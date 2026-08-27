@@ -3,12 +3,14 @@
 import { useEffect, useRef, useState } from "react";
 import type { User } from "@supabase/supabase-js";
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
+import { useOnboarding } from "./onboarding/OnboardingProvider";
+import { UsageMeter } from "./UsageMeter";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
 type Profile = { nom_complet: string | null; plan: string };
 type SectionId =
-  | "plan" | "profil" | "securite" | "preferences"
+  | "plan" | "profil" | "securite" | "preferences" | "usage"
   | "integrations" | "facturation" | "legal" | "danger";
 
 // ─── Plan config ─────────────────────────────────────────────────────────────
@@ -80,6 +82,11 @@ const Ico = {
       <path d="M5.5 7h3" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
     </svg>
   ),
+  usage: (
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+      <path d="M2.5 11.5V7M7 11.5V2.5M11.5 11.5V5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
+    </svg>
+  ),
   facturation: (
     <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
       <rect x="2" y="3.5" width="10" height="7" rx="1.5" stroke="currentColor" strokeWidth="1.2"/>
@@ -132,6 +139,7 @@ const NAV_ITEMS: { id: Exclude<SectionId, "danger">; label: string; icon: React.
   { id: "profil",        label: "Profil",        icon: Ico.profil },
   { id: "securite",      label: "Sécurité",      icon: Ico.securite },
   { id: "preferences",   label: "Préférences",   icon: Ico.preferences },
+  { id: "usage",         label: "Utilisation",   icon: Ico.usage },
   { id: "integrations",  label: "Intégrations",  icon: Ico.integrations },
   { id: "facturation",   label: "Facturation",   icon: Ico.facturation },
   { id: "legal",         label: "Légal",         icon: Ico.legal },
@@ -139,11 +147,22 @@ const NAV_ITEMS: { id: Exclude<SectionId, "danger">; label: string; icon: React.
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
-export default function ParametresModal({ user, onClose }: { user: User; onClose: () => void }) {
+export default function ParametresModal({
+  user,
+  onClose,
+  initialSection,
+  initialShopifyMessage,
+}: {
+  user: User;
+  onClose: () => void;
+  initialSection?: SectionId;
+  initialShopifyMessage?: { ok: boolean; text: string } | null;
+}) {
   const supabase = createSupabaseBrowserClient();
   const overlayRef = useRef<HTMLDivElement>(null);
+  const { restart: restartOnboarding } = useOnboarding();
 
-  const [activeSection, setActiveSection] = useState<SectionId>("plan");
+  const [activeSection, setActiveSection] = useState<SectionId>(initialSection ?? "plan");
 
   // Profile
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -163,9 +182,94 @@ export default function ParametresModal({ user, onClose }: { user: User; onClose
   const [notifPush, setNotifPush] = useState(false);
   const [prefMsg, setPrefMsg] = useState<{ ok: boolean; text: string } | null>(null);
 
-  // Integrations
-  const [shopifyUrl, setShopifyUrl] = useState("");
-  const [intMsg, setIntMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  // Usage
+  type UsageMetric = { key: string; label: string; used: number; max: number | null };
+  type BoutiqueUsage = { id: string; nom: string; used: number; max: number | null };
+  type UsageData = {
+    plan: string;
+    monthly: UsageMetric[];
+    total: UsageMetric[];
+    catalogue: { max: number | null };
+    boutiques: BoutiqueUsage[];
+  };
+  const [usage, setUsage] = useState<UsageData | null>(null);
+  const [usageLoading, setUsageLoading] = useState(true);
+  const [usageError, setUsageError] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetch("/api/usage")
+      .then(async (res) => {
+        const json = await res.json();
+        if (!res.ok) {
+          setUsageError(json.error ?? "Impossible de charger ton utilisation.");
+          return;
+        }
+        setUsage(json);
+      })
+      .catch(() => setUsageError("Impossible de contacter le serveur."))
+      .finally(() => setUsageLoading(false));
+  }, []);
+
+  // Integrations — Shopify
+  type ShopifyStatus = {
+    configured: boolean;
+    connected: boolean;
+    reconnectRequired: boolean;
+    shop_domain: string | null;
+    shop_name: string | null;
+    connected_at: string | null;
+    disputesScopeGranted: boolean;
+  };
+  const [shopifyStatus, setShopifyStatus] = useState<ShopifyStatus | null>(null);
+  const [shopifyStatusLoading, setShopifyStatusLoading] = useState(true);
+  const [shopifyDomainInput, setShopifyDomainInput] = useState("");
+  const [shopifyConnecting, setShopifyConnecting] = useState(false);
+  const [shopifyDisconnecting, setShopifyDisconnecting] = useState(false);
+  const [intMsg, setIntMsg] = useState<{ ok: boolean; text: string } | null>(initialShopifyMessage ?? null);
+
+  useEffect(() => {
+    fetch("/api/shopify/status")
+      .then((res) => res.json())
+      .then((json) => {
+        setShopifyStatus(json);
+        if (json?.reconnectRequired && json.shop_domain) {
+          setShopifyDomainInput(json.shop_domain);
+        }
+      })
+      .catch(() => setShopifyStatus(null))
+      .finally(() => setShopifyStatusLoading(false));
+  }, []);
+
+  function handleConnectShopify() {
+    const shop = shopifyDomainInput.trim().toLowerCase();
+    if (!/^[a-z0-9][a-z0-9-]*\.myshopify\.com$/.test(shop)) {
+      setIntMsg({ ok: false, text: "Format attendu : ma-boutique.myshopify.com" });
+      return;
+    }
+    setShopifyConnecting(true);
+    setIntMsg(null);
+    const returnTo = window.location.pathname + window.location.search;
+    window.location.href = `/api/shopify/connect?shop=${encodeURIComponent(shop)}&returnTo=${encodeURIComponent(returnTo)}`;
+  }
+
+  async function handleDisconnectShopify() {
+    setShopifyDisconnecting(true);
+    setIntMsg(null);
+    try {
+      const res = await fetch("/api/shopify/disconnect", { method: "POST" });
+      const json = await res.json();
+      if (!res.ok) {
+        setIntMsg({ ok: false, text: json.error ?? "Impossible de déconnecter Shopify." });
+        return;
+      }
+      setShopifyStatus((s) => (s ? { ...s, connected: false, reconnectRequired: false, shop_domain: null, shop_name: null } : s));
+      setIntMsg({ ok: true, text: "Boutique Shopify déconnectée." });
+    } catch {
+      setIntMsg({ ok: false, text: "Impossible de contacter le serveur." });
+    } finally {
+      setShopifyDisconnecting(false);
+    }
+  }
 
   // Danger zone
   const [deletePhase, setDeletePhase] = useState<"idle" | "confirm">("idle");
@@ -190,11 +294,6 @@ export default function ParametresModal({ user, onClose }: { user: User; onClose
       });
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user.id]);
-
-  // Reset delete phase when switching sections
-  useEffect(() => {
-    if (activeSection !== "danger") setDeletePhase("idle");
-  }, [activeSection]);
 
   async function handleSaveProfile() {
     setSaving(true);
@@ -311,7 +410,7 @@ export default function ParametresModal({ user, onClose }: { user: User; onClose
         <div>
           <label className={LABEL}>Email</label>
           <p className="bg-white/[0.03] border border-white/[0.06] rounded-lg px-3 py-2.5 text-sm text-zinc-400 truncate">{user.email}</p>
-          <p className="text-[11px] text-zinc-600 mt-1.5">L'email ne peut pas être modifié pour le moment.</p>
+          <p className="text-[11px] text-zinc-600 mt-1.5">L&apos;email ne peut pas être modifié pour le moment.</p>
         </div>
 
         <div>
@@ -399,7 +498,7 @@ export default function ParametresModal({ user, onClose }: { user: User; onClose
         <div className={ROW}>
           <div>
             <p className="text-sm text-white">Langue</p>
-            <p className="text-[11px] text-zinc-500 mt-0.5">Langue d'affichage de l'interface</p>
+            <p className="text-[11px] text-zinc-500 mt-0.5">Langue d&apos;affichage de l&apos;interface</p>
           </div>
           <select
             value={langue}
@@ -442,6 +541,21 @@ export default function ParametresModal({ user, onClose }: { user: User; onClose
             </div>
           </div>
         </div>
+
+        <div className={DIVIDER} />
+
+        <div className={ROW}>
+          <div>
+            <p className="text-sm text-white">Tutoriel de bienvenue</p>
+            <p className="text-[11px] text-zinc-500 mt-0.5">Revoir les bulles d&apos;aide qui présentent les outils Dropvio</p>
+          </div>
+          <button
+            className={`${BTN_G} shrink-0`}
+            onClick={() => { onClose(); restartOnboarding(); }}
+          >
+            Relancer le tutoriel
+          </button>
+        </div>
       </div>
 
       <div className="flex items-center gap-3">
@@ -459,6 +573,62 @@ export default function ParametresModal({ user, onClose }: { user: User; onClose
     </div>
   );
 
+  const renderUsage = () => (
+    <div className="flex flex-col gap-6">
+      <div>
+        <p className={SECTION_TITLE}>Utilisation</p>
+        <p className={SECTION_SUB}>Ce que tu as consommé ce mois-ci sur le plan {PLAN_META[plan]?.label ?? plan}.</p>
+      </div>
+
+      {usageLoading ? (
+        <p className="text-xs text-zinc-500">Chargement de ton utilisation…</p>
+      ) : usageError ? (
+        <div className="rounded-xl bg-red-500/10 border border-red-500/20 px-4 py-3 text-red-400 text-sm">{usageError}</div>
+      ) : usage ? (
+        <>
+          <div className="flex flex-col gap-3">
+            <p className="text-[11px] font-semibold text-zinc-500 uppercase tracking-widest">Ce mois-ci</p>
+            {usage.monthly.map((m) => (
+              <UsageMeter key={m.key} label={m.label} used={m.used} max={m.max} />
+            ))}
+          </div>
+
+          <div className="flex flex-col gap-3">
+            <p className="text-[11px] font-semibold text-zinc-500 uppercase tracking-widest">Au total</p>
+            {usage.total.map((m) => (
+              <UsageMeter key={m.key} label={m.label} used={m.used} max={m.max} />
+            ))}
+          </div>
+
+          <div className="flex flex-col gap-3">
+            <p className="text-[11px] font-semibold text-zinc-500 uppercase tracking-widest">Catalogue & boutiques</p>
+            <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] px-4 py-3.5 flex items-center justify-between gap-4">
+              <div>
+                <p className="text-sm font-medium text-white">Produits gagnants accessibles</p>
+                <p className="text-[11px] text-zinc-500 mt-0.5">Nombre de produits consultables dans le catalogue.</p>
+              </div>
+              <p className="text-xs font-semibold shrink-0">
+                {usage.catalogue.max === null ? (
+                  <span className="text-emerald-400">Catalogue complet</span>
+                ) : (
+                  <span className="text-zinc-300">{usage.catalogue.max} premiers produits</span>
+                )}
+              </p>
+            </div>
+
+            {usage.boutiques.length === 0 ? (
+              <p className="text-[11px] text-zinc-600">Tu n&apos;as pas encore de boutique — crée-en une depuis « Mode boutique ».</p>
+            ) : (
+              usage.boutiques.map((b) => (
+                <UsageMeter key={b.id} label={`Produits de « ${b.nom} »`} used={b.used} max={b.max} />
+              ))
+            )}
+          </div>
+        </>
+      ) : null}
+    </div>
+  );
+
   const renderIntegrations = () => (
     <div className="flex flex-col gap-6">
       <div>
@@ -472,31 +642,74 @@ export default function ParametresModal({ user, onClose }: { user: User; onClose
           <div className="w-9 h-9 rounded-xl bg-[#96bf48]/10 border border-[#96bf48]/20 flex items-center justify-center text-base">🛍️</div>
           <div>
             <p className="text-sm font-medium text-white">Shopify</p>
-            <p className="text-[11px] text-zinc-500">Publie tes landing pages directement sur ta boutique</p>
+            <p className="text-[11px] text-zinc-500">Pousse tes produits, collections et designs directement sur ta boutique</p>
           </div>
         </div>
-        <div>
-          <label className={LABEL}>URL de ta boutique</label>
-          <input
-            type="text"
-            value={shopifyUrl}
-            onChange={(e) => setShopifyUrl(e.target.value)}
-            placeholder="ma-boutique.myshopify.com"
-            className={FIELD}
-          />
-        </div>
-        <div className="flex items-center gap-3">
-          <button
-            className={BTN_G}
-            onClick={() => {
-              setIntMsg({ ok: true, text: "Configuration Shopify sauvegardée." });
-              setTimeout(() => setIntMsg(null), 3000);
-            }}
-          >
-            Connecter Shopify
-          </button>
-          {intMsg && <p className={intMsg.ok ? MSG_OK : MSG_ERR}>{intMsg.text}</p>}
-        </div>
+
+        {shopifyStatusLoading ? (
+          <p className="text-[11px] text-zinc-500">Vérification de la connexion…</p>
+        ) : !shopifyStatus?.configured ? (
+          <p className="text-[11px] text-amber-400">
+            L&apos;intégration Shopify n&apos;est pas encore configurée côté serveur (clés API manquantes). Contacte le support si le problème persiste.
+          </p>
+        ) : shopifyStatus.connected ? (
+          <>
+            <div className="rounded-lg border border-emerald-500/20 bg-emerald-500/[0.06] px-3 py-2.5 flex items-center gap-2">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0" />
+              <p className="text-xs text-emerald-300">
+                Connecté à <span className="font-semibold">{shopifyStatus.shop_name || shopifyStatus.shop_domain}</span>
+                {shopifyStatus.shop_name ? <span className="text-emerald-400/70"> ({shopifyStatus.shop_domain})</span> : null}
+              </p>
+            </div>
+            <p className="text-[11px] text-zinc-500">
+              {shopifyStatus.disputesScopeGranted
+                ? "Remboursements, retours et litiges (chargebacks) synchronisés automatiquement."
+                : "Remboursements et retours synchronisés automatiquement. Litiges non disponibles pour cette boutique (Shopify Payments non activé, ou accès refusé à la connexion)."}
+            </p>
+            <div className="flex items-center gap-3">
+              <button className={BTN_G} disabled={shopifyDisconnecting} onClick={handleDisconnectShopify}>
+                {shopifyDisconnecting ? "Déconnexion…" : "Déconnecter"}
+              </button>
+              {intMsg && <p className={intMsg.ok ? MSG_OK : MSG_ERR}>{intMsg.text}</p>}
+            </div>
+          </>
+        ) : (
+          <>
+            {shopifyStatus.reconnectRequired && (
+              <div className="rounded-lg border border-amber-500/20 bg-amber-500/[0.06] px-3 py-2.5 flex items-center gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0" />
+                <p className="text-xs text-amber-300">
+                  Ta connexion Shopify n&apos;est plus active — reconnecte ta boutique pour continuer à utiliser le
+                  push produits et le suivi des remboursements/litiges.
+                </p>
+              </div>
+            )}
+            <div>
+              <label className={LABEL}>Domaine de ta boutique</label>
+              <input
+                type="text"
+                value={shopifyDomainInput}
+                onChange={(e) => setShopifyDomainInput(e.target.value)}
+                placeholder="ma-boutique.myshopify.com"
+                className={FIELD}
+              />
+            </div>
+            <div className="flex items-center gap-3">
+              <button
+                className={BTN_G}
+                disabled={shopifyConnecting || !shopifyDomainInput.trim()}
+                onClick={handleConnectShopify}
+              >
+                {shopifyConnecting
+                  ? "Redirection…"
+                  : shopifyStatus.reconnectRequired
+                  ? "Reconnecter ma boutique Shopify"
+                  : "Connecter ma boutique Shopify"}
+              </button>
+              {intMsg && <p className={intMsg.ok ? MSG_OK : MSG_ERR}>{intMsg.text}</p>}
+            </div>
+          </>
+        )}
       </div>
 
       {/* AliExpress */}
@@ -509,7 +722,7 @@ export default function ParametresModal({ user, onClose }: { user: User; onClose
           </div>
           <span className="ml-auto text-[10px] font-bold bg-white/[0.05] border border-white/[0.08] text-zinc-400 px-2 py-0.5 rounded-full">Connecté</span>
         </div>
-        <p className="text-[11px] text-zinc-600">L'import par URL est disponible directement dans le Site Builder.</p>
+        <p className="text-[11px] text-zinc-600">L&apos;import par URL est disponible directement dans le Site Builder.</p>
       </div>
 
       {/* Coming soon */}
@@ -523,7 +736,7 @@ export default function ParametresModal({ user, onClose }: { user: User; onClose
     <div className="flex flex-col gap-6">
       <div>
         <p className={SECTION_TITLE}>Facturation</p>
-        <p className={SECTION_SUB}>Historique de paiements et gestion de l'abonnement.</p>
+        <p className={SECTION_SUB}>Historique de paiements et gestion de l&apos;abonnement.</p>
       </div>
 
       <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-4 flex flex-col gap-3">
@@ -565,6 +778,11 @@ export default function ParametresModal({ user, onClose }: { user: User; onClose
 
       <div className="flex flex-col gap-3">
         {[
+          {
+            href: "/faq",
+            title: "Questions fréquentes",
+            desc: "Compte, facturation, fonctionnalités, données : réponses aux questions les plus courantes.",
+          },
           {
             href: "/mentions-legales",
             title: "Mentions légales",
@@ -666,6 +884,7 @@ export default function ParametresModal({ user, onClose }: { user: User; onClose
     profil: renderProfil,
     securite: renderSecurite,
     preferences: renderPreferences,
+    usage: renderUsage,
     integrations: renderIntegrations,
     facturation: renderFacturation,
     legal: renderLegal,
@@ -715,7 +934,10 @@ export default function ParametresModal({ user, onClose }: { user: User; onClose
                 return (
                   <button
                     key={id}
-                    onClick={() => setActiveSection(id)}
+                    onClick={() => {
+                      setActiveSection(id);
+                      setDeletePhase("idle"); // id exclut toujours "danger" (cf. NAV_ITEMS)
+                    }}
                     className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium text-left transition w-full ${
                       isActive
                         ? "bg-white/[0.08] text-white"
