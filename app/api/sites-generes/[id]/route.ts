@@ -1,14 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
-import { supabase } from "@/lib/supabase";
+import { createSupabaseServerClient } from "@/lib/supabase-server";
 
 export async function GET(
   _request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
+  const supabase = await createSupabaseServerClient();
+
   const { data, error } = await supabase
     .from("sites_generes")
     .select("html_content")
-    .eq("id", params.id)
+    .eq("id", id)
     .single();
 
   if (error || !data) {

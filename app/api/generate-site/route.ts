@@ -1,11 +1,55 @@
 import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
+import { getServerUserAndPlan } from "@/lib/supabase-server";
+import { PLAN_LIMITS, planLabel, currentMonthKey } from "@/lib/plan-limits";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
 export async function POST(request: NextRequest) {
-  console.log("[generate-site] ANTHROPIC_API_KEY présente :", !!process.env.ANTHROPIC_API_KEY);
-  console.log("[generate-site] Début des premiers caractères de la clé :", process.env.ANTHROPIC_API_KEY?.slice(0, 20));
+  const { supabase, user, plan } = await getServerUserAndPlan();
+
+  if (!user) {
+    return NextResponse.json({ error: "Connecte-toi pour générer une landing page." }, { status: 401 });
+  }
+
+  // Garde-fou technique indépendant du quota métier (sitesParMoisMax, illimité en Pro/
+  // Agency) : chaque appel déclenche un appel Claude facturé, donc même un plan illimité
+  // ne doit pas pouvoir enchaîner des centaines de générations d'affilée (script, compte
+  // compromis...).
+  if (!checkRateLimit(`generate-site:${user.id}`, { max: 10, windowMs: 3_600_000 })) {
+    return NextResponse.json(
+      { error: "Trop de générations en peu de temps. Réessaie dans quelques minutes." },
+      { status: 429 }
+    );
+  }
+
+  // Même plafond que la sauvegarde (/api/sites-generes), vérifié ici aussi pour éviter
+  // d'appeler Claude (coûteux) pour un site qui ne pourra de toute façon pas être sauvegardé.
+  // Comptage basé sur les sites réellement sauvegardés ce mois-ci — pas de compteur séparé
+  // à incrémenter, donc pas de double comptage avec la vérification de /api/sites-generes.
+  const maxSites = PLAN_LIMITS[plan].sitesParMoisMax;
+  if (maxSites !== null) {
+    const debutMois = `${currentMonthKey()}T00:00:00.000Z`;
+    const { count, error: countError } = await supabase
+      .from("sites_generes")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", user.id)
+      .gte("created_at", debutMois);
+
+    if (countError) {
+      return NextResponse.json({ error: countError.message }, { status: 500 });
+    }
+    if ((count ?? 0) >= maxSites) {
+      return NextResponse.json(
+        {
+          error: `Tu as atteint la limite de ${maxSites} sites générés ce mois-ci sur le plan ${planLabel(plan)}. Passe Pro pour un accès illimité.`,
+        },
+        { status: 403 }
+      );
+    }
+  }
+
   const { productName, description, colorPrimary, colorSecondary, colorAccent, style, imageUrl, rating, orders, salePrice, originalPrice } = await request.json();
 
   const imageInstruction = imageUrl
