@@ -1,0 +1,9 @@
+# Avant-propos
+
+Cette version courte n'est pas un résumé superficiel de la version longue — c'est une formation à part entière, construite pour donner l'essentiel de chaque sujet en un format plus resserré, pour celles et ceux qui veulent démarrer vite avec des bases solides, quitte à approfondir certains points plus tard dans la version longue. Chaque partie garde la même exigence de rigueur : quand un chiffre n'est pas confirmé par une source primaire vérifiable, il est présenté comme une approximation largement citée dans le secteur, jamais comme un fait établi.
+
+Les mentions de fonctionnalités Dropvio au fil du texte ne sont pas des insertions publicitaires déconnectées — ce sont des outils qui appliquent concrètement, avec moins de risque d'erreur d'exécution, la méthode détaillée dans ces pages.
+
+## Sources
+
+Les principes de conversion et d'expérience d'achat s'appuient sur les cadres méthodologiques publics du Nielsen Norman Group et du Baymard Institute, deux références reconnues en recherche sur l'utilisabilité et l'abandon de panier en e-commerce. Les éléments réglementaires français (micro-entreprise, TVA, IOSS, obligations légales) s'appuient sur les ressources officielles service-public.fr, le site des impôts et l'URSSAF — un cadre qui évolue régulièrement et qu'il faut vérifier au moment de ton besoin réel, pas mémoriser définitivement à partir de cette lecture. Les éléments techniques sur les API AliExpress et Shopify s'appuient sur leur documentation développeur officielle publique. Les statistiques générales sur le taux d'échec des boutiques et les difficultés les plus citées par les vendeurs proviennent de contenus largement diffusés dans le secteur du e-commerce, sans étude académique primaire clairement vérifiable derrière — elles sont donc systématiquement présentées comme des ordres de grandeur approximatifs plutôt que comme des données confirmées.
