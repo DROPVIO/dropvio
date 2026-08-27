@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
 
   const { data, error } = await supabase
     .from("produits")
-    .select("nom, image, note, commandes, niche")
+    .select("id, nom, image, note, commandes, niche")
     .ilike("lienAliExpress", `%${productId}%`)
     .limit(1)
     .single();
@@ -36,10 +36,12 @@ export async function POST(request: NextRequest) {
   }
 
   return NextResponse.json({
+    id: data.id,
     nom: data.nom,
     description: data.nom,
     image: data.image ?? null,
     rating: data.note ?? null,
     orders: data.commandes ?? null,
+    niche: data.niche ?? null,
   });
 }
