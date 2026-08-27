@@ -1,57 +1,28 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
-import type { User } from "@supabase/supabase-js";
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  Legend,
-} from "recharts";
+import { PLAN_LIMITS, getMonthlyUsage, type Plan } from "@/lib/plan-limits";
+import DashboardActiviteChart from "@/components/DashboardActiviteChart";
 
 type Profile = { nom_complet: string | null; plan: string };
+
+type ShopifyStatus = {
+  connected: boolean;
+  reconnectRequired: boolean;
+  disputesScopeGranted: boolean;
+  incidentsSummary: { refunds30d: number; disputes30d: number | null } | null;
+};
+
+type CardStat = { label: string; value: string; accent?: string };
+type CardConfig = { id: string; href: string; icon: string; title: string; stats: CardStat[] };
 
 const PLAN_META: Record<string, { label: string; badge: string; border: string }> = {
   free:   { label: "Free",   badge: "text-zinc-300 bg-zinc-700/50",    border: "border-white/10" },
   pro:    { label: "Pro",    badge: "text-violet-300 bg-violet-600/20", border: "border-violet-500/30" },
   agency: { label: "Agency", badge: "text-amber-300 bg-amber-500/15",  border: "border-amber-500/30" },
 };
-
-type ChartPoint = {
-  date: string;
-  "30 derniers jours": number;
-  "Mois précédent": number;
-};
-
-function buildChartData(createdAts: string[]): ChartPoint[] {
-  const now = new Date();
-  const counts: Record<string, number> = {};
-  for (const ts of createdAts) {
-    const key = ts.slice(0, 10); // YYYY-MM-DD (UTC from Supabase)
-    counts[key] = (counts[key] || 0) + 1;
-  }
-  return Array.from({ length: 30 }, (_, i) => {
-    const dCur = new Date(now);
-    dCur.setUTCDate(now.getUTCDate() - (29 - i));
-    const kCur = dCur.toISOString().slice(0, 10);
-
-    const dPrev = new Date(now);
-    dPrev.setUTCDate(now.getUTCDate() - (59 - i));
-    const kPrev = dPrev.toISOString().slice(0, 10);
-
-    const label = dCur.toLocaleDateString("fr-FR", { day: "numeric", month: "short" });
-    return {
-      date: label,
-      "30 derniers jours": counts[kCur] || 0,
-      "Mois précédent": counts[kPrev] || 0,
-    };
-  });
-}
 
 function fmt(n: number): string {
   if (n >= 1000) return `${(n / 1000).toFixed(1).replace(".0", "")}k`;
@@ -66,30 +37,34 @@ function greeting() {
   return "Bonsoir";
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function ChartTooltip({ active, payload, label }: any) {
-  if (!active || !payload?.length) return null;
-  return (
-    <div className="rounded-xl border border-white/10 bg-[#13131f] px-3 py-2.5 shadow-xl">
-      <p className="text-[10px] text-zinc-500 mb-1.5">{label}</p>
-      {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-      {payload.map((entry: any) => (
-        <p key={entry.name} className="text-xs" style={{ color: entry.color }}>
-          {entry.name} : <span className="font-semibold">{entry.value}</span>
-        </p>
-      ))}
-    </div>
-  );
-}
-
 export default function DashboardPage() {
-  const [user,          setUser]          = useState<User | null>(null);
+  const [user,          setUser]          = useState<import("@supabase/supabase-js").User | null>(null);
   const [profile,       setProfile]       = useState<Profile | null>(null);
-  const [sitesTotal,    setSitesTotal]    = useState<number | null>(null);
-  const [sitesMois,     setSitesMois]     = useState<number | null>(null);
-  const [produitsTotal, setProduitsTotal] = useState<number | null>(null);
-  const [chartData,     setChartData]     = useState<ChartPoint[]>([]);
   const [loading,       setLoading]       = useState(true);
+  const [shopifyStatus, setShopifyStatus] = useState<ShopifyStatus | null>(null);
+
+  const [sitesTotal,    setSitesTotal]    = useState(0);
+  const [sitesMois,     setSitesMois]     = useState(0);
+  const [produitsTotal, setProduitsTotal] = useState(0);
+
+  const [simulationsCount, setSimulationsCount] = useState(0);
+  const [margeMoyenne,     setMargeMoyenne]     = useState<number | null>(null);
+  const [auditsCount,      setAuditsCount]      = useState(0);
+  const [scoreMoyen,       setScoreMoyen]       = useState<number | null>(null);
+  const [boutiquesCount,   setBoutiquesCount]   = useState(0);
+  const [produitsBoutiquesCount, setProduitsBoutiquesCount] = useState(0);
+  const [auditsMoisUsage,  setAuditsMoisUsage]  = useState(0);
+  const [sitesMoisUsage,   setSitesMoisUsage]   = useState(0);
+
+  // Requête séparée (route API, pas le client Supabase browser) : shopify_connections /
+  // shopify_incidents n'ont aucune policy RLS pour authenticated (accès service role
+  // uniquement, voir 015/019), donc pas interrogeables directement depuis le navigateur.
+  useEffect(() => {
+    fetch("/api/shopify/status")
+      .then((res) => res.json())
+      .then((json) => setShopifyStatus(json))
+      .catch(() => setShopifyStatus(null));
+  }, []);
 
   useEffect(() => {
     const supabase = createSupabaseBrowserClient();
@@ -102,19 +77,59 @@ export default function DashboardPage() {
         const now = new Date();
         const startOfMonth = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1)).toISOString();
 
-        const [{ data: p }, { data: sites }, { count: prodCount }] = await Promise.all([
+        const [
+          { data: p },
+          { count: sitesTotalCount },
+          { count: sitesMoisCount },
+          { count: prodCount },
+          { data: sims },
+          { data: auds },
+          { data: mesBoutiques },
+        ] = await Promise.all([
           supabase.from("profils").select("nom_complet, plan").eq("id", user.id).maybeSingle(),
-          supabase.from("sites_generes").select("created_at").order("created_at", { ascending: true }),
+          supabase.from("sites_generes").select("id", { count: "exact", head: true }).eq("user_id", user.id),
+          supabase.from("sites_generes").select("id", { count: "exact", head: true }).eq("user_id", user.id).gte("created_at", startOfMonth),
           supabase.from("produits").select("*", { count: "exact", head: true }),
+          supabase.from("simulations_marge").select("resultats").eq("user_id", user.id).limit(500),
+          supabase.from("audits_realises").select("score_total").eq("user_id", user.id).limit(500),
+          // "boutiques" a aussi une policy select_public (boutiques d'autres utilisateurs
+          // marquées publiques) — le filtre .eq("user_id", ...) est indispensable, la RLS
+          // seule ne garantit pas qu'on ne liste que les miennes.
+          supabase.from("boutiques").select("id").eq("user_id", user.id),
         ]);
 
         if (p) setProfile(p as Profile);
-
-        const allSites = sites ?? [];
-        setSitesTotal(allSites.length);
-        setSitesMois(allSites.filter((s) => (s.created_at as string) >= startOfMonth).length);
+        setSitesTotal(sitesTotalCount ?? 0);
+        setSitesMois(sitesMoisCount ?? 0);
         setProduitsTotal(prodCount ?? 0);
-        setChartData(buildChartData(allSites.map((s) => s.created_at as string)));
+
+        const simRows = sims ?? [];
+        setSimulationsCount(simRows.length);
+        const pcts = simRows
+          .map((s) => (s.resultats as { margePct?: number } | null)?.margePct)
+          .filter((v): v is number => typeof v === "number");
+        setMargeMoyenne(pcts.length > 0 ? pcts.reduce((a, b) => a + b, 0) / pcts.length : null);
+
+        const audRows = auds ?? [];
+        setAuditsCount(audRows.length);
+        setScoreMoyen(audRows.length > 0 ? Math.round(audRows.reduce((a, r) => a + r.score_total, 0) / audRows.length) : null);
+
+        const boutiqueIds = (mesBoutiques ?? []).map((b) => b.id);
+        setBoutiquesCount(boutiqueIds.length);
+        if (boutiqueIds.length > 0) {
+          const { count: produitsBoutiques } = await supabase
+            .from("boutique_produits")
+            .select("id", { count: "exact", head: true })
+            .in("boutique_id", boutiqueIds);
+          setProduitsBoutiquesCount(produitsBoutiques ?? 0);
+        }
+
+        const [auditsUsed, sitesUsed] = await Promise.all([
+          getMonthlyUsage(supabase, user.id, "audit_ia"),
+          getMonthlyUsage(supabase, user.id, "site_builder"),
+        ]);
+        setAuditsMoisUsage(auditsUsed);
+        setSitesMoisUsage(sitesUsed);
       }
 
       setLoading(false);
@@ -131,8 +146,9 @@ export default function DashboardPage() {
     );
   }
 
-  const planKey  = profile?.plan ?? "free";
+  const planKey  = (profile?.plan ?? "free") as Plan;
   const planMeta = PLAN_META[planKey] ?? PLAN_META.free;
+  const planLimits = PLAN_LIMITS[planKey];
   const prenom   = profile?.nom_complet?.split(" ")[0]
     || user?.email?.split("@")[0]
     || "là";
@@ -141,21 +157,21 @@ export default function DashboardPage() {
     {
       id: "mois",
       label: "Sites ce mois",
-      value: sitesMois !== null ? String(sitesMois) : "—",
+      value: String(sitesMois),
       sub: "landing pages créées",
       accent: "text-violet-400",
     },
     {
       id: "total",
       label: "Sites au total",
-      value: sitesTotal !== null ? fmt(sitesTotal) : "—",
+      value: fmt(sitesTotal),
       sub: "toutes périodes",
       accent: "text-blue-400",
     },
     {
       id: "produits",
       label: "Produits disponibles",
-      value: produitsTotal !== null ? fmt(produitsTotal) : "—",
+      value: fmt(produitsTotal),
       sub: "dans le catalogue",
       accent: "text-emerald-400",
     },
@@ -168,6 +184,74 @@ export default function DashboardPage() {
       accent: null,
     },
   ] as const;
+
+  const CARDS: CardConfig[] = [
+    {
+      id: "marges",
+      href: "/dashboard/marges",
+      icon: "📊",
+      title: "Calculateur de marge",
+      stats: [
+        { label: "Simulations", value: String(simulationsCount) },
+        { label: "Marge moyenne", value: margeMoyenne !== null ? `${margeMoyenne.toFixed(1)}%` : "—" },
+      ],
+    },
+    {
+      id: "audits",
+      href: "/dashboard/audits",
+      icon: "🔍",
+      title: "Audits IA",
+      stats: [
+        { label: "Audits réalisés", value: String(auditsCount) },
+        { label: "Score moyen", value: scoreMoyen !== null ? `${scoreMoyen}/100` : "—" },
+      ],
+    },
+    {
+      id: "shopify",
+      href: "/dashboard/shopify",
+      icon: "🛍️",
+      title: "Remboursements & litiges",
+      stats: shopifyStatus?.connected
+        ? [
+            { label: "Remboursements 30j", value: String(shopifyStatus.incidentsSummary?.refunds30d ?? "—") },
+            {
+              label: "Litiges 30j",
+              value: shopifyStatus.disputesScopeGranted ? String(shopifyStatus.incidentsSummary?.disputes30d ?? "—") : "N/A",
+            },
+          ]
+        : [{ label: "Statut", value: "Non connecté" }],
+    },
+    {
+      id: "sites",
+      href: "/dashboard/sites",
+      icon: "🌐",
+      title: "Sites générés",
+      stats: [
+        { label: "Ce mois", value: String(sitesMois) },
+        { label: "Au total", value: fmt(sitesTotal) },
+      ],
+    },
+    {
+      id: "boutiques",
+      href: "/dashboard/boutiques",
+      icon: "🏬",
+      title: "Mes boutiques",
+      stats: [
+        { label: "Boutiques", value: String(boutiquesCount) },
+        { label: "Produits catalogués", value: String(produitsBoutiquesCount) },
+      ],
+    },
+    {
+      id: "utilisation",
+      href: "/dashboard/utilisation",
+      icon: "📈",
+      title: "Utilisation du plan",
+      stats: [
+        { label: "Audits ce mois", value: `${auditsMoisUsage}${planLimits.auditsParMoisMax !== null ? `/${planLimits.auditsParMoisMax}` : ""}` },
+        { label: "Sites ce mois", value: `${sitesMoisUsage}${planLimits.sitesParMoisMax !== null ? `/${planLimits.sitesParMoisMax}` : ""}` },
+      ],
+    },
+  ];
 
   return (
     <div className="min-h-screen bg-[#0d0d14] px-8 py-10">
@@ -182,6 +266,24 @@ export default function DashboardPage() {
             Voici un aperçu de ton activité sur Dropvio.
           </p>
         </div>
+
+        {/* ── Bannière reconnexion Shopify ─────────────────────────────── */}
+        {shopifyStatus?.reconnectRequired && (
+          <a
+            href="/dashboard?openIntegrations=1"
+            className="rounded-2xl border border-amber-500/25 bg-amber-500/[0.07] px-5 py-4 flex items-center gap-3 hover:bg-amber-500/[0.1] transition-colors"
+          >
+            <span className="text-lg shrink-0">⚠️</span>
+            <div className="min-w-0">
+              <p className="text-sm font-medium text-amber-200">
+                Ta connexion Shopify n&apos;est plus active
+              </p>
+              <p className="text-[11px] text-amber-300/80 mt-0.5">
+                Le push produits et le suivi des remboursements/litiges sont en pause jusqu&apos;à la reconnexion. Clique ici pour reconnecter ta boutique.
+              </p>
+            </div>
+          </a>
+        )}
 
         {/* ── 4 metric cards ──────────────────────────────────────────── */}
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
@@ -209,64 +311,37 @@ export default function DashboardPage() {
           ))}
         </div>
 
-        {/* ── Activity chart ──────────────────────────────────────────── */}
-        <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-6">
-          <div className="mb-6">
-            <p className="text-sm font-semibold text-white">Sites générés — 30 derniers jours</p>
-            <p className="text-[11px] text-zinc-500 mt-0.5">Comparaison avec les 30 jours précédents</p>
-          </div>
+        {/* ── Graphique d'activité combiné ─────────────────────────────── */}
+        <DashboardActiviteChart />
 
-          {sitesTotal === 0 ? (
-            <div className="flex flex-col items-center justify-center py-12 gap-2">
-              <p className="text-zinc-600 text-sm">Aucun site généré pour l'instant.</p>
-              <a href="/site-builder" className="text-violet-400 text-xs hover:underline">
-                Créer ta première landing page →
-              </a>
-            </div>
-          ) : (
-            <ResponsiveContainer width="100%" height={220}>
-              <LineChart data={chartData} margin={{ top: 4, right: 8, left: -24, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" vertical={false} />
-                <XAxis
-                  dataKey="date"
-                  tick={{ fill: "#52525b", fontSize: 10 }}
-                  axisLine={false}
-                  tickLine={false}
-                  interval={4}
-                />
-                <YAxis
-                  tick={{ fill: "#52525b", fontSize: 10 }}
-                  axisLine={false}
-                  tickLine={false}
-                  allowDecimals={false}
-                  width={32}
-                />
-                <Tooltip content={ChartTooltip} cursor={{ stroke: "rgba(255,255,255,0.06)", strokeWidth: 1 }} />
-                <Legend
-                  iconType="plainline"
-                  iconSize={16}
-                  wrapperStyle={{ fontSize: 11, color: "#71717a", paddingTop: 16 }}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="30 derniers jours"
-                  stroke="#7c3aed"
-                  strokeWidth={2}
-                  dot={false}
-                  activeDot={{ r: 4, fill: "#7c3aed", strokeWidth: 0 }}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="Mois précédent"
-                  stroke="#3f3f46"
-                  strokeWidth={1.5}
-                  strokeDasharray="4 3"
-                  dot={false}
-                  activeDot={{ r: 3, fill: "#71717a", strokeWidth: 0 }}
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          )}
+        {/* ── Dashboard complet ─────────────────────────────────────────── */}
+        <div>
+          <div className="mb-4">
+            <p className="text-sm font-semibold text-white">Dashboard complet</p>
+            <p className="text-[11px] text-zinc-500 mt-0.5">Tous tes tableaux de bord Dropvio, en un seul endroit.</p>
+          </div>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {CARDS.map((card) => (
+              <Link
+                key={card.id}
+                href={card.href}
+                className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-5 flex flex-col gap-4 hover:border-white/[0.12] hover:bg-white/[0.03] transition-colors"
+              >
+                <div className="flex items-center gap-2.5">
+                  <span className="text-lg shrink-0">{card.icon}</span>
+                  <p className="text-sm font-semibold text-white">{card.title}</p>
+                </div>
+                <div className="flex items-center gap-6">
+                  {card.stats.map((s) => (
+                    <div key={s.label}>
+                      <p className="text-lg font-bold tabular-nums text-zinc-100">{s.value}</p>
+                      <p className="text-[10px] text-zinc-600 mt-0.5">{s.label}</p>
+                    </div>
+                  ))}
+                </div>
+              </Link>
+            ))}
+          </div>
         </div>
 
         {/* ── Footer hint ─────────────────────────────────────────────── */}

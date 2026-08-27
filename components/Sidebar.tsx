@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
+import Logo from "./Logo";
 import ParametresModal from "./ParametresModal";
 import type { User } from "@supabase/supabase-js";
 
@@ -46,6 +47,13 @@ const IcoAudit = () => (
     <path d="M4.5 5h4M4.5 7.5h2.5" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
     <circle cx="11.5" cy="11.5" r="2.5" stroke="currentColor" strokeWidth="1.3"/>
     <path d="M13.3 13.3L15 15" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
+  </svg>
+);
+
+const IcoBook = () => (
+  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+    <path d="M2 3.2c1.2-.6 2.7-.9 4-.9 1 0 2 .2 2.8.6v9.4c-.8-.4-1.8-.6-2.8-.6-1.3 0-2.8.3-4 .9V3.2Z" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round"/>
+    <path d="M14 3.2c-1.2-.6-2.7-.9-4-.9-1 0-2 .2-2.8.6v9.4c.8-.4 1.8-.6 2.8-.6 1.3 0 2.8.3 4 .9V3.2Z" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round"/>
   </svg>
 );
 
@@ -97,15 +105,18 @@ interface NavItem {
   label: string;
   icon: React.ReactNode;
   soon?: boolean;
+  /** Clé ciblée par le tutoriel d'onboarding (voir components/onboarding). */
+  onboardingTarget?: string;
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { href: "/dashboard",         label: "Dashboard",             icon: <IcoDashboard /> },
-  { href: "/produits-gagnants", label: "Produits gagnants",     icon: <IcoTrophy /> },
-  { href: "/site-builder",      label: "Site Builder",          icon: <IcoGlobe /> },
+  { href: "/dashboard",         label: "Dashboard",             icon: <IcoDashboard />, onboardingTarget: "dashboard" },
+  { href: "/produits-gagnants", label: "Produits gagnants",     icon: <IcoTrophy />,    onboardingTarget: "produits-gagnants" },
+  { href: "/site-builder",      label: "Site Builder",          icon: <IcoGlobe />,     onboardingTarget: "site-builder" },
   { href: "/mes-sites",         label: "Mes sites",             icon: <IcoFolder /> },
-  { href: "/audit",             label: "Audit de site",         icon: <IcoAudit /> },
-  { href: "/calculateur-marge", label: "Calculateur de marge",  icon: <IcoCalc />, soon: true },
+  { href: "/audit",             label: "Audit de site",         icon: <IcoAudit />,     onboardingTarget: "audit" },
+  { href: "/tools/calculateur-marge", label: "Calculateur de marge", icon: <IcoCalc />, onboardingTarget: "calculateur-marge" },
+  { href: "/formation",         label: "Formation",             icon: <IcoBook /> },
 ];
 
 const PLAN_CLS: Record<string, string> = {
@@ -129,6 +140,40 @@ export default function Sidebar({
   const [user,       setUser]       = useState<User | null>(null);
   const [profile,    setProfile]    = useState<Profile | null>(null);
   const [modalOpen,  setModalOpen]  = useState(false);
+  const [modalShopifyMsg, setModalShopifyMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  const [modalOpenIntegrations, setModalOpenIntegrations] = useState(false);
+
+  // Retour du round-trip OAuth Shopify (/api/shopify/callback) : rouvre la modale de
+  // paramètres directement sur l'onglet Intégrations avec le résultat de la connexion.
+  // openIntegrations=1 (sans shopifyConnected/shopifyError) : même mécanisme, déclenché par
+  // un lien "Reconnecter" ailleurs dans l'app (ex: bannière Dashboard) — ouvre direct sur
+  // l'onglet Intégrations sans message de résultat.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const connected = params.get("shopifyConnected");
+    const err = params.get("shopifyError");
+    const openIntegrations = params.get("openIntegrations");
+    if (!connected && !err && !openIntegrations) return;
+
+    params.delete("shopifyConnected");
+    params.delete("shopifyError");
+    params.delete("openIntegrations");
+    const query = params.toString();
+    router.replace(query ? `${pathname}?${query}` : pathname);
+
+    // setState différé (microtask) plutôt qu'appelé en synchrone dans le corps de
+    // l'effet, pour éviter le re-render en cascade immédiat (react-hooks/set-state-in-effect).
+    queueMicrotask(() => {
+      if (connected || err) {
+        setModalShopifyMsg(
+          connected ? { ok: true, text: "Boutique Shopify connectée avec succès." } : { ok: false, text: err! }
+        );
+      }
+      if (connected || err || openIntegrations) setModalOpenIntegrations(true);
+      setModalOpen(true);
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     const supabase = createSupabaseBrowserClient();
@@ -165,8 +210,8 @@ export default function Sidebar({
         }`}
       >
         {/* ── Logo ──────────────────────────────────────────────────────── */}
-        <div className="flex items-center gap-2.5 border-b border-white/[0.06] shrink-0 h-[57px] px-4">
-          <span className="text-xl shrink-0 leading-none">⚡</span>
+        <div data-onboarding-target="logo" className="flex items-center gap-2.5 border-b border-white/[0.06] shrink-0 h-[57px] px-4">
+          <Logo className="w-6 h-6 shrink-0 text-[var(--logo-accent)]" />
           <span
             className={`text-[15px] font-bold bg-gradient-to-r from-violet-400 to-blue-400 bg-clip-text text-transparent whitespace-nowrap transition-[opacity,width] duration-150 ${
               collapsed ? "opacity-0 w-0 overflow-hidden" : "opacity-100"
@@ -196,13 +241,14 @@ export default function Sidebar({
           <div className="h-px bg-white/[0.05] my-1.5 shrink-0" />
 
           {/* Links */}
-          {NAV_ITEMS.map(({ href, label, icon, soon }) => {
+          {NAV_ITEMS.map(({ href, label, icon, soon, onboardingTarget }) => {
             const isActive = pathname.startsWith(href);
             return (
               <a
                 key={href}
                 href={soon ? undefined : href}
                 title={collapsed ? label : undefined}
+                data-onboarding-target={onboardingTarget}
                 onClick={soon ? (e) => e.preventDefault() : undefined}
                 className={`relative flex items-center gap-3 rounded-lg text-sm transition-all duration-150 shrink-0 ${
                   collapsed ? "w-10 h-10 mx-auto justify-center" : "px-3 py-2.5"
@@ -306,7 +352,12 @@ export default function Sidebar({
 
       {/* Paramètres modal */}
       {modalOpen && user && (
-        <ParametresModal user={user} onClose={() => setModalOpen(false)} />
+        <ParametresModal
+          user={user}
+          onClose={() => { setModalOpen(false); setModalShopifyMsg(null); setModalOpenIntegrations(false); }}
+          initialSection={modalOpenIntegrations ? "integrations" : undefined}
+          initialShopifyMessage={modalShopifyMsg}
+        />
       )}
     </>
   );
