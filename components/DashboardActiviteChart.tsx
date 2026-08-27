@@ -90,15 +90,15 @@ function ActiviteTooltip({ active, payload, label }: any) {
   ];
 
   return (
-    <div className="rounded-xl border border-white/10 bg-[#13131f] px-3 py-2.5 shadow-xl flex flex-col gap-1.5 min-w-[220px]">
-      <p className="text-[10px] text-zinc-500 mb-0.5">{label}</p>
+    <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 py-2.5 shadow-xl flex flex-col gap-1.5 min-w-[220px]">
+      <p className="text-[10px] text-[var(--text-faint)] mb-0.5">{label}</p>
       {rows.map(({ key, raw }) => {
         const serie = SERIES.find((s) => s.key === key)!;
         return (
           <p key={key} className="text-xs flex items-center justify-between gap-4" style={{ color: serie.color }}>
             <span>{serie.name}</span>
             <span className="font-semibold text-right">
-              {raw} <span className="text-zinc-500">({Math.round(point[key])}%)</span>
+              {raw} <span className="text-[var(--text-faint)]">({Math.round(point[key])}%)</span>
             </span>
           </p>
         );
@@ -107,7 +107,26 @@ function ActiviteTooltip({ active, payload, label }: any) {
   );
 }
 
+// recharts dessine ses axes/légende/brush en SVG avec des valeurs de couleur littérales
+// (fill/stroke), qui ne résolvent pas var(--token) de façon fiable — contrairement au
+// reste du composant (classNames Tailwind), ces quelques couleurs doivent être recalculées
+// en JS quand le thème change. Observe l'attribut data-theme plutôt que de dupliquer l'état
+// du toggle (posé dans ParametresModal, lu ici indépendamment via le DOM).
+function useIsLightTheme(): boolean {
+  const [isLight, setIsLight] = useState(false);
+  useEffect(() => {
+    const read = () => setIsLight(document.documentElement.getAttribute("data-theme") === "light");
+    read();
+    const observer = new MutationObserver(read);
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+    return () => observer.disconnect();
+  }, []);
+  return isLight;
+}
+
 export default function DashboardActiviteChart({ chartData }: { chartData: DashboardChartData | null }) {
+  const isLight = useIsLightTheme();
+
   // Seule requête restante ici : les incidents Shopify, non chargés par le parent. Démarre
   // dès le montage — pas besoin d'attendre chartData ni un auth.getUser() local, la route
   // gère déjà l'auth côté serveur et renvoie [] si non connecté (voir le .catch ci-dessous).
@@ -223,38 +242,45 @@ export default function DashboardActiviteChart({ chartData }: { chartData: Dashb
     };
   }, [chartData, incidents]);
 
+  // Valeurs recharts non-Tailwind, recalculées selon le thème (voir useIsLightTheme
+  // ci-dessus) — le reste du composant utilise déjà var(--token) via className.
+  const gridStroke = isLight ? "rgba(0,0,0,0.06)" : "rgba(255,255,255,0.04)";
+  const cursorStroke = isLight ? "rgba(0,0,0,0.08)" : "rgba(255,255,255,0.06)";
+  const axisTickFill = isLight ? "#a1a1aa" : "#52525b";
+  const legendColor = isLight ? "#52525b" : "#a1a1aa";
+
   return (
-    <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-6">
+    <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-6">
       <div className="mb-6">
-        <p className="text-sm font-semibold text-white">Activité — 30 derniers jours</p>
-        <p className="text-[11px] text-zinc-500 mt-0.5">
+        <p className="text-sm font-semibold text-[var(--text-primary)]">Activité — 30 derniers jours</p>
+        <p className="text-[11px] text-[var(--text-faint)] mt-0.5">
           Chaque courbe est normalisée en % de son propre maximum sur la période — survole un point pour voir la vraie valeur. Fais glisser les bornes sous le graphique pour zoomer.
         </p>
       </div>
 
       {loading ? (
         <div className="h-[320px] flex items-center justify-center">
-          <div className="w-5 h-5 rounded-full border-2 border-violet-500 border-t-transparent animate-spin" />
+          <div className="w-5 h-5 rounded-full border-2 border-[var(--accent)] border-t-transparent animate-spin" />
         </div>
       ) : !hasActivity ? (
         <div className="h-[220px] flex items-center justify-center">
-          <p className="text-zinc-600 text-sm">Pas encore d&apos;activité sur les 30 derniers jours.</p>
+          <p className="text-[var(--text-faint)] text-sm">Pas encore d&apos;activité sur les 30 derniers jours.</p>
         </div>
       ) : (
         <ResponsiveContainer width="100%" height={340}>
           <LineChart data={data} margin={{ top: 4, right: 8, left: -24, bottom: 0 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" vertical={false} />
-            <XAxis dataKey="dateLabel" tick={{ fill: "#52525b", fontSize: 10 }} axisLine={false} tickLine={false} interval={4} />
+            <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} vertical={false} />
+            <XAxis dataKey="dateLabel" tick={{ fill: axisTickFill, fontSize: 10 }} axisLine={false} tickLine={false} interval={4} />
             <YAxis
               domain={[0, 100]}
               tickFormatter={(v) => `${v}%`}
-              tick={{ fill: "#52525b", fontSize: 10 }}
+              tick={{ fill: axisTickFill, fontSize: 10 }}
               axisLine={false}
               tickLine={false}
               width={40}
             />
-            <Tooltip content={ActiviteTooltip} cursor={{ stroke: "rgba(255,255,255,0.06)", strokeWidth: 1 }} />
-            <Legend iconType="plainline" iconSize={16} wrapperStyle={{ fontSize: 11, color: "#a1a1aa", paddingTop: 12 }} />
+            <Tooltip content={ActiviteTooltip} cursor={{ stroke: cursorStroke, strokeWidth: 1 }} />
+            <Legend iconType="plainline" iconSize={16} wrapperStyle={{ fontSize: 11, color: legendColor, paddingTop: 12 }} />
             {SERIES.map((s) => (
               <Line
                 key={s.key}
@@ -267,7 +293,7 @@ export default function DashboardActiviteChart({ chartData }: { chartData: Dashb
                 activeDot={{ r: 3, strokeWidth: 0 }}
               />
             ))}
-            <Brush dataKey="dateLabel" height={24} stroke="#7c3aed" fill="#13131f" travellerWidth={8} />
+            <Brush dataKey="dateLabel" height={24} stroke="#7c3aed" fill={isLight ? "#ffffff" : "#13131f"} travellerWidth={8} />
           </LineChart>
         </ResponsiveContainer>
       )}

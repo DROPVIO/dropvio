@@ -5,6 +5,7 @@ import type { User } from "@supabase/supabase-js";
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
 import { useOnboarding } from "./onboarding/OnboardingProvider";
 import { UsageMeter } from "./UsageMeter";
+import { applyTheme, getStoredTheme, type Theme } from "@/lib/theme";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -18,7 +19,7 @@ type SectionId =
 const PLAN_META: Record<string, {
   label: string; badge: string; border: string; bg: string; glow: string; desc: string;
 }> = {
-  free:   { label: "Free",   badge: "bg-zinc-700 text-zinc-200",  border: "border-white/10",        bg: "bg-white/[0.02]",       glow: "",                                          desc: "Accès limité aux fonctionnalités de base." },
+  free:   { label: "Free",   badge: "bg-zinc-700 text-zinc-200",  border: "border-[var(--border-strong)]", bg: "bg-[var(--surface)]",  glow: "",                                          desc: "Accès limité aux fonctionnalités de base." },
   pro:    { label: "Pro",    badge: "bg-violet-600 text-white",   border: "border-violet-500/40",   bg: "bg-violet-500/[0.06]",  glow: "shadow-[0_0_28px_rgba(124,58,237,0.14)]",  desc: "Accès complet à tous les outils Dropvio." },
   agency: { label: "Agency", badge: "bg-amber-400 text-black",   border: "border-amber-400/40",    bg: "bg-amber-400/[0.05]",   glow: "shadow-[0_0_28px_rgba(251,191,36,0.11)]",  desc: "Multi-comptes, API et support prioritaire." },
 };
@@ -37,15 +38,15 @@ const PLAN_FEATURES: Record<string, string[]> = {
 
 // ─── Shared styles ───────────────────────────────────────────────────────────
 
-const FIELD = "w-full bg-[#09090f] border border-white/[0.08] rounded-lg px-3 py-2.5 text-sm text-white placeholder-zinc-600 focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500/40 transition";
-const LABEL = "block text-xs font-medium text-zinc-400 mb-1.5";
+const FIELD = "w-full bg-[var(--bg-sunken)] border border-[var(--border)] rounded-lg px-3 py-2.5 text-sm text-[var(--text-primary)] placeholder-[var(--text-faint)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)]/40 transition";
+const LABEL = "block text-xs font-medium text-[var(--text-muted)] mb-1.5";
 const BTN_V = "px-4 py-2 rounded-lg bg-violet-600 hover:bg-violet-500 text-white text-xs font-semibold transition disabled:opacity-40 disabled:cursor-not-allowed";
-const BTN_G = "px-4 py-2 rounded-lg bg-white/[0.06] border border-white/10 hover:bg-white/[0.10] text-white text-xs font-semibold transition disabled:opacity-40";
-const MSG_OK = "text-[11px] text-emerald-400";
-const MSG_ERR = "text-[11px] text-red-400";
-const SECTION_TITLE = "text-[15px] font-semibold text-white";
-const SECTION_SUB = "text-[12px] text-zinc-500 mt-0.5";
-const DIVIDER = "border-t border-white/5 my-5";
+const BTN_G = "px-4 py-2 rounded-lg bg-[var(--surface-2)] border border-[var(--border-strong)] hover:bg-[var(--surface-3)] text-[var(--text-primary)] text-xs font-semibold transition disabled:opacity-40";
+const MSG_OK = "text-[11px] text-[var(--success)]";
+const MSG_ERR = "text-[11px] text-[var(--danger)]";
+const SECTION_TITLE = "text-[15px] font-semibold text-[var(--text-primary)]";
+const SECTION_SUB = "text-[12px] text-[var(--text-faint)] mt-0.5";
+const DIVIDER = "border-t border-[var(--border)] my-5";
 const ROW = "flex items-center justify-between gap-4";
 
 // ─── Icons ───────────────────────────────────────────────────────────────────
@@ -125,7 +126,7 @@ function Toggle({ on, onChange }: { on: boolean; onChange: (v: boolean) => void 
     <button
       type="button"
       onClick={() => onChange(!on)}
-      className={`relative w-9 h-5 rounded-full transition-colors shrink-0 ${on ? "bg-violet-600" : "bg-white/10"}`}
+      className={`relative w-9 h-5 rounded-full transition-colors shrink-0 ${on ? "bg-violet-600" : "bg-[var(--surface-3)]"}`}
     >
       <span className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-all ${on ? "left-[18px]" : "left-0.5"}`} />
     </button>
@@ -178,6 +179,16 @@ export default function ParametresModal({
 
   // Preferences
   const [langue, setLangue] = useState("fr");
+  // Initialisé à "dark" (valeur par défaut de app/globals.css) puis synchronisé depuis
+  // localStorage au montage — le data-theme réel est déjà posé avant hydratation par le
+  // script inline de app/layout.tsx, cet état ne fait que refléter ce choix dans l'UI.
+  const [theme, setThemeState] = useState<Theme>("dark");
+  useEffect(() => { setThemeState(getStoredTheme()); }, []);
+
+  function handleThemeChange(next: Theme) {
+    setThemeState(next);
+    applyTheme(next);
+  }
   const [notifEmail, setNotifEmail] = useState(true);
   const [notifPush, setNotifPush] = useState(false);
   const [prefMsg, setPrefMsg] = useState<{ ok: boolean; text: string } | null>(null);
@@ -352,12 +363,12 @@ export default function ParametresModal({
       <div className={`rounded-xl border px-5 py-4 ${planMeta.border} ${planMeta.bg} ${planMeta.glow}`}>
         <div className={ROW}>
           <div>
-            <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-widest mb-1">Plan actuel</p>
+            <p className="text-[10px] font-semibold text-[var(--text-faint)] uppercase tracking-widest mb-1">Plan actuel</p>
             <div className="flex items-center gap-2">
-              <span className="text-xl font-bold text-white">{planMeta.label}</span>
+              <span className="text-xl font-bold text-[var(--text-primary)]">{planMeta.label}</span>
               <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${planMeta.badge}`}>{planMeta.label.toUpperCase()}</span>
             </div>
-            <p className="text-[11px] text-zinc-500 mt-1">{planMeta.desc}</p>
+            <p className="text-[11px] text-[var(--text-faint)] mt-1">{planMeta.desc}</p>
           </div>
           <button className={BTN_G}>Changer de plan</button>
         </div>
@@ -369,11 +380,11 @@ export default function ParametresModal({
           const meta = PLAN_META[p];
           const isCurrent = plan === p;
           return (
-            <div key={p} className={`rounded-xl border p-4 flex flex-col gap-3 transition ${isCurrent ? `${meta.border} ${meta.bg}` : "border-white/[0.06] bg-white/[0.01]"}`}>
+            <div key={p} className={`rounded-xl border p-4 flex flex-col gap-3 transition ${isCurrent ? `${meta.border} ${meta.bg}` : "border-[var(--border)] bg-[var(--surface-2)]"}`}>
               <div className="flex items-center justify-between">
                 <div>
-                  <span className="text-sm font-semibold text-white">{meta.label}</span>
-                  <p className="text-[11px] text-zinc-500 mt-0.5">{PLAN_PRICE[p]}</p>
+                  <span className="text-sm font-semibold text-[var(--text-primary)]">{meta.label}</span>
+                  <p className="text-[11px] text-[var(--text-faint)] mt-0.5">{PLAN_PRICE[p]}</p>
                 </div>
                 {isCurrent && (
                   <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${meta.badge}`}>ACTUEL</span>
@@ -381,14 +392,14 @@ export default function ParametresModal({
               </div>
               <ul className="flex flex-col gap-1.5">
                 {PLAN_FEATURES[p].map((f) => (
-                  <li key={f} className="flex items-start gap-1.5 text-[11px] text-zinc-400">
-                    <span className="text-emerald-500 mt-[1px] shrink-0">{Ico.check}</span>
+                  <li key={f} className="flex items-start gap-1.5 text-[11px] text-[var(--text-muted)]">
+                    <span className="text-[var(--success)] mt-[1px] shrink-0">{Ico.check}</span>
                     {f}
                   </li>
                 ))}
               </ul>
               {!isCurrent && (
-                <button className={`mt-auto w-full py-1.5 rounded-lg text-xs font-semibold transition ${p === "pro" ? "bg-violet-600 hover:bg-violet-500 text-white" : "bg-white/[0.06] border border-white/10 hover:bg-white/[0.10] text-white"}`}>
+                <button className={`mt-auto w-full py-1.5 rounded-lg text-xs font-semibold transition ${p === "pro" ? "bg-violet-600 hover:bg-violet-500 text-white" : "bg-[var(--surface-2)] border border-[var(--border-strong)] hover:bg-[var(--surface-3)] text-[var(--text-primary)]"}`}>
                   Choisir
                 </button>
               )}
@@ -409,8 +420,8 @@ export default function ParametresModal({
       <div className="flex flex-col gap-4">
         <div>
           <label className={LABEL}>Email</label>
-          <p className="bg-white/[0.03] border border-white/[0.06] rounded-lg px-3 py-2.5 text-sm text-zinc-400 truncate">{user.email}</p>
-          <p className="text-[11px] text-zinc-600 mt-1.5">L&apos;email ne peut pas être modifié pour le moment.</p>
+          <p className="bg-[var(--surface-2)] border border-[var(--border)] rounded-lg px-3 py-2.5 text-sm text-[var(--text-muted)] truncate">{user.email}</p>
+          <p className="text-[11px] text-[var(--text-faint)] mt-1.5">L&apos;email ne peut pas être modifié pour le moment.</p>
         </div>
 
         <div>
@@ -435,8 +446,8 @@ export default function ParametresModal({
       <div className={DIVIDER} />
 
       <div>
-        <p className="text-[12px] font-medium text-zinc-300 mb-0.5">Avatar</p>
-        <p className="text-[11px] text-zinc-600 mb-3">Les avatars personnalisés seront disponibles prochainement.</p>
+        <p className="text-[12px] font-medium text-[var(--text-muted)] mb-0.5">Avatar</p>
+        <p className="text-[11px] text-[var(--text-faint)] mb-3">Les avatars personnalisés seront disponibles prochainement.</p>
         <div className="flex items-center gap-3">
           <div className="w-12 h-12 rounded-xl bg-violet-600 flex items-center justify-center text-lg font-bold text-white">
             {(nomComplet || user.email || "?").slice(0, 2).toUpperCase()}
@@ -475,13 +486,13 @@ export default function ParametresModal({
       <div className={DIVIDER} />
 
       <div>
-        <p className="text-[12px] font-medium text-zinc-300 mb-3">Sessions actives</p>
-        <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] px-4 py-3 flex items-center justify-between">
+        <p className="text-[12px] font-medium text-[var(--text-muted)] mb-3">Sessions actives</p>
+        <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3 flex items-center justify-between">
           <div>
-            <p className="text-sm text-white">Session actuelle</p>
-            <p className="text-[11px] text-zinc-500 mt-0.5">Navigateur — {new Date().toLocaleDateString("fr-FR")}</p>
+            <p className="text-sm text-[var(--text-primary)]">Session actuelle</p>
+            <p className="text-[11px] text-[var(--text-faint)] mt-0.5">Navigateur — {new Date().toLocaleDateString("fr-FR")}</p>
           </div>
-          <span className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_6px_#10b981]" />
+          <span className="w-2 h-2 rounded-full bg-[var(--success)] shadow-[0_0_6px_var(--success)]" />
         </div>
       </div>
     </div>
@@ -497,13 +508,13 @@ export default function ParametresModal({
       <div className="flex flex-col gap-5">
         <div className={ROW}>
           <div>
-            <p className="text-sm text-white">Langue</p>
-            <p className="text-[11px] text-zinc-500 mt-0.5">Langue d&apos;affichage de l&apos;interface</p>
+            <p className="text-sm text-[var(--text-primary)]">Langue</p>
+            <p className="text-[11px] text-[var(--text-faint)] mt-0.5">Langue d&apos;affichage de l&apos;interface</p>
           </div>
           <select
             value={langue}
             onChange={(e) => setLangue(e.target.value)}
-            className="bg-[#09090f] border border-white/[0.08] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-violet-500 transition shrink-0"
+            className="bg-[var(--bg-sunken)] border border-[var(--border)] rounded-lg px-3 py-2 text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)] transition shrink-0"
           >
             <option value="fr">Français</option>
             <option value="en" disabled>English (bientôt)</option>
@@ -514,28 +525,46 @@ export default function ParametresModal({
 
         <div className={ROW}>
           <div>
-            <p className="text-sm text-white">Thème</p>
-            <p className="text-[11px] text-zinc-500 mt-0.5">Interface sombre — mode clair à venir</p>
+            <p className="text-sm text-[var(--text-primary)]">Thème</p>
+            <p className="text-[11px] text-[var(--text-faint)] mt-0.5">Sombre ou clair — ton choix est mémorisé sur cet appareil</p>
           </div>
-          <span className="text-xs text-zinc-500 bg-white/[0.04] border border-white/[0.06] px-3 py-1.5 rounded-lg">Sombre</span>
+          <div className="inline-flex gap-1 p-1 rounded-lg bg-[var(--surface-2)] border border-[var(--border)] shrink-0">
+            {([
+              { id: "dark", label: "Sombre" },
+              { id: "light", label: "Clair" },
+            ] as const).map((opt) => (
+              <button
+                key={opt.id}
+                type="button"
+                onClick={() => handleThemeChange(opt.id)}
+                className={`px-3 py-1.5 rounded-md text-xs font-semibold transition ${
+                  theme === opt.id
+                    ? "bg-violet-600 text-white"
+                    : "text-[var(--text-faint)] hover:text-[var(--text-muted)]"
+                }`}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
         </div>
 
         <div className={DIVIDER} />
 
         <div>
-          <p className="text-[12px] font-medium text-zinc-300 mb-4">Notifications</p>
+          <p className="text-[12px] font-medium text-[var(--text-muted)] mb-4">Notifications</p>
           <div className="flex flex-col gap-4">
             <div className={ROW}>
               <div>
-                <p className="text-sm text-white">Emails de suivi</p>
-                <p className="text-[11px] text-zinc-500 mt-0.5">Nouveaux produits gagnants, mises à jour Dropvio</p>
+                <p className="text-sm text-[var(--text-primary)]">Emails de suivi</p>
+                <p className="text-[11px] text-[var(--text-faint)] mt-0.5">Nouveaux produits gagnants, mises à jour Dropvio</p>
               </div>
               <Toggle on={notifEmail} onChange={setNotifEmail} />
             </div>
             <div className={ROW}>
               <div>
-                <p className="text-sm text-white">Notifications push</p>
-                <p className="text-[11px] text-zinc-500 mt-0.5">Alertes tendances en temps réel</p>
+                <p className="text-sm text-[var(--text-primary)]">Notifications push</p>
+                <p className="text-[11px] text-[var(--text-faint)] mt-0.5">Alertes tendances en temps réel</p>
               </div>
               <Toggle on={notifPush} onChange={setNotifPush} />
             </div>
@@ -546,8 +575,8 @@ export default function ParametresModal({
 
         <div className={ROW}>
           <div>
-            <p className="text-sm text-white">Tutoriel de bienvenue</p>
-            <p className="text-[11px] text-zinc-500 mt-0.5">Revoir les bulles d&apos;aide qui présentent les outils Dropvio</p>
+            <p className="text-sm text-[var(--text-primary)]">Tutoriel de bienvenue</p>
+            <p className="text-[11px] text-[var(--text-faint)] mt-0.5">Revoir les bulles d&apos;aide qui présentent les outils Dropvio</p>
           </div>
           <button
             className={`${BTN_G} shrink-0`}
@@ -581,43 +610,43 @@ export default function ParametresModal({
       </div>
 
       {usageLoading ? (
-        <p className="text-xs text-zinc-500">Chargement de ton utilisation…</p>
+        <p className="text-xs text-[var(--text-faint)]">Chargement de ton utilisation…</p>
       ) : usageError ? (
-        <div className="rounded-xl bg-red-500/10 border border-red-500/20 px-4 py-3 text-red-400 text-sm">{usageError}</div>
+        <div className="rounded-xl bg-[var(--danger)]/10 border border-[var(--danger)]/20 px-4 py-3 text-[var(--danger)] text-sm">{usageError}</div>
       ) : usage ? (
         <>
           <div className="flex flex-col gap-3">
-            <p className="text-[11px] font-semibold text-zinc-500 uppercase tracking-widest">Ce mois-ci</p>
+            <p className="text-[11px] font-semibold text-[var(--text-faint)] uppercase tracking-widest">Ce mois-ci</p>
             {usage.monthly.map((m) => (
               <UsageMeter key={m.key} label={m.label} used={m.used} max={m.max} />
             ))}
           </div>
 
           <div className="flex flex-col gap-3">
-            <p className="text-[11px] font-semibold text-zinc-500 uppercase tracking-widest">Au total</p>
+            <p className="text-[11px] font-semibold text-[var(--text-faint)] uppercase tracking-widest">Au total</p>
             {usage.total.map((m) => (
               <UsageMeter key={m.key} label={m.label} used={m.used} max={m.max} />
             ))}
           </div>
 
           <div className="flex flex-col gap-3">
-            <p className="text-[11px] font-semibold text-zinc-500 uppercase tracking-widest">Catalogue & boutiques</p>
-            <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] px-4 py-3.5 flex items-center justify-between gap-4">
+            <p className="text-[11px] font-semibold text-[var(--text-faint)] uppercase tracking-widest">Catalogue & boutiques</p>
+            <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3.5 flex items-center justify-between gap-4">
               <div>
-                <p className="text-sm font-medium text-white">Produits gagnants accessibles</p>
-                <p className="text-[11px] text-zinc-500 mt-0.5">Nombre de produits consultables dans le catalogue.</p>
+                <p className="text-sm font-medium text-[var(--text-primary)]">Produits gagnants accessibles</p>
+                <p className="text-[11px] text-[var(--text-faint)] mt-0.5">Nombre de produits consultables dans le catalogue.</p>
               </div>
               <p className="text-xs font-semibold shrink-0">
                 {usage.catalogue.max === null ? (
-                  <span className="text-emerald-400">Catalogue complet</span>
+                  <span className="text-[var(--success)]">Catalogue complet</span>
                 ) : (
-                  <span className="text-zinc-300">{usage.catalogue.max} premiers produits</span>
+                  <span className="text-[var(--text-muted)]">{usage.catalogue.max} premiers produits</span>
                 )}
               </p>
             </div>
 
             {usage.boutiques.length === 0 ? (
-              <p className="text-[11px] text-zinc-600">Tu n&apos;as pas encore de boutique — crée-en une depuis « Mode boutique ».</p>
+              <p className="text-[11px] text-[var(--text-faint)]">Tu n&apos;as pas encore de boutique — crée-en une depuis « Mode boutique ».</p>
             ) : (
               usage.boutiques.map((b) => (
                 <UsageMeter key={b.id} label={`Produits de « ${b.nom} »`} used={b.used} max={b.max} />
@@ -637,31 +666,31 @@ export default function ParametresModal({
       </div>
 
       {/* Shopify */}
-      <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-5 flex flex-col gap-4">
+      <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5 flex flex-col gap-4">
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-xl bg-[#96bf48]/10 border border-[#96bf48]/20 flex items-center justify-center text-base">🛍️</div>
           <div>
-            <p className="text-sm font-medium text-white">Shopify</p>
-            <p className="text-[11px] text-zinc-500">Pousse tes produits, collections et designs directement sur ta boutique</p>
+            <p className="text-sm font-medium text-[var(--text-primary)]">Shopify</p>
+            <p className="text-[11px] text-[var(--text-faint)]">Pousse tes produits, collections et designs directement sur ta boutique</p>
           </div>
         </div>
 
         {shopifyStatusLoading ? (
-          <p className="text-[11px] text-zinc-500">Vérification de la connexion…</p>
+          <p className="text-[11px] text-[var(--text-faint)]">Vérification de la connexion…</p>
         ) : !shopifyStatus?.configured ? (
-          <p className="text-[11px] text-amber-400">
+          <p className="text-[11px] text-[var(--warning)]">
             L&apos;intégration Shopify n&apos;est pas encore configurée côté serveur (clés API manquantes). Contacte le support si le problème persiste.
           </p>
         ) : shopifyStatus.connected ? (
           <>
-            <div className="rounded-lg border border-emerald-500/20 bg-emerald-500/[0.06] px-3 py-2.5 flex items-center gap-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0" />
-              <p className="text-xs text-emerald-300">
+            <div className="rounded-lg border border-[var(--success)]/20 bg-[var(--success)]/[0.06] px-3 py-2.5 flex items-center gap-2">
+              <span className="w-1.5 h-1.5 rounded-full bg-[var(--success)] shrink-0" />
+              <p className="text-xs text-[var(--success)]">
                 Connecté à <span className="font-semibold">{shopifyStatus.shop_name || shopifyStatus.shop_domain}</span>
-                {shopifyStatus.shop_name ? <span className="text-emerald-400/70"> ({shopifyStatus.shop_domain})</span> : null}
+                {shopifyStatus.shop_name ? <span className="text-[var(--success)]/70"> ({shopifyStatus.shop_domain})</span> : null}
               </p>
             </div>
-            <p className="text-[11px] text-zinc-500">
+            <p className="text-[11px] text-[var(--text-faint)]">
               {shopifyStatus.disputesScopeGranted
                 ? "Remboursements, retours et litiges (chargebacks) synchronisés automatiquement."
                 : "Remboursements et retours synchronisés automatiquement. Litiges non disponibles pour cette boutique (Shopify Payments non activé, ou accès refusé à la connexion)."}
@@ -676,9 +705,9 @@ export default function ParametresModal({
         ) : (
           <>
             {shopifyStatus.reconnectRequired && (
-              <div className="rounded-lg border border-amber-500/20 bg-amber-500/[0.06] px-3 py-2.5 flex items-center gap-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0" />
-                <p className="text-xs text-amber-300">
+              <div className="rounded-lg border border-[var(--warning)]/20 bg-[var(--warning)]/[0.06] px-3 py-2.5 flex items-center gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-[var(--warning)] shrink-0" />
+                <p className="text-xs text-[var(--warning)]">
                   Ta connexion Shopify n&apos;est plus active — reconnecte ta boutique pour continuer à utiliser le
                   push produits et le suivi des remboursements/litiges.
                 </p>
@@ -713,21 +742,21 @@ export default function ParametresModal({
       </div>
 
       {/* AliExpress */}
-      <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-5 flex flex-col gap-3">
+      <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-5 flex flex-col gap-3">
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center text-base">📦</div>
           <div>
-            <p className="text-sm font-medium text-white">AliExpress</p>
-            <p className="text-[11px] text-zinc-500">Importe tes produits depuis AliExpress</p>
+            <p className="text-sm font-medium text-[var(--text-primary)]">AliExpress</p>
+            <p className="text-[11px] text-[var(--text-faint)]">Importe tes produits depuis AliExpress</p>
           </div>
-          <span className="ml-auto text-[10px] font-bold bg-white/[0.05] border border-white/[0.08] text-zinc-400 px-2 py-0.5 rounded-full">Connecté</span>
+          <span className="ml-auto text-[10px] font-bold bg-[var(--surface-2)] border border-[var(--border)] text-[var(--text-muted)] px-2 py-0.5 rounded-full">Connecté</span>
         </div>
-        <p className="text-[11px] text-zinc-600">L&apos;import par URL est disponible directement dans le Site Builder.</p>
+        <p className="text-[11px] text-[var(--text-faint)]">L&apos;import par URL est disponible directement dans le Site Builder.</p>
       </div>
 
       {/* Coming soon */}
-      <div className="rounded-xl border border-dashed border-white/[0.06] p-4 text-center">
-        <p className="text-xs text-zinc-600">Zapier, Make, Stripe — prochainement disponibles</p>
+      <div className="rounded-xl border border-dashed border-[var(--border)] p-4 text-center">
+        <p className="text-xs text-[var(--text-faint)]">Zapier, Make, Stripe — prochainement disponibles</p>
       </div>
     </div>
   );
@@ -739,27 +768,27 @@ export default function ParametresModal({
         <p className={SECTION_SUB}>Historique de paiements et gestion de l&apos;abonnement.</p>
       </div>
 
-      <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-4 flex flex-col gap-3">
+      <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4 flex flex-col gap-3">
         <div className={ROW}>
-          <p className="text-xs text-zinc-500 uppercase tracking-wider font-medium">Plan actuel</p>
+          <p className="text-xs text-[var(--text-faint)] uppercase tracking-wider font-medium">Plan actuel</p>
           <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${planMeta.badge}`}>{planMeta.label.toUpperCase()}</span>
         </div>
         <div className={DIVIDER} />
         <div className={ROW}>
-          <p className="text-sm text-zinc-400">Prochain paiement</p>
-          <p className="text-sm text-zinc-500">{plan === "free" ? "—" : "Non configuré"}</p>
+          <p className="text-sm text-[var(--text-muted)]">Prochain paiement</p>
+          <p className="text-sm text-[var(--text-faint)]">{plan === "free" ? "—" : "Non configuré"}</p>
         </div>
         <div className={ROW}>
-          <p className="text-sm text-zinc-400">Moyen de paiement</p>
-          <p className="text-sm text-zinc-500">{plan === "free" ? "—" : "Non configuré"}</p>
+          <p className="text-sm text-[var(--text-muted)]">Moyen de paiement</p>
+          <p className="text-sm text-[var(--text-faint)]">{plan === "free" ? "—" : "Non configuré"}</p>
         </div>
       </div>
 
       <div>
-        <p className="text-[12px] font-medium text-zinc-300 mb-3">Historique des factures</p>
-        <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] px-4 py-8 text-center">
-          <p className="text-sm text-zinc-600">Aucune facture pour le moment.</p>
-          <p className="text-[11px] text-zinc-700 mt-1">Les factures Stripe apparaîtront ici après le premier paiement.</p>
+        <p className="text-[12px] font-medium text-[var(--text-muted)] mb-3">Historique des factures</p>
+        <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-8 text-center">
+          <p className="text-sm text-[var(--text-faint)]">Aucune facture pour le moment.</p>
+          <p className="text-[11px] text-[var(--text-faint)] mt-1">Les factures Stripe apparaîtront ici après le premier paiement.</p>
         </div>
       </div>
 
@@ -804,21 +833,21 @@ export default function ParametresModal({
             href={href}
             target="_blank"
             rel="noopener noreferrer"
-            className="rounded-xl border border-white/[0.06] bg-white/[0.02] px-4 py-3.5 flex items-center justify-between gap-4 hover:bg-white/[0.05] transition group"
+            className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3.5 flex items-center justify-between gap-4 hover:bg-[var(--surface-2)] transition group"
           >
             <div>
-              <p className="text-sm text-white group-hover:text-violet-300 transition">{title}</p>
-              <p className="text-[11px] text-zinc-500 mt-0.5">{desc}</p>
+              <p className="text-sm text-[var(--text-primary)] group-hover:text-violet-300 transition">{title}</p>
+              <p className="text-[11px] text-[var(--text-faint)] mt-0.5">{desc}</p>
             </div>
-            <span className="text-zinc-600 group-hover:text-violet-400 transition shrink-0">{Ico.ext}</span>
+            <span className="text-[var(--text-faint)] group-hover:text-violet-400 transition shrink-0">{Ico.ext}</span>
           </a>
         ))}
       </div>
 
       <div className={DIVIDER} />
 
-      <div className="text-[11px] text-zinc-600 leading-relaxed">
-        Pour toute question légale, contacte-nous à <span className="text-zinc-400">legal@dropvio.com</span>.
+      <div className="text-[11px] text-[var(--text-faint)] leading-relaxed">
+        Pour toute question légale, contacte-nous à <span className="text-[var(--text-muted)]">legal@dropvio.com</span>.
         Dropvio est conforme au RGPD européen.
       </div>
     </div>
@@ -831,10 +860,10 @@ export default function ParametresModal({
         <p className={SECTION_SUB}>Actions irréversibles sur ton compte.</p>
       </div>
 
-      <div className="rounded-xl border border-red-500/20 bg-red-500/[0.03] p-5 flex flex-col gap-4">
+      <div className="rounded-xl border border-[var(--danger)]/20 bg-[var(--danger)]/[0.03] p-5 flex flex-col gap-4">
         <div>
-          <p className="text-sm font-medium text-red-400">Supprimer mon compte</p>
-          <p className="text-[11px] text-zinc-500 mt-1 leading-relaxed">
+          <p className="text-sm font-medium text-[var(--danger)]">Supprimer mon compte</p>
+          <p className="text-[11px] text-[var(--text-faint)] mt-1 leading-relaxed">
             Cette action est définitive et irréversible. Toutes tes données seront supprimées :
             produits, sites générés, abonnement annulé immédiatement.
           </p>
@@ -843,13 +872,13 @@ export default function ParametresModal({
         {deletePhase === "idle" ? (
           <button
             onClick={() => setDeletePhase("confirm")}
-            className="self-start px-4 py-2 rounded-lg border border-red-500/30 text-red-400 text-xs font-semibold hover:bg-red-500/10 transition"
+            className="self-start px-4 py-2 rounded-lg border border-[var(--danger)]/30 text-[var(--danger)] text-xs font-semibold hover:bg-[var(--danger)]/10 transition"
           >
             Supprimer mon compte
           </button>
         ) : (
           <div className="flex flex-col gap-3">
-            <p className="text-xs text-red-300 font-medium">Tu es sûr ? Cette action ne peut pas être annulée.</p>
+            <p className="text-xs text-[var(--danger)] font-medium">Tu es sûr ? Cette action ne peut pas être annulée.</p>
             <div className="flex gap-2">
               <button
                 onClick={() => setDeletePhase("idle")}
@@ -869,9 +898,9 @@ export default function ParametresModal({
         )}
       </div>
 
-      <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] px-4 py-3 text-[11px] text-zinc-600">
+      <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3 text-[11px] text-[var(--text-faint)]">
         Tu veux juste faire une pause ? Tu peux&nbsp;
-        <button className="text-zinc-400 underline underline-offset-2 hover:text-white transition">
+        <button className="text-[var(--text-muted)] underline underline-offset-2 hover:text-[var(--text-primary)] transition">
           suspendre ton compte
         </button>
         &nbsp;sans le supprimer.
@@ -901,20 +930,20 @@ export default function ParametresModal({
     >
       <div className="absolute inset-0 bg-black/70 backdrop-blur-[6px]" />
 
-      <div className="relative z-10 w-full max-w-[820px] bg-[#0f0f1a] border border-white/[0.07] rounded-2xl shadow-2xl flex flex-col"
+      <div className="relative z-10 w-full max-w-[820px] bg-[var(--surface)] border border-[var(--border)] rounded-2xl shadow-2xl flex flex-col"
         style={{ height: "80vh" }}>
 
         {/* ── Header ─────────────────────────────────────────────────────── */}
-        <div className="flex items-center justify-between px-5 py-3.5 border-b border-white/[0.06] shrink-0">
+        <div className="flex items-center justify-between px-5 py-3.5 border-b border-[var(--border)] shrink-0">
           <div className="flex items-center gap-2.5">
             <div className="w-7 h-7 rounded-lg bg-violet-500/15 border border-violet-500/20 flex items-center justify-center">
               {Ico.preferences}
             </div>
-            <h2 className="text-sm font-semibold text-white">Paramètres du compte</h2>
+            <h2 className="text-sm font-semibold text-[var(--text-primary)]">Paramètres du compte</h2>
           </div>
           <button
             onClick={onClose}
-            className="w-7 h-7 rounded-lg flex items-center justify-center text-zinc-500 hover:text-white hover:bg-white/[0.06] transition"
+            className="w-7 h-7 rounded-lg flex items-center justify-center text-[var(--text-faint)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-3)] transition"
             aria-label="Fermer"
           >
             <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
@@ -927,7 +956,7 @@ export default function ParametresModal({
         <div className="flex flex-1 min-h-0">
 
           {/* Left nav */}
-          <nav className="w-[196px] shrink-0 border-r border-white/[0.06] flex flex-col p-2 overflow-y-auto">
+          <nav className="w-[196px] shrink-0 border-r border-[var(--border)] flex flex-col p-2 overflow-y-auto">
             <div className="flex flex-col gap-0.5">
               {NAV_ITEMS.map(({ id, label, icon }) => {
                 const isActive = activeSection === id;
@@ -940,11 +969,11 @@ export default function ParametresModal({
                     }}
                     className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium text-left transition w-full ${
                       isActive
-                        ? "bg-white/[0.08] text-white"
-                        : "text-zinc-400 hover:text-zinc-200 hover:bg-white/[0.04]"
+                        ? "bg-[var(--surface-3)] text-[var(--text-primary)]"
+                        : "text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-2)]"
                     }`}
                   >
-                    <span className={isActive ? "text-violet-400" : "text-zinc-500"}>{icon}</span>
+                    <span className={isActive ? "text-[var(--accent)]" : "text-[var(--text-faint)]"}>{icon}</span>
                     {label}
                   </button>
                 );
@@ -958,8 +987,8 @@ export default function ParametresModal({
               onClick={() => setActiveSection("danger")}
               className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium text-left transition w-full mt-1 ${
                 activeSection === "danger"
-                  ? "bg-red-500/10 text-red-400"
-                  : "text-red-600/50 hover:text-red-500/80 hover:bg-red-500/[0.05]"
+                  ? "bg-[var(--danger)]/10 text-[var(--danger)]"
+                  : "text-[var(--danger)]/50 hover:text-[var(--danger)]/80 hover:bg-[var(--danger)]/[0.05]"
               }`}
             >
               <span>{Ico.danger}</span>

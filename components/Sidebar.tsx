@@ -121,9 +121,9 @@ const NAV_ITEMS: NavItem[] = [
 ];
 
 const PLAN_CLS: Record<string, string> = {
-  free:   "text-zinc-500",
-  pro:    "text-violet-400",
-  agency: "text-amber-400",
+  free:   "text-[var(--text-faint)]",
+  pro:    "text-[var(--accent)]",
+  agency: "text-[var(--warning)]",
 };
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -206,7 +206,7 @@ export default function Sidebar({
   return (
     <>
       <aside
-        className={`fixed top-0 left-0 h-screen bg-[#09090f] border-r border-white/[0.06] flex flex-col z-40 transition-[width] duration-200 ease-in-out overflow-hidden ${
+        className={`fixed top-0 left-0 h-screen bg-[var(--bg-sunken)] border-r border-[var(--border)] flex flex-col z-40 transition-[width] duration-200 ease-in-out overflow-hidden ${
           collapsed ? "w-16" : "w-[260px]"
         }`}
       >
@@ -214,11 +214,11 @@ export default function Sidebar({
         <Link
           href="/dashboard"
           data-onboarding-target="logo"
-          className="flex items-center gap-2.5 border-b border-white/[0.06] shrink-0 h-[57px] px-4 hover:bg-white/[0.03] transition-colors"
+          className="flex items-center gap-2.5 border-b border-[var(--border)] shrink-0 h-[57px] px-4 hover:bg-[var(--surface-2)] transition-colors"
         >
           <Logo className="w-6 h-6 shrink-0 text-[var(--logo-accent)]" />
           <span
-            className={`text-[15px] font-bold bg-gradient-to-r from-violet-400 to-blue-400 bg-clip-text text-transparent whitespace-nowrap transition-[opacity,width] duration-150 ${
+            className={`text-[15px] font-bold bg-gradient-to-r from-[var(--accent)] to-[var(--accent-secondary)] bg-clip-text text-transparent whitespace-nowrap transition-[opacity,width] duration-150 ${
               collapsed ? "opacity-0 w-0 overflow-hidden" : "opacity-100"
             }`}
           >
@@ -243,7 +243,7 @@ export default function Sidebar({
             {!collapsed && <span className="whitespace-nowrap">Nouvelle génération</span>}
           </button>
 
-          <div className="h-px bg-white/[0.05] my-1.5 shrink-0" />
+          <div className="h-px bg-[var(--border)] my-1.5 shrink-0" />
 
           {/* Links */}
           {NAV_ITEMS.map(({ href, label, icon, soon, onboardingTarget }) => {
@@ -259,18 +259,18 @@ export default function Sidebar({
                   collapsed ? "w-10 h-10 mx-auto justify-center" : "px-3 py-2.5"
                 } ${
                   soon
-                    ? "opacity-40 cursor-not-allowed text-zinc-500"
+                    ? "opacity-40 cursor-not-allowed text-[var(--text-faint)]"
                     : isActive
-                    ? "bg-white/[0.07] text-white"
-                    : "text-zinc-400 hover:text-white hover:bg-white/[0.04]"
+                    ? "bg-[var(--surface-3)] text-[var(--text-primary)]"
+                    : "text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-2)]"
                 }`}
               >
                 {/* Active pill */}
                 {isActive && !collapsed && (
-                  <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 bg-violet-500 rounded-r-full" />
+                  <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 bg-[var(--accent)] rounded-r-full" />
                 )}
 
-                <span className={`shrink-0 ${isActive ? "text-violet-400" : soon ? "text-zinc-600" : "text-zinc-500"}`}>
+                <span className={`shrink-0 ${isActive ? "text-[var(--accent)]" : "text-[var(--text-faint)]"}`}>
                   {icon}
                 </span>
 
@@ -278,7 +278,7 @@ export default function Sidebar({
                   <>
                     <span className="flex-1 whitespace-nowrap">{label}</span>
                     {soon && (
-                      <span className="text-[9px] font-bold bg-white/[0.05] border border-white/[0.07] text-zinc-600 px-1.5 py-0.5 rounded-full">
+                      <span className="text-[9px] font-bold bg-[var(--surface-2)] border border-[var(--border)] text-[var(--text-faint)] px-1.5 py-0.5 rounded-full">
                         bientôt
                       </span>
                     )}
@@ -289,15 +289,15 @@ export default function Sidebar({
           })}
 
           {/* Paramètres */}
-          <div className="h-px bg-white/[0.05] my-1 shrink-0" />
+          <div className="h-px bg-[var(--border)] my-1 shrink-0" />
           <button
             onClick={() => setModalOpen(true)}
             title={collapsed ? "Paramètres" : undefined}
-            className={`relative flex items-center gap-3 rounded-lg text-sm transition-all duration-150 shrink-0 text-zinc-400 hover:text-white hover:bg-white/[0.04] ${
+            className={`relative flex items-center gap-3 rounded-lg text-sm transition-all duration-150 shrink-0 text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-2)] ${
               collapsed ? "w-10 h-10 mx-auto justify-center" : "px-3 py-2.5"
             }`}
           >
-            <span className="shrink-0 text-zinc-500"><IcoSettings /></span>
+            <span className="shrink-0 text-[var(--text-faint)]"><IcoSettings /></span>
             {!collapsed && <span className="flex-1 whitespace-nowrap text-left">Paramètres</span>}
           </button>
         </div>
@@ -307,7 +307,7 @@ export default function Sidebar({
           <button
             onClick={onCollapse}
             title={collapsed ? "Agrandir la sidebar" : "Réduire la sidebar"}
-            className={`flex items-center gap-2 rounded-lg text-[11px] text-zinc-600 hover:text-zinc-300 hover:bg-white/[0.04] transition h-8 ${
+            className={`flex items-center gap-2 rounded-lg text-[11px] text-[var(--text-faint)] hover:text-[var(--text-muted)] hover:bg-[var(--surface-2)] transition h-8 ${
               collapsed ? "w-10 justify-center" : "w-full px-3"
             }`}
           >
@@ -321,12 +321,12 @@ export default function Sidebar({
         </div>
 
         {/* ── User block ────────────────────────────────────────────────── */}
-        <div className="border-t border-white/[0.06] p-2 shrink-0">
+        <div className="border-t border-[var(--border)] p-2 shrink-0">
           {user && (
             <button
               onClick={() => setModalOpen(true)}
               title={collapsed ? `${displayName} · Paramètres` : undefined}
-              className={`flex items-center gap-2.5 w-full rounded-xl hover:bg-white/[0.05] transition-colors px-2 py-2 group text-left ${
+              className={`flex items-center gap-2.5 w-full rounded-xl hover:bg-[var(--surface-2)] transition-colors px-2 py-2 group text-left ${
                 collapsed ? "justify-center" : ""
               }`}
             >
@@ -338,14 +338,14 @@ export default function Sidebar({
               {!collapsed && (
                 <>
                   <div className="flex-1 min-w-0">
-                    <p className="text-[12px] font-medium text-zinc-200 truncate leading-snug">
+                    <p className="text-[12px] font-medium text-[var(--text-primary)] truncate leading-snug">
                       {displayName}
                     </p>
                     <p className={`text-[10px] leading-snug ${PLAN_CLS[planKey] ?? PLAN_CLS.free}`}>
                       {planLabel}
                     </p>
                   </div>
-                  <span className="text-zinc-600 group-hover:text-zinc-400 transition-colors shrink-0">
+                  <span className="text-[var(--text-faint)] group-hover:text-[var(--text-muted)] transition-colors shrink-0">
                     <IcoGear />
                   </span>
                 </>

@@ -18,10 +18,13 @@ type ShopifyStatus = {
 type CardStat = { label: string; value: string; accent?: string };
 type CardConfig = { id: string; href: string; icon: string; title: string; stats: CardStat[] };
 
+// Badges opaques (pas de wash translucide) — un texte pâle sur fond teinté à faible
+// opacité (l'ancien style) n'a de contraste correct que sur un fond sombre ; ces valeurs
+// reprennent celles, déjà éprouvées dans les deux thèmes, de ParametresModal.tsx.
 const PLAN_META: Record<string, { label: string; badge: string; border: string }> = {
-  free:   { label: "Free",   badge: "text-zinc-300 bg-zinc-700/50",    border: "border-white/10" },
-  pro:    { label: "Pro",    badge: "text-violet-300 bg-violet-600/20", border: "border-violet-500/30" },
-  agency: { label: "Agency", badge: "text-amber-300 bg-amber-500/15",  border: "border-amber-500/30" },
+  free:   { label: "Free",   badge: "bg-zinc-700 text-zinc-200",  border: "border-white/10" },
+  pro:    { label: "Pro",    badge: "bg-violet-600 text-white",   border: "border-violet-500/30" },
+  agency: { label: "Agency", badge: "bg-amber-400 text-black",    border: "border-amber-500/30" },
 };
 
 function fmt(n: number): string {
@@ -170,21 +173,21 @@ export default function DashboardPage() {
       label: "Sites ce mois",
       value: String(sitesMois),
       sub: "landing pages créées",
-      accent: "text-violet-400",
+      accent: "text-[var(--accent)]",
     },
     {
       id: "total",
       label: "Sites au total",
       value: fmt(sitesTotal),
       sub: "toutes périodes",
-      accent: "text-blue-400",
+      accent: "text-[var(--accent-secondary)]",
     },
     {
       id: "produits",
       label: "Produits disponibles",
       value: fmt(produitsTotal),
       sub: "dans le catalogue",
-      accent: "text-emerald-400",
+      accent: "text-[var(--success)]",
     },
     {
       id: "plan",
@@ -265,21 +268,21 @@ export default function DashboardPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-[#0d0d14] px-8 py-10">
+    <div className="min-h-screen bg-[var(--bg)] px-8 py-10">
       <div className="max-w-4xl mx-auto flex flex-col gap-8">
 
         {loading ? (
           <div className="flex items-center justify-center py-20">
-            <div className="w-5 h-5 rounded-full border-2 border-violet-500 border-t-transparent animate-spin" />
+            <div className="w-5 h-5 rounded-full border-2 border-[var(--accent)] border-t-transparent animate-spin" />
           </div>
         ) : (
           <>
             {/* ── Welcome ─────────────────────────────────────────────────── */}
             <div>
-              <h1 className="text-2xl font-bold text-white">
+              <h1 className="text-2xl font-bold text-[var(--text-primary)]">
                 {greeting()}, {prenom} 👋
               </h1>
-              <p className="text-zinc-500 text-sm mt-1.5">
+              <p className="text-[var(--text-faint)] text-sm mt-1.5">
                 Voici un aperçu de ton activité sur Dropvio.
               </p>
             </div>
@@ -288,14 +291,14 @@ export default function DashboardPage() {
             {shopifyStatus?.reconnectRequired && (
               <a
                 href="/dashboard?openIntegrations=1"
-                className="rounded-2xl border border-amber-500/25 bg-amber-500/[0.07] px-5 py-4 flex items-center gap-3 hover:bg-amber-500/[0.1] transition-colors"
+                className="rounded-2xl border border-[var(--warning)]/25 bg-[var(--warning)]/[0.07] px-5 py-4 flex items-center gap-3 hover:bg-[var(--warning)]/10 transition-colors"
               >
                 <span className="text-lg shrink-0">⚠️</span>
                 <div className="min-w-0">
-                  <p className="text-sm font-medium text-amber-200">
+                  <p className="text-sm font-medium text-[var(--warning)]">
                     Ta connexion Shopify n&apos;est plus active
                   </p>
-                  <p className="text-[11px] text-amber-300/80 mt-0.5">
+                  <p className="text-[11px] text-[var(--warning)]/80 mt-0.5">
                     Le push produits et le suivi des remboursements/litiges sont en pause jusqu&apos;à la reconnexion. Clique ici pour reconnecter ta boutique.
                   </p>
                 </div>
@@ -307,9 +310,9 @@ export default function DashboardPage() {
               {METRICS.map((m) => (
                 <div
                   key={m.id}
-                  className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-5 flex flex-col gap-2"
+                  className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 flex flex-col gap-2"
                 >
-                  <p className="text-[10px] font-semibold uppercase tracking-widest text-zinc-600">
+                  <p className="text-[10px] font-semibold uppercase tracking-widest text-[var(--text-faint)]">
                     {m.label}
                   </p>
                   {"badge" in m && m.badge ? (
@@ -322,7 +325,7 @@ export default function DashboardPage() {
                     </span>
                   )}
                   {m.sub && (
-                    <p className="text-[11px] text-zinc-600 leading-relaxed">{m.sub}</p>
+                    <p className="text-[11px] text-[var(--text-faint)] leading-relaxed">{m.sub}</p>
                   )}
                 </div>
               ))}
@@ -341,25 +344,25 @@ export default function DashboardPage() {
         {/* ── Dashboard complet ─────────────────────────────────────────── */}
         <div>
           <div className="mb-4">
-            <p className="text-sm font-semibold text-white">Dashboard complet</p>
-            <p className="text-[11px] text-zinc-500 mt-0.5">Tous tes tableaux de bord Dropvio, en un seul endroit.</p>
+            <p className="text-sm font-semibold text-[var(--text-primary)]">Dashboard complet</p>
+            <p className="text-[11px] text-[var(--text-faint)] mt-0.5">Tous tes tableaux de bord Dropvio, en un seul endroit.</p>
           </div>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {CARDS.map((card) => (
               <Link
                 key={card.id}
                 href={card.href}
-                className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-5 flex flex-col gap-4 hover:border-white/[0.12] hover:bg-white/[0.03] transition-colors"
+                className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 flex flex-col gap-4 hover:border-[var(--border-strong)] hover:bg-[var(--surface-2)] transition-colors"
               >
                 <div className="flex items-center gap-2.5">
                   <span className="text-lg shrink-0">{card.icon}</span>
-                  <p className="text-sm font-semibold text-white">{card.title}</p>
+                  <p className="text-sm font-semibold text-[var(--text-primary)]">{card.title}</p>
                 </div>
                 <div className="flex items-center gap-6">
                   {card.stats.map((s) => (
                     <div key={s.label}>
-                      <p className="text-lg font-bold tabular-nums text-zinc-100">{s.value}</p>
-                      <p className="text-[10px] text-zinc-600 mt-0.5">{s.label}</p>
+                      <p className="text-lg font-bold tabular-nums text-[var(--text-primary)]">{s.value}</p>
+                      <p className="text-[10px] text-[var(--text-faint)] mt-0.5">{s.label}</p>
                     </div>
                   ))}
                 </div>
@@ -369,7 +372,7 @@ export default function DashboardPage() {
         </div>
 
         {/* ── Footer hint ─────────────────────────────────────────────── */}
-        <p className="text-center text-[11px] text-zinc-700">
+        <p className="text-center text-[11px] text-[var(--text-faint)]">
           Accède aux paramètres de ton compte via la sidebar à gauche.
         </p>
         </>

@@ -1,29 +1,69 @@
 @import "tailwindcss";
 @plugin "@tailwindcss/typography";
 
+/* ─── Design tokens (thème sombre/clair) ─────────────────────────────────
+   Consommés via des valeurs arbitraires Tailwind (ex: bg-[var(--surface)]),
+   même mécanisme que --logo-accent déjà utilisée dans Logo.tsx/Sidebar.tsx —
+   pas de préfixe --color- ni d'enregistrement @theme, pour rester cohérent
+   avec ce précédent plutôt que d'introduire un deuxième système.
+
+   Bascule : attribut data-theme sur <html> ("dark" par défaut, "light" en
+   choix explicite), positionné avant hydratation par un script inline dans
+   app/layout.tsx pour éviter un flash, et persisté en localStorage — pas de
+   dépendance à prefers-color-scheme seul, pour permettre un choix manuel
+   qui ne suit pas forcément les réglages système.
+
+   Valeurs sombres = réplique exacte de l'existant (mêmes hex déjà en dur
+   partout dans l'app : #0d0d14, #09090f, #13131f...) pour qu'aucune page
+   non migrée ne change visuellement tant que data-theme reste "dark" (son
+   défaut). Vocabulaire inspiré de .landing-page (--bg/--surface/--text/
+   --purple/--green) plus loin dans ce fichier, sans le réutiliser tel quel
+   (cette palette-là reste scopée à la landing page, cf. son propre commentaire). */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --bg: #0d0d14;
+  --bg-sunken: #09090f;
+  --surface: #13131f;
+  --surface-2: rgba(255, 255, 255, 0.05);
+  --surface-3: rgba(255, 255, 255, 0.10);
+  --border: rgba(255, 255, 255, 0.06);
+  --border-strong: rgba(255, 255, 255, 0.12);
+  --text-primary: #ffffff;
+  --text-muted: #a1a1aa;
+  --text-faint: #71717a;
+  --accent: #7c3aed;
+  --accent-secondary: #60a5fa;
+  --success: #10b981;
+  --warning: #fbbf24;
+  --danger: #ef4444;
   --logo-accent: #34D399;
 }
 
+:root[data-theme="light"] {
+  --bg: #f7f7f9;
+  --bg-sunken: #eeeef2;
+  --surface: #ffffff;
+  --surface-2: rgba(0, 0, 0, 0.035);
+  --surface-3: rgba(0, 0, 0, 0.07);
+  --border: rgba(0, 0, 0, 0.08);
+  --border-strong: rgba(0, 0, 0, 0.14);
+  --text-primary: #18181b;
+  --text-muted: #52525b;
+  --text-faint: #a1a1aa;
+  --accent: #7c3aed;
+  --accent-secondary: #3b82f6;
+  --success: #059669;
+  --warning: #d97706;
+  --danger: #dc2626;
+}
+
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
 body {
-  background: var(--background);
-  color: var(--foreground);
+  background: var(--bg);
+  color: var(--text-primary);
   font-family: Arial, Helvetica, sans-serif;
 }
 

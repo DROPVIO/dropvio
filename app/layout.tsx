@@ -27,8 +27,22 @@ export default function RootLayout({
     <html
       lang="fr"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      // data-theme est posé par le script inline ci-dessous avant hydratation (voir
+      // lib/theme.ts) — React s'attend à ne pas le trouver dans le HTML serveur, ce qui
+      // déclencherait un avertissement de mismatch sans rapport avec un vrai bug.
+      suppressHydrationWarning
     >
-      <body className="min-h-full bg-[#0d0d14]">
+      <head>
+        {/* Pose data-theme avant tout rendu React — évite un flash du mauvais thème le
+            temps que le JS de l'app se charge. Doit rester en JS pur (pas d'import),
+            la clé localStorage est dupliquée depuis lib/theme.ts (THEME_STORAGE_KEY). */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `try{var t=localStorage.getItem('dropvio-theme');document.documentElement.setAttribute('data-theme',t==='light'?'light':'dark')}catch(e){}`,
+          }}
+        />
+      </head>
+      <body className="min-h-full bg-[var(--bg)]">
         <AppShell>{children}</AppShell>
       </body>
     </html>
