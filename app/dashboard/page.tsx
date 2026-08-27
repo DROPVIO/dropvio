@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
 import { PLAN_LIMITS, getMonthlyUsage, type Plan } from "@/lib/plan-limits";
-import DashboardActiviteChart from "@/components/DashboardActiviteChart";
+import DashboardActiviteChart, { type DashboardChartData } from "@/components/DashboardActiviteChart";
 
 type Profile = { nom_complet: string | null; plan: string };
 
@@ -55,6 +55,7 @@ export default function DashboardPage() {
   const [produitsBoutiquesCount, setProduitsBoutiquesCount] = useState(0);
   const [auditsMoisUsage,  setAuditsMoisUsage]  = useState(0);
   const [sitesMoisUsage,   setSitesMoisUsage]   = useState(0);
+  const [chartData,        setChartData]        = useState<DashboardChartData | null>(null);
 
   // Requête séparée (route API, pas le client Supabase browser) : shopify_connections /
   // shopify_incidents n'ont aucune policy RLS pour authenticated (accès service role
@@ -77,30 +78,40 @@ export default function DashboardPage() {
         const now = new Date();
         const startOfMonth = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1)).toISOString();
 
+        // usage_mensuel (audit_ia, site_builder) fusionné ici : ces deux requêtes ne
+        // dépendent que de user.id, déjà disponible — les isoler dans un Promise.all
+        // séparé après coup ne faisait qu'ajouter une étape séquentielle inutile.
         const [
           { data: p },
-          { count: sitesTotalCount },
-          { count: sitesMoisCount },
+          { data: sitesRows },
           { count: prodCount },
           { data: sims },
           { data: auds },
           { data: mesBoutiques },
+          auditsUsed,
+          sitesUsed,
         ] = await Promise.all([
           supabase.from("profils").select("nom_complet, plan").eq("id", user.id).maybeSingle(),
-          supabase.from("sites_generes").select("id", { count: "exact", head: true }).eq("user_id", user.id),
-          supabase.from("sites_generes").select("id", { count: "exact", head: true }).eq("user_id", user.id).gte("created_at", startOfMonth),
+          // Lignes complètes (pas juste un count) : sert à la fois au total/ce mois-ci
+          // ci-dessous ET au graphique d'activité (DashboardActiviteChart), qui n'a plus
+          // sa propre requête sur cette table.
+          supabase.from("sites_generes").select("id, created_at").eq("user_id", user.id).limit(1000),
           supabase.from("produits").select("*", { count: "exact", head: true }),
-          supabase.from("simulations_marge").select("resultats").eq("user_id", user.id).limit(500),
-          supabase.from("audits_realises").select("score_total").eq("user_id", user.id).limit(500),
+          supabase.from("simulations_marge").select("resultats, created_at").eq("user_id", user.id).limit(500),
+          supabase.from("audits_realises").select("score_total, created_at").eq("user_id", user.id).limit(500),
           // "boutiques" a aussi une policy select_public (boutiques d'autres utilisateurs
           // marquées publiques) — le filtre .eq("user_id", ...) est indispensable, la RLS
           // seule ne garantit pas qu'on ne liste que les miennes.
           supabase.from("boutiques").select("id").eq("user_id", user.id),
+          getMonthlyUsage(supabase, user.id, "audit_ia"),
+          getMonthlyUsage(supabase, user.id, "site_builder"),
         ]);
 
         if (p) setProfile(p as Profile);
-        setSitesTotal(sitesTotalCount ?? 0);
-        setSitesMois(sitesMoisCount ?? 0);
+
+        const siteRows = sitesRows ?? [];
+        setSitesTotal(siteRows.length);
+        setSitesMois(siteRows.filter((s) => s.created_at >= startOfMonth).length);
         setProduitsTotal(prodCount ?? 0);
 
         const simRows = sims ?? [];
@@ -116,20 +127,28 @@ export default function DashboardPage() {
 
         const boutiqueIds = (mesBoutiques ?? []).map((b) => b.id);
         setBoutiquesCount(boutiqueIds.length);
+
+        let boutiqueProduitsRows: { created_at: string }[] = [];
         if (boutiqueIds.length > 0) {
-          const { count: produitsBoutiques } = await supabase
+          const { data: bp } = await supabase
             .from("boutique_produits")
-            .select("id", { count: "exact", head: true })
+            .select("id, created_at")
             .in("boutique_id", boutiqueIds);
-          setProduitsBoutiquesCount(produitsBoutiques ?? 0);
+          boutiqueProduitsRows = bp ?? [];
+          setProduitsBoutiquesCount(boutiqueProduitsRows.length);
         }
 
-        const [auditsUsed, sitesUsed] = await Promise.all([
-          getMonthlyUsage(supabase, user.id, "audit_ia"),
-          getMonthlyUsage(supabase, user.id, "site_builder"),
-        ]);
         setAuditsMoisUsage(auditsUsed);
         setSitesMoisUsage(sitesUsed);
+
+        // Passé en props à DashboardActiviteChart, qui n'a plus besoin de refetcher ces
+        // 5 sources ni de faire son propre auth.getUser() (voir components/DashboardActiviteChart.tsx).
+        setChartData({
+          simulations: simRows,
+          audits: audRows,
+          sites: siteRows,
+          boutiqueProduits: boutiqueProduitsRows,
+        });
       }
 
       setLoading(false);
@@ -137,14 +156,6 @@ export default function DashboardPage() {
 
     load();
   }, []);
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-[#0d0d14] flex items-center justify-center">
-        <div className="w-5 h-5 rounded-full border-2 border-violet-500 border-t-transparent animate-spin" />
-      </div>
-    );
-  }
 
   const planKey  = (profile?.plan ?? "free") as Plan;
   const planMeta = PLAN_META[planKey] ?? PLAN_META.free;
@@ -257,63 +268,76 @@ export default function DashboardPage() {
     <div className="min-h-screen bg-[#0d0d14] px-8 py-10">
       <div className="max-w-4xl mx-auto flex flex-col gap-8">
 
-        {/* ── Welcome ─────────────────────────────────────────────────── */}
-        <div>
-          <h1 className="text-2xl font-bold text-white">
-            {greeting()}, {prenom} 👋
-          </h1>
-          <p className="text-zinc-500 text-sm mt-1.5">
-            Voici un aperçu de ton activité sur Dropvio.
-          </p>
-        </div>
-
-        {/* ── Bannière reconnexion Shopify ─────────────────────────────── */}
-        {shopifyStatus?.reconnectRequired && (
-          <a
-            href="/dashboard?openIntegrations=1"
-            className="rounded-2xl border border-amber-500/25 bg-amber-500/[0.07] px-5 py-4 flex items-center gap-3 hover:bg-amber-500/[0.1] transition-colors"
-          >
-            <span className="text-lg shrink-0">⚠️</span>
-            <div className="min-w-0">
-              <p className="text-sm font-medium text-amber-200">
-                Ta connexion Shopify n&apos;est plus active
-              </p>
-              <p className="text-[11px] text-amber-300/80 mt-0.5">
-                Le push produits et le suivi des remboursements/litiges sont en pause jusqu&apos;à la reconnexion. Clique ici pour reconnecter ta boutique.
+        {loading ? (
+          <div className="flex items-center justify-center py-20">
+            <div className="w-5 h-5 rounded-full border-2 border-violet-500 border-t-transparent animate-spin" />
+          </div>
+        ) : (
+          <>
+            {/* ── Welcome ─────────────────────────────────────────────────── */}
+            <div>
+              <h1 className="text-2xl font-bold text-white">
+                {greeting()}, {prenom} 👋
+              </h1>
+              <p className="text-zinc-500 text-sm mt-1.5">
+                Voici un aperçu de ton activité sur Dropvio.
               </p>
             </div>
-          </a>
+
+            {/* ── Bannière reconnexion Shopify ─────────────────────────────── */}
+            {shopifyStatus?.reconnectRequired && (
+              <a
+                href="/dashboard?openIntegrations=1"
+                className="rounded-2xl border border-amber-500/25 bg-amber-500/[0.07] px-5 py-4 flex items-center gap-3 hover:bg-amber-500/[0.1] transition-colors"
+              >
+                <span className="text-lg shrink-0">⚠️</span>
+                <div className="min-w-0">
+                  <p className="text-sm font-medium text-amber-200">
+                    Ta connexion Shopify n&apos;est plus active
+                  </p>
+                  <p className="text-[11px] text-amber-300/80 mt-0.5">
+                    Le push produits et le suivi des remboursements/litiges sont en pause jusqu&apos;à la reconnexion. Clique ici pour reconnecter ta boutique.
+                  </p>
+                </div>
+              </a>
+            )}
+
+            {/* ── 4 metric cards ──────────────────────────────────────────── */}
+            <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+              {METRICS.map((m) => (
+                <div
+                  key={m.id}
+                  className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-5 flex flex-col gap-2"
+                >
+                  <p className="text-[10px] font-semibold uppercase tracking-widest text-zinc-600">
+                    {m.label}
+                  </p>
+                  {"badge" in m && m.badge ? (
+                    <span className={`self-start text-[11px] font-bold px-2.5 py-1 rounded-full ${m.badge}`}>
+                      {m.value.toUpperCase()}
+                    </span>
+                  ) : (
+                    <span className={`text-2xl font-bold tabular-nums ${"accent" in m ? m.accent : ""}`}>
+                      {m.value}
+                    </span>
+                  )}
+                  {m.sub && (
+                    <p className="text-[11px] text-zinc-600 leading-relaxed">{m.sub}</p>
+                  )}
+                </div>
+              ))}
+            </div>
+          </>
         )}
 
-        {/* ── 4 metric cards ──────────────────────────────────────────── */}
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-          {METRICS.map((m) => (
-            <div
-              key={m.id}
-              className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-5 flex flex-col gap-2"
-            >
-              <p className="text-[10px] font-semibold uppercase tracking-widest text-zinc-600">
-                {m.label}
-              </p>
-              {"badge" in m && m.badge ? (
-                <span className={`self-start text-[11px] font-bold px-2.5 py-1 rounded-full ${m.badge}`}>
-                  {m.value.toUpperCase()}
-                </span>
-              ) : (
-                <span className={`text-2xl font-bold tabular-nums ${"accent" in m ? m.accent : ""}`}>
-                  {m.value}
-                </span>
-              )}
-              {m.sub && (
-                <p className="text-[11px] text-zinc-600 leading-relaxed">{m.sub}</p>
-              )}
-            </div>
-          ))}
-        </div>
+        {/* ── Graphique d'activité combiné ─────────────────────────────────
+            Position JSX fixe, jamais dans une branche conditionnelle liée à
+            "loading" : sinon React démonte/remonte le composant quand loading
+            change, ce qui relance son fetch (incidents Shopify) pour rien. */}
+        <DashboardActiviteChart chartData={chartData} />
 
-        {/* ── Graphique d'activité combiné ─────────────────────────────── */}
-        <DashboardActiviteChart />
-
+        {loading ? null : (
+        <>
         {/* ── Dashboard complet ─────────────────────────────────────────── */}
         <div>
           <div className="mb-4">
@@ -348,6 +372,8 @@ export default function DashboardPage() {
         <p className="text-center text-[11px] text-zinc-700">
           Accède aux paramètres de ton compte via la sidebar à gauche.
         </p>
+        </>
+        )}
 
       </div>
     </div>

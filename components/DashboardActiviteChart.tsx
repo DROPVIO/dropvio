@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   LineChart,
   Line,
@@ -12,9 +12,21 @@ import {
   Brush,
   ResponsiveContainer,
 } from "recharts";
-import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
 
 const PERIOD_DAYS = 30;
+
+// Les 5 sources ci-dessous sont déjà chargées par app/dashboard/page.tsx (mêmes lignes
+// réutilisées pour ses propres stats) — ce composant ne les refetch plus lui-même. Ça
+// éliminait 2 appels auth.getUser() redondants et une deuxième requête sur chacune de ces
+// 5 tables à chaque chargement du dashboard (voir diagnostic de perf : ce doublon, gaté
+// derrière le "loading" du parent, créait une vraie cascade de ~800ms). Seuls les incidents
+// Shopify (donnée non chargée par le parent) restent fetchés ici, indépendamment.
+export type DashboardChartData = {
+  simulations: { resultats: unknown; created_at: string }[];
+  audits: { score_total: number; created_at: string }[];
+  sites: { created_at: string }[];
+  boutiqueProduits: { created_at: string }[];
+};
 
 type DayPoint = {
   dateKey: string;
@@ -95,141 +107,121 @@ function ActiviteTooltip({ active, payload, label }: any) {
   );
 }
 
-export default function DashboardActiviteChart() {
-  const [loading, setLoading] = useState(true);
-  const [data, setData] = useState<DayPoint[]>([]);
-  const [hasActivity, setHasActivity] = useState(false);
+export default function DashboardActiviteChart({ chartData }: { chartData: DashboardChartData | null }) {
+  // Seule requête restante ici : les incidents Shopify, non chargés par le parent. Démarre
+  // dès le montage — pas besoin d'attendre chartData ni un auth.getUser() local, la route
+  // gère déjà l'auth côté serveur et renvoie [] si non connecté (voir le .catch ci-dessous).
+  const [incidents, setIncidents] = useState<{ created_at: string }[] | null>(null);
 
   useEffect(() => {
-    const supabase = createSupabaseBrowserClient();
+    fetch("/api/shopify/incidents")
+      .then((r) => (r.ok ? r.json() : { incidents: [] }))
+      .then((json) => setIncidents(json.incidents ?? []))
+      .catch(() => setIncidents([]));
+  }, []);
 
-    async function load() {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) { setLoading(false); return; }
+  const loading = chartData === null || incidents === null;
 
-      const now = new Date();
-      const cutoff = new Date(now);
-      cutoff.setUTCDate(now.getUTCDate() - (PERIOD_DAYS - 1));
-      cutoff.setUTCHours(0, 0, 0, 0);
-      const cutoffIso = cutoff.toISOString();
+  const { data, hasActivity } = useMemo<{ data: DayPoint[]; hasActivity: boolean }>(() => {
+    if (chartData === null || incidents === null) return { data: [], hasActivity: false };
 
-      const [
-        { data: sims },
-        { data: auds },
-        { data: sites },
-        { data: mesBoutiques },
-        incidentsJson,
-      ] = await Promise.all([
-        supabase.from("simulations_marge").select("resultats, created_at").eq("user_id", user.id).gte("created_at", cutoffIso),
-        supabase.from("audits_realises").select("score_total, created_at").eq("user_id", user.id).gte("created_at", cutoffIso),
-        supabase.from("sites_generes").select("created_at").eq("user_id", user.id).gte("created_at", cutoffIso),
-        // "boutiques" a aussi une policy select_public (boutiques d'autres utilisateurs
-        // marquées publiques) — le filtre .eq("user_id", ...) est indispensable, la RLS
-        // seule ne garantit pas qu'on ne récupère que les miennes.
-        supabase.from("boutiques").select("id").eq("user_id", user.id),
-        fetch("/api/shopify/incidents").then((r) => (r.ok ? r.json() : { incidents: [] })).catch(() => ({ incidents: [] as { created_at: string }[] })),
-      ]);
+    const now = new Date();
+    const cutoff = new Date(now);
+    cutoff.setUTCDate(now.getUTCDate() - (PERIOD_DAYS - 1));
+    cutoff.setUTCHours(0, 0, 0, 0);
+    const cutoffIso = cutoff.toISOString();
 
-      const boutiqueIds = (mesBoutiques ?? []).map((b) => b.id);
-      let boutiqueProduits: { created_at: string }[] = [];
-      if (boutiqueIds.length > 0) {
-        const { data: bp } = await supabase
-          .from("boutique_produits")
-          .select("created_at")
-          .in("boutique_id", boutiqueIds)
-          .gte("created_at", cutoffIso);
-        boutiqueProduits = bp ?? [];
+    // chartData vient du parent sans filtre de date (réutilisé tel quel pour ses propres
+    // stats all-time) — on restreint aux 30 derniers jours ici, en mémoire, sans requête.
+    const sims = chartData.simulations.filter((s) => s.created_at >= cutoffIso);
+    const auds = chartData.audits.filter((a) => a.created_at >= cutoffIso);
+    const sites = chartData.sites.filter((s) => s.created_at >= cutoffIso);
+    const boutiqueProduits = chartData.boutiqueProduits.filter((p) => p.created_at >= cutoffIso);
+    const incidentsRecents = incidents.filter((i) => i.created_at >= cutoffIso);
+
+    const margeSum = new Map<string, number>();
+    const margeCount = new Map<string, number>();
+    const auditSum = new Map<string, number>();
+    const auditCount = new Map<string, number>();
+    const shopifyCount = new Map<string, number>();
+    const sitesCount = new Map<string, number>();
+    const boutiquesCount = new Map<string, number>();
+
+    for (const s of sims) {
+      const key = s.created_at.slice(0, 10);
+      const eur = (s.resultats as { margeNette?: number } | null)?.margeNette;
+      if (typeof eur === "number") {
+        margeSum.set(key, (margeSum.get(key) ?? 0) + eur);
+        margeCount.set(key, (margeCount.get(key) ?? 0) + 1);
       }
-
-      const incidents: { created_at: string }[] = (incidentsJson.incidents ?? []).filter(
-        (i: { created_at: string }) => i.created_at >= cutoffIso
-      );
-
-      const margeSum = new Map<string, number>();
-      const margeCount = new Map<string, number>();
-      const auditSum = new Map<string, number>();
-      const auditCount = new Map<string, number>();
-      const shopifyCount = new Map<string, number>();
-      const sitesCount = new Map<string, number>();
-      const boutiquesCount = new Map<string, number>();
-
-      for (const s of sims ?? []) {
-        const key = (s.created_at as string).slice(0, 10);
-        const eur = (s.resultats as { margeNette?: number } | null)?.margeNette;
-        if (typeof eur === "number") {
-          margeSum.set(key, (margeSum.get(key) ?? 0) + eur);
-          margeCount.set(key, (margeCount.get(key) ?? 0) + 1);
-        }
-      }
-      for (const a of auds ?? []) {
-        const key = (a.created_at as string).slice(0, 10);
-        auditSum.set(key, (auditSum.get(key) ?? 0) + a.score_total);
-        auditCount.set(key, (auditCount.get(key) ?? 0) + 1);
-      }
-      for (const i of incidents) {
-        const key = i.created_at.slice(0, 10);
-        shopifyCount.set(key, (shopifyCount.get(key) ?? 0) + 1);
-      }
-      for (const s of sites ?? []) {
-        const key = (s.created_at as string).slice(0, 10);
-        sitesCount.set(key, (sitesCount.get(key) ?? 0) + 1);
-      }
-      for (const p of boutiqueProduits) {
-        const key = p.created_at.slice(0, 10);
-        boutiquesCount.set(key, (boutiquesCount.get(key) ?? 0) + 1);
-      }
-
-      const points: DayPoint[] = buildEmptyDays().map((d) => {
-        const margeN = margeCount.get(d.dateKey) ?? 0;
-        const auditN = auditCount.get(d.dateKey) ?? 0;
-        const sitesN = sitesCount.get(d.dateKey) ?? 0;
-        return {
-          dateKey: d.dateKey,
-          dateLabel: d.dateLabel,
-          margeEur: margeN > 0 ? (margeSum.get(d.dateKey) ?? 0) / margeN : 0,
-          margeHasData: margeN > 0,
-          margePct: 0,
-          auditScore: auditN > 0 ? (auditSum.get(d.dateKey) ?? 0) / auditN : 0,
-          auditHasData: auditN > 0,
-          auditPct: 0,
-          shopifyIncidents: shopifyCount.get(d.dateKey) ?? 0,
-          shopifyPct: 0,
-          sites: sitesN,
-          sitesPct: 0,
-          boutiqueProduits: boutiquesCount.get(d.dateKey) ?? 0,
-          boutiquesPct: 0,
-          utilisation: auditN + sitesN,
-          utilisationPct: 0,
-        };
-      });
-
-      // Normalisation en % du max propre de chaque série sur la période affichée — Math.max
-      // avec 0 en plancher pour ne jamais diviser par une valeur négative (marge nette
-      // moyenne qui serait une perte tous les jours actifs, par exemple).
-      const maxOf = (sel: (p: DayPoint) => number) => Math.max(0, ...points.map(sel));
-      const margeMax = maxOf((p) => p.margeEur);
-      const auditMax = maxOf((p) => p.auditScore);
-      const shopifyMax = maxOf((p) => p.shopifyIncidents);
-      const sitesMax = maxOf((p) => p.sites);
-      const boutiquesMax = maxOf((p) => p.boutiqueProduits);
-      const utilisationMax = maxOf((p) => p.utilisation);
-
-      for (const p of points) {
-        p.margePct = margeMax > 0 ? (p.margeEur / margeMax) * 100 : 0;
-        p.auditPct = auditMax > 0 ? (p.auditScore / auditMax) * 100 : 0;
-        p.shopifyPct = shopifyMax > 0 ? (p.shopifyIncidents / shopifyMax) * 100 : 0;
-        p.sitesPct = sitesMax > 0 ? (p.sites / sitesMax) * 100 : 0;
-        p.boutiquesPct = boutiquesMax > 0 ? (p.boutiqueProduits / boutiquesMax) * 100 : 0;
-        p.utilisationPct = utilisationMax > 0 ? (p.utilisation / utilisationMax) * 100 : 0;
-      }
-
-      setData(points);
-      setHasActivity(points.some((p) => p.margeHasData || p.auditHasData || p.shopifyIncidents > 0 || p.sites > 0 || p.boutiqueProduits > 0));
-      setLoading(false);
+    }
+    for (const a of auds) {
+      const key = a.created_at.slice(0, 10);
+      auditSum.set(key, (auditSum.get(key) ?? 0) + a.score_total);
+      auditCount.set(key, (auditCount.get(key) ?? 0) + 1);
+    }
+    for (const i of incidentsRecents) {
+      const key = i.created_at.slice(0, 10);
+      shopifyCount.set(key, (shopifyCount.get(key) ?? 0) + 1);
+    }
+    for (const s of sites) {
+      const key = s.created_at.slice(0, 10);
+      sitesCount.set(key, (sitesCount.get(key) ?? 0) + 1);
+    }
+    for (const p of boutiqueProduits) {
+      const key = p.created_at.slice(0, 10);
+      boutiquesCount.set(key, (boutiquesCount.get(key) ?? 0) + 1);
     }
 
-    load();
-  }, []);
+    const points: DayPoint[] = buildEmptyDays().map((d) => {
+      const margeN = margeCount.get(d.dateKey) ?? 0;
+      const auditN = auditCount.get(d.dateKey) ?? 0;
+      const sitesN = sitesCount.get(d.dateKey) ?? 0;
+      return {
+        dateKey: d.dateKey,
+        dateLabel: d.dateLabel,
+        margeEur: margeN > 0 ? (margeSum.get(d.dateKey) ?? 0) / margeN : 0,
+        margeHasData: margeN > 0,
+        margePct: 0,
+        auditScore: auditN > 0 ? (auditSum.get(d.dateKey) ?? 0) / auditN : 0,
+        auditHasData: auditN > 0,
+        auditPct: 0,
+        shopifyIncidents: shopifyCount.get(d.dateKey) ?? 0,
+        shopifyPct: 0,
+        sites: sitesN,
+        sitesPct: 0,
+        boutiqueProduits: boutiquesCount.get(d.dateKey) ?? 0,
+        boutiquesPct: 0,
+        utilisation: auditN + sitesN,
+        utilisationPct: 0,
+      };
+    });
+
+    // Normalisation en % du max propre de chaque série sur la période affichée — Math.max
+    // avec 0 en plancher pour ne jamais diviser par une valeur négative (marge nette
+    // moyenne qui serait une perte tous les jours actifs, par exemple).
+    const maxOf = (sel: (p: DayPoint) => number) => Math.max(0, ...points.map(sel));
+    const margeMax = maxOf((p) => p.margeEur);
+    const auditMax = maxOf((p) => p.auditScore);
+    const shopifyMax = maxOf((p) => p.shopifyIncidents);
+    const sitesMax = maxOf((p) => p.sites);
+    const boutiquesMax = maxOf((p) => p.boutiqueProduits);
+    const utilisationMax = maxOf((p) => p.utilisation);
+
+    for (const p of points) {
+      p.margePct = margeMax > 0 ? (p.margeEur / margeMax) * 100 : 0;
+      p.auditPct = auditMax > 0 ? (p.auditScore / auditMax) * 100 : 0;
+      p.shopifyPct = shopifyMax > 0 ? (p.shopifyIncidents / shopifyMax) * 100 : 0;
+      p.sitesPct = sitesMax > 0 ? (p.sites / sitesMax) * 100 : 0;
+      p.boutiquesPct = boutiquesMax > 0 ? (p.boutiqueProduits / boutiquesMax) * 100 : 0;
+      p.utilisationPct = utilisationMax > 0 ? (p.utilisation / utilisationMax) * 100 : 0;
+    }
+
+    return {
+      data: points,
+      hasActivity: points.some((p) => p.margeHasData || p.auditHasData || p.shopifyIncidents > 0 || p.sites > 0 || p.boutiqueProduits > 0),
+    };
+  }, [chartData, incidents]);
 
   return (
     <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-6">
