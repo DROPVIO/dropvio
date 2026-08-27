@@ -1,6 +1,10 @@
 import Stripe from "stripe";
 import type { FormationOffre } from "./formation";
 
+export function isStripeConfigured(): boolean {
+  return Boolean(process.env.STRIPE_SECRET_KEY);
+}
+
 export function createStripeClient(): Stripe {
   return new Stripe(process.env.STRIPE_SECRET_KEY!);
 }

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getServerUserAndPlan } from "@/lib/supabase-server";
-import { createStripeClient, getFormationPriceId } from "@/lib/stripe";
+import { createStripeClient, getFormationPriceId, isStripeConfigured } from "@/lib/stripe";
 import { collectionsDeOffre, type FormationOffre } from "@/lib/formation";
 
 // Crée une Checkout Session Stripe en mode "payment" (achat unique, jamais "subscription")
@@ -11,6 +11,13 @@ export async function POST(request: Request) {
 
   if (!user) {
     return NextResponse.json({ error: "Connecte-toi pour acheter une formation." }, { status: 401 });
+  }
+
+  if (!isStripeConfigured()) {
+    return NextResponse.json(
+      { error: "Le paiement n'est pas encore configuré côté serveur (clé Stripe manquante)." },
+      { status: 500 }
+    );
   }
 
   const body = await request.json().catch(() => null);

@@ -82,10 +82,19 @@ export default function FormationPage() {
 
   useEffect(() => {
     const supabase = createSupabaseBrowserClient();
-    supabase.auth.getUser().then(({ data }) => {
-      setIsLoggedIn(!!data.user);
-      setAuthChecked(true);
-    });
+    supabase.auth.getUser()
+      .then(({ data }) => {
+        setIsLoggedIn(!!data.user);
+      })
+      .catch(() => {
+        // Un échec réseau/SDK sur cette vérification ne doit jamais laisser la page
+        // bloquée indéfiniment sur le placeholder noir ci-dessous (voir authChecked) —
+        // on retombe sur la version déconnectée plutôt que de ne jamais l'afficher.
+        setIsLoggedIn(false);
+      })
+      .finally(() => {
+        setAuthChecked(true);
+      });
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
       setIsLoggedIn(!!session?.user);
     });
