@@ -128,11 +128,40 @@ export default function AuditPage() {
   const [htmlLoading, setHtmlLoading] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
+  const [urlInput,   setUrlInput]   = useState("");
+  const [urlLoading, setUrlLoading] = useState(false);
+  const [urlError,   setUrlError]   = useState<string | null>(null);
+
   const handleFile = useCallback((file: File) => {
     const reader = new FileReader();
     reader.onload = (e) => setHtml((e.target?.result as string) ?? "");
     reader.readAsText(file);
   }, []);
+
+  async function handleFetchUrl() {
+    if (!urlInput.trim()) return;
+    setUrlLoading(true);
+    setUrlError(null);
+    try {
+      const res = await fetch("/api/audit-site/from-url", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url: urlInput.trim() }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setUrlError(data.error ?? "Impossible de récupérer cette page.");
+        return;
+      }
+      setHtml(data.html);
+      setResult(null);
+      setError(null);
+    } catch {
+      setUrlError("Impossible de contacter le serveur.");
+    } finally {
+      setUrlLoading(false);
+    }
+  }
 
   async function runAudit() {
     if (!html.trim()) return;
@@ -233,6 +262,33 @@ export default function AuditPage() {
               )}
             </div>
           </div>
+
+          {/* ── Analyser depuis une URL ─────────────────────────────────── */}
+          <div className="flex flex-col gap-2">
+            <label className="text-sm font-medium text-zinc-300">
+              🔗 Analyser depuis une URL{" "}
+              <span className="text-zinc-500 font-normal">(optionnel)</span>
+            </label>
+            <div className="flex gap-2">
+              <input
+                type="url"
+                value={urlInput}
+                onChange={(e) => { setUrlInput(e.target.value); setUrlError(null); }}
+                placeholder="https://ma-boutique.com"
+                className="flex-1 bg-[#09090f] border border-white/[0.08] rounded-xl px-4 py-3 text-sm text-white placeholder-zinc-700 focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500/40 transition"
+              />
+              <button
+                onClick={handleFetchUrl}
+                disabled={!urlInput.trim() || urlLoading}
+                className="px-4 py-3 rounded-xl bg-violet-600/20 border border-violet-500/30 text-violet-400 text-sm font-semibold hover:bg-violet-600/30 transition disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap"
+              >
+                {urlLoading ? "…" : "Récupérer"}
+              </button>
+            </div>
+            {urlError && <p className="text-xs text-red-400">{urlError}</p>}
+          </div>
+
+          <div className="border-t border-white/[0.05]" />
 
           <textarea
             value={html}
