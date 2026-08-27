@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import {
   CATEGORIES,
   TEXTES_DEFAUT,
@@ -19,9 +20,28 @@ type AuditLive = {
 };
 
 export default function TemplateEditor() {
+  // Préremplissage depuis "Créer un site pour cette boutique" (page de gestion boutique) —
+  // mêmes query params que le mode IA (app/site-builder/page.tsx), lus ici directement
+  // puisque ce composant n'a pas accès aux props du parent pour ce préremplissage.
+  const searchParams = useSearchParams();
+  const prefillName = searchParams.get("name");
+  const prefillDescription = searchParams.get("description");
+  const prefillImage = searchParams.get("image");
+  const boutiqueId = searchParams.get("boutiqueId") ?? undefined;
+
   const [categorie, setCategorie] = useState<Categorie>("generique");
-  const [contenu, setContenu] = useState<ContenuTexte>(TEXTES_DEFAUT.generique);
-  const [images, setImages] = useState<ImagesSite>(imagesVides());
+  const [contenu, setContenu] = useState<ContenuTexte>(() =>
+    prefillName || prefillDescription
+      ? {
+          ...TEXTES_DEFAUT.generique,
+          titre: prefillName || TEXTES_DEFAUT.generique.titre,
+          description: prefillDescription || TEXTES_DEFAUT.generique.description,
+        }
+      : TEXTES_DEFAUT.generique
+  );
+  const [images, setImages] = useState<ImagesSite>(() =>
+    prefillImage ? { ...imagesVides(), hero: prefillImage } : imagesVides()
+  );
   const [prixVente, setPrixVente] = useState("");
   const [prixBarre, setPrixBarre] = useState("");
   const [saved, setSaved] = useState(false);
@@ -133,7 +153,7 @@ export default function TemplateEditor() {
       const res = await fetch("/api/sites-generes", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ nom_produit: contenu.titre || "Landing page", html_content: html }),
+        body: JSON.stringify({ nom_produit: contenu.titre || "Landing page", html_content: html, boutique_id: boutiqueId }),
       });
       const data = await res.json();
       if (!res.ok) {

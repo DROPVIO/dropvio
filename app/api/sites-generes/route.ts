@@ -28,13 +28,28 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Connecte-toi pour sauvegarder un site." }, { status: 401 });
   }
 
-  const { nom_produit, html_content } = await request.json();
+  const { nom_produit, html_content, boutique_id } = await request.json();
 
   if (!nom_produit || !html_content) {
     return NextResponse.json(
       { error: "nom_produit et html_content sont requis" },
       { status: 400 }
     );
+  }
+
+  // boutique_id est fourni par le client (query param repris depuis la page de gestion
+  // boutique) — jamais de confiance aveugle : on vérifie qu'elle appartient bien à
+  // l'utilisateur avant de l'accepter, sinon on l'ignore silencieusement plutôt que de faire
+  // échouer toute la sauvegarde du site (qui reste utile même sans le lien).
+  let verifiedBoutiqueId: string | null = null;
+  if (boutique_id) {
+    const { data: boutique } = await supabase
+      .from("boutiques")
+      .select("id")
+      .eq("id", boutique_id)
+      .eq("user_id", user.id)
+      .maybeSingle();
+    if (boutique) verifiedBoutiqueId = boutique.id;
   }
 
   const max = PLAN_LIMITS[plan].sitesParMoisMax;
@@ -61,7 +76,7 @@ export async function POST(request: NextRequest) {
 
   const { data, error } = await supabase
     .from("sites_generes")
-    .insert({ user_id: user.id, nom_produit, html_content })
+    .insert({ user_id: user.id, nom_produit, html_content, boutique_id: verifiedBoutiqueId })
     .select("id")
     .single();
 

@@ -109,6 +109,20 @@ export default function BoutiqueBuilderDetailPage() {
     [categories]
   );
 
+  // Préremplit le Site Builder avec le nom/la description de la boutique — les boutiques
+  // n'ayant pas de champ image propre, l'image du premier produit sert de visuel par défaut
+  // s'il y en a un. boutique_id relie ensuite le site généré à cette boutique (sites_generes).
+  function buildSiteBuilderPrefillUrl(mode: "ia" | "template"): string {
+    const p = new URLSearchParams();
+    p.set("mode", mode);
+    if (typeof params?.id === "string") p.set("boutiqueId", params.id);
+    if (boutique?.nom) p.set("name", boutique.nom);
+    p.set("description", boutique?.description || `Découvrez les produits de la boutique ${boutique?.nom ?? ""}.`);
+    const firstImage = products.find((prod) => prod.image_urls?.[0])?.image_urls?.[0];
+    if (firstImage) p.set("image", firstImage);
+    return `/site-builder?${p.toString()}`;
+  }
+
   useEffect(() => {
     if (!params?.id) return;
     void fetchBoutique();
@@ -602,6 +616,29 @@ export default function BoutiqueBuilderDetailPage() {
             </div>
           </section>
         </div>
+
+        {/* Créer un site pour cette boutique */}
+        <section className="rounded-3xl border border-white/10 bg-[#13131f] p-6">
+          <p className="text-xs uppercase tracking-[0.3em] text-violet-400">Site Builder</p>
+          <h3 className="mt-2 text-lg font-semibold text-white">Créer un site pour cette boutique</h3>
+          <p className="mt-1 text-sm text-zinc-500">
+            Génère une landing page prérempli avec le nom et la description de la boutique — au choix, avec l&apos;IA ou l&apos;éditeur de templates.
+          </p>
+          <div className="mt-4 flex flex-wrap gap-3">
+            <Link
+              href={buildSiteBuilderPrefillUrl("ia")}
+              className="rounded-2xl bg-gradient-to-r from-violet-600 to-blue-600 px-5 py-3 text-sm font-semibold text-white transition hover:from-violet-500 hover:to-blue-500"
+            >
+              🤖 Génération IA
+            </Link>
+            <Link
+              href={buildSiteBuilderPrefillUrl("template")}
+              className="rounded-2xl border border-white/10 bg-white/5 px-5 py-3 text-sm font-semibold text-white transition hover:border-violet-500/40 hover:bg-violet-500/10"
+            >
+              🎨 Éditeur de templates
+            </Link>
+          </div>
+        </section>
 
         {/* Push Shopify */}
         <section className="rounded-3xl border border-white/10 bg-[#13131f] p-6">

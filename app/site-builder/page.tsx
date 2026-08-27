@@ -30,13 +30,16 @@ function addTargetBlank(html: string): string {
 function SiteBuilderContent() {
   const searchParams = useSearchParams();
 
-  const [mode, setMode] = useState<"ia" | "template">("ia");
+  const [mode, setMode] = useState<"ia" | "template">(searchParams.get("mode") === "template" ? "template" : "ia");
   const [step, setStep] = useState<Step>(1);
   const [productName, setProductName] = useState(searchParams.get("name") ?? "");
   const [description, setDescription] = useState(searchParams.get("description") ?? "");
   const [imageUrl, setImageUrl] = useState(searchParams.get("image") ?? "");
   const rating = searchParams.get("rating") ?? undefined;
   const orders = searchParams.get("orders") ?? undefined;
+  // Préremplissage depuis "Créer un site pour cette boutique" (page de gestion boutique) —
+  // relie le site généré à sa boutique d'origine dans sites_generes.boutique_id.
+  const boutiqueId = searchParams.get("boutiqueId") ?? undefined;
 
   // Style & palette
   const [selectedStyleId, setSelectedStyleId] = useState("premium");
@@ -190,7 +193,7 @@ function SiteBuilderContent() {
       fetch("/api/sites-generes", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ nom_produit: productName, html_content: finalHtml }),
+        body: JSON.stringify({ nom_produit: productName, html_content: finalHtml, boutique_id: boutiqueId }),
       })
         .then(async (res) => {
           const data = await res.json().catch(() => ({}));
