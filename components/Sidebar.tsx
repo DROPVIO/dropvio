@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
 import Logo from "./Logo";
@@ -210,7 +211,11 @@ export default function Sidebar({
         }`}
       >
         {/* ── Logo ──────────────────────────────────────────────────────── */}
-        <div data-onboarding-target="logo" className="flex items-center gap-2.5 border-b border-white/[0.06] shrink-0 h-[57px] px-4">
+        <Link
+          href="/dashboard"
+          data-onboarding-target="logo"
+          className="flex items-center gap-2.5 border-b border-white/[0.06] shrink-0 h-[57px] px-4 hover:bg-white/[0.03] transition-colors"
+        >
           <Logo className="w-6 h-6 shrink-0 text-[var(--logo-accent)]" />
           <span
             className={`text-[15px] font-bold bg-gradient-to-r from-violet-400 to-blue-400 bg-clip-text text-transparent whitespace-nowrap transition-[opacity,width] duration-150 ${
@@ -219,7 +224,7 @@ export default function Sidebar({
           >
             Dropvio
           </span>
-        </div>
+        </Link>
 
         {/* ── Nav ───────────────────────────────────────────────────────── */}
         <div className="flex flex-col flex-1 overflow-y-auto overflow-x-hidden p-2 gap-1">
