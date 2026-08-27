@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import Logo from "@/components/Logo";
 
 // ─── Static data ──────────────────────────────────────────────────────────────
 
@@ -32,32 +33,58 @@ const SCORE_BARS = [
 const FEATURES = [
   {
     title: "Produits gagnants",
-    desc: "20 niches de produits gagnants avec données AliExpress en direct — potentiel de marge, concurrence, tendance, tout visible avant de choisir quoi vendre.",
+    desc: "Ce catalogue vous montre les produits qui se vendent bien en ce moment, classés par thème (fitness, beauté, maison...). Pour chaque produit : le prix d'achat sur AliExpress, le prix de vente conseillé, et la marge que vous pouvez espérer.",
     statVal: "20", statLabel: "niches de produits gagnants",
-    more: "Chaque niche affiche les produits les plus vendus du moment, leur fourchette de prix d'achat, et une estimation de marge avant même d'ouvrir AliExpress. Mise à jour continue, pas de données figées.",
+    more: "Vous n'avez pas besoin de fouiller AliExpress pendant des heures. Ouvrez un thème, regardez les produits déjà triés par popularité, et comparez leur marge en un coup d'œil. Les données sont mises à jour régulièrement, ce ne sont pas des chiffres d'il y a six mois.",
     icon: (
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7">
         <path d="M3 12l4-7 5 4 5-8 4 6"/>
         <circle cx="19" cy="7" r="1.5" fill="currentColor"/>
       </svg>
     ),
+    demo: (
+      <div className="feat-demo fd-produit">
+        <div className="fd-produit-thumb">🛍️</div>
+        <div className="fd-produit-info">
+          <p className="fd-produit-nom">Bandes de résistance fitness (lot de 5)</p>
+          <p className="fd-produit-meta">⭐ 4.7 · 12k commandes</p>
+          <p className="fd-produit-prix">Achat AliExpress <b>4,20 €</b> → Vente conseillée <b>19,99 €</b></p>
+        </div>
+        <span className="fd-marge-badge">Marge 79%</span>
+      </div>
+    ),
   },
   {
     title: "Calculateur de marge",
-    desc: "Prix d'achat, frais de port, commission pub, prix de vente — la marge nette se recalcule en direct pour ne jamais lancer un produit à perte.",
+    desc: "Vous entrez le prix d'achat, les frais de livraison, le prix que vous comptez demander — et l'outil calcule ce qu'il vous reste vraiment en poche. Vous savez avant de payer une pub si le produit est rentable ou pas.",
     statVal: "0€", statLabel: "surprise sur vos marges",
-    more: "Ajoutez vos coûts réels (achat, transport, transaction, publicité estimée) et voyez la marge nette évoluer champ par champ, avant de fixer votre prix de vente final.",
+    more: "Remplissez vos vrais coûts : achat, transport, frais de paiement, budget pub estimé. À chaque champ que vous changez, la marge se met à jour tout de suite. Vous voyez immédiatement si votre prix de vente est trop bas.",
     icon: (
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7">
         <path d="M4 4h16v16H4z"/><path d="M4 10h16M10 4v16"/>
       </svg>
     ),
+    demo: (
+      <div className="feat-demo fd-calc">
+        <div className="fd-calc-row"><span>Prix d&apos;achat</span><span>8,50 €</span></div>
+        <div className="fd-calc-row"><span>Frais de livraison</span><span>2,00 €</span></div>
+        <div className="fd-calc-row"><span>Prix de vente</span><span>24,99 €</span></div>
+        <div className="fd-calc-divider" />
+        <div className="fd-calc-result">
+          <div>
+            <span className="fd-calc-result-label">Marge nette</span>
+            <span className="fd-calc-result-num" style={{ color: "var(--green)" }}>+14,49 €</span>
+          </div>
+          <span className="fd-calc-badge" style={{ color: "var(--green)", borderColor: "rgba(52,211,153,0.35)", background: "rgba(52,211,153,0.1)" }}>58%</span>
+        </div>
+      </div>
+    ),
   },
   {
     title: "Site builder",
-    desc: "Palettes personnalisées, prix réels, structure de page prête pour la conversion — sauvegarde automatique et export prêt pour Shopify.",
+    desc: "Cet outil crée automatiquement une page de vente pour votre produit : titre, photos, description, prix, bouton d'achat. Vous choisissez juste les couleurs et le style, tout le reste est déjà prêt.",
     statVal: "6", statLabel: "styles de page",
-    more: "Choisissez une palette à 3 couleurs, vos vrais prix (avec ou sans barré), et prévisualisez en desktop, tablette et mobile avant d'exporter en HTML ou en Liquid pour Shopify.",
+    more: "Choisissez un style et des couleurs, ajoutez vos photos et votre prix, et regardez le résultat en temps réel — sur ordinateur et sur mobile. Une fois satisfait, téléchargez la page HTML ou exportez-la en thème Shopify.",
     icon: (
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7">
         <rect x="3" y="3" width="7" height="7" rx="1"/>
@@ -66,17 +93,56 @@ const FEATURES = [
         <rect x="14" y="14" width="7" height="7" rx="1"/>
       </svg>
     ),
+    demo: (
+      <div className="feat-demo fd-builder">
+        <div className="fd-browser-bar">
+          <span className="fd-dot" style={{ background: "#F87171" }} />
+          <span className="fd-dot" style={{ background: "var(--amber)" }} />
+          <span className="fd-dot" style={{ background: "var(--green)" }} />
+        </div>
+        <div className="fd-builder-preview">
+          <div className="fd-builder-img" />
+          <div className="fd-builder-content">
+            <p className="fd-builder-title">Ceinture chauffante lombaire</p>
+            <span className="fd-builder-line" />
+            <p className="fd-builder-price">29,99 €</p>
+            <span className="fd-builder-cta">Commander →</span>
+          </div>
+        </div>
+      </div>
+    ),
   },
   {
     title: "Audit de page IA",
-    desc: "Score sur 100 basé sur 8 critères issus d'études UX publiées, corrections précises appliquées automatiquement, HTML corrigé téléchargeable.",
-    statVal: "8", statLabel: "critères analysés",
-    more: "Collez votre HTML ou uploadez le fichier, notre IA note chaque critère et vous montre exactement quoi corriger — avec un export du HTML déjà corrigé, prêt à republier.",
+    desc: "Avant de mettre votre page en ligne, notre IA la note sur 100 et vous dit précisément ce qui cloche : le titre pas assez visible, le bouton d'achat mal placé, aucun avis client, etc.",
+    statVal: "9", statLabel: "critères analysés",
+    more: "Collez le code de votre page (ou celle créée avec le site builder). L'IA l'analyse selon 9 points qui comptent vraiment pour vendre, y compris l'affichage mobile : voit-on bien le titre, comprend-on le prix, le bouton donne-t-il envie de cliquer, la page fonctionne-t-elle bien sur téléphone... Elle vous dit quoi corriger, et peut même vous donner la version déjà corrigée.",
     icon: (
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7">
         <path d="M12 3l7 3v6c0 5-3.5 7.5-7 9-3.5-1.5-7-4-7-9V6l7-3z"/>
         <path d="M9 12l2 2 4-4"/>
       </svg>
+    ),
+    demo: (
+      <div className="feat-demo fd-audit-mini">
+        <div className="fd-audit-ring">
+          <svg width="56" height="56" viewBox="0 0 56 56">
+            <circle cx="28" cy="28" r="24" fill="none" stroke="var(--surface-2)" strokeWidth="5" />
+            <circle cx="28" cy="28" r="24" fill="none" stroke="var(--green)" strokeWidth="5" strokeLinecap="round" strokeDasharray="150.8" strokeDashoffset="13.6" />
+          </svg>
+          <span>91</span>
+        </div>
+        <div className="fd-audit-bars">
+          <div>
+            <span className="fd-audit-bar-label">Titre visible</span>
+            <div className="fd-audit-bar-track"><div className="fd-audit-bar-fill" style={{ width: "95%" }} /></div>
+          </div>
+          <div>
+            <span className="fd-audit-bar-label">Bouton d&apos;achat</span>
+            <div className="fd-audit-bar-track"><div className="fd-audit-bar-fill" style={{ width: "90%" }} /></div>
+          </div>
+        </div>
+      </div>
     ),
   },
 ];
@@ -190,13 +256,14 @@ export default function LandingPage() {
       <nav className="lp-nav">
         <div className="wrap">
           <Link href="/" className="lp-logo">
-            <div className="lp-logo-mark" />
+            <Logo className="lp-logo-mark" />
             Dropvio
           </Link>
           <div className="nav-links">
             <a href="#features">Fonctionnalités</a>
             <a href="#workflow">Méthode</a>
             <a href="#pricing">Tarifs</a>
+            <Link href="/faq">FAQ</Link>
           </div>
           <Link href="/register" className="nav-cta">Commencer gratuitement</Link>
         </div>
@@ -261,6 +328,7 @@ export default function LandingPage() {
                 <div className="feat-icon">{feat.icon}</div>
                 <h3>{feat.title}</h3>
                 <p>{feat.desc}</p>
+                {feat.demo}
                 <div className="feat-stat">
                   <b>{feat.statVal}</b>
                   <span>{feat.statLabel}</span>
@@ -269,7 +337,7 @@ export default function LandingPage() {
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <path d="M12 5v14M5 12h14" />
                   </svg>
-                  {openFeature === i ? "Réduire" : "Voir le détail"}
+                  {openFeature === i ? "Voir moins" : "Voir plus"}
                 </div>
                 <div className="feat-more">
                   <div className="feat-more-inner">{feat.more}</div>
@@ -286,7 +354,7 @@ export default function LandingPage() {
           <div className="section-head" style={{ marginBottom: 40 }}>
             <p className="kicker">Analyse en direct</p>
             <h2>Cette page a été notée par notre IA</h2>
-            <p>8 critères issus d&apos;études réelles (Nielsen Norman Group, Unbounce, McKinsey).</p>
+            <p>9 critères issus d&apos;études réelles (Nielsen Norman Group, Unbounce, McKinsey).</p>
           </div>
 
           <div className="audit-demo">
@@ -309,7 +377,7 @@ export default function LandingPage() {
               <p className="tag">Audit automatique</p>
               <h3>Cette landing page a été analysée par notre IA</h3>
               <p className="desc">
-                Hiérarchie visuelle, espace blanc, typographie, preuve sociale, CTA, copywriting — 8 critères, 1 score, des corrections actionnables.
+                Hiérarchie visuelle, espace blanc, typographie, preuve sociale, CTA, copywriting, mobile — 9 critères, 1 score, des corrections actionnables.
               </p>
               <div className="audit-criteria">
                 <span className="crit ok">Hiérarchie visuelle</span>
@@ -366,7 +434,7 @@ export default function LandingPage() {
           <div className="section-head">
             <p className="kicker">Pourquoi faire confiance au score</p>
             <h2>Le /100 vient de vraies études, pas d&apos;une impression</h2>
-            <p>Chacun des 8 critères notés par notre IA est directement issu de recherches UX publiées — pas de faux témoignages, pas de chiffres inventés.</p>
+            <p>Chacun des 9 critères notés par notre IA est directement issu de recherches UX publiées — pas de faux témoignages, pas de chiffres inventés.</p>
           </div>
           <div className="trust-grid">
             {TRUST_ITEMS.map((item, i) => (
