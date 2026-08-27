@@ -3,23 +3,34 @@
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
+import Logo from "@/components/Logo";
 import { Suspense } from "react";
+
+function isEmailNotConfirmedError(err: { message: string; code?: string }): boolean {
+  return err.code === "email_not_confirmed" || err.message.toLowerCase().includes("email not confirmed");
+}
 
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirect = searchParams.get("redirect") ?? "/dashboard";
+  const justConfirmed = searchParams.get("confirmed") === "1";
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [unconfirmed, setUnconfirmed] = useState(false);
+  const [resendState, setResendState] = useState<"idle" | "loading" | "sent" | "error">("idle");
+  const [resendError, setResendError] = useState<string | null>(null);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!email.trim() || !password) return;
     setLoading(true);
     setError(null);
+    setUnconfirmed(false);
+    setResendState("idle");
 
     const supabase = createSupabaseBrowserClient();
     const { error: authError } = await supabase.auth.signInWithPassword({
@@ -28,7 +39,12 @@ function LoginForm() {
     });
 
     if (authError) {
-      setError("Email ou mot de passe incorrect.");
+      if (isEmailNotConfirmedError(authError)) {
+        setUnconfirmed(true);
+        setError("Ton compte n'est pas encore confirmé. Vérifie ta boîte mail pour confirmer ton compte avant de te connecter.");
+      } else {
+        setError("Email ou mot de passe incorrect.");
+      }
       setLoading(false);
       return;
     }
@@ -37,12 +53,32 @@ function LoginForm() {
     router.refresh();
   }
 
+  async function handleResend() {
+    setResendState("loading");
+    setResendError(null);
+    const supabase = createSupabaseBrowserClient();
+    const { error: resendErr } = await supabase.auth.resend({
+      type: "signup",
+      email: email.trim(),
+      options: {
+        emailRedirectTo: `${window.location.origin}/login?confirmed=1`,
+      },
+    });
+
+    if (resendErr) {
+      setResendState("error");
+      setResendError(resendErr.message);
+      return;
+    }
+    setResendState("sent");
+  }
+
   return (
     <div className="min-h-screen bg-[#0d0d14] flex items-center justify-center px-4">
       <div className="w-full max-w-sm">
         {/* Logo */}
         <div className="flex items-center justify-center gap-2 mb-10">
-          <span className="text-2xl">⚡</span>
+          <Logo className="w-7 h-7 text-[var(--logo-accent)]" />
           <span className="text-xl font-bold bg-gradient-to-r from-violet-400 to-blue-400 bg-clip-text text-transparent">
             Dropvio
           </span>
@@ -52,9 +88,32 @@ function LoginForm() {
           <h1 className="text-xl font-bold text-white mb-1">Connexion</h1>
           <p className="text-zinc-500 text-sm mb-8">Accède à ton espace Dropvio</p>
 
+          {justConfirmed && !error && (
+            <div className="mb-5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 px-4 py-3 text-emerald-400 text-sm">
+              Ton email est confirmé. Tu peux te connecter.
+            </div>
+          )}
+
           {error && (
-            <div className="mb-5 rounded-xl bg-red-500/10 border border-red-500/20 px-4 py-3 text-red-400 text-sm">
-              {error}
+            <div className="mb-5 rounded-xl bg-red-500/10 border border-red-500/20 px-4 py-3 text-red-400 text-sm flex flex-col gap-2">
+              <span>{error}</span>
+              {unconfirmed && (
+                resendState === "sent" ? (
+                  <span className="text-emerald-400 text-xs">Email renvoyé ! Vérifie ta boîte mail (et tes spams).</span>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={handleResend}
+                    disabled={resendState === "loading"}
+                    className="self-start text-xs text-violet-400 hover:text-violet-300 transition font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {resendState === "loading" ? "Envoi…" : "Renvoyer l'email de confirmation"}
+                  </button>
+                )
+              )}
+              {unconfirmed && resendState === "error" && resendError && (
+                <span className="text-red-300 text-xs">{resendError}</span>
+              )}
             </div>
           )}
 

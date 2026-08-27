@@ -3,6 +3,18 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
+import Logo from "@/components/Logo";
+
+const FALLBACK_ERROR = "Une erreur est survenue, réessaie.";
+
+// authError.message peut être vide, absent, ou littéralement "{}" (cas observé avec
+// AuthRetryableFetchError quand Supabase ne renvoie pas de corps JSON exploitable) —
+// on n'affiche jamais l'objet brut, seulement un message texte utile.
+function getAuthErrorMessage(err: { message?: string } | null | undefined): string {
+  const msg = err?.message?.trim();
+  if (!msg || msg === "{}") return FALLBACK_ERROR;
+  return msg;
+}
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -13,6 +25,8 @@ export default function RegisterPage() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [resendState, setResendState] = useState<"idle" | "loading" | "sent" | "error">("idle");
+  const [resendError, setResendError] = useState<string | null>(null);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -32,12 +46,15 @@ export default function RegisterPage() {
     const { data, error: authError } = await supabase.auth.signUp({
       email: email.trim(),
       password,
+      options: {
+        emailRedirectTo: `${window.location.origin}/login?confirmed=1`,
+      },
     });
 
     if (authError) {
       setError(authError.message === "User already registered"
         ? "Cet email est déjà utilisé. Connecte-toi."
-        : authError.message
+        : getAuthErrorMessage(authError)
       );
       setLoading(false);
       return;
@@ -53,17 +70,53 @@ export default function RegisterPage() {
     setLoading(false);
   }
 
+  async function handleResend() {
+    setResendState("loading");
+    setResendError(null);
+    const supabase = createSupabaseBrowserClient();
+    const { error: resendErr } = await supabase.auth.resend({
+      type: "signup",
+      email: email.trim(),
+      options: {
+        emailRedirectTo: `${window.location.origin}/login?confirmed=1`,
+      },
+    });
+
+    if (resendErr) {
+      setResendState("error");
+      setResendError(getAuthErrorMessage(resendErr));
+      return;
+    }
+    setResendState("sent");
+  }
+
   if (success) {
     return (
       <div className="min-h-screen bg-[#0d0d14] flex items-center justify-center px-4">
         <div className="w-full max-w-sm rounded-2xl bg-[#13131f] border border-white/5 p-8 text-center flex flex-col items-center gap-4">
           <span className="text-4xl">📧</span>
-          <h2 className="text-white font-bold text-lg">Vérifie tes emails</h2>
+          <h2 className="text-white font-bold text-lg">Vérifie ta boîte mail</h2>
           <p className="text-zinc-400 text-sm leading-relaxed">
             Un lien de confirmation a été envoyé à <span className="text-white font-medium">{email}</span>.
-            Clique dessus pour activer ton compte.
+            Confirme ton compte avant de te connecter — le lien active ton accès.
           </p>
-          <a href="/login" className="mt-2 text-sm text-violet-400 hover:text-violet-300 transition font-medium">
+
+          {resendState === "sent" ? (
+            <p className="mt-1 text-sm text-emerald-400">Email renvoyé ! Vérifie ta boîte mail (et tes spams).</p>
+          ) : (
+            <button
+              onClick={handleResend}
+              disabled={resendState === "loading"}
+              className="mt-1 text-sm text-violet-400 hover:text-violet-300 transition font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {resendState === "loading" ? "Envoi…" : "Renvoyer l'email de confirmation"}
+            </button>
+          )}
+          {resendState === "error" && resendError && (
+            <p className="text-xs text-red-400">{resendError}</p>
+          )}
+
+          <a href="/login" className="mt-2 text-sm text-zinc-500 hover:text-zinc-300 transition font-medium">
             Retour à la connexion →
           </a>
         </div>
@@ -76,7 +129,7 @@ export default function RegisterPage() {
       <div className="w-full max-w-sm">
         {/* Logo */}
         <div className="flex items-center justify-center gap-2 mb-10">
-          <span className="text-2xl">⚡</span>
+          <Logo className="w-7 h-7 text-[var(--logo-accent)]" />
           <span className="text-xl font-bold bg-gradient-to-r from-violet-400 to-blue-400 bg-clip-text text-transparent">
             Dropvio
           </span>
