@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
+import { getServerUserAndPlan } from "@/lib/supabase-server";
+import { PLAN_LIMITS, planLabel, getMonthlyUsage, incrementMonthlyUsage } from "@/lib/plan-limits";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
@@ -7,18 +10,18 @@ const SYSTEM = `Tu es un expert senior en conversion rate optimization et UI/UX 
 
 RÈGLE ABSOLUE: Réponds UNIQUEMENT avec un JSON valide, sans aucun texte avant ou après, sans markdown, sans balises de code.`;
 
-const PROMPT = `Analyse cette landing page HTML selon 8 critères professionnels. Retourne UNIQUEMENT ce JSON (aucun texte autour) :
+const PROMPT = `Analyse cette landing page HTML selon 9 critères professionnels. Retourne UNIQUEMENT ce JSON (aucun texte autour) :
 
 {
-  "score_global": <entier 0-100, égal à la somme des 8 scores>,
+  "score_global": <entier 0-100, égal à la somme des 9 scores>,
   "score_designer": "<2-3 phrases directes et honnêtes, comme un designer pro à 3000€ — pas condescendant, pas complaisant, juste vrai>",
   "resume_executif": "<2-3 phrases percutantes — commence par ce qui bloque concrètement les conversions>",
   "categories": [
     {
       "id": "hierarchie_visuelle",
       "nom": "Hiérarchie visuelle",
-      "score": <0-15>,
-      "max": 15,
+      "score": <0-13>,
+      "max": 13,
       "points_forts": ["<point positif concret>"],
       "points_faibles": ["<problème concret>"],
       "corrections_specifiques": ["<correction CSS/HTML précise et actionnable>"]
@@ -26,8 +29,8 @@ const PROMPT = `Analyse cette landing page HTML selon 8 critères professionnels
     {
       "id": "espace_blanc",
       "nom": "Espace blanc",
-      "score": <0-10>,
-      "max": 10,
+      "score": <0-9>,
+      "max": 9,
       "points_forts": [],
       "points_faibles": [],
       "corrections_specifiques": []
@@ -35,8 +38,8 @@ const PROMPT = `Analyse cette landing page HTML selon 8 critères professionnels
     {
       "id": "typographie",
       "nom": "Typographie",
-      "score": <0-10>,
-      "max": 10,
+      "score": <0-9>,
+      "max": 9,
       "points_forts": [],
       "points_faibles": [],
       "corrections_specifiques": []
@@ -44,8 +47,8 @@ const PROMPT = `Analyse cette landing page HTML selon 8 critères professionnels
     {
       "id": "image_produit",
       "nom": "Image produit",
-      "score": <0-15>,
-      "max": 15,
+      "score": <0-13>,
+      "max": 13,
       "points_forts": [],
       "points_faibles": [],
       "corrections_specifiques": []
@@ -53,8 +56,8 @@ const PROMPT = `Analyse cette landing page HTML selon 8 critères professionnels
     {
       "id": "cta",
       "nom": "CTA",
-      "score": <0-15>,
-      "max": 15,
+      "score": <0-13>,
+      "max": 13,
       "points_forts": [],
       "points_faibles": [],
       "corrections_specifiques": []
@@ -62,8 +65,8 @@ const PROMPT = `Analyse cette landing page HTML selon 8 critères professionnels
     {
       "id": "preuve_sociale",
       "nom": "Preuve sociale",
-      "score": <0-15>,
-      "max": 15,
+      "score": <0-13>,
+      "max": 13,
       "points_forts": [],
       "points_faibles": [],
       "corrections_specifiques": []
@@ -71,8 +74,8 @@ const PROMPT = `Analyse cette landing page HTML selon 8 critères professionnels
     {
       "id": "copywriting",
       "nom": "Copywriting",
-      "score": <0-10>,
-      "max": 10,
+      "score": <0-9>,
+      "max": 9,
       "points_forts": [],
       "points_faibles": [],
       "corrections_specifiques": []
@@ -80,8 +83,17 @@ const PROMPT = `Analyse cette landing page HTML selon 8 critères professionnels
     {
       "id": "urgence_prix",
       "nom": "Urgence & Prix",
-      "score": <0-10>,
-      "max": 10,
+      "score": <0-9>,
+      "max": 9,
+      "points_forts": [],
+      "points_faibles": [],
+      "corrections_specifiques": []
+    },
+    {
+      "id": "mobile",
+      "nom": "Mobile",
+      "score": <0-12>,
+      "max": 12,
       "points_forts": [],
       "points_faibles": [],
       "corrections_specifiques": []
@@ -91,40 +103,64 @@ const PROMPT = `Analyse cette landing page HTML selon 8 critères professionnels
 
 BARÈME:
 
-1. Hiérarchie visuelle (max 15)
+1. Hiérarchie visuelle (max 13)
    H1 visible sans scroll, CTA contrasté immédiatement visible, lecture Z/F naturelle, taille des éléments proportionnelle à leur importance.
-   15=exemplaire · 10-14=correct · 5-9=à revoir · 0-4=bloquant
+   13=exemplaire · 9-12=correct · 4-8=à revoir · 0-3=bloquant
 
-2. Espace blanc (max 10)
+2. Espace blanc (max 9)
    Densité ≤40% de remplissage écran, padding/margin cohérents entre blocs, zones de respiration pour l'œil.
-   10=exemplaire · 7-9=correct · 3-6=à revoir · 0-2=bloquant
+   9=exemplaire · 6-8=correct · 3-5=à revoir · 0-2=bloquant
 
-3. Typographie (max 10)
+3. Typographie (max 9)
    Max 2 polices, max 3 tailles distinctes, lisibilité CM1-CM2 (phrases <15 mots), contraste texte/fond WCAG AA.
-   10=exemplaire · 7-9=correct · 3-6=à revoir · 0-2=bloquant
+   9=exemplaire · 6-8=correct · 3-5=à revoir · 0-2=bloquant
 
-4. Image produit (max 15)
+4. Image produit (max 13)
    Image présente dans le hero (above fold), haute qualité (taille suffisante), montre le produit en usage, alt text présent.
-   15=exemplaire · 10-14=correct · 5-9=à revoir · 0-4=absent
+   13=exemplaire · 9-12=correct · 4-8=à revoir · 0-3=absent
 
-5. CTA (max 15)
+5. CTA (max 13)
    Bouton clairement visible, texte orienté bénéfice (pas seulement "Acheter"), couleur contrastée, une seule action principale, position above fold.
-   15=exemplaire · 10-14=correct · 5-9=à revoir · 0-4=bloquant
+   13=exemplaire · 9-12=correct · 4-8=à revoir · 0-3=bloquant
 
-6. Preuve sociale (max 15)
+6. Preuve sociale (max 13)
    Note/étoiles présentes, nombre de clients ou commandes mentionné, badges de confiance (paiement sécurisé, garantie), témoignages clients.
-   15=exemplaire · 10-14=correct · 5-9=à revoir · 0-4=absent
+   13=exemplaire · 9-12=correct · 4-8=à revoir · 0-3=absent
 
-7. Copywriting (max 10)
+7. Copywriting (max 9)
    H1 exprime un bénéfice (pas une feature), phrases courtes, bénéfices concrets et chiffrés, zéro jargon.
-   10=exemplaire · 7-9=correct · 3-6=à revoir · 0-2=bloquant
+   9=exemplaire · 6-8=correct · 3-5=à revoir · 0-2=bloquant
 
-8. Urgence & Prix (max 10)
+8. Urgence & Prix (max 9)
    Prix clairement affiché, prix barré si promo, urgence honnête (stock/délai), livraison explicitement mentionnée.
-   10=exemplaire · 7-9=correct · 3-6=à revoir · 0-2=absent
+   9=exemplaire · 6-8=correct · 3-5=à revoir · 0-2=absent
+
+9. Mobile (max 12)
+   Balise <meta name="viewport" content="width=device-width, initial-scale=1"> présente, texte lisible sans zoom (taille de base ≥14px sur mobile), zones cliquables (boutons/CTA) d'au moins 44×44px pour le tactile, aucun contenu qui déborde horizontalement (pas de largeur fixe supérieure au viewport), images en max-width:100% pour rester responsive.
+   12=exemplaire · 8-11=correct · 4-7=à revoir · 0-3=bloquant
 
 HTML à analyser :
 `;
+
+type AuditResult = {
+  score_global: number;
+  categories: unknown;
+};
+
+function isAuditResult(value: unknown): value is AuditResult {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    typeof (value as { score_global?: unknown }).score_global === "number" &&
+    Array.isArray((value as { categories?: unknown }).categories)
+  );
+}
+
+function extraireNomSite(html: string): string {
+  const match = html.match(/<title[^>]*>([^<]*)<\/title>/i);
+  const titre = match?.[1]?.trim();
+  return titre && titre.length > 0 ? titre : "Landing page sans titre";
+}
 
 function extractJson(raw: string): string {
   // 1. Strip markdown fences if present
@@ -143,6 +179,45 @@ function extractJson(raw: string): string {
 
 export async function POST(request: NextRequest) {
   try {
+    const { supabase, user, plan } = await getServerUserAndPlan();
+
+    if (!user) {
+      return NextResponse.json({ error: "Connecte-toi pour utiliser l'audit IA." }, { status: 401 });
+    }
+
+    // Garde-fou technique indépendant du quota métier mensuel : évite qu'un script ou
+    // un compte compromis enchaîne des dizaines d'appels Claude (facturés) d'affilée,
+    // même sous le plafond mensuel.
+    if (!checkRateLimit(`audit-site:${user.id}`, { max: 10, windowMs: 3_600_000 })) {
+      return NextResponse.json(
+        { error: "Trop d'audits en peu de temps. Réessaie dans quelques minutes." },
+        { status: 429 }
+      );
+    }
+
+    const maxParMois = PLAN_LIMITS[plan].auditsParMoisMax;
+
+    if (maxParMois === 0) {
+      return NextResponse.json(
+        { error: "L'audit IA n'est pas disponible sur le plan Free. Passe Pro pour débloquer 30 audits par mois." },
+        { status: 403 }
+      );
+    }
+
+    if (maxParMois !== null) {
+      const used = await getMonthlyUsage(supabase, user.id, "audit_ia");
+      if (used >= maxParMois) {
+        return NextResponse.json(
+          {
+            error: `Tu as atteint la limite de ${maxParMois} audits ce mois-ci sur le plan ${planLabel(plan)}. ${
+              plan === "pro" ? "Passe Agency pour 100 audits par mois." : "La limite se réinitialise le mois prochain."
+            }`,
+          },
+          { status: 403 }
+        );
+      }
+    }
+
     const { html } = await request.json();
 
     if (!html || typeof html !== "string" || html.trim().length < 50) {
@@ -159,7 +234,21 @@ export async function POST(request: NextRequest) {
       messages: [{ role: "user", content: PROMPT + truncated }],
     });
 
-    const raw = message.content[0].type === "text" ? message.content[0].text : "";
+    let raw: string | undefined;
+    for (const block of message.content) {
+      if (block.type === "text") {
+        raw = block.text;
+        break;
+      }
+    }
+
+    if (raw === undefined) {
+      console.error("[audit-site] no text block in response, stop_reason:", message.stop_reason);
+      return NextResponse.json(
+        { error: "Réponse Claude vide ou inattendue. Réessaie." },
+        { status: 500 }
+      );
+    }
 
     console.log("[audit-site] stop_reason:", message.stop_reason);
     console.log("[audit-site] raw response (%d chars):", raw.length, raw.slice(0, 400));
@@ -190,6 +279,24 @@ export async function POST(request: NextRequest) {
         },
         { status: 500 }
       );
+    }
+
+    // Le quota n'est décompté qu'en cas de succès — un audit qui échoue (erreur
+    // Claude, JSON invalide...) ne doit pas coûter au client.
+    await incrementMonthlyUsage(supabase, user.id, "audit_ia");
+
+    // Sauvegarde de l'historique — best-effort : un échec ici ne doit pas faire
+    // échouer la réponse, l'audit lui-même a réussi.
+    if (isAuditResult(result)) {
+      const { error: insertErr } = await supabase.from("audits_realises").insert({
+        user_id: user.id,
+        url_ou_nom_site: extraireNomSite(html),
+        score_total: result.score_global,
+        categories: result.categories,
+      });
+      if (insertErr) {
+        console.error("[audit-site] failed to save audit history:", insertErr);
+      }
     }
 
     return NextResponse.json(result);

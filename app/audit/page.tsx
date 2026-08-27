@@ -201,7 +201,7 @@ export default function AuditPage() {
         <div>
           <h1 className="text-2xl font-bold text-white">🔍 Audit de landing page IA</h1>
           <p className="text-zinc-500 text-sm mt-1.5">
-            Analyse basée sur Nielsen Norman Group, Unbounce et McKinsey — score sur 100 en 8 critères.
+            Analyse basée sur Nielsen Norman Group, Unbounce et McKinsey — score sur 100 en 9 critères.
           </p>
         </div>
 
@@ -304,7 +304,7 @@ export default function AuditPage() {
             {/* Category cards */}
             <div>
               <p className="text-[10px] font-semibold uppercase tracking-widest text-zinc-600 mb-4">
-                Analyse détaillée — 8 critères
+                Analyse détaillée — 9 critères
               </p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {result.categories.map((cat) => (
