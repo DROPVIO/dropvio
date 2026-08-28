@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
 import Sidebar from "@/components/Sidebar";
 import OnboardingProvider from "@/components/onboarding/OnboardingProvider";
@@ -288,9 +289,18 @@ export default function FormationPage() {
                             <h3 className="text-sm font-semibold text-white">{m.titre}</h3>
                             <p className="text-zinc-400 text-sm mt-2">{m.description}</p>
                           </div>
-                          <span className="text-zinc-500 text-xs shrink-0 mt-1 group-open:rotate-180 transition-transform">
-                            ▾
-                          </span>
+                          <div className="flex shrink-0 items-center gap-3">
+                            <Link
+                              href={`/formation/lire/${m.id}`}
+                              onClick={(e) => e.stopPropagation()}
+                              className="rounded-lg border border-violet-500/30 bg-violet-500/10 px-3 py-1.5 text-xs font-medium text-violet-300 transition hover:bg-violet-500/20"
+                            >
+                              Lire →
+                            </Link>
+                            <span className="text-zinc-500 text-xs mt-1 group-open:rotate-180 transition-transform">
+                              ▾
+                            </span>
+                          </div>
                         </summary>
                         <div
                           className="prose prose-invert prose-sm max-w-none mt-6 text-zinc-300"
