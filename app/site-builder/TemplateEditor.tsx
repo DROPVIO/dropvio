@@ -8,22 +8,26 @@ import {
   REASSURANCE_DEFAUT,
   imagesVides,
   buildTemplateHtml,
+  buildTemplateHtmlBoutique,
   type Categorie,
   type ContenuTexte,
   type ImagesSite,
   type Reassurance,
 } from "@/lib/site-templates";
+import type { BoutiqueDraft } from "@/lib/site-builder-handoff";
 
 type AuditLive = {
   score_global: number;
   resume_executif: string;
 };
 
-export default function TemplateEditor() {
+export default function TemplateEditor({ boutiqueDraft }: { boutiqueDraft?: BoutiqueDraft | null }) {
   // Préremplissage depuis "Créer un site pour cette boutique" (page de gestion boutique) —
   // mêmes query params que le mode IA (app/site-builder/page.tsx), lus ici directement
   // puisque ce composant n'a pas accès aux props du parent pour ce préremplissage.
+  // Mode produit unique seulement — le mode boutique arrive via la prop boutiqueDraft.
   const searchParams = useSearchParams();
+  const isBoutiqueMode = Boolean(boutiqueDraft);
   const prefillName = searchParams.get("name");
   const prefillDescription = searchParams.get("description");
   const prefillImage = searchParams.get("image");
@@ -53,15 +57,23 @@ export default function TemplateEditor() {
 
   const html = useMemo(
     () =>
-      buildTemplateHtml({
-        categorie,
-        contenu,
-        images,
-        prixVente,
-        prixBarre,
-        reassurance,
-      }),
-    [categorie, contenu, images, prixVente, prixBarre, reassurance]
+      boutiqueDraft
+        ? buildTemplateHtmlBoutique({
+            categorie,
+            nomBoutique: boutiqueDraft.nomBoutique,
+            descriptionBoutique: boutiqueDraft.descriptionBoutique,
+            produits: boutiqueDraft.produits,
+            reassurance,
+          })
+        : buildTemplateHtml({
+            categorie,
+            contenu,
+            images,
+            prixVente,
+            prixBarre,
+            reassurance,
+          }),
+    [categorie, contenu, images, prixVente, prixBarre, reassurance, boutiqueDraft]
   );
 
   // Score d'audit IA live — débouncé, réutilise l'auditeur existant (/api/audit-site)
@@ -70,7 +82,10 @@ export default function TemplateEditor() {
   const dernierHtmlAudite = useRef<string>("");
 
   useEffect(() => {
-    if (!contenu.titre.trim() || !contenu.description.trim()) return;
+    const pretAAuditer = isBoutiqueMode
+      ? Boolean(boutiqueDraft?.nomBoutique.trim() && boutiqueDraft?.produits.length)
+      : Boolean(contenu.titre.trim() && contenu.description.trim());
+    if (!pretAAuditer) return;
     if (html === dernierHtmlAudite.current) return;
 
     const timeout = setTimeout(async () => {
@@ -94,7 +109,7 @@ export default function TemplateEditor() {
     }, 3000);
 
     return () => clearTimeout(timeout);
-  }, [html, contenu.titre, contenu.description]);
+  }, [html, contenu.titre, contenu.description, isBoutiqueMode, boutiqueDraft]);
 
   function changerCategorie(id: Categorie) {
     setCategorie(id);
@@ -140,11 +155,12 @@ export default function TemplateEditor() {
   }
 
   async function handleDownload() {
+    const nom = isBoutiqueMode ? boutiqueDraft?.nomBoutique || "Boutique" : contenu.titre || "Landing page";
     const blob = new Blob([html], { type: "text/html;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `${(contenu.titre || "landing").replace(/\s+/g, "-").toLowerCase()}.html`;
+    a.download = `${nom.replace(/\s+/g, "-").toLowerCase()}.html`;
     a.click();
     URL.revokeObjectURL(url);
 
@@ -153,7 +169,7 @@ export default function TemplateEditor() {
       const res = await fetch("/api/sites-generes", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ nom_produit: contenu.titre || "Landing page", html_content: html, boutique_id: boutiqueId }),
+        body: JSON.stringify({ nom_produit: nom, html_content: html, boutique_id: boutiqueId }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -196,6 +212,14 @@ export default function TemplateEditor() {
         </div>
       </div>
 
+      {/* Mode boutique : les champs produit unique (contenu/preuve sociale/photos) ne
+          s'appliquent pas — l'édition des produits se fait en amont, une seule fois,
+          partagée avec le mode IA (voir components/site-builder/BoutiqueProduitsEditor.tsx
+          et app/site-builder/page.tsx). Ce composant se contente de consommer boutiqueDraft
+          pour le rendu (html useMemo ci-dessus) et l'audit live. */}
+
+      {!isBoutiqueMode && (
+      <>
       {/* Formulaire de contenu */}
       <div className="rounded-2xl bg-[var(--surface)] border border-[var(--border)] p-6 flex flex-col gap-5">
         <div className="flex items-center justify-between">
@@ -387,6 +411,8 @@ export default function TemplateEditor() {
           )}
         </div>
       </div>
+      </>
+      )}
 
       {/* Réassurance */}
       <div className="rounded-2xl bg-[var(--surface)] border border-[var(--border)] p-6 flex flex-col gap-4">
@@ -432,7 +458,7 @@ export default function TemplateEditor() {
           <p className="text-[11px] text-[var(--text-faint)] mt-1 leading-relaxed">
             {auditResult
               ? auditResult.resume_executif
-              : contenu.titre.trim() && contenu.description.trim()
+              : (isBoutiqueMode ? boutiqueDraft?.produits.length : contenu.titre.trim() && contenu.description.trim())
               ? "Analyse en cours après tes modifications…"
               : "Remplis le titre et la description pour lancer l'analyse."}
           </p>

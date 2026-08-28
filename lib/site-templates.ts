@@ -224,18 +224,22 @@ function checkoutStyles(t: CheckoutTheme): string {
   .dv-footer-links a { color:inherit; opacity:.6; font-size:var(--fs-small); text-decoration:underline; cursor:pointer; display:inline-block; padding:14px 8px; margin:-14px -8px; }`;
 }
 
-function checkoutHtml(prixVenteNum: number, cta: string): string {
+// idSuffix distingue plusieurs instances de ce bloc sur une même page (mode boutique —
+// une mini-commande indépendante par carte produit, voir productGridSection ci-dessous) ;
+// vide par défaut, donc les ids restent identiques à avant pour le mode produit unique
+// (une seule instance par page, aucun changement de sortie HTML).
+function checkoutHtml(prixVenteNum: number, cta: string, idSuffix = ""): string {
   return `
     <div class="dv-order">
       <div class="dv-qty-row">
-        <button type="button" id="dv-qty-minus" class="dv-qty-btn" aria-label="Diminuer la quantité">−</button>
-        <span id="dv-qty" class="dv-qty-val">1</span>
-        <button type="button" id="dv-qty-plus" class="dv-qty-btn" aria-label="Augmenter la quantité">+</button>
+        <button type="button" id="dv-qty-minus${idSuffix}" class="dv-qty-btn" aria-label="Diminuer la quantité">−</button>
+        <span id="dv-qty${idSuffix}" class="dv-qty-val">1</span>
+        <button type="button" id="dv-qty-plus${idSuffix}" class="dv-qty-btn" aria-label="Augmenter la quantité">+</button>
       </div>
-      <div class="dv-total">Total : <strong id="dv-total">${prixVenteNum.toFixed(2)}€</strong></div>
-      <button type="button" id="dv-order-btn" class="cta" style="border:none;cursor:pointer;font-family:inherit;">${escapeHtml(cta)}</button>
+      <div class="dv-total">Total : <strong id="dv-total${idSuffix}">${prixVenteNum.toFixed(2)}€</strong></div>
+      <button type="button" id="dv-order-btn${idSuffix}" class="cta" style="border:none;cursor:pointer;font-family:inherit;">${escapeHtml(cta)}</button>
 
-      <div id="dv-checkout-form" class="dv-checkout" style="display:none">
+      <div id="dv-checkout-form${idSuffix}" class="dv-checkout" style="display:none">
         <h3>Tes informations de livraison</h3>
         <div class="dv-field"><label>Nom complet</label><input type="text" placeholder="Ton nom"></div>
         <div class="dv-field"><label>Adresse de livraison</label><input type="text" placeholder="Adresse, code postal, ville"></div>
@@ -246,24 +250,24 @@ function checkoutHtml(prixVenteNum: number, cta: string): string {
     </div>`;
 }
 
-function checkoutScript(prixVenteNum: number): string {
+function checkoutScript(prixVenteNum: number, idSuffix = ""): string {
   return `<script>
 (function(){
   var prixUnitaire = ${prixVenteNum};
   var qty = 1;
-  var qtyEl = document.getElementById('dv-qty');
-  var totalEl = document.getElementById('dv-total');
+  var qtyEl = document.getElementById('dv-qty${idSuffix}');
+  var totalEl = document.getElementById('dv-total${idSuffix}');
   function updateTotal(){
     if (qtyEl) qtyEl.textContent = qty;
     if (totalEl) totalEl.textContent = (prixUnitaire * qty).toFixed(2) + '€';
   }
-  var minus = document.getElementById('dv-qty-minus');
-  var plus = document.getElementById('dv-qty-plus');
+  var minus = document.getElementById('dv-qty-minus${idSuffix}');
+  var plus = document.getElementById('dv-qty-plus${idSuffix}');
   if (minus) minus.addEventListener('click', function(){ if (qty > 1) { qty--; updateTotal(); } });
   if (plus) plus.addEventListener('click', function(){ qty++; updateTotal(); });
 
-  var orderBtn = document.getElementById('dv-order-btn');
-  var checkoutForm = document.getElementById('dv-checkout-form');
+  var orderBtn = document.getElementById('dv-order-btn${idSuffix}');
+  var checkoutForm = document.getElementById('dv-checkout-form${idSuffix}');
   if (orderBtn && checkoutForm) {
     orderBtn.addEventListener('click', function(){
       checkoutForm.style.display = 'block';
@@ -302,6 +306,68 @@ function mentionsLegalesModal(): string {
       <p>[À compléter : finalité de la collecte des données, base légale, durée de conservation, coordonnées du responsable de traitement, modalités d'exercice des droits d'accès, de rectification et de suppression conformément au RGPD.]</p>
     </div>
   </div>`;
+}
+
+// ─── Produits (mode boutique) — grille partagée + panier indépendant par carte ────────
+// Choix volontaire (voir discussion produit) : pas de panier partagé multi-articles avec
+// total cumulé — chaque carte a son propre mini parcours de commande indépendant, en
+// réutilisant checkoutHtml/checkoutScript ci-dessus avec un idSuffix par produit. Plus
+// simple à maintenir, et suffisant pour une page catalogue statique exportée.
+
+export type ProduitBoutique = {
+  nom: string;
+  description: string;
+  image: string | null;
+  prixVente: string;
+  prixOriginal: string;
+};
+
+// Styles de carte partagés entre les 4 déclinaisons boutique — seule la couleur d'accent
+// change, la forme (fond translucide + bordure + radius) reste cohérente avec les styles
+// "card"/"pill" déjà utilisés par les templates produit correspondants.
+export function grilleStyles(accent: string, cardBg: string, cardBorder: string, textColor: string, mutedColor: string): string {
+  return `
+  .grille { display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:24px; }
+  .grille-carte { background:${cardBg}; border:1px solid ${cardBorder}; border-radius:16px; overflow:hidden; display:flex; flex-direction:column; }
+  .grille-img { aspect-ratio:1; overflow:hidden; background:${cardBorder}; }
+  .grille-img img { width:100%; height:100%; object-fit:cover; }
+  .grille-img-placeholder { width:100%; height:100%; background:linear-gradient(135deg,${accent}33,${accent}11); }
+  .grille-body { padding:18px; display:flex; flex-direction:column; gap:10px; flex:1; }
+  .grille-body h3 { font-size:1.05rem; color:${textColor}; }
+  .grille-desc { font-size:var(--fs-small); color:${mutedColor}; line-height:1.5; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+  .grille-carte .prix { font-size:1.2rem; margin-bottom:4px; }
+  .grille-carte .dv-order { margin-top:auto; }
+  .grille-carte .cta { display:block; text-align:center; padding:11px; font-size:var(--fs-small); }
+  @media(max-width:500px){ .grille{grid-template-columns:1fr 1fr} }`;
+}
+
+function produitCardHtml(p: ProduitBoutique, idx: number, accent: string, ctaLabel: string): string {
+  const idSuffix = `-p${idx}`;
+  const prixNum = parseFloat(p.prixVente) || 0;
+  return `<div class="grille-carte">
+    <div class="grille-img">${p.image ? `<img src="${escapeHtml(p.image)}" alt="${escapeHtml(p.nom)}">` : `<div class="grille-img-placeholder"></div>`}</div>
+    <div class="grille-body">
+      <h3>${escapeHtml(p.nom)}</h3>
+      ${p.description.trim() ? `<p class="grille-desc">${escapeHtml(p.description)}</p>` : ""}
+      ${prixBlock(p.prixVente, p.prixOriginal, accent)}
+      ${p.prixVente.trim() ? checkoutHtml(prixNum, ctaLabel, idSuffix) : `<a href="#" class="cta">${escapeHtml(ctaLabel)}</a>`}
+    </div>
+  </div>`;
+}
+
+export function productGridSection(produits: ProduitBoutique[], accent: string, ctaLabel: string): string {
+  return `<section id="produits"><div class="wrap">
+    <h2>Nos produits</h2>
+    <div class="grille">
+      ${produits.map((p, i) => produitCardHtml(p, i, accent, ctaLabel)).join("\n")}
+    </div>
+  </div></section>`;
+}
+
+export function produitsCheckoutScripts(produits: ProduitBoutique[]): string {
+  return produits
+    .map((p, i) => (p.prixVente.trim() ? checkoutScript(parseFloat(p.prixVente) || 0, `-p${i}`) : ""))
+    .join("\n");
 }
 
 // ─── Template TECH — sombre, néon, split-screen, bento grid ──────────────────
@@ -678,6 +744,244 @@ function templateGenerique(c: ContenuTexte, images: ImagesSite, prixVente: strin
   ${mentionsLegalesModal()}
   ${prixVente.trim() ? checkoutScript(parseFloat(prixVente) || 0) : ""}
 </body></html>`;
+}
+
+// ─── Déclinaisons boutique (multi-produits) des 4 styles ──────────────────────────────
+// Même identité visuelle (polices, couleurs, forme du hero) que le template produit
+// correspondant, mais la section centrale devient une grille de produits (productGridSection)
+// au lieu du bloc "bénéfices + description + galerie" d'un seul produit. Le hero pointe vers
+// #produits au lieu d'un unique bloc de commande ; chaque carte gère sa propre commande.
+
+function templateTechBoutique(nomBoutique: string, descriptionBoutique: string, produits: ProduitBoutique[], reassurance: Reassurance, ctaLabel: string): string {
+  const accent = "#22d3ee";
+  const accent2 = "#7c3aed";
+  return `<!DOCTYPE html>
+<html lang="fr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>${escapeHtml(nomBoutique)}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  :root { --fs-h1:clamp(2.2rem,5vw,3.4rem); --fs-h2:clamp(1.6rem,3vw,2.2rem); --fs-body:1rem; --fs-small:.8rem; }
+  body { background:#0a0a0f; color:#f0f0f8; font-family:'Inter',sans-serif; line-height:1.6; }
+  h1,h2 { font-family:'Space Grotesk',sans-serif; }
+  .wrap { max-width:1100px; margin:0 auto; padding:0 24px; }
+  .hero { min-height:60vh; display:flex; align-items:center; padding:60px 0; background:
+    radial-gradient(circle at 80% 20%, ${accent2}22, transparent 50%),
+    radial-gradient(circle at 20% 80%, ${accent}22, transparent 50%); text-align:center; }
+  .hero .wrap { display:flex; flex-direction:column; align-items:center; }
+  .badge { display:inline-block; padding:6px 14px; border-radius:999px; background:${accent}1a; border:1px solid ${accent}44; color:${accent}; font-size:var(--fs-small); font-weight:600; letter-spacing:.06em; text-transform:uppercase; margin-bottom:20px; }
+  .hero h1 { font-size:var(--fs-h1); font-weight:700; line-height:1.1; margin-bottom:18px; }
+  .hero .sous { color:rgba(240,240,248,.6); font-size:var(--fs-body); margin-bottom:28px; max-width:560px; }
+  .cta { display:inline-block; padding:16px 32px; border-radius:10px; background:${accent}; color:#04141a; font-weight:700; text-decoration:none; box-shadow:0 0 32px ${accent}55; }
+  section { padding:70px 0; }
+  h2 { font-size:var(--fs-h2); margin-bottom:32px; text-align:center; }
+  .reassurance { border-top:1px solid rgba(255,255,255,.08); }
+  .reassurance-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:20px; }
+  .reassurance-item { display:flex; gap:12px; align-items:flex-start; }
+  .reassurance-icon { font-size:var(--fs-h2); }
+  .reassurance-titre { font-weight:600; font-size:var(--fs-body); }
+  .reassurance-texte { font-size:var(--fs-small); color:rgba(240,240,248,.55); margin-top:2px; }
+  footer { text-align:center; padding:30px; color:rgba(240,240,248,.4); font-size:var(--fs-small); }
+  @media(max-width:700px){ .reassurance-grid{grid-template-columns:1fr} }
+  ${grilleStyles(accent, "rgba(255,255,255,.04)", "rgba(255,255,255,.1)", "#f0f0f8", "rgba(240,240,248,.6)")}
+  ${checkoutStyles({
+    qtyBg: "rgba(255,255,255,.08)", qtyBorder: "rgba(255,255,255,.2)", qtyColor: "#fff",
+    cardBg: "rgba(255,255,255,.06)", inputBg: "rgba(255,255,255,.08)", inputBorder: "rgba(255,255,255,.2)", textColor: "#fff",
+    modalBg: "#13131a", modalText: "#f0f0f8",
+  })}
+</style></head>
+<body>
+  <section class="hero"><div class="wrap">
+    <span class="badge">Boutique</span>
+    <h1>${escapeHtml(nomBoutique)}</h1>
+    <p class="sous">${escapeHtml(descriptionBoutique)}</p>
+    <a href="#produits" class="cta">Voir nos produits</a>
+  </div></section>
+
+  ${productGridSection(produits, accent, ctaLabel)}
+
+  ${reassuranceBlock(reassurance, "wrap")}
+
+  <footer>© Tous droits réservés${footerLegalLink()}</footer>
+  ${mentionsLegalesModal()}
+  ${produitsCheckoutScripts(produits)}
+</body></html>`;
+}
+
+function templateMaisonBoutique(nomBoutique: string, descriptionBoutique: string, produits: ProduitBoutique[], reassurance: Reassurance, ctaLabel: string): string {
+  const accent = "#c2703d";
+  return `<!DOCTYPE html>
+<html lang="fr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>${escapeHtml(nomBoutique)}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  :root { --fs-h1:clamp(2rem,5vw,3rem); --fs-h2:clamp(1.5rem,3vw,2rem); --fs-body:1rem; --fs-small:.8rem; }
+  body { background:#faf7f2; color:#2b2620; font-family:'Inter',sans-serif; line-height:1.65; }
+  h1,h2 { font-family:'Fraunces',serif; font-weight:600; }
+  .wrap { max-width:1000px; margin:0 auto; padding:0 24px; }
+  .hero { text-align:center; padding:90px 24px 60px; }
+  .hero h1 { font-size:var(--fs-h1); margin-bottom:16px; }
+  .hero .sous { color:#6b5f4f; font-size:var(--fs-body); max-width:520px; margin:0 auto 28px; }
+  .cta { display:inline-block; padding:15px 30px; border-radius:999px; background:${accent}; color:#fff; font-weight:600; text-decoration:none; }
+  section { padding:60px 0; }
+  h2 { font-size:var(--fs-h2); text-align:center; margin-bottom:40px; }
+  .reassurance { background:#f1ece2; }
+  .reassurance-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:24px; text-align:center; }
+  .reassurance-item { display:flex; flex-direction:column; align-items:center; gap:8px; }
+  .reassurance-icon { font-size:var(--fs-h2); }
+  .reassurance-titre { font-weight:600; font-size:var(--fs-body); }
+  .reassurance-texte { font-size:var(--fs-small); color:#6b5f4f; }
+  footer { text-align:center; padding:30px; color:#8a7d6a; font-size:var(--fs-small); }
+  @media(max-width:700px){ .reassurance-grid{grid-template-columns:1fr} }
+  ${grilleStyles(accent, "#fff", "#e0d5c7", "#2b2620", "#6b5f4f")}
+  ${checkoutStyles({
+    // Cartes produit à fond blanc ici (contrairement au bloc CTA final sombre du template
+    // produit d'origine) — qty/texte foncés, pas blancs, sous peine d'être invisibles.
+    qtyBg: "#f1ece2", qtyBorder: "#e0d5c7", qtyColor: "#2b2620",
+    cardBg: "#f1ece2", inputBg: "#fff", inputBorder: "#e0d5c7", textColor: "#2b2620",
+    modalBg: "#faf7f2", modalText: "#2b2620",
+  })}
+</style></head>
+<body>
+  <section class="hero"><div class="wrap">
+    <h1>${escapeHtml(nomBoutique)}</h1>
+    <p class="sous">${escapeHtml(descriptionBoutique)}</p>
+    <a href="#produits" class="cta">Voir nos produits</a>
+  </div></section>
+
+  ${productGridSection(produits, accent, ctaLabel)}
+
+  ${reassuranceBlock(reassurance, "wrap")}
+
+  <footer>© Tous droits réservés${footerLegalLink()}</footer>
+  ${mentionsLegalesModal()}
+  ${produitsCheckoutScripts(produits)}
+</body></html>`;
+}
+
+function templateBeauteBoutique(nomBoutique: string, descriptionBoutique: string, produits: ProduitBoutique[], reassurance: Reassurance, ctaLabel: string): string {
+  const accent = "#ec4899";
+  return `<!DOCTYPE html>
+<html lang="fr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>${escapeHtml(nomBoutique)}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  :root { --fs-h1:clamp(2.4rem,6vw,3.6rem); --fs-h2:clamp(1.6rem,3vw,2.2rem); --fs-body:1rem; --fs-small:.8rem; }
+  body { background:linear-gradient(180deg,#fff1f5,#f3e8ff 40%,#fff 80%); color:#3a2e35; font-family:'Inter',sans-serif; line-height:1.65; }
+  h1,h2 { font-family:'Cormorant Garamond',serif; font-weight:700; }
+  .wrap { max-width:960px; margin:0 auto; padding:0 24px; }
+  .hero { text-align:center; padding:80px 24px 40px; }
+  .hero h1 { font-size:var(--fs-h1); margin-bottom:14px; }
+  .hero .sous { color:#5c4a53; font-size:var(--fs-body); max-width:480px; margin:0 auto 26px; }
+  .cta { display:inline-block; padding:15px 34px; border-radius:999px; background:${accent}; color:#fff; font-weight:600; text-decoration:none; letter-spacing:.02em; }
+  section { padding:56px 0; }
+  h2 { font-size:var(--fs-h2); text-align:center; margin-bottom:32px; }
+  .reassurance-grid { display:flex; justify-content:center; gap:32px; flex-wrap:wrap; text-align:center; }
+  .reassurance-item { max-width:180px; }
+  .reassurance-icon { font-size:var(--fs-h2); display:block; margin-bottom:6px; }
+  .reassurance-titre { font-weight:600; font-size:var(--fs-body); }
+  .reassurance-texte { font-size:var(--fs-small); color:#5c4a53; margin-top:2px; }
+  footer { text-align:center; padding:30px; color:#9c8a93; font-size:var(--fs-small); }
+  ${grilleStyles(accent, "#fff", `${accent}33`, "#3a2e35", "#5c4a53")}
+  ${checkoutStyles({
+    qtyBg: "#fff", qtyBorder: `${accent}33`, qtyColor: accent,
+    cardBg: "#fdf2f7", inputBg: "#fff", inputBorder: `${accent}33`, textColor: "#3a2e35",
+    modalBg: "#fff", modalText: "#3a2e35",
+  })}
+</style></head>
+<body>
+  <section class="hero"><div class="wrap">
+    <h1>${escapeHtml(nomBoutique)}</h1>
+    <p class="sous">${escapeHtml(descriptionBoutique)}</p>
+    <a href="#produits" class="cta">Voir nos produits</a>
+  </div></section>
+
+  ${productGridSection(produits, accent, ctaLabel)}
+
+  ${reassuranceBlock(reassurance, "wrap")}
+
+  <footer>© Tous droits réservés${footerLegalLink()}</footer>
+  ${mentionsLegalesModal()}
+  ${produitsCheckoutScripts(produits)}
+</body></html>`;
+}
+
+function templateGeneriqueBoutique(nomBoutique: string, descriptionBoutique: string, produits: ProduitBoutique[], reassurance: Reassurance, ctaLabel: string): string {
+  const accent = "#2563eb";
+  return `<!DOCTYPE html>
+<html lang="fr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>${escapeHtml(nomBoutique)}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  :root { --fs-h1:clamp(2rem,4.5vw,2.8rem); --fs-h2:clamp(1.4rem,3vw,1.9rem); --fs-body:1rem; --fs-small:.8rem; }
+  body { background:#fff; color:#111827; font-family:'Inter',system-ui,sans-serif; line-height:1.6; }
+  .wrap { max-width:1040px; margin:0 auto; padding:0 24px; }
+  .hero { text-align:center; padding:70px 24px 60px; }
+  .hero h1 { font-size:var(--fs-h1); font-weight:800; margin-bottom:14px; }
+  .hero .sous { color:#4b5563; font-size:var(--fs-body); max-width:520px; margin:0 auto 26px; }
+  .cta { display:inline-block; padding:14px 30px; border-radius:8px; background:${accent}; color:#fff; font-weight:600; text-decoration:none; }
+  section { padding:56px 0; }
+  h2 { font-size:var(--fs-h2); font-weight:800; text-align:center; margin-bottom:32px; }
+  .reassurance { background:#f9fafb; border-top:1px solid #e5e7eb; border-bottom:1px solid #e5e7eb; }
+  .reassurance-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:20px; text-align:center; }
+  .reassurance-icon { font-size:var(--fs-h2); display:block; margin-bottom:6px; }
+  .reassurance-titre { font-weight:600; font-size:var(--fs-body); }
+  .reassurance-texte { font-size:var(--fs-small); color:#6b7280; margin-top:2px; }
+  footer { text-align:center; padding:30px; color:#9ca3af; font-size:var(--fs-small); }
+  @media(max-width:700px){ .reassurance-grid{grid-template-columns:1fr} }
+  ${grilleStyles(accent, "#fff", "#e5e7eb", "#111827", "#6b7280")}
+  ${checkoutStyles({
+    // Cartes produit à fond blanc ici (contrairement au bloc CTA final sombre du template
+    // produit d'origine) — qty/texte foncés, pas blancs, sous peine d'être invisibles.
+    qtyBg: "#f3f4f6", qtyBorder: "#e5e7eb", qtyColor: "#111827",
+    cardBg: "#f9fafb", inputBg: "#fff", inputBorder: "#e5e7eb", textColor: "#111827",
+    modalBg: "#fff", modalText: "#111827",
+  })}
+</style></head>
+<body>
+  <section class="hero"><div class="wrap">
+    <h1>${escapeHtml(nomBoutique)}</h1>
+    <p class="sous">${escapeHtml(descriptionBoutique)}</p>
+    <a href="#produits" class="cta">Voir nos produits</a>
+  </div></section>
+
+  ${productGridSection(produits, accent, ctaLabel)}
+
+  ${reassuranceBlock(reassurance, "wrap")}
+
+  <footer>© Tous droits réservés${footerLegalLink()}</footer>
+  ${mentionsLegalesModal()}
+  ${produitsCheckoutScripts(produits)}
+</body></html>`;
+}
+
+export function buildTemplateHtmlBoutique(input: {
+  categorie: Categorie;
+  nomBoutique: string;
+  descriptionBoutique: string;
+  produits: ProduitBoutique[];
+  reassurance: Reassurance;
+  ctaLabel?: string;
+}): string {
+  const { categorie, nomBoutique, descriptionBoutique, produits, reassurance } = input;
+  const ctaLabel = input.ctaLabel?.trim() || "Commander";
+  switch (categorie) {
+    case "tech":
+      return templateTechBoutique(nomBoutique, descriptionBoutique, produits, reassurance, ctaLabel);
+    case "maison":
+      return templateMaisonBoutique(nomBoutique, descriptionBoutique, produits, reassurance, ctaLabel);
+    case "beaute":
+      return templateBeauteBoutique(nomBoutique, descriptionBoutique, produits, reassurance, ctaLabel);
+    default:
+      return templateGeneriqueBoutique(nomBoutique, descriptionBoutique, produits, reassurance, ctaLabel);
+  }
 }
 
 export function buildTemplateHtml(input: {

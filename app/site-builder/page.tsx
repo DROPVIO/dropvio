@@ -1,10 +1,12 @@
 "use client";
 
-import { useState, useEffect, Suspense } from "react";
+import { useState, useEffect, useRef, Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import TemplateEditor from "./TemplateEditor";
+import BoutiqueProduitsEditor from "@/components/site-builder/BoutiqueProduitsEditor";
 import { htmlToLiquidSection } from "@/lib/html-to-liquid";
+import { readAndClearBoutiqueDraft, type BoutiqueDraft } from "@/lib/site-builder-handoff";
 
 type Step = 1 | 2 | 3;
 
@@ -40,6 +42,25 @@ function SiteBuilderContent() {
   // Préremplissage depuis "Créer un site pour cette boutique" (page de gestion boutique) —
   // relie le site généré à sa boutique d'origine dans sites_generes.boutique_id.
   const boutiqueId = searchParams.get("boutiqueId") ?? undefined;
+
+  // Mode boutique (plusieurs produits) — le brouillon est déposé en sessionStorage par
+  // app/site-builder/boutique/[id]/page.tsx juste avant la navigation (voir
+  // lib/site-builder-handoff.ts). Lu une seule fois au montage, jamais rechargé ensuite :
+  // un refresh de cette page retombe proprement sur le mode produit unique vide.
+  const [boutiqueDraft, setBoutiqueDraft] = useState<BoutiqueDraft | null>(null);
+  // handoffLu protège contre le double-appel de cet effet en StrictMode (dev) : React
+  // monte → nettoie → remonte le même composant pour détecter les effets non idempotents.
+  // readAndClearBoutiqueDraft() ne l'est pas (elle vide sessionStorage) — sans cette garde,
+  // le 2e appel retrouve la valeur déjà effacée par le 1er et écrase l'état avec null.
+  const handoffLu = useRef(false);
+  useEffect(() => {
+    if (handoffLu.current) return;
+    handoffLu.current = true;
+    if (searchParams.get("multi") === "1") {
+      setBoutiqueDraft(readAndClearBoutiqueDraft());
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Style & palette
   const [selectedStyleId, setSelectedStyleId] = useState("premium");
@@ -154,27 +175,46 @@ function SiteBuilderContent() {
   }
 
   async function handleGenerate(withAutoMode = false) {
-    if (!productName.trim() || !description.trim()) return;
-    const isAuto = withAutoMode || autoMode;
+    // Mode boutique (plusieurs produits) : style="auto" (Claude choisit librement toute la
+    // palette) n'est pas supporté côté API pour ce mode — voir handleGenerateBoutique,
+    // app/api/generate-site/route.ts — la grille injectée doit connaître la couleur d'accent
+    // à l'avance. On résout donc toujours une palette concrète ici aussi.
+    if (boutiqueDraft) {
+      if (boutiqueDraft.produits.length === 0) return;
+    } else if (!productName.trim() || !description.trim()) {
+      return;
+    }
+    const isAuto = !boutiqueDraft && (withAutoMode || autoMode);
     setStep(2);
     setError(null);
     try {
+      const payload = boutiqueDraft
+        ? {
+            nomBoutique: boutiqueDraft.nomBoutique,
+            descriptionBoutique: boutiqueDraft.descriptionBoutique,
+            produits: boutiqueDraft.produits,
+            colorPrimary: palette.primary,
+            colorSecondary: palette.secondary,
+            colorAccent: palette.accent,
+            style: selectedStyleId,
+          }
+        : {
+            productName,
+            description,
+            colorPrimary: isAuto ? undefined : palette.primary,
+            colorSecondary: isAuto ? undefined : palette.secondary,
+            colorAccent: isAuto ? undefined : palette.accent,
+            style: isAuto ? "auto" : selectedStyleId,
+            imageUrl: imageUrl.trim() || undefined,
+            rating,
+            orders,
+            salePrice: salePrice.trim() || undefined,
+            originalPrice: originalPrice.trim() || undefined,
+          };
       const res = await fetch("/api/generate-site", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          productName,
-          description,
-          colorPrimary: isAuto ? undefined : palette.primary,
-          colorSecondary: isAuto ? undefined : palette.secondary,
-          colorAccent: isAuto ? undefined : palette.accent,
-          style: isAuto ? "auto" : selectedStyleId,
-          imageUrl: imageUrl.trim() || undefined,
-          rating,
-          orders,
-          salePrice: salePrice.trim() || undefined,
-          originalPrice: originalPrice.trim() || undefined,
-        }),
+        body: JSON.stringify(payload),
       });
       const json = await res.json();
       if (!res.ok) {
@@ -193,7 +233,11 @@ function SiteBuilderContent() {
       fetch("/api/sites-generes", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ nom_produit: productName, html_content: finalHtml, boutique_id: boutiqueId }),
+        body: JSON.stringify({
+          nom_produit: boutiqueDraft ? boutiqueDraft.nomBoutique : productName,
+          html_content: finalHtml,
+          boutique_id: boutiqueId,
+        }),
       })
         .then(async (res) => {
           const data = await res.json().catch(() => ({}));
@@ -213,22 +257,24 @@ function SiteBuilderContent() {
   }
 
   function handleDownload() {
+    const nom = boutiqueDraft ? boutiqueDraft.nomBoutique : productName;
     const blob = new Blob([generatedHtml], { type: "text/html;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `${productName.replace(/\s+/g, "-").toLowerCase()}-landing.html`;
+    a.download = `${nom.replace(/\s+/g, "-").toLowerCase()}-landing.html`;
     a.click();
     URL.revokeObjectURL(url);
   }
 
   function handleDownloadLiquid() {
-    const liquid = htmlToLiquidSection(generatedHtml, productName);
+    const nom = boutiqueDraft ? boutiqueDraft.nomBoutique : productName;
+    const liquid = htmlToLiquidSection(generatedHtml, nom);
     const blob = new Blob([liquid], { type: "text/plain;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `${productName.replace(/\s+/g, "-").toLowerCase()}-section.liquid`;
+    a.download = `${nom.replace(/\s+/g, "-").toLowerCase()}-section.liquid`;
     a.click();
     URL.revokeObjectURL(url);
   }
@@ -246,7 +292,9 @@ function SiteBuilderContent() {
     setOriginalPrice("");
   }
 
-  const canGenerate = productName.trim() && description.trim() && salePrice.trim();
+  const canGenerate = boutiqueDraft
+    ? boutiqueDraft.produits.length > 0
+    : productName.trim() && description.trim() && salePrice.trim();
 
   return (
     <div className="min-h-screen bg-[var(--bg)] text-[var(--text-primary)] font-sans px-4 py-16">
@@ -277,6 +325,22 @@ function SiteBuilderContent() {
           </div>
         </div>
 
+        {/* Bannière + édition mode boutique — rendues une seule fois, partagées entre les
+            modes IA et Éditeur de templates ci-dessous (tous deux consomment le même
+            boutiqueDraft en lecture pour leur génération respective). */}
+        {boutiqueDraft && (
+          <>
+            <div className="mb-4 rounded-2xl border border-violet-500/30 bg-violet-500/10 px-5 py-4 text-sm text-[var(--text-primary)]">
+              🏪 Mode boutique — <strong>{boutiqueDraft.nomBoutique}</strong> : {boutiqueDraft.produits.length} produit
+              {boutiqueDraft.produits.length > 1 ? "s" : ""} importé{boutiqueDraft.produits.length > 1 ? "s" : ""}
+              {boutiqueDraft.totalProduitsBoutique > boutiqueDraft.produits.length
+                ? ` sur ${boutiqueDraft.totalProduitsBoutique} au total (plafond de ${boutiqueDraft.produits.length} atteint).`
+                : "."}
+            </div>
+            <BoutiqueProduitsEditor draft={boutiqueDraft} onChange={setBoutiqueDraft} />
+          </>
+        )}
+
         {/* Mode toggle */}
         <div className="flex justify-center mb-10">
           <div className="inline-flex gap-1 p-1 rounded-xl bg-[var(--surface)] border border-[var(--border)]">
@@ -301,7 +365,7 @@ function SiteBuilderContent() {
           </div>
         </div>
 
-        {mode === "template" && <TemplateEditor />}
+        {mode === "template" && <TemplateEditor boutiqueDraft={boutiqueDraft} />}
 
         {mode === "ia" && (
         <>
@@ -330,8 +394,29 @@ function SiteBuilderContent() {
           ))}
         </div>
 
+        {/* Step 1 (mode boutique) : les produits s'éditent au-dessus (BoutiqueProduitsEditor,
+            partagé avec le mode Éditeur) — ici juste l'erreur éventuelle + génération directe.
+            Pas de bouton "génération automatique" : style="auto" n'est pas supporté pour ce
+            mode côté API (voir app/api/generate-site/route.ts). */}
+        {step === 1 && boutiqueDraft && (
+          <div className="rounded-2xl bg-[var(--surface)] border border-[var(--border)] p-8 flex flex-col gap-6">
+            {error && (
+              <div className="rounded-xl bg-[var(--danger)]/10 border border-[var(--danger)]/20 px-4 py-3 text-[var(--danger)] text-sm">
+                {error}
+              </div>
+            )}
+            <button
+              onClick={() => handleGenerate(false)}
+              disabled={!canGenerate}
+              className="w-full py-3 rounded-xl bg-gradient-to-r from-violet-600 to-blue-600 text-white text-sm font-semibold hover:from-violet-500 hover:to-blue-500 transition-all duration-200 shadow-lg shadow-violet-900/40 disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              Générer la landing page avec l&apos;IA
+            </button>
+          </div>
+        )}
+
         {/* Step 1: Product info form */}
-        {step === 1 && (
+        {step === 1 && !boutiqueDraft && (
           <div className="rounded-2xl bg-[var(--surface)] border border-[var(--border)] p-8 flex flex-col gap-6">
             {error && (
               <div className="rounded-xl bg-[var(--danger)]/10 border border-[var(--danger)]/20 px-4 py-3 text-[var(--danger)] text-sm">
@@ -660,7 +745,9 @@ function SiteBuilderContent() {
             <div className="flex items-center justify-between">
               <p className="text-sm text-[var(--text-muted)]">
                 Landing page générée pour{" "}
-                <span className="text-[var(--text-primary)] font-medium">{productName}</span>
+                <span className="text-[var(--text-primary)] font-medium">
+                  {boutiqueDraft ? boutiqueDraft.nomBoutique : productName}
+                </span>
               </p>
               <div className="flex gap-2 flex-wrap justify-end">
                 <button
@@ -690,7 +777,7 @@ function SiteBuilderContent() {
                 <div className="w-2.5 h-2.5 rounded-full bg-amber-500/60" />
                 <div className="w-2.5 h-2.5 rounded-full bg-emerald-500/60" />
                 <span className="ml-3 text-xs text-[var(--text-faint)] font-mono">
-                  {productName.replace(/\s+/g, "-").toLowerCase()}-landing.html
+                  {(boutiqueDraft ? boutiqueDraft.nomBoutique : productName).replace(/\s+/g, "-").toLowerCase()}-landing.html
                 </span>
               </div>
               {/* L'aperçu est toujours rendu sur fond blanc (background: "#fff") quel que

@@ -2,10 +2,11 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState, type FormEvent } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { getBoutiquePublicUrl } from "@/lib/boutique-subdomains";
 import { slugify } from "@/lib/slugify";
 import ProduitsSuggeres from "@/components/ProduitsSuggeres";
+import { BOUTIQUE_PRODUITS_CAP, writeBoutiqueDraft } from "@/lib/site-builder-handoff";
 
 type Boutique = {
   id: string;
@@ -49,6 +50,7 @@ function formatPrice(value: number | null | undefined) {
 
 export default function BoutiqueBuilderDetailPage() {
   const params = useParams();
+  const router = useRouter();
   const [boutique, setBoutique] = useState<Boutique | null>(null);
   const [globalError, setGlobalError] = useState<string | null>(null);
 
@@ -57,6 +59,12 @@ export default function BoutiqueBuilderDetailPage() {
   const [productsError, setProductsError] = useState<string | null>(null);
   const [productPage, setProductPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  // Total réel de produits (indépendant de la pagination) — détermine le mode du Site
+  // Builder au clic sur "Créer un site" : un seul produit garde le comportement existant,
+  // plusieurs déclenchent le hand-off multi-produits (voir lib/site-builder-handoff.ts).
+  const [totalProduits, setTotalProduits] = useState(0);
+  const [creatingSite, setCreatingSite] = useState(false);
+  const [creatingSiteError, setCreatingSiteError] = useState<string | null>(null);
   const [productSearch, setProductSearch] = useState("");
   const [productCategoryFilter, setProductCategoryFilter] = useState<string>("");
 
@@ -240,6 +248,7 @@ export default function BoutiqueBuilderDetailPage() {
       }
       setProducts(json.products ?? []);
       setTotalPages(json.totalPages ?? 1);
+      setTotalProduits(json.total ?? 0);
       setProductPage(page);
     } catch {
       setProductsError("Impossible de contacter le serveur.");
@@ -247,6 +256,48 @@ export default function BoutiqueBuilderDetailPage() {
       setTotalPages(1);
     } finally {
       setProductsLoading(false);
+    }
+  }
+
+  // Mode boutique (>1 produit) : récupère jusqu'à BOUTIQUE_PRODUITS_CAP produits en un seul
+  // appel (l'API renvoie le total réel indépendamment de ce plafond), les transmet au Site
+  // Builder via sessionStorage, puis navigue. Le mode produit unique (<=1 produit) n'est pas
+  // modifié : il continue à passer par buildSiteBuilderPrefillUrl ci-dessous.
+  async function handleCreerSiteBoutique(mode: "ia" | "template") {
+    if (typeof params?.id !== "string") return;
+    setCreatingSite(true);
+    setCreatingSiteError(null);
+    try {
+      const res = await fetch(`/api/boutiques/${params.id}/produits?limit=${BOUTIQUE_PRODUITS_CAP}`);
+      const json = await res.json();
+      if (!res.ok) {
+        setCreatingSiteError(json.error ?? "Impossible de charger les produits de la boutique.");
+        return;
+      }
+      const produitsList = (json.products as BoutiqueProduct[] ?? []).map((p) => ({
+        nom: p.nom,
+        description: p.description ?? "",
+        image: p.image_urls?.[0] ?? null,
+        prixVente: String(p.prix_vente ?? ""),
+        prixOriginal: p.prix_original != null ? String(p.prix_original) : "",
+      }));
+      writeBoutiqueDraft({
+        boutiqueId: params.id,
+        nomBoutique: boutique?.nom ?? "",
+        descriptionBoutique:
+          boutique?.description || `Découvrez les produits de la boutique ${boutique?.nom ?? ""}.`,
+        produits: produitsList,
+        totalProduitsBoutique: json.total ?? produitsList.length,
+      });
+      const p = new URLSearchParams();
+      p.set("mode", mode);
+      p.set("boutiqueId", params.id);
+      p.set("multi", "1");
+      router.push(`/site-builder?${p.toString()}`);
+    } catch {
+      setCreatingSiteError("Impossible de contacter le serveur.");
+    } finally {
+      setCreatingSite(false);
     }
   }
 
@@ -621,22 +672,55 @@ export default function BoutiqueBuilderDetailPage() {
         <section className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-6">
           <p className="text-xs uppercase tracking-[0.3em] text-violet-400">Site Builder</p>
           <h3 className="mt-2 text-lg font-semibold text-[var(--text-primary)]">Créer un site pour cette boutique</h3>
-          <p className="mt-1 text-sm text-[var(--text-faint)]">
-            Génère une landing page prérempli avec le nom et la description de la boutique — au choix, avec l&apos;IA ou l&apos;éditeur de templates.
-          </p>
+          {totalProduits > 1 ? (
+            <p className="mt-1 text-sm text-[var(--text-faint)]">
+              Cette boutique a {totalProduits} produits — génère un site multi-produits (jusqu&apos;à{" "}
+              {BOUTIQUE_PRODUITS_CAP} importés) avec l&apos;IA ou l&apos;éditeur de templates.
+            </p>
+          ) : (
+            <p className="mt-1 text-sm text-[var(--text-faint)]">
+              Génère une landing page prérempli avec le nom et la description de la boutique — au choix, avec l&apos;IA ou l&apos;éditeur de templates.
+            </p>
+          )}
+          {creatingSiteError && (
+            <p className="mt-2 text-sm text-[var(--danger)]">{creatingSiteError}</p>
+          )}
           <div className="mt-4 flex flex-wrap gap-3">
-            <Link
-              href={buildSiteBuilderPrefillUrl("ia")}
-              className="rounded-2xl bg-gradient-to-r from-violet-600 to-blue-600 px-5 py-3 text-sm font-semibold text-white transition hover:from-violet-500 hover:to-blue-500"
-            >
-              🤖 Génération IA
-            </Link>
-            <Link
-              href={buildSiteBuilderPrefillUrl("template")}
-              className="rounded-2xl border border-[var(--border)] bg-[var(--surface-2)] px-5 py-3 text-sm font-semibold text-[var(--text-primary)] transition hover:border-violet-500/40 hover:bg-violet-500/10"
-            >
-              🎨 Éditeur de templates
-            </Link>
+            {totalProduits > 1 ? (
+              <>
+                <button
+                  type="button"
+                  onClick={() => void handleCreerSiteBoutique("ia")}
+                  disabled={creatingSite}
+                  className="rounded-2xl bg-gradient-to-r from-violet-600 to-blue-600 px-5 py-3 text-sm font-semibold text-white transition hover:from-violet-500 hover:to-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {creatingSite ? "Préparation…" : "🤖 Génération IA"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => void handleCreerSiteBoutique("template")}
+                  disabled={creatingSite}
+                  className="rounded-2xl border border-[var(--border)] bg-[var(--surface-2)] px-5 py-3 text-sm font-semibold text-[var(--text-primary)] transition hover:border-violet-500/40 hover:bg-violet-500/10 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {creatingSite ? "Préparation…" : "🎨 Éditeur de templates"}
+                </button>
+              </>
+            ) : (
+              <>
+                <Link
+                  href={buildSiteBuilderPrefillUrl("ia")}
+                  className="rounded-2xl bg-gradient-to-r from-violet-600 to-blue-600 px-5 py-3 text-sm font-semibold text-white transition hover:from-violet-500 hover:to-blue-500"
+                >
+                  🤖 Génération IA
+                </Link>
+                <Link
+                  href={buildSiteBuilderPrefillUrl("template")}
+                  className="rounded-2xl border border-[var(--border)] bg-[var(--surface-2)] px-5 py-3 text-sm font-semibold text-[var(--text-primary)] transition hover:border-violet-500/40 hover:bg-violet-500/10"
+                >
+                  🎨 Éditeur de templates
+                </Link>
+              </>
+            )}
           </div>
         </section>
 

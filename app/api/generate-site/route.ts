@@ -3,8 +3,79 @@ import Anthropic from "@anthropic-ai/sdk";
 import { getServerUserAndPlan } from "@/lib/supabase-server";
 import { PLAN_LIMITS, planLabel, currentMonthKey } from "@/lib/plan-limits";
 import { checkRateLimit } from "@/lib/rate-limit";
+import { grilleStyles, productGridSection, produitsCheckoutScripts, type ProduitBoutique } from "@/lib/site-templates";
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+
+// Couleurs de fond/texte du mode IA — fixes, indépendantes du style choisi (voir le prompt
+// produit existant plus bas : "Fond global : #0a0a0f" n'a jamais varié). La grille de
+// produits injectée en mode boutique se cale dessus, garantissant une cohérence visuelle
+// même quand style="auto" laisse Claude choisir librement primary/secondary/accent.
+const IA_BG = "#0a0a0f";
+const IA_TEXT = "#f0f0f8";
+const IA_TEXT_MUTED = "rgba(240,240,248,.6)";
+const IA_CARD_BG = "rgba(255,255,255,.04)";
+const IA_CARD_BORDER = "rgba(255,255,255,.1)";
+
+// Appelle Claude avec relance automatique si la réponse est tronquée (max_tokens) — logique
+// partagée entre le mode produit unique et le mode boutique, seul le prompt initial diffère.
+async function generateHtmlViaClaude(prompt: string): Promise<string> {
+  type Msg = { role: "user" | "assistant"; content: string };
+  const msgs: Msg[] = [{ role: "user", content: prompt }];
+  let html = "";
+
+  for (let attempt = 0; attempt < 4; attempt++) {
+    const stream = client.messages.stream({
+      model: "claude-sonnet-4-6",
+      max_tokens: 16000,
+      messages: msgs,
+    });
+
+    let chunk = "";
+    stream.on("text", (text) => {
+      chunk += text;
+    });
+
+    const finalMessage = await stream.finalMessage();
+    html += chunk;
+
+    console.log(
+      `[generate-site] Attempt ${attempt + 1}: stop_reason=${finalMessage.stop_reason}, chunk=${chunk.length} chars, total=${html.length} chars`
+    );
+
+    if (finalMessage.stop_reason !== "max_tokens") break;
+
+    msgs.push({ role: "assistant", content: chunk });
+    msgs.push({
+      role: "user",
+      content:
+        "Continue exactement là où tu t'es arrêté dans le code HTML. Reprends immédiatement au caractère suivant sans répéter ce qui précède, sans aucune explication ni balise markdown.",
+    });
+  }
+
+  return html;
+}
+
+// Injecte la grille de produits (construite déterministiquement, voir lib/site-templates.ts)
+// dans la coquille générée par Claude en mode boutique — celui-ci ne connaît que le nom de
+// la boutique et son propos général, jamais le détail des produits (prix/images exacts),
+// pour éviter qu'il invente ou déforme des données réelles. Repli par simple insertion avant
+// </style>/</body> si Claude n'a pas laissé les marqueurs demandés tels quels.
+function injectProductGrid(html: string, produits: ProduitBoutique[], accent: string): string {
+  const gridCss = grilleStyles(accent, IA_CARD_BG, IA_CARD_BORDER, IA_TEXT, IA_TEXT_MUTED);
+  const gridHtml = productGridSection(produits, accent, "Commander");
+  const gridScripts = produitsCheckoutScripts(produits);
+
+  let result = html.includes("/* GRILLE_PRODUITS_CSS */")
+    ? html.replace("/* GRILLE_PRODUITS_CSS */", gridCss)
+    : html.replace("</style>", `${gridCss}\n</style>`);
+
+  result = result.includes("<!-- GRILLE_PRODUITS -->")
+    ? result.replace("<!-- GRILLE_PRODUITS -->", gridHtml)
+    : result.replace("</body>", `${gridHtml}\n</body>`);
+
+  return result.replace("</body>", `${gridScripts}\n</body>`);
+}
 
 export async function POST(request: NextRequest) {
   const { supabase, user, plan } = await getServerUserAndPlan();
@@ -50,7 +121,16 @@ export async function POST(request: NextRequest) {
     }
   }
 
-  const { productName, description, colorPrimary, colorSecondary, colorAccent, style, imageUrl, rating, orders, salePrice, originalPrice } = await request.json();
+  const body = await request.json();
+
+  // Mode boutique (plusieurs produits, voir app/site-builder/{page.tsx,TemplateEditor.tsx})
+  // — payload distingué par la présence d'un tableau produits, branché ici avant la
+  // validation productName/description (propre au mode produit unique, inchangée ci-dessous).
+  if (Array.isArray(body.produits)) {
+    return handleGenerateBoutique(body);
+  }
+
+  const { productName, description, colorPrimary, colorSecondary, colorAccent, style, imageUrl, rating, orders, salePrice, originalPrice } = body;
 
   const imageInstruction = imageUrl
     ? `\nImage du produit : une balise <img src="${imageUrl}" alt="${productName}" style="max-width:100%;max-height:420px;object-fit:contain;border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,0.18);"> doit apparaître de façon prominente dans la section hero, centrée ou côte à côte avec le texte.`
@@ -182,40 +262,7 @@ INTERDIT : noms de marques, journaux, magazines, médias, célébrités, platefo
 Réponds UNIQUEMENT avec le code HTML, sans explication ni balise markdown.`;
 
   try {
-    type Msg = { role: "user" | "assistant"; content: string };
-    const msgs: Msg[] = [{ role: "user", content: prompt }];
-    let html = "";
-
-    for (let attempt = 0; attempt < 4; attempt++) {
-      const stream = client.messages.stream({
-        model: "claude-sonnet-4-6",
-        max_tokens: 16000,
-        messages: msgs,
-      });
-
-      let chunk = "";
-      stream.on("text", (text) => {
-        chunk += text;
-      });
-
-      const finalMessage = await stream.finalMessage();
-      html += chunk;
-
-      console.log(
-        `[generate-site] Attempt ${attempt + 1}: stop_reason=${finalMessage.stop_reason}, chunk=${chunk.length} chars, total=${html.length} chars`
-      );
-
-      if (finalMessage.stop_reason !== "max_tokens") break;
-
-      // Response was truncated — ask Claude to continue exactly where it stopped
-      msgs.push({ role: "assistant", content: chunk });
-      msgs.push({
-        role: "user",
-        content:
-          "Continue exactement là où tu t'es arrêté dans le code HTML. Reprends immédiatement au caractère suivant sans répéter ce qui précède, sans aucune explication ni balise markdown.",
-      });
-    }
-
+    const html = await generateHtmlViaClaude(prompt);
     return NextResponse.json({ html });
   } catch (err) {
     console.error("[generate-site] Erreur Anthropic complète :", err);
@@ -228,6 +275,119 @@ Réponds UNIQUEMENT avec le code HTML, sans explication ni balise markdown.`;
     if (errObj?.error)  console.error("[generate-site] Détail API :", JSON.stringify(errObj.error));
     return NextResponse.json(
       { error: "Erreur lors de la génération de la landing page" },
+      { status: 500 }
+    );
+  }
+}
+
+// ─── Mode boutique (plusieurs produits) ────────────────────────────────────────────────
+// Claude ne génère que la coquille (hero/confiance/footer) — jamais le détail des produits
+// (prix, images, descriptions exactes), pour ne jamais risquer qu'il invente ou déforme des
+// données réelles. La grille de produits elle-même est injectée après coup, construite
+// déterministiquement à partir des données réelles (voir injectProductGrid ci-dessus).
+// Note de scope (v1) : contrairement au mode produit unique, style="auto" (Claude choisit
+// librement toute la palette) n'est pas supporté ici — la grille injectée doit connaître la
+// couleur d'accent à l'avance pour rester cohérente avec la coquille générée. primaryColor
+// est donc toujours résolue vers une valeur concrète, jamais laissée au hasard de Claude.
+async function handleGenerateBoutique(body: {
+  nomBoutique?: string;
+  descriptionBoutique?: string;
+  produits?: ProduitBoutique[];
+  colorPrimary?: string;
+  colorSecondary?: string;
+  colorAccent?: string;
+  style?: string;
+}): Promise<NextResponse> {
+  const { nomBoutique, descriptionBoutique, produits, colorPrimary, colorSecondary, colorAccent, style } = body;
+
+  if (!nomBoutique || !Array.isArray(produits) || produits.length === 0) {
+    return NextResponse.json(
+      { error: "nomBoutique et au moins un produit sont requis" },
+      { status: 400 }
+    );
+  }
+
+  const primaryColor   = colorPrimary   || "#7c3aed";
+  const secondaryColor = colorSecondary || "#1a0533";
+  const accentColor    = colorAccent    || "#f59e0b";
+
+  const STYLE_PROMPTS: Record<string, string> = {
+    premium:    "Ton et vocabulaire LUXUEUX : mots comme « exclusif », « raffiné », « d'exception », « prestige », « savoir-faire ». Typographie majestueuse, espacement généreux.",
+    nature:     "Ton et vocabulaire ÉCO-RESPONSABLE : mots comme « naturel », « durable », « éco-conçu », « respectueux », « bienveillant ».",
+    mainstream: "Ton et vocabulaire ACCESSIBLE : clair, direct, rassurant. Mots comme « simple », « pratique », « efficace », « pour tout le monde ».",
+    retro:      "Ton et vocabulaire RÉTRO/VINTAGE : nostalgique, chaleureux, authentique. Mots comme « intemporel », « artisanal », « fait avec passion ».",
+    minimal:    "Ton et vocabulaire MINIMALISTE : sobre, épuré, essentiel. Phrases courtes. Beaucoup d'espace blanc.",
+    tech:       "Ton et vocabulaire TECH/FUTURISTE : innovant, précis, performance. Mots comme « haute technologie », « ingénierie », « nouvelle génération ».",
+    auto:       "Choisis le ton et le vocabulaire les plus adaptés à cette boutique en fonction de son nom et de sa description (la palette de couleurs, elle, est déjà fixée ci-dessous — ne la change pas).",
+  };
+  const stylePrompt = STYLE_PROMPTS[style ?? ""] ?? STYLE_PROMPTS.auto;
+
+  // Aperçu succinct pour donner le ton à Claude sans lui laisser croire qu'il doit décrire
+  // chaque produit — la grille réelle (avec les vrais prix/images) est injectée après coup.
+  const apercuProduits = produits
+    .slice(0, 10)
+    .map((p) => `- ${p.nom}${p.prixVente ? ` (${p.prixVente}€)` : ""}`)
+    .join("\n");
+
+  const prompt = `Tu es un développeur front-end expert. Génère la COQUILLE HTML d'une page catalogue pour la boutique en ligne suivante — un système externe insère la grille de produits à ta place, tu ne dois JAMAIS écrire toi-même de fiche produit détaillée.
+
+BOUTIQUE : ${nomBoutique}
+DESCRIPTION : ${descriptionBoutique || "Boutique en ligne généraliste."}
+NOMBRE DE PRODUITS DANS LA BOUTIQUE : ${produits.length}
+APERÇU (pour inspirer le ton uniquement — ne décris jamais ces produits en détail, ni leur prix exact) :
+${apercuProduits}
+
+COULEURS (fixes, ne pas dévier) : Principale ${primaryColor} | Secondaire ${secondaryColor} | Accent ${accentColor}
+STYLE & TON : ${stylePrompt}
+
+SECTIONS (dans cet ordre, RIEN D'AUTRE) :
+
+1. NAVBAR sticky — logo texte "${nomBoutique}" à gauche, bouton CTA "Voir les produits" à droite (ancre href="#produits"). Fond transparent → semi-transparent au scroll (JS scrollY).
+
+2. HERO (80vh) — fond dégradé animé linear-gradient(135deg, ${primaryColor}, ${accentColor}). Titre H1 = accroche de la boutique dans son ensemble (jamais le nom d'un produit précis), sous-titre = reformulation persuasive de la description en 1-2 phrases. Bouton CTA vers #produits.
+
+3. CONFIANCE — section avec 4 stats visuelles en grille : "🚚 Livraison rapide & sécurisée", "🔒 Paiement 100% sécurisé", "↩ Satisfait ou remboursé 30 jours", "💬 Support client réactif". Fond rgba(255,255,255,0.04), bordure rgba(255,255,255,0.08).
+
+4. Sur sa propre ligne, EXACTEMENT ce commentaire HTML, sans rien avant ni après, sans l'expliquer ni le modifier :
+<!-- GRILLE_PRODUITS -->
+
+5. FOOTER — logo texte, liens légaux (Mentions légales, CGV, Confidentialité), copyright. 1 ligne simple.
+
+TYPOGRAPHIE :
+- Google Fonts : Playfair Display (700) + Inter (400, 600)
+- H1 : clamp(2.2rem, 5vw, 4rem), Playfair Display · H2 : clamp(1.6rem, 3vw, 2.4rem), Playfair Display · Body : Inter
+
+COULEURS DE BASE (fixes, ne pas dévier — la grille injectée s'y cale) :
+- Fond global : ${IA_BG} · Texte : ${IA_TEXT} · Texte secondaire : ${IA_TEXT_MUTED}
+
+ANIMATIONS (simples uniquement) :
+- Fade-in au chargement : éléments .reveal opacity:1/transform:none par défaut dans le CSS ; JS applique opacity:0+translateY(20px) au chargement puis setTimeout décalé (100/200/300ms) remet l'état normal avec transition 0.5s. Pas d'IntersectionObserver (non fiable en iframe).
+- Hover bouton : scale(1.03). Fond hero : @keyframes gradientShift sur background-position (10s infinite). Navbar : opacity/background au scroll.
+
+TECHNIQUE :
+- HTML standalone, tout CSS dans un unique <style>, tout JS dans un <script> avant </body>.
+- Juste avant la fermeture </style>, sur sa propre ligne, EXACTEMENT ce commentaire CSS, sans rien avant ni après :
+/* GRILLE_PRODUITS_CSS */
+- Responsive (media query 768px), scroll-behavior: smooth.
+- Textes en français, copywriting persuasif, aucun Lorem Ipsum.
+- Code COMPLET de <!DOCTYPE html> à </html>.
+
+INTERDIT : décrire, nommer, chiffrer ou lister un produit précis de la boutique (tu ne connais que l'aperçu ci-dessus, à titre de contexte uniquement) ; noms de marques, journaux, magazines, médias, célébrités, plateformes e-commerce (AliExpress, Amazon, etc.) ; avis client inventé, nom fictif, citation fabriquée.
+
+Réponds UNIQUEMENT avec le code HTML, sans explication ni balise markdown.`;
+
+  try {
+    const rawHtml = await generateHtmlViaClaude(prompt);
+    const html = injectProductGrid(rawHtml, produits, primaryColor);
+    return NextResponse.json({ html });
+  } catch (err) {
+    console.error("[generate-site] Erreur Anthropic complète (mode boutique) :", err);
+    if (err instanceof Error) {
+      console.error("[generate-site] Message :", err.message);
+      console.error("[generate-site] Stack :", err.stack);
+    }
+    return NextResponse.json(
+      { error: "Erreur lors de la génération du site boutique" },
       { status: 500 }
     );
   }
