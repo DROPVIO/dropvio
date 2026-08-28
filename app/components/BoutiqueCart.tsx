@@ -21,9 +21,16 @@ function boutiqueProductHref(boutiqueSlug: string, produitId: string): string {
 }
 
 export default function BoutiqueCart({ title = "Mon panier" }: BoutiqueCartProps) {
-  const [cart, setCart] = useState<BoutiqueCartItem[]>(() => getCartItems());
+  // Initialisé à [] (identique au rendu serveur) plutôt que via useState(() => getCartItems())
+  // — localStorage n'existe pas côté serveur, donc lire son contenu réel dans l'initialiseur
+  // provoquait un mismatch d'hydratation (erreur React #418) dès qu'un panier non vide était
+  // présent. Le vrai contenu n'est lu qu'après montage, dans ce useEffect — même pattern que
+  // getStoredTheme()/lib/theme.ts.
+  const [cart, setCart] = useState<BoutiqueCartItem[]>([]);
 
   useEffect(() => {
+    setCart(getCartItems());
+
     const handleUpdate = () => {
       setCart(getCartItems());
     };
@@ -64,67 +71,67 @@ export default function BoutiqueCart({ title = "Mon panier" }: BoutiqueCartProps
   }
 
   return (
-    <div className="rounded-3xl border border-white/10 bg-[#13131f] p-6">
-      <h2 className="text-xl font-semibold text-white">{title}</h2>
+    <div className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-6">
+      <h2 className="text-xl font-semibold text-[var(--text-primary)]">{title}</h2>
       {cart.length === 0 ? (
-        <div className="mt-6 rounded-3xl border border-dashed border-white/10 bg-white/5 p-6 text-sm text-zinc-400">
+        <div className="mt-6 rounded-3xl border border-dashed border-[var(--border)] bg-[var(--surface-2)] p-6 text-sm text-[var(--text-muted)]">
           Votre panier est vide. Ajoutez un produit depuis une fiche produit.
         </div>
       ) : (
         <div className="mt-6 space-y-4">
           {cart.map((item) => (
-            <div key={`${item.boutiqueSlug}-${item.produitId}`} className="rounded-3xl border border-white/10 bg-[#0f1320] p-4">
+            <div key={`${item.boutiqueSlug}-${item.produitId}`} className="rounded-3xl border border-[var(--border)] bg-[var(--surface-2)] p-4">
               <div className="flex items-start gap-4">
-                <div className="h-16 w-16 overflow-hidden rounded-3xl bg-white/5">
+                <div className="h-16 w-16 overflow-hidden rounded-3xl bg-[var(--surface-3)]">
                   {item.imageUrl ? (
                     <img src={item.imageUrl} alt={item.nom} className="h-full w-full object-cover" />
                   ) : (
-                    <div className="flex h-full w-full items-center justify-center text-xl text-zinc-600">🖼️</div>
+                    <div className="flex h-full w-full items-center justify-center text-xl text-[var(--text-faint)]">🖼️</div>
                   )}
                 </div>
                 <div className="flex-1">
-                  <Link href={boutiqueProductHref(item.boutiqueSlug, item.produitId)} className="text-sm font-semibold text-white hover:text-violet-300">
+                  <Link href={boutiqueProductHref(item.boutiqueSlug, item.produitId)} className="text-sm font-semibold text-[var(--text-primary)] hover:text-violet-300">
                     {item.nom}
                   </Link>
-                  <p className="mt-2 text-sm text-zinc-400">{item.quantity} × {item.prix.toFixed(2)}€</p>
-                  <p className="mt-2 text-sm text-white/80">Sous-total : {(item.prix * item.quantity).toFixed(2)}€</p>
+                  <p className="mt-2 text-sm text-[var(--text-muted)]">{item.quantity} × {item.prix.toFixed(2)}€</p>
+                  <p className="mt-2 text-sm text-[var(--text-primary)]/80">Sous-total : {(item.prix * item.quantity).toFixed(2)}€</p>
                 </div>
               </div>
               <div className="mt-4 flex flex-wrap items-center gap-3">
                 <button
                   type="button"
                   onClick={() => changeQuantity(item, -1)}
-                  className="rounded-full border border-white/10 bg-white/5 px-3 py-2 text-sm text-white transition hover:bg-violet-500/10"
+                  className="rounded-full border border-[var(--border)] bg-[var(--surface-3)] px-3 py-2 text-sm text-[var(--text-primary)] transition hover:bg-violet-500/10"
                 >
                   −
                 </button>
-                <span className="text-sm text-white">Quantité : {item.quantity}</span>
+                <span className="text-sm text-[var(--text-primary)]">Quantité : {item.quantity}</span>
                 <button
                   type="button"
                   onClick={() => changeQuantity(item, 1)}
-                  className="rounded-full border border-white/10 bg-white/5 px-3 py-2 text-sm text-white transition hover:bg-violet-500/10"
+                  className="rounded-full border border-[var(--border)] bg-[var(--surface-3)] px-3 py-2 text-sm text-[var(--text-primary)] transition hover:bg-violet-500/10"
                 >
                   +
                 </button>
                 <button
                   type="button"
                   onClick={() => removeItem(item)}
-                  className="ml-auto rounded-2xl border border-white/10 bg-red-500/10 px-3 py-2 text-sm text-red-200 transition hover:bg-red-500/20"
+                  className="ml-auto rounded-2xl border border-[var(--border)] bg-[var(--danger)]/10 px-3 py-2 text-sm text-[var(--danger)] transition hover:bg-[var(--danger)]/20"
                 >
                   Retirer
                 </button>
               </div>
             </div>
           ))}
-          <div className="rounded-3xl border border-white/10 bg-[#0d0d14] p-4">
-            <div className="flex items-center justify-between text-sm text-zinc-400">
+          <div className="rounded-3xl border border-[var(--border)] bg-[var(--surface-2)] p-4">
+            <div className="flex items-center justify-between text-sm text-[var(--text-muted)]">
               <span>Total</span>
-              <strong className="text-white">{totalPrice.toFixed(2)}€</strong>
+              <strong className="text-[var(--text-primary)]">{totalPrice.toFixed(2)}€</strong>
             </div>
-            <button disabled className="mt-4 w-full rounded-2xl bg-zinc-600/50 px-4 py-3 text-sm font-semibold text-white opacity-80">
+            <button disabled className="mt-4 w-full rounded-2xl bg-[var(--surface-3)] px-4 py-3 text-sm font-semibold text-[var(--text-faint)] opacity-80">
               Payer — bientôt disponible
             </button>
-            <p className="mt-3 text-xs leading-5 text-zinc-500">
+            <p className="mt-3 text-xs leading-5 text-[var(--text-faint)]">
               Le paiement n&apos;est pas encore activé. Ceci reste un panier local pour tester l&apos;expérience.
             </p>
           </div>

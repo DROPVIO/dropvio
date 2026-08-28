@@ -30,7 +30,7 @@ export default function AddToCartButton({ boutiqueSlug, produitId, slug, nom, pr
       >
         Ajouter au panier
       </button>
-      {message ? <p className="text-sm text-emerald-300">{message}</p> : null}
+      {message ? <p className="text-sm text-[var(--success)]">{message}</p> : null}
     </div>
   );
 }

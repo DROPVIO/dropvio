@@ -93,26 +93,26 @@ export default async function ProduitPage({
   };
 
   return (
-    <main className="min-h-screen bg-[#07080e] text-white">
+    <main className="min-h-screen bg-[var(--bg)] text-[var(--text-primary)]">
       <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6 lg:px-8">
         <div className="grid gap-10 xl:grid-cols-[0.65fr_0.35fr]">
-          <div className="rounded-3xl border border-white/10 bg-white/5 p-8 shadow-xl shadow-violet-500/10">
+          <div className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-8 shadow-xl shadow-violet-500/10">
             <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <p className="text-xs uppercase tracking-[0.3em] text-violet-300">Produit</p>
-                <h1 className="mt-2 text-4xl font-bold text-white">{produit.nom}</h1>
-                <p className="mt-2 text-sm text-zinc-400">{produit.boutique_categories?.nom ?? "Sans catégorie"}</p>
+                <h1 className="mt-2 text-4xl font-bold text-[var(--text-primary)]">{produit.nom}</h1>
+                <p className="mt-2 text-sm text-[var(--text-muted)]">{produit.boutique_categories?.nom ?? "Sans catégorie"}</p>
               </div>
               <Link
                 href={basePath || "/"}
-                className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-semibold text-white transition hover:border-violet-400/60 hover:bg-violet-500/10"
+                className="rounded-2xl border border-[var(--border)] bg-[var(--surface-2)] px-4 py-3 text-sm font-semibold text-[var(--text-primary)] transition hover:border-violet-400/60 hover:bg-violet-500/10"
               >
                 Retour à la boutique
               </Link>
             </div>
             <div className="grid gap-6 lg:grid-cols-[0.8fr_0.4fr]">
               <div>
-                <div className="rounded-3xl overflow-hidden border border-white/10 bg-[#0f1320]">
+                <div className="rounded-3xl overflow-hidden border border-[var(--border)] bg-[var(--surface-2)]">
                   {produit.image_urls?.[0] ? (
                     <img
                       src={produit.image_urls[0]}
@@ -120,26 +120,26 @@ export default async function ProduitPage({
                       className="h-full w-full object-cover"
                     />
                   ) : (
-                    <div className="flex aspect-square w-full items-center justify-center text-5xl text-zinc-700">🖼️</div>
+                    <div className="flex aspect-square w-full items-center justify-center text-5xl text-[var(--text-faint)]">🖼️</div>
                   )}
                 </div>
-                <div className="mt-6 rounded-3xl border border-white/10 bg-[#13131f] p-6">
-                  <h2 className="text-xl font-semibold text-white">Description</h2>
-                  <p className="mt-4 text-sm leading-7 text-zinc-300">{produit.description || "Aucune description disponible."}</p>
+                <div className="mt-6 rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-6">
+                  <h2 className="text-xl font-semibold text-[var(--text-primary)]">Description</h2>
+                  <p className="mt-4 text-sm leading-7 text-[var(--text-muted)]">{produit.description || "Aucune description disponible."}</p>
                 </div>
               </div>
               <aside className="space-y-6">
-                <div className="rounded-3xl border border-white/10 bg-[#13131f] p-6">
-                  <h2 className="text-xl font-semibold text-white">Prix</h2>
+                <div className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-6">
+                  <h2 className="text-xl font-semibold text-[var(--text-primary)]">Prix</h2>
                   <div className="mt-4 flex items-center gap-3">
-                    <span className="text-3xl font-bold text-white">{formatPrice(produit.prix_vente)}</span>
-                    {produit.prix_original ? <span className="text-sm text-zinc-500 line-through">{formatPrice(produit.prix_original)}</span> : null}
+                    <span className="text-3xl font-bold text-[var(--text-primary)]">{formatPrice(produit.prix_vente)}</span>
+                    {produit.prix_original ? <span className="text-sm text-[var(--text-faint)] line-through">{formatPrice(produit.prix_original)}</span> : null}
                   </div>
-                  <p className="mt-4 text-sm text-zinc-400">Stock : {produit.stock} ({produit.stock_status === "in_stock" ? "En stock" : "Rupture"})</p>
+                  <p className="mt-4 text-sm text-[var(--text-muted)]">Stock : {produit.stock} ({produit.stock_status === "in_stock" ? "En stock" : "Rupture"})</p>
                 </div>
-                <div className="rounded-3xl border border-white/10 bg-[#13131f] p-6">
-                  <h2 className="text-xl font-semibold text-white">Commander</h2>
-                  <p className="mt-4 text-sm text-zinc-400">Ajoute ce produit au panier puis passe à la caisse. Paiement sécurisé — bientôt disponible.</p>
+                <div className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-6">
+                  <h2 className="text-xl font-semibold text-[var(--text-primary)]">Commander</h2>
+                  <p className="mt-4 text-sm text-[var(--text-muted)]">Ajoute ce produit au panier puis passe à la caisse. Paiement sécurisé — bientôt disponible.</p>
                   <AddToCartButton
                     boutiqueSlug={slug}
                     produitId={produit.id}

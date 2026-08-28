@@ -32,11 +32,11 @@ export default async function BoutiquesIndexPage({
     : { boutiques: [] as PublicBoutique[], totalPages: 1 };
 
   return (
-    <main className="min-h-screen bg-[#07080e] text-white">
+    <main className="min-h-screen bg-[var(--bg)] text-[var(--text-primary)]">
       <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6 lg:px-8">
         <p className="text-sm uppercase tracking-[0.3em] text-violet-300">Annuaire</p>
-        <h1 className="mt-4 text-4xl font-bold text-white">Boutiques publiques</h1>
-        <p className="mt-4 max-w-2xl text-sm leading-7 text-zinc-300">
+        <h1 className="mt-4 text-4xl font-bold text-[var(--text-primary)]">Boutiques publiques</h1>
+        <p className="mt-4 max-w-2xl text-sm leading-7 text-[var(--text-muted)]">
           Découvre les boutiques créées par la communauté dropvio.
         </p>
 
@@ -46,17 +46,17 @@ export default async function BoutiquesIndexPage({
               <Link
                 key={boutique.id}
                 href={getBoutiquePublicUrl(boutique.slug)}
-                className="group overflow-hidden rounded-3xl border border-white/10 bg-[#141827] p-6 transition hover:border-violet-500/40 hover:bg-[#1a1f33]"
+                className="group overflow-hidden rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-6 transition hover:border-violet-500/40 hover:bg-[var(--surface-2)]"
               >
-                <h2 className="text-lg font-semibold text-white">{boutique.nom}</h2>
-                <p className="mt-2 text-sm text-zinc-400 line-clamp-3">
+                <h2 className="text-lg font-semibold text-[var(--text-primary)]">{boutique.nom}</h2>
+                <p className="mt-2 text-sm text-[var(--text-muted)] line-clamp-3">
                   {boutique.description || "Découvre les produits de cette boutique."}
                 </p>
               </Link>
             ))}
           </div>
         ) : (
-          <div className="mt-10 rounded-3xl border border-dashed border-white/10 bg-white/5 p-10 text-center text-sm text-zinc-400">
+          <div className="mt-10 rounded-3xl border border-dashed border-[var(--border)] bg-[var(--surface-2)] p-10 text-center text-sm text-[var(--text-muted)]">
             Aucune boutique publique pour le moment.
           </div>
         )}
@@ -66,16 +66,16 @@ export default async function BoutiquesIndexPage({
             {page > 1 && (
               <Link
                 href={`/boutiques?page=${page - 1}`}
-                className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white transition hover:border-violet-400/60 hover:bg-violet-500/10"
+                className="rounded-2xl border border-[var(--border)] bg-[var(--surface-2)] px-4 py-2 text-sm text-[var(--text-primary)] transition hover:border-violet-400/60 hover:bg-violet-500/10"
               >
                 ← Précédent
               </Link>
             )}
-            <span className="text-sm text-zinc-400">Page {page} / {totalPages}</span>
+            <span className="text-sm text-[var(--text-muted)]">Page {page} / {totalPages}</span>
             {page < totalPages && (
               <Link
                 href={`/boutiques?page=${page + 1}`}
-                className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white transition hover:border-violet-400/60 hover:bg-violet-500/10"
+                className="rounded-2xl border border-[var(--border)] bg-[var(--surface-2)] px-4 py-2 text-sm text-[var(--text-primary)] transition hover:border-violet-400/60 hover:bg-violet-500/10"
               >
                 Suivant →
               </Link>

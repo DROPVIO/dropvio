@@ -497,13 +497,13 @@ export default function BoutiqueBuilderDetailPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0d0d14] px-4 py-14 text-white">
+    <div className="min-h-screen bg-[var(--bg)] px-4 py-14 text-[var(--text-primary)]">
       <div className="mx-auto max-w-7xl space-y-8">
         <div className="mb-4 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <p className="text-sm uppercase tracking-[0.2em] text-violet-400">Mode Boutique</p>
             <h1 className="mt-3 text-3xl font-bold">Gestion de la boutique</h1>
-            <p className="mt-2 max-w-2xl text-sm text-zinc-400">
+            <p className="mt-2 max-w-2xl text-sm text-[var(--text-muted)]">
               Ajoute des produits, organise des catégories et prépare ta boutique publique.
             </p>
           </div>
@@ -514,8 +514,8 @@ export default function BoutiqueBuilderDetailPage() {
               disabled={!boutique || togglingPublic}
               className={`rounded-2xl border px-4 py-3 text-sm font-semibold transition disabled:opacity-50 ${
                 boutique?.est_publique
-                  ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-300 hover:bg-emerald-500/20"
-                  : "border-white/10 bg-white/5 text-white hover:border-violet-500/40 hover:bg-violet-500/10"
+                  ? "border-emerald-500/40 bg-emerald-500/10 text-[var(--success)] hover:bg-emerald-500/20"
+                  : "border-[var(--border)] bg-[var(--surface-2)] text-[var(--text-primary)] hover:border-violet-500/40 hover:bg-violet-500/10"
               }`}
             >
               {togglingPublic
@@ -526,7 +526,7 @@ export default function BoutiqueBuilderDetailPage() {
             </button>
             <Link
               href="/site-builder/boutique"
-              className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-semibold text-white transition hover:border-violet-500/40 hover:bg-violet-500/10"
+              className="rounded-2xl border border-[var(--border)] bg-[var(--surface-2)] px-4 py-3 text-sm font-semibold text-[var(--text-primary)] transition hover:border-violet-500/40 hover:bg-violet-500/10"
             >
               Retour aux boutiques
             </Link>
@@ -534,24 +534,24 @@ export default function BoutiqueBuilderDetailPage() {
         </div>
 
         {globalError ? (
-          <div className="rounded-3xl border border-red-500/20 bg-red-500/10 p-6 text-sm text-red-200">
+          <div className="rounded-3xl border border-[var(--danger)]/20 bg-[var(--danger)]/10 p-6 text-sm text-[var(--danger)]">
             {globalError}
           </div>
         ) : null}
 
         <div className="grid gap-6 xl:grid-cols-[0.9fr_0.55fr]">
-          <section className="rounded-3xl border border-white/10 bg-[#13131f] p-6">
+          <section className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-6">
             <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <p className="text-xs uppercase tracking-[0.3em] text-violet-400">Boutique</p>
-                <h2 className="mt-2 text-2xl font-semibold text-white">{boutique?.nom || "Chargement..."}</h2>
-                <p className="mt-2 text-sm text-zinc-500">
+                <h2 className="mt-2 text-2xl font-semibold text-[var(--text-primary)]">{boutique?.nom || "Chargement..."}</h2>
+                <p className="mt-2 text-sm text-[var(--text-faint)]">
                   URL : {boutique ? getBoutiquePublicUrl(boutique.slug) : "..."}
                   {boutique ? (
                     boutique.est_publique ? (
-                      <span className="ml-2 text-emerald-400">— accessible à tous</span>
+                      <span className="ml-2 text-[var(--success)]">— accessible à tous</span>
                     ) : (
-                      <span className="ml-2 text-amber-400">— privée, non accessible tant qu&apos;elle n&apos;est pas publiée</span>
+                      <span className="ml-2 text-[var(--warning)]">— privée, non accessible tant qu&apos;elle n&apos;est pas publiée</span>
                     )
                   ) : null}
                 </p>
@@ -559,26 +559,26 @@ export default function BoutiqueBuilderDetailPage() {
             </div>
 
             <div className="grid gap-4 sm:grid-cols-3">
-              <div className="rounded-3xl border border-white/10 bg-[#0d0d14] p-4">
-                <p className="text-xs uppercase tracking-[0.2em] text-zinc-400">Thème</p>
-                <p className="mt-2 text-sm text-white">{boutique?.theme || "Standard"}</p>
+              <div className="rounded-3xl border border-[var(--border)] bg-[var(--surface-2)] p-4">
+                <p className="text-xs uppercase tracking-[0.2em] text-[var(--text-muted)]">Thème</p>
+                <p className="mt-2 text-sm text-[var(--text-primary)]">{boutique?.theme || "Standard"}</p>
               </div>
-              <div className="rounded-3xl border border-white/10 bg-[#0d0d14] p-4">
-                <p className="text-xs uppercase tracking-[0.2em] text-zinc-400">Produits affichés</p>
-                <p className="mt-2 text-sm text-white">{products.length} / {DEFAULT_PAGE_SIZE} par page</p>
+              <div className="rounded-3xl border border-[var(--border)] bg-[var(--surface-2)] p-4">
+                <p className="text-xs uppercase tracking-[0.2em] text-[var(--text-muted)]">Produits affichés</p>
+                <p className="mt-2 text-sm text-[var(--text-primary)]">{products.length} / {DEFAULT_PAGE_SIZE} par page</p>
               </div>
-              <div className="rounded-3xl border border-white/10 bg-[#0d0d14] p-4">
-                <p className="text-xs uppercase tracking-[0.2em] text-zinc-400">Catégories</p>
-                <p className="mt-2 text-sm text-white">{categories.length}</p>
+              <div className="rounded-3xl border border-[var(--border)] bg-[var(--surface-2)] p-4">
+                <p className="text-xs uppercase tracking-[0.2em] text-[var(--text-muted)]">Catégories</p>
+                <p className="mt-2 text-sm text-[var(--text-primary)]">{categories.length}</p>
               </div>
             </div>
           </section>
 
-          <section className="rounded-3xl border border-white/10 bg-[#13131f] p-6">
-            <h3 className="text-lg font-semibold text-white">Filtrer les produits</h3>
+          <section className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-6">
+            <h3 className="text-lg font-semibold text-[var(--text-primary)]">Filtrer les produits</h3>
             <div className="mt-4 space-y-4">
               <div>
-                <label className="text-sm text-zinc-300">Recherche</label>
+                <label className="text-sm text-[var(--text-muted)]">Recherche</label>
                 <input
                   type="search"
                   value={productSearch}
@@ -587,18 +587,18 @@ export default function BoutiqueBuilderDetailPage() {
                     if (event.key === "Enter") void fetchProducts(1);
                   }}
                   placeholder="Rechercher par nom ou description"
-                  className="mt-2 w-full rounded-2xl border border-white/10 bg-[#0d0d14] px-4 py-3 text-sm text-white outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
+                  className="mt-2 w-full rounded-2xl border border-[var(--border)] bg-[var(--bg-sunken)] px-4 py-3 text-sm text-[var(--text-primary)] outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
                 />
               </div>
               <div>
-                <label className="text-sm text-zinc-300">Catégorie</label>
+                <label className="text-sm text-[var(--text-muted)]">Catégorie</label>
                 <select
                   value={productCategoryFilter}
                   onChange={(event) => {
                     setProductCategoryFilter(event.target.value);
                     void fetchProducts(1);
                   }}
-                  className="mt-2 w-full rounded-2xl border border-white/10 bg-[#0d0d14] px-4 py-3 text-sm text-white outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
+                  className="mt-2 w-full rounded-2xl border border-[var(--border)] bg-[var(--bg-sunken)] px-4 py-3 text-sm text-[var(--text-primary)] outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
                 >
                   <option value="">Toutes les catégories</option>
                   {categories.map((category) => (
@@ -618,10 +618,10 @@ export default function BoutiqueBuilderDetailPage() {
         </div>
 
         {/* Créer un site pour cette boutique */}
-        <section className="rounded-3xl border border-white/10 bg-[#13131f] p-6">
+        <section className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-6">
           <p className="text-xs uppercase tracking-[0.3em] text-violet-400">Site Builder</p>
-          <h3 className="mt-2 text-lg font-semibold text-white">Créer un site pour cette boutique</h3>
-          <p className="mt-1 text-sm text-zinc-500">
+          <h3 className="mt-2 text-lg font-semibold text-[var(--text-primary)]">Créer un site pour cette boutique</h3>
+          <p className="mt-1 text-sm text-[var(--text-faint)]">
             Génère une landing page prérempli avec le nom et la description de la boutique — au choix, avec l&apos;IA ou l&apos;éditeur de templates.
           </p>
           <div className="mt-4 flex flex-wrap gap-3">
@@ -633,7 +633,7 @@ export default function BoutiqueBuilderDetailPage() {
             </Link>
             <Link
               href={buildSiteBuilderPrefillUrl("template")}
-              className="rounded-2xl border border-white/10 bg-white/5 px-5 py-3 text-sm font-semibold text-white transition hover:border-violet-500/40 hover:bg-violet-500/10"
+              className="rounded-2xl border border-[var(--border)] bg-[var(--surface-2)] px-5 py-3 text-sm font-semibold text-[var(--text-primary)] transition hover:border-violet-500/40 hover:bg-violet-500/10"
             >
               🎨 Éditeur de templates
             </Link>
@@ -641,12 +641,12 @@ export default function BoutiqueBuilderDetailPage() {
         </section>
 
         {/* Push Shopify */}
-        <section className="rounded-3xl border border-white/10 bg-[#13131f] p-6">
+        <section className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <p className="text-xs uppercase tracking-[0.3em] text-violet-400">Shopify</p>
-              <h3 className="mt-2 text-lg font-semibold text-white">Pousser vers Shopify</h3>
-              <p className="mt-1 text-sm text-zinc-500">
+              <h3 className="mt-2 text-lg font-semibold text-[var(--text-primary)]">Pousser vers Shopify</h3>
+              <p className="mt-1 text-sm text-[var(--text-faint)]">
                 {shopifyConnected === null
                   ? "Vérification de la connexion…"
                   : shopifyConnected
@@ -665,7 +665,7 @@ export default function BoutiqueBuilderDetailPage() {
           </div>
 
           {shopifyPushError && (
-            <div className="mt-4 rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+            <div className="mt-4 rounded-xl border border-[var(--danger)]/20 bg-[var(--danger)]/10 px-4 py-3 text-sm text-[var(--danger)]">
               {shopifyPushError}
             </div>
           )}
@@ -675,10 +675,10 @@ export default function BoutiqueBuilderDetailPage() {
               <div
                 className={`rounded-xl border px-4 py-3 text-sm ${
                   shopifyPushResult.status === "success"
-                    ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-300"
+                    ? "border-emerald-500/20 bg-emerald-500/10 text-[var(--success)]"
                     : shopifyPushResult.status === "partial"
-                    ? "border-amber-500/20 bg-amber-500/10 text-amber-300"
-                    : "border-red-500/20 bg-red-500/10 text-red-300"
+                    ? "border-amber-500/20 bg-amber-500/10 text-[var(--warning)]"
+                    : "border-[var(--danger)]/20 bg-[var(--danger)]/10 text-[var(--danger)]"
                 }`}
               >
                 {shopifyPushResult.status === "success"
@@ -690,7 +690,7 @@ export default function BoutiqueBuilderDetailPage() {
               {[...shopifyPushResult.categories, ...shopifyPushResult.products]
                 .filter((item) => item.status === "error")
                 .map((item) => (
-                  <div key={item.id} className="rounded-lg border border-red-500/10 bg-red-500/[0.04] px-3 py-2 text-xs text-red-300">
+                  <div key={item.id} className="rounded-lg border border-[var(--danger)]/10 bg-[var(--danger)]/[0.04] px-3 py-2 text-xs text-[var(--danger)]">
                     <span className="font-semibold">{item.nom}</span> : {item.error}
                   </div>
                 ))}
@@ -710,30 +710,30 @@ export default function BoutiqueBuilderDetailPage() {
         )}
 
         <div className="grid gap-6 xl:grid-cols-[0.9fr_0.55fr]">
-          <section className="rounded-3xl border border-white/10 bg-[#13131f] p-6">
+          <section className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-6">
             <div className="mb-6 flex items-center justify-between gap-4">
               <div>
-                <h3 className="text-xl font-semibold text-white">Produits</h3>
-                <p className="mt-2 text-sm text-zinc-400">Liste des produits et gestion rapide.</p>
+                <h3 className="text-xl font-semibold text-[var(--text-primary)]">Produits</h3>
+                <p className="mt-2 text-sm text-[var(--text-muted)]">Liste des produits et gestion rapide.</p>
               </div>
-              <div className="flex flex-wrap gap-2 text-xs text-zinc-500">
-                <span className="rounded-full border border-white/10 bg-white/5 px-3 py-2">Max Free: 10</span>
-                <span className="rounded-full border border-white/10 bg-white/5 px-3 py-2">Max Pro/Agency: 200</span>
+              <div className="flex flex-wrap gap-2 text-xs text-[var(--text-faint)]">
+                <span className="rounded-full border border-[var(--border)] bg-[var(--surface-2)] px-3 py-2">Max Free: 10</span>
+                <span className="rounded-full border border-[var(--border)] bg-[var(--surface-2)] px-3 py-2">Max Pro/Agency: 200</span>
               </div>
             </div>
 
-            <div className="rounded-3xl border border-white/10 bg-[#0d0d14] p-4">
+            <div className="rounded-3xl border border-[var(--border)] bg-[var(--surface-2)] p-4">
               {productsLoading ? (
-                <p className="text-sm text-zinc-400">Chargement des produits...</p>
+                <p className="text-sm text-[var(--text-muted)]">Chargement des produits...</p>
               ) : productsError ? (
-                <p className="text-sm text-red-300">{productsError}</p>
+                <p className="text-sm text-[var(--danger)]">{productsError}</p>
               ) : products.length === 0 ? (
-                <p className="text-sm text-zinc-400">Aucun produit trouvé pour le moment.</p>
+                <p className="text-sm text-[var(--text-muted)]">Aucun produit trouvé pour le moment.</p>
               ) : (
                 <div className="overflow-x-auto">
                   <table className="min-w-full border-separate border-spacing-0 text-left text-sm">
                     <thead>
-                      <tr className="border-b border-white/10 text-zinc-400">
+                      <tr className="border-b border-[var(--border)] text-[var(--text-muted)]">
                         <th className="px-4 py-3">Produit</th>
                         <th className="px-4 py-3">Catégorie</th>
                         <th className="px-4 py-3">Prix</th>
@@ -743,32 +743,32 @@ export default function BoutiqueBuilderDetailPage() {
                     </thead>
                     <tbody>
                       {products.map((product, index) => (
-                        <tr key={product.id} className="border-b border-white/10">
+                        <tr key={product.id} className="border-b border-[var(--border)]">
                           <td className="px-4 py-3 align-top">
-                            <div className="font-semibold text-white">{product.nom}</div>
-                            <div className="text-xs text-zinc-500">{product.slug}</div>
+                            <div className="font-semibold text-[var(--text-primary)]">{product.nom}</div>
+                            <div className="text-xs text-[var(--text-faint)]">{product.slug}</div>
                           </td>
-                          <td className="px-4 py-3 align-top text-sm text-zinc-300">
+                          <td className="px-4 py-3 align-top text-sm text-[var(--text-muted)]">
                             {product.boutique_categories?.nom || "Aucune"}
                           </td>
-                          <td className="px-4 py-3 align-top text-sm text-white">
+                          <td className="px-4 py-3 align-top text-sm text-[var(--text-primary)]">
                             {formatPrice(product.prix_vente)}{product.prix_original ? ` · ${formatPrice(product.prix_original)}` : ""}
                           </td>
-                          <td className="px-4 py-3 align-top text-sm text-zinc-300">
+                          <td className="px-4 py-3 align-top text-sm text-[var(--text-muted)]">
                             {product.stock} / {product.stock_status === "in_stock" ? "En stock" : "Rupture"}
                           </td>
                           <td className="px-4 py-3 align-top space-y-2">
                             <button
                               type="button"
                               onClick={() => populateProductForm(product)}
-                              className="rounded-xl bg-white/5 px-3 py-2 text-xs font-semibold text-white transition hover:bg-white/10"
+                              className="rounded-xl bg-[var(--surface-2)] px-3 py-2 text-xs font-semibold text-[var(--text-primary)] transition hover:bg-[var(--surface-3)]"
                             >
                               Éditer
                             </button>
                             <button
                               type="button"
                               onClick={() => void handleDeleteProduct(product.id)}
-                              className="rounded-xl bg-red-500/10 px-3 py-2 text-xs font-semibold text-red-200 transition hover:bg-red-500/20"
+                              className="rounded-xl bg-[var(--danger)]/10 px-3 py-2 text-xs font-semibold text-[var(--danger)] transition hover:bg-[var(--danger)]/20"
                             >
                               Supprimer
                             </button>
@@ -777,7 +777,7 @@ export default function BoutiqueBuilderDetailPage() {
                                 type="button"
                                 disabled={index === 0 || reorderLoading}
                                 onClick={() => void handleMoveProduct(product, -1)}
-                                className="rounded-xl bg-white/5 px-2 py-2 text-xs text-white transition hover:bg-white/10 disabled:opacity-40"
+                                className="rounded-xl bg-[var(--surface-2)] px-2 py-2 text-xs text-[var(--text-primary)] transition hover:bg-[var(--surface-3)] disabled:opacity-40"
                               >
                                 ↑
                               </button>
@@ -785,7 +785,7 @@ export default function BoutiqueBuilderDetailPage() {
                                 type="button"
                                 disabled={index === products.length - 1 || reorderLoading}
                                 onClick={() => void handleMoveProduct(product, 1)}
-                                className="rounded-xl bg-white/5 px-2 py-2 text-xs text-white transition hover:bg-white/10 disabled:opacity-40"
+                                className="rounded-xl bg-[var(--surface-2)] px-2 py-2 text-xs text-[var(--text-primary)] transition hover:bg-[var(--surface-3)] disabled:opacity-40"
                               >
                                 ↓
                               </button>
@@ -799,14 +799,14 @@ export default function BoutiqueBuilderDetailPage() {
               )}
             </div>
 
-            <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-sm text-zinc-400">
+            <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-sm text-[var(--text-muted)]">
               <span>Page {productPage} / {totalPages}</span>
               <div className="flex gap-2">
                 <button
                   type="button"
                   disabled={productPage <= 1 || productsLoading}
                   onClick={() => void fetchProducts(productPage - 1)}
-                  className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-xs transition hover:border-violet-500/40 disabled:opacity-40"
+                  className="rounded-2xl border border-[var(--border)] bg-[var(--surface-2)] px-4 py-2 text-xs transition hover:border-violet-500/40 disabled:opacity-40"
                 >
                   Précédent
                 </button>
@@ -814,7 +814,7 @@ export default function BoutiqueBuilderDetailPage() {
                   type="button"
                   disabled={productPage >= totalPages || productsLoading}
                   onClick={() => void fetchProducts(productPage + 1)}
-                  className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-xs transition hover:border-violet-500/40 disabled:opacity-40"
+                  className="rounded-2xl border border-[var(--border)] bg-[var(--surface-2)] px-4 py-2 text-xs transition hover:border-violet-500/40 disabled:opacity-40"
                 >
                   Suivant
                 </button>
@@ -822,21 +822,21 @@ export default function BoutiqueBuilderDetailPage() {
             </div>
           </section>
 
-          <section className="rounded-3xl border border-white/10 bg-[#13131f] p-6">
-            <h3 className="text-xl font-semibold text-white">Ajouter / éditer un produit</h3>
-            <p className="mt-2 text-sm text-zinc-400">
+          <section className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-6">
+            <h3 className="text-xl font-semibold text-[var(--text-primary)]">Ajouter / éditer un produit</h3>
+            <p className="mt-2 text-sm text-[var(--text-muted)]">
               Utilise l&apos;import AliExpress ou remplis le formulaire manuellement.
             </p>
             <form onSubmit={handleSubmitProduct} className="mt-6 space-y-4">
-              <div className="space-y-3 rounded-3xl border border-white/10 bg-[#0d0d14] p-4">
-                <label className="text-sm font-medium text-zinc-300">Importer depuis AliExpress</label>
+              <div className="space-y-3 rounded-3xl border border-[var(--border)] bg-[var(--surface-2)] p-4">
+                <label className="text-sm font-medium text-[var(--text-muted)]">Importer depuis AliExpress</label>
                 <div className="flex gap-2">
                   <input
                     type="url"
                     value={importUrl}
                     onChange={(event) => setImportUrl(event.target.value)}
                     placeholder="https://www.aliexpress.com/item/123456789.html"
-                    className="flex-1 rounded-2xl border border-white/10 bg-[#0d0d14] px-4 py-3 text-sm text-white outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
+                    className="flex-1 rounded-2xl border border-[var(--border)] bg-[var(--bg-sunken)] px-4 py-3 text-sm text-[var(--text-primary)] outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
                   />
                   <button
                     type="button"
@@ -847,56 +847,56 @@ export default function BoutiqueBuilderDetailPage() {
                     {importLoading ? "Importation..." : "Importer"}
                   </button>
                 </div>
-                {importError ? <p className="text-xs text-red-300">{importError}</p> : null}
+                {importError ? <p className="text-xs text-[var(--danger)]">{importError}</p> : null}
               </div>
 
               <div className="grid gap-4 sm:grid-cols-2">
-                <label className="block text-sm text-zinc-300">
+                <label className="block text-sm text-[var(--text-muted)]">
                   Nom du produit
                   <input
                     type="text"
                     value={productName}
                     onChange={(event) => setProductName(event.target.value)}
-                    className="mt-2 w-full rounded-2xl border border-white/10 bg-[#0d0d14] px-4 py-3 text-sm text-white outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
+                    className="mt-2 w-full rounded-2xl border border-[var(--border)] bg-[var(--bg-sunken)] px-4 py-3 text-sm text-[var(--text-primary)] outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
                     placeholder="Titre du produit"
                   />
                 </label>
-                <label className="block text-sm text-zinc-300">
+                <label className="block text-sm text-[var(--text-muted)]">
                   Slug du produit
                   <input
                     type="text"
                     value={productSlug}
                     onChange={(event) => setProductSlug(event.target.value)}
-                    className="mt-2 w-full rounded-2xl border border-white/10 bg-[#0d0d14] px-4 py-3 text-sm text-white outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
+                    className="mt-2 w-full rounded-2xl border border-[var(--border)] bg-[var(--bg-sunken)] px-4 py-3 text-sm text-[var(--text-primary)] outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
                     placeholder="nom-du-produit"
                   />
                 </label>
               </div>
 
-              <label className="block text-sm text-zinc-300">
+              <label className="block text-sm text-[var(--text-muted)]">
                 Description
                 <textarea
                   value={productDescription}
                   onChange={(event) => setProductDescription(event.target.value)}
                   rows={4}
-                  className="mt-2 w-full rounded-2xl border border-white/10 bg-[#0d0d14] px-4 py-3 text-sm text-white outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 resize-none"
+                  className="mt-2 w-full rounded-2xl border border-[var(--border)] bg-[var(--bg-sunken)] px-4 py-3 text-sm text-[var(--text-primary)] outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 resize-none"
                   placeholder="Description du produit"
                 />
               </label>
 
-              <label className="block text-sm text-zinc-300">
+              <label className="block text-sm text-[var(--text-muted)]">
                 Image principale (URL)
                 <input
                   type="url"
                   value={productImageUrl}
                   onChange={(event) => setProductImageUrl(event.target.value)}
-                  className="mt-2 w-full rounded-2xl border border-white/10 bg-[#0d0d14] px-4 py-3 text-sm text-white outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
+                  className="mt-2 w-full rounded-2xl border border-[var(--border)] bg-[var(--bg-sunken)] px-4 py-3 text-sm text-[var(--text-primary)] outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
                   placeholder="https://..."
                 />
               </label>
 
               <div className="grid gap-4 sm:grid-cols-2">
-                <label className="block text-sm text-zinc-300">
+                <label className="block text-sm text-[var(--text-muted)]">
                   Prix de vente
                   <input
                     type="number"
@@ -904,11 +904,11 @@ export default function BoutiqueBuilderDetailPage() {
                     step="0.01"
                     value={productPrixVente}
                     onChange={(event) => setProductPrixVente(event.target.value)}
-                    className="mt-2 w-full rounded-2xl border border-white/10 bg-[#0d0d14] px-4 py-3 text-sm text-white outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
+                    className="mt-2 w-full rounded-2xl border border-[var(--border)] bg-[var(--bg-sunken)] px-4 py-3 text-sm text-[var(--text-primary)] outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
                     placeholder="29.99"
                   />
                 </label>
-                <label className="block text-sm text-zinc-300">
+                <label className="block text-sm text-[var(--text-muted)]">
                   Prix original
                   <input
                     type="number"
@@ -916,29 +916,29 @@ export default function BoutiqueBuilderDetailPage() {
                     step="0.01"
                     value={productPrixOriginal}
                     onChange={(event) => setProductPrixOriginal(event.target.value)}
-                    className="mt-2 w-full rounded-2xl border border-white/10 bg-[#0d0d14] px-4 py-3 text-sm text-white outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
+                    className="mt-2 w-full rounded-2xl border border-[var(--border)] bg-[var(--bg-sunken)] px-4 py-3 text-sm text-[var(--text-primary)] outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
                     placeholder="59.99"
                   />
                 </label>
               </div>
 
               <div className="grid gap-4 sm:grid-cols-2">
-                <label className="block text-sm text-zinc-300">
+                <label className="block text-sm text-[var(--text-muted)]">
                   Stock
                   <input
                     type="number"
                     min="0"
                     value={productStock}
                     onChange={(event) => setProductStock(event.target.value)}
-                    className="mt-2 w-full rounded-2xl border border-white/10 bg-[#0d0d14] px-4 py-3 text-sm text-white outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
+                    className="mt-2 w-full rounded-2xl border border-[var(--border)] bg-[var(--bg-sunken)] px-4 py-3 text-sm text-[var(--text-primary)] outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
                   />
                 </label>
-                <label className="block text-sm text-zinc-300">
+                <label className="block text-sm text-[var(--text-muted)]">
                   Statut de stock
                   <select
                     value={productStockStatus}
                     onChange={(event) => setProductStockStatus(event.target.value)}
-                    className="mt-2 w-full rounded-2xl border border-white/10 bg-[#0d0d14] px-4 py-3 text-sm text-white outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
+                    className="mt-2 w-full rounded-2xl border border-[var(--border)] bg-[var(--bg-sunken)] px-4 py-3 text-sm text-[var(--text-primary)] outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
                   >
                     <option value="in_stock">En stock</option>
                     <option value="out_of_stock">Rupture</option>
@@ -946,12 +946,12 @@ export default function BoutiqueBuilderDetailPage() {
                 </label>
               </div>
 
-              <label className="block text-sm text-zinc-300">
+              <label className="block text-sm text-[var(--text-muted)]">
                 Catégorie
                 <select
                   value={productCategoryId}
                   onChange={(event) => setProductCategoryId(event.target.value)}
-                  className="mt-2 w-full rounded-2xl border border-white/10 bg-[#0d0d14] px-4 py-3 text-sm text-white outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
+                  className="mt-2 w-full rounded-2xl border border-[var(--border)] bg-[var(--bg-sunken)] px-4 py-3 text-sm text-[var(--text-primary)] outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
                 >
                   {categoryOptions.map((category) => (
                     <option key={category.id} value={category.id}>{category.nom}</option>
@@ -960,9 +960,9 @@ export default function BoutiqueBuilderDetailPage() {
               </label>
 
               {productFormError ? (
-                <p className="text-sm text-red-300">{productFormError}</p>
+                <p className="text-sm text-[var(--danger)]">{productFormError}</p>
               ) : productFormSuccess ? (
-                <p className="text-sm text-green-300">{productFormSuccess}</p>
+                <p className="text-sm text-[var(--success)]">{productFormSuccess}</p>
               ) : null}
 
               <div className="flex flex-wrap gap-2">
@@ -976,7 +976,7 @@ export default function BoutiqueBuilderDetailPage() {
                 <button
                   type="button"
                   onClick={resetProductForm}
-                  className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-semibold text-white transition hover:border-violet-500/40"
+                  className="rounded-2xl border border-[var(--border)] bg-[var(--surface-2)] px-4 py-3 text-sm font-semibold text-[var(--text-primary)] transition hover:border-violet-500/40"
                 >
                   Réinitialiser
                 </button>
@@ -984,32 +984,32 @@ export default function BoutiqueBuilderDetailPage() {
             </form>
           </section>
 
-          <section className="rounded-3xl border border-white/10 bg-[#13131f] p-6">
+          <section className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-6">
             <div className="flex items-center justify-between gap-4">
               <div>
-                <h3 className="text-xl font-semibold text-white">Catégories</h3>
-                <p className="mt-2 text-sm text-zinc-400">Crée, renomme ou supprime des catégories.</p>
+                <h3 className="text-xl font-semibold text-[var(--text-primary)]">Catégories</h3>
+                <p className="mt-2 text-sm text-[var(--text-muted)]">Crée, renomme ou supprime des catégories.</p>
               </div>
             </div>
 
-            <form onSubmit={handleCreateCategory} className="mt-6 space-y-4 rounded-3xl border border-white/10 bg-[#0d0d14] p-4">
-              <label className="block text-sm text-zinc-300">
+            <form onSubmit={handleCreateCategory} className="mt-6 space-y-4 rounded-3xl border border-[var(--border)] bg-[var(--surface-2)] p-4">
+              <label className="block text-sm text-[var(--text-muted)]">
                 Nom de la catégorie
                 <input
                   type="text"
                   value={categoryName}
                   onChange={(event) => setCategoryName(event.target.value)}
-                  className="mt-2 w-full rounded-2xl border border-white/10 bg-[#0d0d14] px-4 py-3 text-sm text-white outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
+                  className="mt-2 w-full rounded-2xl border border-[var(--border)] bg-[var(--bg-sunken)] px-4 py-3 text-sm text-[var(--text-primary)] outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
                   placeholder="Ex: Fitness"
                 />
               </label>
-              <label className="block text-sm text-zinc-300">
+              <label className="block text-sm text-[var(--text-muted)]">
                 Slug de la catégorie
                 <input
                   type="text"
                   value={categorySlug}
                   onChange={(event) => setCategorySlug(event.target.value)}
-                  className="mt-2 w-full rounded-2xl border border-white/10 bg-[#0d0d14] px-4 py-3 text-sm text-white outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
+                  className="mt-2 w-full rounded-2xl border border-[var(--border)] bg-[var(--bg-sunken)] px-4 py-3 text-sm text-[var(--text-primary)] outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
                   placeholder="fitness"
                 />
               </label>
@@ -1022,19 +1022,19 @@ export default function BoutiqueBuilderDetailPage() {
             </form>
 
             {categoriesLoading ? (
-              <p className="mt-6 text-sm text-zinc-400">Chargement des catégories...</p>
+              <p className="mt-6 text-sm text-[var(--text-muted)]">Chargement des catégories...</p>
             ) : categoriesError ? (
-              <p className="mt-6 text-sm text-red-300">{categoriesError}</p>
+              <p className="mt-6 text-sm text-[var(--danger)]">{categoriesError}</p>
             ) : categories.length === 0 ? (
-              <p className="mt-6 text-sm text-zinc-400">Aucune catégorie créée.</p>
+              <p className="mt-6 text-sm text-[var(--text-muted)]">Aucune catégorie créée.</p>
             ) : (
               <div className="mt-6 space-y-3">
                 {categories.map((category) => (
-                  <div key={category.id} className="rounded-3xl border border-white/10 bg-[#0d0d14] p-4">
+                  <div key={category.id} className="rounded-3xl border border-[var(--border)] bg-[var(--surface-2)] p-4">
                     <div className="flex flex-wrap items-center justify-between gap-3">
                       <div>
-                        <p className="font-semibold text-white">{category.nom}</p>
-                        <p className="text-xs text-zinc-500">/{category.slug}</p>
+                        <p className="font-semibold text-[var(--text-primary)]">{category.nom}</p>
+                        <p className="text-xs text-[var(--text-faint)]">/{category.slug}</p>
                       </div>
                       <div className="flex gap-2">
                         <button
@@ -1043,14 +1043,14 @@ export default function BoutiqueBuilderDetailPage() {
                             setEditingCategoryId(category.id);
                             setEditingCategoryName(category.nom);
                           }}
-                          className="rounded-2xl bg-white/5 px-3 py-2 text-xs font-semibold text-white transition hover:bg-white/10"
+                          className="rounded-2xl bg-[var(--surface-3)] px-3 py-2 text-xs font-semibold text-[var(--text-primary)] transition hover:bg-[var(--surface-3)]"
                         >
                           Renommer
                         </button>
                         <button
                           type="button"
                           onClick={() => void handleDeleteCategory(category.id)}
-                          className="rounded-2xl bg-red-500/10 px-3 py-2 text-xs font-semibold text-red-200 transition hover:bg-red-500/20"
+                          className="rounded-2xl bg-[var(--danger)]/10 px-3 py-2 text-xs font-semibold text-[var(--danger)] transition hover:bg-[var(--danger)]/20"
                         >
                           Supprimer
                         </button>
@@ -1062,7 +1062,7 @@ export default function BoutiqueBuilderDetailPage() {
                           type="text"
                           value={editingCategoryName}
                           onChange={(event) => setEditingCategoryName(event.target.value)}
-                          className="w-full rounded-2xl border border-white/10 bg-[#0d0d14] px-4 py-3 text-sm text-white outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
+                          className="w-full rounded-2xl border border-[var(--border)] bg-[var(--bg-sunken)] px-4 py-3 text-sm text-[var(--text-primary)] outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
                         />
                         <div className="flex gap-2">
                           <button
@@ -1075,7 +1075,7 @@ export default function BoutiqueBuilderDetailPage() {
                           <button
                             type="button"
                             onClick={() => { setEditingCategoryId(null); setEditingCategoryName(""); }}
-                            className="rounded-2xl border border-white/10 bg-white/5 px-3 py-2 text-xs font-semibold text-white transition hover:border-violet-500/40"
+                            className="rounded-2xl border border-[var(--border)] bg-[var(--surface-2)] px-3 py-2 text-xs font-semibold text-[var(--text-primary)] transition hover:border-violet-500/40"
                           >
                             Annuler
                           </button>

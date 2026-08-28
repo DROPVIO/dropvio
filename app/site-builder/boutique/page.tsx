@@ -94,121 +94,121 @@ export default function BoutiqueBuilderListPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0d0d14] px-4 py-14 text-white">
+    <div className="min-h-screen bg-[var(--bg)] px-4 py-14 text-[var(--text-primary)]">
       <div className="mx-auto max-w-5xl">
         <div className="mb-10 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <p className="text-sm uppercase tracking-[0.2em] text-violet-400">Boutique Dropvio</p>
             <h1 className="mt-3 text-3xl font-bold">Créer et gérer tes boutiques</h1>
-            <p className="mt-2 max-w-2xl text-sm text-zinc-400">
+            <p className="mt-2 max-w-2xl text-sm text-[var(--text-muted)]">
               Gère plusieurs produits, catégories et ta boutique publique depuis Dropvio.
             </p>
           </div>
           <Link
             href="/site-builder"
-            className="inline-flex items-center justify-center rounded-2xl border border-white/10 bg-white/5 px-5 py-3 text-sm font-semibold text-white transition hover:border-violet-500/40 hover:bg-violet-500/10"
+            className="inline-flex items-center justify-center rounded-2xl border border-[var(--border)] bg-[var(--surface-2)] px-5 py-3 text-sm font-semibold text-[var(--text-primary)] transition hover:border-violet-500/40 hover:bg-violet-500/10"
           >
             Retour au générateur actuel
           </Link>
         </div>
 
         <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
-          <section className="rounded-3xl border border-white/10 bg-[#13131f] p-6">
-            <h2 className="text-lg font-semibold text-white">Tes boutiques</h2>
-            <p className="mt-2 text-sm text-zinc-500">
+          <section className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-6">
+            <h2 className="text-lg font-semibold text-[var(--text-primary)]">Tes boutiques</h2>
+            <p className="mt-2 text-sm text-[var(--text-faint)]">
               Crée une nouvelle boutique ou ouvre une boutique existante pour y ajouter des produits.
             </p>
 
             {loading ? (
-              <div className="mt-6 text-sm text-zinc-400">Chargement...</div>
+              <div className="mt-6 text-sm text-[var(--text-muted)]">Chargement...</div>
             ) : error ? (
-              <div className="mt-6 rounded-2xl border border-red-500/20 bg-red-500/10 p-4 text-sm text-red-200">
+              <div className="mt-6 rounded-2xl border border-[var(--danger)]/20 bg-[var(--danger)]/10 p-4 text-sm text-[var(--danger)]">
                 {error}
               </div>
             ) : boutiques.length === 0 ? (
-              <div className="mt-6 text-sm text-zinc-400">Aucune boutique créée pour le moment.</div>
+              <div className="mt-6 text-sm text-[var(--text-muted)]">Aucune boutique créée pour le moment.</div>
             ) : (
               <div className="mt-6 space-y-4">
                 {boutiques.map((boutique) => (
                   <Link
                     key={boutique.id}
                     href={`/site-builder/boutique/${boutique.id}`}
-                    className="block rounded-3xl border border-white/10 bg-white/5 p-4 transition hover:border-violet-500/30 hover:bg-white/10"
+                    className="block rounded-3xl border border-[var(--border)] bg-[var(--surface-2)] p-4 transition hover:border-violet-500/30 hover:bg-[var(--surface-3)]"
                   >
                     <div className="flex items-center justify-between gap-4">
                       <div>
-                        <p className="font-semibold text-white">{boutique.nom}</p>
-                        <p className="text-sm text-zinc-500">/{boutique.slug}</p>
+                        <p className="font-semibold text-[var(--text-primary)]">{boutique.nom}</p>
+                        <p className="text-sm text-[var(--text-faint)]">/{boutique.slug}</p>
                       </div>
                       <div className="flex items-center gap-2">
                         <span
                           className={`rounded-full px-3 py-1 text-xs uppercase tracking-[0.2em] ${
                             boutique.est_publique
-                              ? "bg-emerald-500/10 text-emerald-300"
-                              : "bg-white/5 text-zinc-400"
+                              ? "bg-emerald-500/10 text-[var(--success)]"
+                              : "bg-[var(--surface-3)] text-[var(--text-muted)]"
                           }`}
                         >
                           {boutique.est_publique ? "Publique" : "Privée"}
                         </span>
-                        <span className="rounded-full bg-violet-500/10 px-3 py-1 text-xs uppercase tracking-[0.2em] text-violet-300">
+                        <span className="rounded-full bg-violet-500/10 px-3 py-1 text-xs uppercase tracking-[0.2em] text-[var(--accent)]">
                           Ouvrir
                         </span>
                       </div>
                     </div>
-                    <p className="mt-3 text-sm text-zinc-400">{boutique.description || "Pas de description"}</p>
+                    <p className="mt-3 text-sm text-[var(--text-muted)]">{boutique.description || "Pas de description"}</p>
                   </Link>
                 ))}
               </div>
             )}
           </section>
 
-          <section className="rounded-3xl border border-white/10 bg-[#13131f] p-6">
+          <section className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-6">
             <div className="flex items-center justify-between gap-3">
               <div>
-                <h2 className="text-lg font-semibold text-white">Créer une boutique</h2>
-                <p className="mt-1 text-sm text-zinc-500">Nom, slug, et thème de la boutique.</p>
+                <h2 className="text-lg font-semibold text-[var(--text-primary)]">Créer une boutique</h2>
+                <p className="mt-1 text-sm text-[var(--text-faint)]">Nom, slug, et thème de la boutique.</p>
               </div>
             </div>
 
             <form className="mt-6 space-y-4" onSubmit={handleCreate}>
               <div>
-                <label className="text-sm font-medium text-zinc-300">Nom de la boutique</label>
+                <label className="text-sm font-medium text-[var(--text-muted)]">Nom de la boutique</label>
                 <input
                   value={nom}
                   onChange={(e) => setNom(e.target.value)}
-                  className="mt-2 w-full rounded-2xl border border-white/10 bg-[#0d0d14] px-4 py-3 text-sm text-white outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
+                  className="mt-2 w-full rounded-2xl border border-[var(--border)] bg-[var(--bg-sunken)] px-4 py-3 text-sm text-[var(--text-primary)] outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
                   placeholder="Ex: Boutique Fitness"
                 />
               </div>
 
               <div>
-                <label className="text-sm font-medium text-zinc-300">Slug public</label>
+                <label className="text-sm font-medium text-[var(--text-muted)]">Slug public</label>
                 <input
                   value={slug}
                   onChange={(e) => setSlug(e.target.value)}
-                  className="mt-2 w-full rounded-2xl border border-white/10 bg-[#0d0d14] px-4 py-3 text-sm text-white outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
+                  className="mt-2 w-full rounded-2xl border border-[var(--border)] bg-[var(--bg-sunken)] px-4 py-3 text-sm text-[var(--text-primary)] outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
                   placeholder="Ex: boutique-fitness"
                 />
-                <p className="mt-2 text-xs text-zinc-500">Laisse vide pour générer automatiquement à partir du nom.</p>
+                <p className="mt-2 text-xs text-[var(--text-faint)]">Laisse vide pour générer automatiquement à partir du nom.</p>
               </div>
 
               <div>
-                <label className="text-sm font-medium text-zinc-300">Description</label>
+                <label className="text-sm font-medium text-[var(--text-muted)]">Description</label>
                 <textarea
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   rows={3}
-                  className="mt-2 w-full rounded-2xl border border-white/10 bg-[#0d0d14] px-4 py-3 text-sm text-white outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 resize-none"
+                  className="mt-2 w-full rounded-2xl border border-[var(--border)] bg-[var(--bg-sunken)] px-4 py-3 text-sm text-[var(--text-primary)] outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 resize-none"
                   placeholder="Description courte de la boutique"
                 />
               </div>
 
               <div>
-                <label className="text-sm font-medium text-zinc-300">Thème</label>
+                <label className="text-sm font-medium text-[var(--text-muted)]">Thème</label>
                 <input
                   value={theme}
                   onChange={(e) => setTheme(e.target.value)}
-                  className="mt-2 w-full rounded-2xl border border-white/10 bg-[#0d0d14] px-4 py-3 text-sm text-white outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
+                  className="mt-2 w-full rounded-2xl border border-[var(--border)] bg-[var(--bg-sunken)] px-4 py-3 text-sm text-[var(--text-primary)] outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
                   placeholder="Ex: premium"
                 />
               </div>

@@ -102,19 +102,19 @@ export default function ProduitsSuggeres({
   if (!loading && suggestions.length === 0 && !error) return null;
 
   return (
-    <section className="rounded-3xl border border-white/10 bg-[#13131f] p-6">
+    <section className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-6">
       <div className="mb-4">
         <p className="text-xs uppercase tracking-[0.3em] text-violet-400">Suggestions</p>
-        <h3 className="mt-2 text-lg font-semibold text-white">Produits complémentaires suggérés</h3>
-        <p className="mt-1 text-sm text-zinc-500">
+        <h3 className="mt-2 text-lg font-semibold text-[var(--text-primary)]">Produits complémentaires suggérés</h3>
+        <p className="mt-1 text-sm text-[var(--text-faint)]">
           Basées sur la niche des produits déjà dans cette boutique.
         </p>
       </div>
 
       {loading ? (
-        <p className="text-xs text-zinc-500">Chargement des suggestions…</p>
+        <p className="text-xs text-[var(--text-faint)]">Chargement des suggestions…</p>
       ) : error ? (
-        <div className="rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-300">{error}</div>
+        <div className="rounded-xl border border-[var(--danger)]/20 bg-[var(--danger)]/10 px-4 py-3 text-sm text-[var(--danger)]">{error}</div>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {suggestions.map((s) => {
@@ -122,9 +122,9 @@ export default function ProduitsSuggeres({
             return (
               <div
                 key={s.id}
-                className="flex flex-col overflow-hidden rounded-2xl border border-white/10 bg-[#0d0d14]"
+                className="flex flex-col overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface-2)]"
               >
-                <div className="h-32 overflow-hidden bg-[#0f1320]">
+                <div className="h-32 overflow-hidden bg-[var(--surface-3)]">
                   {s.image ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img src={s.image} alt={s.nom} className="h-full w-full object-cover" />
@@ -133,14 +133,14 @@ export default function ProduitsSuggeres({
                   )}
                 </div>
                 <div className="flex flex-1 flex-col gap-2 p-4">
-                  <p className="line-clamp-2 text-sm font-medium text-white">{s.nom}</p>
-                  <div className="flex items-center justify-between text-xs text-zinc-400">
+                  <p className="line-clamp-2 text-sm font-medium text-[var(--text-primary)]">{s.nom}</p>
+                  <div className="flex items-center justify-between text-xs text-[var(--text-muted)]">
                     <span className="font-semibold text-violet-300">{s.prixVente.toFixed(2)}€</span>
                     <span>{s.commandes > 1000 ? `${(s.commandes / 1000).toFixed(0)}k` : s.commandes} cmd</span>
                   </div>
                   {s.croissance !== null && (
                     <span
-                      className={`text-[11px] font-semibold ${s.croissance >= 0 ? "text-emerald-400" : "text-red-400"}`}
+                      className={`text-[11px] font-semibold ${s.croissance >= 0 ? "text-[var(--success)]" : "text-[var(--danger)]"}`}
                     >
                       {s.croissance >= 0 ? "↑" : "↓"} {Math.abs(s.croissance).toFixed(0)}% de croissance
                     </span>
