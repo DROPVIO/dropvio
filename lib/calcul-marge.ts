@@ -67,10 +67,14 @@ export function calcPrixVenteMin(
 }
 
 // Code couleur partagé pour l'affichage d'une marge nette (%) — calculateur + dashboard.
+// Valeurs retournées comme des var() CSS (pas des hex figés) pour suivre le thème
+// clair/sombre — valide dans un style={{ color }} React sur un élément HTML classique
+// (contrairement aux props SVG de recharts, qui elles ont besoin de couleurs littérales,
+// voir les composants graphiques qui font leur propre résolution de thème).
 export function getMargeColor(pct: number): string {
-  if (pct >= 40) return "#22c55e";
-  if (pct >= 20) return "#f59e0b";
-  return "#ef4444";
+  if (pct >= 40) return "var(--success)";
+  if (pct >= 20) return "var(--warning)";
+  return "var(--danger)";
 }
 
 export function getMargeLabel(pct: number): string {

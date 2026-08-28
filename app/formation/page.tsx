@@ -67,6 +67,21 @@ function formatPrix(prix: number): string {
   return `${prix.toFixed(2).replace(".", ",")}€`;
 }
 
+// prose-invert (Tailwind Typography) fige un rendu clair-sur-sombre pour le HTML des
+// leçons dépliées inline — sans ce hook, le contenu resterait illisible (texte clair sur
+// carte --surface blanche) une fois le thème clair actif.
+function useIsLightTheme(): boolean {
+  const [isLight, setIsLight] = useState(false);
+  useEffect(() => {
+    const read = () => setIsLight(document.documentElement.getAttribute("data-theme") === "light");
+    read();
+    const observer = new MutationObserver(read);
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+    return () => observer.disconnect();
+  }, []);
+  return isLight;
+}
+
 export default function FormationPage() {
   const [state, setState] = useState<FormationState>({ status: "loading" });
   const [buying, setBuying] = useState<FormationOffre | null>(null);
@@ -80,6 +95,7 @@ export default function FormationPage() {
   const [authChecked, setAuthChecked] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const isLight = useIsLightTheme();
 
   useEffect(() => {
     const supabase = createSupabaseBrowserClient();
@@ -164,38 +180,38 @@ export default function FormationPage() {
   const hasBoth = owned.courte && owned.longue;
 
   const content = (
-    <div className="min-h-screen bg-[#0d0d14] text-white font-sans px-4 py-16">
+    <div className="min-h-screen bg-[var(--bg)] text-[var(--text-primary)] font-sans px-4 py-16">
       <div className="max-w-3xl mx-auto">
         <div className="mb-10 text-center">
-          <div className="inline-flex items-center gap-2 mb-4 px-3 py-1 rounded-full bg-violet-500/10 border border-violet-500/20 text-violet-400 text-xs font-medium tracking-widest uppercase">
+          <div className="inline-flex items-center gap-2 mb-4 px-3 py-1 rounded-full bg-violet-500/10 border border-violet-500/20 text-[var(--accent)] text-xs font-medium tracking-widest uppercase">
             <span className="w-1.5 h-1.5 rounded-full bg-violet-400" />
             Formation
           </div>
           <h1 className="text-3xl font-extrabold tracking-tight">Formation dropshipping</h1>
-          <p className="text-zinc-400 text-sm max-w-md mx-auto mt-3">
+          <p className="text-[var(--text-muted)] text-sm max-w-md mx-auto mt-3">
             Achat unique, accès à vie. Pas d&apos;abonnement.
           </p>
         </div>
 
         {banner === "success" && (
-          <div className="mb-8 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-sm text-center px-4 py-3">
+          <div className="mb-8 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-[var(--success)] text-sm text-center px-4 py-3">
             Paiement reçu — l&apos;accès s&apos;active en quelques secondes.
           </div>
         )}
         {banner === "canceled" && (
-          <div className="mb-8 rounded-xl bg-white/[0.04] border border-white/10 text-zinc-400 text-sm text-center px-4 py-3">
+          <div className="mb-8 rounded-xl bg-[var(--surface-2)] border border-[var(--border-strong)] text-[var(--text-muted)] text-sm text-center px-4 py-3">
             Paiement annulé, rien n&apos;a été débité.
           </div>
         )}
 
         {state.status === "loading" && (
-          <div className="rounded-2xl bg-[#13131f] border border-white/5 p-10 text-center text-zinc-500 text-sm">
+          <div className="rounded-2xl bg-[var(--surface)] border border-[var(--border)] p-10 text-center text-[var(--text-faint)] text-sm">
             Chargement…
           </div>
         )}
 
         {state.status === "error" && (
-          <div className="rounded-2xl bg-[#13131f] border border-white/5 p-10 text-center text-zinc-400 text-sm">
+          <div className="rounded-2xl bg-[var(--surface)] border border-[var(--border)] p-10 text-center text-[var(--text-muted)] text-sm">
             {state.message}
           </div>
         )}
@@ -210,21 +226,21 @@ export default function FormationPage() {
                   .map((collection) => {
                     const info = OFFRE_INFO[collection];
                     return (
-                      <div key={collection} className="rounded-2xl bg-[#13131f] border border-white/5 p-6">
+                      <div key={collection} className="rounded-2xl bg-[var(--surface)] border border-[var(--border)] p-6">
                         <div className="flex items-start justify-between gap-4 flex-wrap">
                           <div>
-                            <h2 className="text-lg font-bold text-white">{info.titre}</h2>
-                            <p className="text-zinc-400 text-sm mt-1">{info.accroche}</p>
+                            <h2 className="text-lg font-bold text-[var(--text-primary)]">{info.titre}</h2>
+                            <p className="text-[var(--text-muted)] text-sm mt-1">{info.accroche}</p>
                           </div>
-                          <div className="text-2xl font-extrabold text-white shrink-0">
+                          <div className="text-2xl font-extrabold text-[var(--text-primary)] shrink-0">
                             {formatPrix(FORMATION_PRIX[collection])}
                           </div>
                         </div>
-                        <p className="text-zinc-500 text-xs mt-4 italic">{info.public}</p>
+                        <p className="text-[var(--text-faint)] text-xs mt-4 italic">{info.public}</p>
                         <ul className="mt-4 flex flex-col gap-1.5">
                           {info.bullets.map((b) => (
-                            <li key={b} className="flex items-start gap-2 text-sm text-zinc-300">
-                              <span className="text-violet-400 shrink-0 mt-0.5">✓</span>
+                            <li key={b} className="flex items-start gap-2 text-sm text-[var(--text-muted)]">
+                              <span className="text-[var(--accent)] shrink-0 mt-0.5">✓</span>
                               {b}
                             </li>
                           ))}
@@ -242,20 +258,20 @@ export default function FormationPage() {
 
                 {/* Bundle, mis en avant tant que les deux ne sont pas déjà possédées */}
                 {!hasBoth && (
-                  <div className="rounded-2xl bg-gradient-to-br from-violet-950/60 to-[#13131f] border border-violet-500/30 p-6 relative overflow-hidden">
+                  <div className="rounded-2xl bg-gradient-to-br from-violet-950/60 to-[var(--surface)] border border-violet-500/30 p-6 relative overflow-hidden">
                     <span className="absolute top-0 right-0 text-[10px] font-bold bg-violet-500 text-white px-3 py-1 rounded-bl-lg">
                       MEILLEURE OFFRE
                     </span>
-                    <h2 className="text-lg font-bold text-white">Les deux formations</h2>
-                    <p className="text-zinc-400 text-sm mt-1">
+                    <h2 className="text-lg font-bold text-[var(--text-primary)]">Les deux formations</h2>
+                    <p className="text-[var(--text-muted)] text-sm mt-1">
                       Version courte pour démarrer vite, version longue pour tout approfondir — l&apos;accès aux deux, à vie.
                     </p>
                     <div className="flex items-center gap-2 mt-4">
-                      <span className="text-2xl font-extrabold text-white">{formatPrix(FORMATION_PRIX.bundle)}</span>
-                      <span className="text-sm text-zinc-500 line-through">
+                      <span className="text-2xl font-extrabold text-[var(--text-primary)]">{formatPrix(FORMATION_PRIX.bundle)}</span>
+                      <span className="text-sm text-[var(--text-faint)] line-through">
                         {formatPrix(FORMATION_PRIX.courte + FORMATION_PRIX.longue)}
                       </span>
-                      <span className="text-xs text-emerald-400 font-medium">
+                      <span className="text-xs text-[var(--success)] font-medium">
                         économise {formatPrix(FORMATION_PRIX.courte + FORMATION_PRIX.longue - FORMATION_PRIX.bundle)}
                       </span>
                     </div>
@@ -277,33 +293,33 @@ export default function FormationPage() {
               const modules = state.modules.filter((m) => m.collection === collection);
               return (
                 <section key={collection}>
-                  <h2 className="text-lg font-bold text-white mb-4">{OFFRE_INFO[collection].titre}</h2>
+                  <h2 className="text-lg font-bold text-[var(--text-primary)] mb-4">{OFFRE_INFO[collection].titre}</h2>
                   <div className="flex flex-col gap-4">
                     {modules.map((m) => (
                       <details
                         key={m.id}
-                        className="group rounded-2xl bg-[#13131f] border border-white/5 p-6 open:pb-8"
+                        className="group rounded-2xl bg-[var(--surface)] border border-[var(--border)] p-6 open:pb-8"
                       >
                         <summary className="cursor-pointer list-none flex items-start justify-between gap-4">
                           <div>
-                            <h3 className="text-sm font-semibold text-white">{m.titre}</h3>
-                            <p className="text-zinc-400 text-sm mt-2">{m.description}</p>
+                            <h3 className="text-sm font-semibold text-[var(--text-primary)]">{m.titre}</h3>
+                            <p className="text-[var(--text-muted)] text-sm mt-2">{m.description}</p>
                           </div>
                           <div className="flex shrink-0 items-center gap-3">
                             <Link
                               href={`/formation/lire/${m.id}`}
                               onClick={(e) => e.stopPropagation()}
-                              className="rounded-lg border border-violet-500/30 bg-violet-500/10 px-3 py-1.5 text-xs font-medium text-violet-300 transition hover:bg-violet-500/20"
+                              className="rounded-lg border border-violet-500/30 bg-violet-500/10 px-3 py-1.5 text-xs font-medium text-[var(--accent)] transition hover:bg-violet-500/20"
                             >
                               Lire →
                             </Link>
-                            <span className="text-zinc-500 text-xs mt-1 group-open:rotate-180 transition-transform">
+                            <span className="text-[var(--text-faint)] text-xs mt-1 group-open:rotate-180 transition-transform">
                               ▾
                             </span>
                           </div>
                         </summary>
                         <div
-                          className="prose prose-invert prose-sm max-w-none mt-6 text-zinc-300"
+                          className={`prose prose-sm max-w-none mt-6 text-[var(--text-muted)] ${isLight ? "" : "prose-invert"}`}
                           dangerouslySetInnerHTML={{ __html: m.contenuHtml }}
                         />
                       </details>
@@ -322,7 +338,7 @@ export default function FormationPage() {
   // page n'est affichée — évite de flasher la version publique puis de basculer sur la
   // sidebar une fraction de seconde plus tard (ou l'inverse).
   if (!authChecked) {
-    return <div className="min-h-screen bg-[#0d0d14]" />;
+    return <div className="min-h-screen bg-[var(--bg)]" />;
   }
 
   if (!isLoggedIn) {

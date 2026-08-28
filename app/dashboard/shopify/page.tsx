@@ -27,10 +27,12 @@ const TYPE_LABEL: Record<Incident["type"], string> = {
   dispute: "Litige (chargeback)",
 };
 
+// Valeurs retournées comme des var() CSS (pas des hex figés) : valide dans un style={{ color }}
+// React sur un élément HTML classique, suit le thème clair/sombre automatiquement.
 const TYPE_COLOR: Record<Incident["type"], string> = {
-  refund: "#3b82f6",
-  return: "#3b82f6",
-  dispute: "#f43f5e",
+  refund: "var(--accent-secondary)",
+  return: "var(--accent-secondary)",
+  dispute: "var(--danger)",
 };
 
 export default function ShopifyDetailPage() {
@@ -53,64 +55,64 @@ export default function ShopifyDetailPage() {
   const disputes = incidents?.filter((i) => i.type === "dispute") ?? [];
 
   return (
-    <div className="min-h-screen bg-[#0d0d14] px-8 py-10">
+    <div className="min-h-screen bg-[var(--bg)] px-8 py-10">
       <div className="max-w-4xl mx-auto flex flex-col gap-8">
         <div>
-          <Link href="/dashboard" className="text-xs text-zinc-500 hover:text-zinc-300 transition-colors">
+          <Link href="/dashboard" className="text-xs text-[var(--text-faint)] hover:text-[var(--text-muted)] transition-colors">
             ← Dashboard
           </Link>
-          <h1 className="text-2xl font-bold text-white mt-3">Shopify — Remboursements & litiges</h1>
-          <p className="text-zinc-500 text-sm mt-1.5">Synchronisé automatiquement depuis ta boutique Shopify.</p>
+          <h1 className="text-2xl font-bold text-[var(--text-primary)] mt-3">Shopify — Remboursements & litiges</h1>
+          <p className="text-[var(--text-faint)] text-sm mt-1.5">Synchronisé automatiquement depuis ta boutique Shopify.</p>
         </div>
 
         {status && !status.connected ? (
-          <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-10 flex flex-col items-center gap-2 text-center">
-            <p className="text-zinc-600 text-sm">
+          <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface-2)] p-10 flex flex-col items-center gap-2 text-center">
+            <p className="text-[var(--text-faint)] text-sm">
               {status.reconnectRequired
                 ? "Reconnecte ta boutique Shopify pour reprendre le suivi."
                 : "Connecte ta boutique Shopify pour voir tes remboursements et litiges ici."}
             </p>
-            <a href="/dashboard?openIntegrations=1" className="text-violet-400 text-xs hover:underline">
+            <a href="/dashboard?openIntegrations=1" className="text-[var(--accent)] text-xs hover:underline">
               {status.reconnectRequired ? "Reconnecter ma boutique →" : "Connecter ma boutique Shopify →"}
             </a>
           </div>
         ) : (
           <>
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
-              <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-5">
-                <p className="text-[10px] font-semibold uppercase tracking-widest text-zinc-600">
+              <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface-2)] p-5">
+                <p className="text-[10px] font-semibold uppercase tracking-widest text-[var(--text-faint)]">
                   Remboursements & retours ({lookbackDays}j)
                 </p>
-                <p className="text-2xl font-bold tabular-nums text-blue-400 mt-2">{refunds.length}</p>
+                <p className="text-2xl font-bold tabular-nums text-[var(--accent-secondary)] mt-2">{refunds.length}</p>
               </div>
-              <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-5">
-                <p className="text-[10px] font-semibold uppercase tracking-widest text-zinc-600">
+              <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface-2)] p-5">
+                <p className="text-[10px] font-semibold uppercase tracking-widest text-[var(--text-faint)]">
                   Litiges ({lookbackDays}j)
                 </p>
                 {status?.disputesScopeGranted ? (
-                  <p className="text-2xl font-bold tabular-nums text-rose-400 mt-2">{disputes.length}</p>
+                  <p className="text-2xl font-bold tabular-nums text-[var(--danger)] mt-2">{disputes.length}</p>
                 ) : (
-                  <p className="text-xs font-semibold text-zinc-500 mt-3">Non disponible</p>
+                  <p className="text-xs font-semibold text-[var(--text-faint)] mt-3">Non disponible</p>
                 )}
               </div>
             </div>
 
-            <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-6">
+            <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface-2)] p-6">
               {incidents === null ? (
-                <p className="text-zinc-600 text-sm text-center py-12">Chargement…</p>
+                <p className="text-[var(--text-faint)] text-sm text-center py-12">Chargement…</p>
               ) : incidents.length === 0 ? (
-                <p className="text-zinc-600 text-sm text-center py-12">
+                <p className="text-[var(--text-faint)] text-sm text-center py-12">
                   Aucun remboursement, retour ou litige sur les {lookbackDays} derniers jours.
                 </p>
               ) : (
-                <div className="flex flex-col divide-y divide-white/[0.05]">
+                <div className="flex flex-col divide-y divide-[var(--border)]">
                   {incidents.map((i) => (
                     <div key={i.id} className="flex items-center justify-between py-3 first:pt-0 last:pb-0">
                       <div className="min-w-0">
-                        <p className="text-sm text-zinc-200">
+                        <p className="text-sm text-[var(--text-primary)]">
                           {TYPE_LABEL[i.type]} · Commande #{i.shopify_order_id}
                         </p>
-                        <p className="text-[11px] text-zinc-600 mt-0.5">
+                        <p className="text-[11px] text-[var(--text-faint)] mt-0.5">
                           {new Date(i.created_at).toLocaleDateString("fr-FR", { day: "numeric", month: "short", year: "numeric" })}
                           {i.statut ? ` · ${i.statut}` : ""}
                         </p>

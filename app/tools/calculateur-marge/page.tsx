@@ -48,6 +48,36 @@ type SimulationMarge = {
 
 const PALIERS = [10, 50, 200];
 
+// Tuple utilisé pour les couleurs qui ont besoin d'une variante avec alpha (bordures) —
+// getMargeColor() renvoie une chaîne var(--token) valide pour `color`/`background`, mais on
+// ne peut pas lui concaténer un suffixe d'alpha hex ("var(--success)33" n'est pas du CSS
+// valide). Pour les bordures translucides, on déduit le palier directement et on choisit la
+// classe Tailwind correspondante plutôt que de manipuler la chaîne retournée par getMargeColor.
+function margeTier(pct: number): "success" | "warning" | "danger" {
+  if (pct >= 40) return "success";
+  if (pct >= 20) return "warning";
+  return "danger";
+}
+const MARGE_BORDER: Record<ReturnType<typeof margeTier>, string> = {
+  success: "border-emerald-500/20",
+  warning: "border-amber-500/20",
+  danger: "border-red-500/20",
+};
+
+// Couleurs recharts non-Tailwind (props SVG littérales — pas de résolution de var() CSS
+// possible, cf. DashboardActiviteChart.tsx) — recalculées selon le thème.
+function useIsLightTheme(): boolean {
+  const [isLight, setIsLight] = useState(false);
+  useEffect(() => {
+    const read = () => setIsLight(document.documentElement.getAttribute("data-theme") === "light");
+    read();
+    const observer = new MutationObserver(read);
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+    return () => observer.disconnect();
+  }, []);
+  return isLight;
+}
+
 export default function CalculateurMarge() {
   return (
     <Suspense fallback={null}>
@@ -58,6 +88,7 @@ export default function CalculateurMarge() {
 
 function CalculateurMargeInner() {
   const searchParams = useSearchParams();
+  const isLight = useIsLightTheme();
 
   const [mode, setMode] = useState<Mode>("france");
 
@@ -226,60 +257,31 @@ function CalculateurMargeInner() {
 
   const caCumule = parseFloat(caAnnuelCumule) || 0;
   const tvaPct = Math.min((caCumule / SEUIL_TVA_MAJORE) * 100, 100);
-  const tvaColor = caCumule > SEUIL_TVA_MAJORE ? "#ef4444" : caCumule > SEUIL_TVA ? "#f59e0b" : "#22c55e";
+  const tvaColor = caCumule > SEUIL_TVA_MAJORE ? "var(--danger)" : caCumule > SEUIL_TVA ? "var(--warning)" : "var(--success)";
 
   return (
-    <div style={{
-      minHeight: "100vh",
-      background: "#0f0f0f",
-      color: "#f1f1f1",
-      fontFamily: "'Inter', -apple-system, sans-serif",
-      padding: "40px 20px",
-    }}>
-      <div style={{ maxWidth: 680, margin: "0 auto" }}>
+    <div className="min-h-screen bg-[var(--bg)] text-[var(--text-primary)] font-['Inter',-apple-system,sans-serif] px-5 py-10">
+      <div className="max-w-[680px] mx-auto">
 
         {/* Header */}
-        <div style={{ marginBottom: 40 }}>
-          <h1 style={{
-            fontSize: 32,
-            fontWeight: 700,
-            margin: 0,
-            lineHeight: 1.2,
-            color: "#ffffff",
-          }}>
+        <div className="mb-10">
+          <h1 className="text-[32px] font-bold m-0 leading-tight text-[var(--text-primary)]">
             Calculateur de marge
           </h1>
-          <p style={{ color: "#888", marginTop: 10, fontSize: 15 }}>
+          <p className="text-[var(--text-faint)] mt-2.5 text-[15px]">
             Calcule ta rentabilité avant de lancer un produit.
           </p>
         </div>
 
         {/* Toggle mode */}
-        <div style={{
-          display: "flex",
-          gap: 6,
-          background: "#161616",
-          border: "1px solid #2a2a2a",
-          borderRadius: 12,
-          padding: 5,
-          marginBottom: 20,
-        }}>
+        <div className="flex gap-1.5 bg-[var(--surface)] border border-[var(--border-strong)] rounded-xl p-1.5 mb-5">
           {(["france", "manuel"] as Mode[]).map((m) => (
             <button
               key={m}
               onClick={() => setMode(m)}
-              style={{
-                flex: 1,
-                padding: "11px 14px",
-                borderRadius: 8,
-                border: "none",
-                background: mode === m ? "#6366f1" : "transparent",
-                color: mode === m ? "#fff" : "#888",
-                fontSize: 13.5,
-                fontWeight: 600,
-                cursor: "pointer",
-                transition: "all 0.15s",
-              }}
+              className={`flex-1 px-3.5 py-2.5 rounded-lg border-none text-[13.5px] font-semibold cursor-pointer transition-all ${
+                mode === m ? "bg-violet-600 text-white" : "bg-transparent text-[var(--text-faint)]"
+              }`}
             >
               {m === "france" ? "🇫🇷 France auto" : "🌍 International manuel"}
             </button>
@@ -287,14 +289,8 @@ function CalculateurMargeInner() {
         </div>
 
         {/* Formulaire */}
-        <div style={{
-          background: "#1a1a1a",
-          borderRadius: 16,
-          padding: 32,
-          border: "1px solid #2a2a2a",
-          marginBottom: 24,
-        }}>
-          <div style={{ display: "grid", gap: 20 }}>
+        <div className="bg-[var(--surface)] rounded-2xl p-8 border border-[var(--border-strong)] mb-6">
+          <div className="grid gap-5">
 
             <InputField
               label="Prix fournisseur (€)"
@@ -325,25 +321,18 @@ function CalculateurMargeInner() {
 
             {/* Bloc spécifique au mode */}
             {mode === "france" ? (
-              <div style={{
-                background: "#111",
-                borderRadius: 12,
-                padding: 20,
-                border: "1px solid #222",
-                display: "grid",
-                gap: 16,
-              }}>
-                <label style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 13.5, color: "#ccc", cursor: "pointer" }}>
+              <div className="bg-[var(--bg-sunken)] rounded-xl p-5 border border-[var(--border)] grid gap-4">
+                <label className="flex items-center gap-2.5 text-[13.5px] text-[var(--text-muted)] cursor-pointer">
                   <input
                     type="checkbox"
                     checked={extraUE}
                     onChange={(e) => setExtraUE(e.target.checked)}
-                    style={{ width: 16, height: 16, accentColor: "#6366f1" }}
+                    className="w-4 h-4 accent-violet-600"
                   />
                   Vente / envoi hors UE (colis &lt; 150€)
                 </label>
 
-                <div style={{ fontSize: 12, color: "#666", lineHeight: 1.6 }}>
+                <div className="text-xs text-[var(--text-faint)] leading-relaxed">
                   Charges appliquées automatiquement : URSSAF 12,3% du CA · Frais Stripe {extraUE ? "2,5%" : "1,5%"} + 0,25€{extraUE ? " (hors UE)" : " (UE)"}
                   {extraUE && ` · Taxe UE ${TAXE_UE_FLAT.toFixed(2)}€ flat`}.
                 </div>
@@ -355,40 +344,29 @@ function CalculateurMargeInner() {
                     value={caAnnuelCumule}
                     onChange={setCaAnnuelCumule}
                   />
-                  <div style={{ marginTop: 12 }}>
-                    <div style={{
-                      display: "flex", justifyContent: "space-between",
-                      fontSize: 11, color: "#666", marginBottom: 6,
-                    }}>
+                  <div className="mt-3">
+                    <div className="flex justify-between text-[11px] text-[var(--text-faint)] mb-1.5">
                       <span>Progression vers le seuil de TVA</span>
-                      <span style={{ color: tvaColor, fontWeight: 600 }}>{caCumule.toLocaleString("fr-FR")}€ / {SEUIL_TVA.toLocaleString("fr-FR")}€</span>
+                      <span className="font-semibold" style={{ color: tvaColor }}>{caCumule.toLocaleString("fr-FR")}€ / {SEUIL_TVA.toLocaleString("fr-FR")}€</span>
                     </div>
-                    <div style={{ height: 8, borderRadius: 99, background: "#222", overflow: "hidden", position: "relative" }}>
-                      <div style={{
-                        position: "absolute", left: `${(SEUIL_TVA / SEUIL_TVA_MAJORE) * 100}%`,
-                        top: 0, bottom: 0, width: 1, background: "#555", zIndex: 2,
-                      }} />
-                      <div style={{
-                        height: "100%", borderRadius: 99, width: `${tvaPct}%`,
-                        background: tvaColor, transition: "width 0.3s",
-                      }} />
+                    <div className="h-2 rounded-full bg-[var(--surface-3)] overflow-hidden relative">
+                      <div
+                        className="absolute top-0 bottom-0 w-px bg-[var(--border-strong)] z-[2]"
+                        style={{ left: `${(SEUIL_TVA / SEUIL_TVA_MAJORE) * 100}%` }}
+                      />
+                      <div
+                        className="h-full rounded-full transition-[width] duration-300"
+                        style={{ width: `${tvaPct}%`, background: tvaColor }}
+                      />
                     </div>
-                    <div style={{ fontSize: 10.5, color: "#555", marginTop: 6 }}>
+                    <div className="text-[10.5px] text-[var(--text-faint)] mt-1.5">
                       Franchise en base jusqu’à {SEUIL_TVA.toLocaleString("fr-FR")}€ (limite majorée {SEUIL_TVA_MAJORE.toLocaleString("fr-FR")}€)
                     </div>
                   </div>
                 </div>
               </div>
             ) : (
-              <div style={{
-                background: "#111",
-                borderRadius: 12,
-                padding: 20,
-                border: "1px solid #222",
-                display: "grid",
-                gridTemplateColumns: "1fr 1fr",
-                gap: 16,
-              }}>
+              <div className="bg-[var(--bg-sunken)] rounded-xl p-5 border border-[var(--border)] grid grid-cols-2 gap-4">
                 <InputField
                   label="Taux de charge (%)"
                   placeholder="ex: 15"
@@ -407,35 +385,20 @@ function CalculateurMargeInner() {
         </div>
 
         {/* Calcul inversé : marge cible -> prix de vente minimum */}
-        <div style={{
-          background: "#1a1a1a",
-          borderRadius: 16,
-          padding: 28,
-          border: "1px solid #2a2a2a",
-          marginBottom: 24,
-        }}>
-          <h2 style={{ margin: "0 0 16px", fontSize: 16, fontWeight: 600, color: "#888", textTransform: "uppercase", letterSpacing: "0.1em" }}>
+        <div className="bg-[var(--surface)] rounded-2xl p-7 border border-[var(--border-strong)] mb-6">
+          <h2 className="mt-0 mb-4 text-base font-semibold text-[var(--text-faint)] uppercase tracking-[0.1em]">
             Calcul inversé
           </h2>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, alignItems: "end" }}>
+          <div className="grid grid-cols-2 gap-4 items-end">
             <InputField
               label="Marge nette cible (%)"
               placeholder="ex: 30"
               value={margeCible}
               onChange={setMargeCible}
             />
-            <div style={{
-              background: "#111",
-              borderRadius: 10,
-              padding: "12px 16px",
-              border: "1px solid #222",
-              height: 46,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-            }}>
-              <span style={{ fontSize: 12, color: "#666" }}>Prix de vente minimum</span>
-              <span style={{ fontSize: 16, fontWeight: 700, color: prixVenteMin !== null ? "#a5b4fc" : "#555" }}>
+            <div className="bg-[var(--bg-sunken)] rounded-[10px] px-4 py-3 border border-[var(--border)] h-[46px] flex items-center justify-between">
+              <span className="text-xs text-[var(--text-faint)]">Prix de vente minimum</span>
+              <span className={`text-base font-bold ${prixVenteMin !== null ? "text-[var(--accent)]" : "text-[var(--text-faint)]"}`}>
                 {margeCible
                   ? prixVenteMin !== null
                     ? `${prixVenteMin.toFixed(2)} €`
@@ -445,7 +408,7 @@ function CalculateurMargeInner() {
             </div>
           </div>
           {margeCible && prixVenteMin === null && (
-            <div style={{ marginTop: 12, fontSize: 12.5, color: "#fca5a5" }}>
+            <div className="mt-3 text-[12.5px] text-[var(--danger)]">
               ⚠️ Objectif inatteignable : les charges + la marge visée dépassent 100% du prix de vente. Réduis la marge cible ou les coûts fixes.
             </div>
           )}
@@ -453,54 +416,31 @@ function CalculateurMargeInner() {
 
         {/* Résultats */}
         {resultats ? (
-          <div style={{
-            background: "#1a1a1a",
-            borderRadius: 16,
-            padding: 32,
-            border: "1px solid #2a2a2a",
-          }}>
-            <h2 style={{ margin: "0 0 24px", fontSize: 16, fontWeight: 600, color: "#888", textTransform: "uppercase", letterSpacing: "0.1em" }}>
+          <div className="bg-[var(--surface)] rounded-2xl p-8 border border-[var(--border-strong)]">
+            <h2 className="mt-0 mb-6 text-base font-semibold text-[var(--text-faint)] uppercase tracking-[0.1em]">
               Résultats
             </h2>
 
             {/* Marge principale */}
-            <div style={{
-              background: "#111",
-              borderRadius: 12,
-              padding: "24px 28px",
-              marginBottom: 20,
-              border: `1px solid ${getMargeColor(resultats.margePct)}33`,
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-            }}>
+            <div className={`bg-[var(--bg-sunken)] rounded-xl px-7 py-6 mb-5 border flex justify-between items-center ${MARGE_BORDER[margeTier(resultats.margePct)]}`}>
               <div>
-                <div style={{ fontSize: 13, color: "#666", marginBottom: 4 }}>Marge nette par vente</div>
-                <div style={{ fontSize: 36, fontWeight: 700, color: getMargeColor(resultats.margePct) }}>
+                <div className="text-[13px] text-[var(--text-faint)] mb-1">Marge nette par vente</div>
+                <div className="text-4xl font-bold" style={{ color: getMargeColor(resultats.margePct) }}>
                   {resultats.margeNette >= 0 ? "+" : ""}{resultats.margeNette.toFixed(2)} €
                 </div>
               </div>
-              <div style={{ textAlign: "right" }}>
-                <div style={{
-                  fontSize: 22,
-                  fontWeight: 700,
-                  color: getMargeColor(resultats.margePct),
-                }}>
+              <div className="text-right">
+                <div className="text-[22px] font-bold" style={{ color: getMargeColor(resultats.margePct) }}>
                   {resultats.margePct.toFixed(1)}%
                 </div>
-                <div style={{
-                  fontSize: 12,
-                  fontWeight: 600,
-                  color: getMargeColor(resultats.margePct),
-                  marginTop: 4,
-                }}>
+                <div className="text-xs font-semibold mt-1" style={{ color: getMargeColor(resultats.margePct) }}>
                   {getMargeLabel(resultats.margePct)}
                 </div>
               </div>
             </div>
 
             {/* Stats secondaires */}
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 12 }}>
+            <div className="grid grid-cols-4 gap-3">
               <StatCard label="Coût total" value={`${resultats.coutTotal.toFixed(2)} €`} />
               <StatCard label="Charges" value={`${resultats.chargesTotal.toFixed(2)} €`} />
               <StatCard label="ROI" value={`${resultats.roi.toFixed(0)}%`} />
@@ -508,110 +448,69 @@ function CalculateurMargeInner() {
             </div>
 
             {/* Détail des charges */}
-            <div style={{ marginTop: 20, display: "grid", gap: 8 }}>
+            <div className="mt-5 grid gap-2">
               {charges.breakdown.map((c) => (
-                <div key={c.label} style={{ display: "flex", justifyContent: "space-between", fontSize: 12.5, color: "#777" }}>
+                <div key={c.label} className="flex justify-between text-[12.5px] text-[var(--text-faint)]">
                   <span>{c.label}</span>
-                  <span style={{ color: "#aaa" }}>{c.detail}</span>
+                  <span className="text-[var(--text-muted)]">{c.detail}</span>
                 </div>
               ))}
             </div>
 
             {/* Sauvegarde de la simulation */}
             {user ? (
-              <div style={{ marginTop: 20, display: "flex", gap: 10 }}>
+              <div className="mt-5 flex gap-2.5">
                 <input
                   type="text"
                   placeholder="Nom de la simulation (ex: Lampe LED - fitness)"
                   value={nomSimulation}
                   onChange={(e) => setNomSimulation(e.target.value)}
-                  style={{
-                    flex: 1,
-                    background: "#111",
-                    border: "1px solid #2e2e2e",
-                    borderRadius: 8,
-                    padding: "10px 14px",
-                    color: "#f1f1f1",
-                    fontSize: 13.5,
-                    outline: "none",
-                  }}
+                  className="flex-1 bg-[var(--bg-sunken)] border border-[var(--border-strong)] rounded-lg px-3.5 py-2.5 text-[13.5px] text-[var(--text-primary)] outline-none focus:border-violet-500"
                 />
                 <button
                   onClick={handleSauvegarder}
                   disabled={saving}
-                  style={{
-                    background: "#6366f1",
-                    color: "#fff",
-                    border: "none",
-                    padding: "10px 18px",
-                    borderRadius: 8,
-                    fontSize: 13.5,
-                    fontWeight: 600,
-                    cursor: saving ? "default" : "pointer",
-                    opacity: saving ? 0.6 : 1,
-                    whiteSpace: "nowrap",
-                  }}
+                  className={`bg-violet-600 text-white border-none px-4.5 py-2.5 rounded-lg text-[13.5px] font-semibold whitespace-nowrap ${saving ? "cursor-default opacity-60" : "cursor-pointer"}`}
                 >
                   {saving ? "Sauvegarde…" : "💾 Sauvegarder"}
                 </button>
               </div>
             ) : null}
             {saveError && (
-              <div style={{
-                marginTop: 12, padding: "10px 14px", background: "#1f1010",
-                border: "1px solid #ef444433", borderRadius: 8, fontSize: 12.5, color: "#fca5a5",
-              }}>
+              <div className="mt-3 px-3.5 py-2.5 bg-[var(--danger)]/10 border border-[var(--danger)]/20 rounded-lg text-[12.5px] text-[var(--danger)]">
                 {saveError}
               </div>
             )}
             {!user && (
-              <div style={{ marginTop: 20, fontSize: 12.5, color: "#666" }}>
+              <div className="mt-5 text-[12.5px] text-[var(--text-faint)]">
                 Connecte-toi pour sauvegarder cette simulation.
               </div>
             )}
 
             {/* Conseil */}
             {resultats.margePct < 20 && (
-              <div style={{
-                marginTop: 20,
-                padding: "14px 18px",
-                background: "#1f1010",
-                borderRadius: 10,
-                border: "1px solid #ef444433",
-                fontSize: 13,
-                color: "#fca5a5",
-                lineHeight: 1.5,
-              }}>
+              <div className="mt-5 px-4.5 py-3.5 bg-[var(--danger)]/10 rounded-[10px] border border-[var(--danger)]/20 text-[13px] text-[var(--danger)] leading-relaxed">
                 ⚠️ Marge trop faible pour absorber les imprévus. Essaie de négocier le prix fournisseur ou d’augmenter le prix de vente.
               </div>
             )}
             {resultats.margePct >= 40 && (
-              <div style={{
-                marginTop: 20,
-                padding: "14px 18px",
-                background: "#0f1f10",
-                borderRadius: 10,
-                border: "1px solid #22c55e33",
-                fontSize: 13,
-                color: "#86efac",
-                lineHeight: 1.5,
-              }}>
+              <div className="mt-5 px-4.5 py-3.5 bg-[var(--success)]/10 rounded-[10px] border border-[var(--success)]/20 text-[13px] text-[var(--success)] leading-relaxed">
                 ✅ Bonne marge ! Ce produit peut absorber les coûts pubs et les retours.
               </div>
             )}
 
             {/* Simulation à l'échelle */}
-            <div style={{ marginTop: 32 }}>
-              <h2 style={{ margin: "0 0 16px", fontSize: 16, fontWeight: 600, color: "#888", textTransform: "uppercase", letterSpacing: "0.1em" }}>
+            <div className="mt-8">
+              <h2 className="mt-0 mb-4 text-base font-semibold text-[var(--text-faint)] uppercase tracking-[0.1em]">
                 Simulation à l’échelle
               </h2>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
+              <div className="grid grid-cols-3 gap-3">
                 {scaleData.map((s) => (
-                  <div key={s.n} style={{ background: "#111", borderRadius: 12, padding: "18px 16px", border: "1px solid #222" }}>
-                    <div style={{ fontSize: 12, fontWeight: 700, color: "#a5b4fc", marginBottom: 12 }}>
+                  <div key={s.n} className="bg-[var(--bg-sunken)] rounded-xl px-4 py-4.5 border border-[var(--border)]">
+                    <div className="text-xs font-bold text-[var(--accent)] mb-3">
                       {s.n} commandes/mois
                     </div>
-                    <div style={{ display: "grid", gap: 8 }}>
+                    <div className="grid gap-2">
                       <MiniStat label="CA" value={`${s.ca.toFixed(0)} €`} />
                       <MiniStat label="Marge brute" value={`${s.margeBrute.toFixed(0)} €`} />
                       <MiniStat label="Marge nette" value={`${s.margeNette.toFixed(0)} €`} color={getMargeColor(resultats.margePct)} />
@@ -623,119 +522,78 @@ function CalculateurMargeInner() {
             </div>
 
             {/* Graphique marge brute vs marge nette */}
-            <div style={{ marginTop: 28 }}>
-              <h2 style={{ margin: "0 0 16px", fontSize: 16, fontWeight: 600, color: "#888", textTransform: "uppercase", letterSpacing: "0.1em" }}>
+            <div className="mt-7">
+              <h2 className="mt-0 mb-4 text-base font-semibold text-[var(--text-faint)] uppercase tracking-[0.1em]">
                 Marge brute vs marge nette
               </h2>
-              <div style={{ background: "#111", borderRadius: 12, border: "1px solid #222", padding: "16px 8px 8px" }}>
+              <div className="bg-[var(--bg-sunken)] rounded-xl border border-[var(--border)] pt-4 px-2 pb-2">
                 <ResponsiveContainer width="100%" height={240}>
                   <BarChart data={chartData} margin={{ top: 4, right: 8, left: -12, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#222" vertical={false} />
-                    <XAxis dataKey="name" tick={{ fill: "#666", fontSize: 11 }} axisLine={false} tickLine={false} />
-                    <YAxis tick={{ fill: "#666", fontSize: 11 }} axisLine={false} tickLine={false} width={46} />
+                    <CartesianGrid strokeDasharray="3 3" stroke={isLight ? "rgba(0,0,0,0.06)" : "rgba(255,255,255,0.06)"} vertical={false} />
+                    <XAxis dataKey="name" tick={{ fill: isLight ? "#a1a1aa" : "#71717a", fontSize: 11 }} axisLine={false} tickLine={false} />
+                    <YAxis tick={{ fill: isLight ? "#a1a1aa" : "#71717a", fontSize: 11 }} axisLine={false} tickLine={false} width={46} />
                     <Tooltip
-                      contentStyle={{ background: "#1a1a1a", border: "1px solid #2a2a2a", borderRadius: 10, fontSize: 12 }}
-                      labelStyle={{ color: "#888" }}
+                      contentStyle={{ background: "var(--surface)", border: "1px solid var(--border-strong)", borderRadius: 10, fontSize: 12 }}
+                      labelStyle={{ color: "var(--text-faint)" }}
                       formatter={(value) => `${Number(value).toFixed(2)} €`}
                     />
-                    <Legend wrapperStyle={{ fontSize: 11, color: "#888" }} />
-                    <Bar dataKey="margeBrute" name="Marge brute" fill="#6366f1" radius={[6, 6, 0, 0]} />
-                    <Bar dataKey="margeNette" name="Marge nette" fill="#22c55e" radius={[6, 6, 0, 0]} />
+                    <Legend wrapperStyle={{ fontSize: 11, color: isLight ? "#52525b" : "#a1a1aa" }} />
+                    <Bar dataKey="margeBrute" name="Marge brute" fill="#7c3aed" radius={[6, 6, 0, 0]} />
+                    <Bar dataKey="margeNette" name="Marge nette" fill={isLight ? "#059669" : "#10b981"} radius={[6, 6, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
             </div>
           </div>
         ) : (
-          <div style={{
-            background: "#1a1a1a",
-            borderRadius: 16,
-            padding: 40,
-            border: "1px solid #2a2a2a",
-            textAlign: "center",
-            color: "#444",
-            fontSize: 14,
-          }}>
+          <div className="bg-[var(--surface)] rounded-2xl p-10 border border-[var(--border-strong)] text-center text-[var(--text-faint)] text-sm">
             Remplis le prix fournisseur et le prix de vente pour voir les résultats.
           </div>
         )}
 
         {/* Simulations sauvegardées */}
         {user && (
-          <div style={{
-            background: "#1a1a1a",
-            borderRadius: 16,
-            padding: 28,
-            border: "1px solid #2a2a2a",
-            marginTop: 24,
-          }}>
-            <h2 style={{ margin: "0 0 16px", fontSize: 16, fontWeight: 600, color: "#888", textTransform: "uppercase", letterSpacing: "0.1em" }}>
+          <div className="bg-[var(--surface)] rounded-2xl p-7 border border-[var(--border-strong)] mt-6">
+            <h2 className="mt-0 mb-4 text-base font-semibold text-[var(--text-faint)] uppercase tracking-[0.1em]">
               Mes simulations
             </h2>
 
             {loadingSims ? (
-              <div style={{ fontSize: 13, color: "#555" }}>Chargement…</div>
+              <div className="text-[13px] text-[var(--text-faint)]">Chargement…</div>
             ) : simulations.length === 0 ? (
-              <div style={{ fontSize: 13, color: "#555" }}>
+              <div className="text-[13px] text-[var(--text-faint)]">
                 Aucune simulation sauvegardée pour l’instant.
               </div>
             ) : (
-              <div style={{ display: "grid", gap: 10 }}>
+              <div className="grid gap-2.5">
                 {simulations.map((sim) => {
                   const margePct = typeof sim.resultats?.margePct === "number" ? sim.resultats.margePct as number : null;
                   return (
                     <div
                       key={sim.id}
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                        background: "#111",
-                        border: "1px solid #222",
-                        borderRadius: 10,
-                        padding: "12px 16px",
-                        gap: 12,
-                      }}
+                      className="flex items-center justify-between bg-[var(--bg-sunken)] border border-[var(--border)] rounded-[10px] px-4 py-3 gap-3"
                     >
-                      <div style={{ minWidth: 0 }}>
-                        <div style={{ fontSize: 13.5, fontWeight: 600, color: "#e5e5e5", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                      <div className="min-w-0">
+                        <div className="text-[13.5px] font-semibold text-[var(--text-primary)] whitespace-nowrap overflow-hidden text-ellipsis">
                           {sim.nom}
                         </div>
-                        <div style={{ fontSize: 11.5, color: "#666", marginTop: 2 }}>
+                        <div className="text-[11.5px] text-[var(--text-faint)] mt-0.5">
                           {new Date(sim.created_at).toLocaleDateString("fr-FR", { day: "numeric", month: "short", year: "numeric" })}
                           {margePct !== null && (
-                            <span style={{ color: getMargeColor(margePct), fontWeight: 600 }}> · {margePct.toFixed(1)}% net</span>
+                            <span className="font-semibold" style={{ color: getMargeColor(margePct) }}> · {margePct.toFixed(1)}% net</span>
                           )}
                         </div>
                       </div>
-                      <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
+                      <div className="flex gap-2 shrink-0">
                         <button
                           onClick={() => handleCharger(sim)}
-                          style={{
-                            background: "#1a1a2e",
-                            border: "1px solid #6366f144",
-                            color: "#a5b4fc",
-                            padding: "7px 12px",
-                            borderRadius: 7,
-                            fontSize: 12,
-                            fontWeight: 600,
-                            cursor: "pointer",
-                          }}
+                          className="bg-violet-500/10 border border-violet-500/30 text-[var(--accent)] px-3 py-[7px] rounded-[7px] text-xs font-semibold cursor-pointer"
                         >
                           Charger
                         </button>
                         <button
                           onClick={() => handleSupprimer(sim.id)}
-                          style={{
-                            background: "transparent",
-                            border: "1px solid #ef444433",
-                            color: "#fca5a5",
-                            padding: "7px 12px",
-                            borderRadius: 7,
-                            fontSize: 12,
-                            fontWeight: 600,
-                            cursor: "pointer",
-                          }}
+                          className="bg-transparent border border-[var(--danger)]/20 text-[var(--danger)] px-3 py-[7px] rounded-[7px] text-xs font-semibold cursor-pointer"
                         >
                           Supprimer
                         </button>
@@ -767,34 +625,15 @@ function InputField({
 }) {
   return (
     <div>
-      <label style={{
-        display: "block",
-        fontSize: 13,
-        fontWeight: 500,
-        color: "#aaa",
-        marginBottom: 8,
-      }}>
-        {label} {required && <span style={{ color: "#6366f1" }}>*</span>}
+      <label className="block text-[13px] font-medium text-[var(--text-muted)] mb-2">
+        {label} {required && <span className="text-[var(--accent)]">*</span>}
       </label>
       <input
         type="number"
         placeholder={placeholder}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        style={{
-          width: "100%",
-          background: "#111",
-          border: "1px solid #2e2e2e",
-          borderRadius: 8,
-          padding: "12px 14px",
-          color: "#f1f1f1",
-          fontSize: 15,
-          outline: "none",
-          boxSizing: "border-box",
-          transition: "border-color 0.2s",
-        }}
-        onFocus={(e) => (e.target.style.borderColor = "#6366f1")}
-        onBlur={(e) => (e.target.style.borderColor = "#2e2e2e")}
+        className="w-full box-border bg-[var(--bg-sunken)] border border-[var(--border-strong)] rounded-lg px-3.5 py-3 text-[15px] text-[var(--text-primary)] outline-none transition-colors focus:border-violet-500"
       />
     </div>
   );
@@ -802,25 +641,20 @@ function InputField({
 
 function MiniStat({ label, value, color }: { label: string; value: string; color?: string }) {
   return (
-    <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12 }}>
-      <span style={{ color: "#666" }}>{label}</span>
-      <span style={{ color: color || "#ccc", fontWeight: 600 }}>{value}</span>
+    <div className="flex justify-between text-xs">
+      <span className="text-[var(--text-faint)]">{label}</span>
+      <span className="font-semibold" style={{ color: color || "var(--text-muted)" }}>{value}</span>
     </div>
   );
 }
 
 function StatCard({ label, value }: { label: string; value: string }) {
   return (
-    <div style={{
-      background: "#111",
-      borderRadius: 10,
-      padding: "16px 18px",
-      border: "1px solid #222",
-    }}>
-      <div style={{ fontSize: 11, color: "#555", marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.08em" }}>
+    <div className="bg-[var(--bg-sunken)] rounded-[10px] px-4.5 py-4 border border-[var(--border)]">
+      <div className="text-[11px] text-[var(--text-faint)] mb-1.5 uppercase tracking-[0.08em]">
         {label}
       </div>
-      <div style={{ fontSize: 18, fontWeight: 600, color: "#e5e5e5" }}>
+      <div className="text-lg font-semibold text-[var(--text-primary)]">
         {value}
       </div>
     </div>

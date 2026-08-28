@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 interface SpyResult {
   productCount: number;
@@ -16,6 +16,22 @@ function formatCurrency(value: number) {
     currency: "EUR",
     maximumFractionDigits: 2,
   }).format(value);
+}
+
+// StatCard a besoin de 4 teintes d'accent distinctes (violet/blue/indigo/purple) — seules
+// les deux premières ont un token dédié (--accent/--accent-secondary). Pour indigo/purple,
+// pas de token existant : on bascule la nuance Tailwind elle-même selon le thème (600 sur
+// fond clair, 300 sur fond sombre) plutôt que d'ajouter deux tokens pour un seul usage.
+function useIsLightTheme(): boolean {
+  const [isLight, setIsLight] = useState(false);
+  useEffect(() => {
+    const read = () => setIsLight(document.documentElement.getAttribute("data-theme") === "light");
+    read();
+    const observer = new MutationObserver(read);
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+    return () => observer.disconnect();
+  }, []);
+  return isLight;
 }
 
 export default function SpyPage() {
@@ -53,24 +69,24 @@ export default function SpyPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0d0d14] text-white font-sans px-4 py-16">
+    <div className="min-h-screen bg-[var(--bg)] text-[var(--text-primary)] font-sans px-4 py-16">
       <div className="max-w-2xl mx-auto">
         {/* Header */}
         <div className="mb-12 text-center">
-          <div className="inline-flex items-center gap-2 mb-4 px-3 py-1 rounded-full bg-violet-500/10 border border-violet-500/20 text-violet-400 text-xs font-medium tracking-widest uppercase">
+          <div className="inline-flex items-center gap-2 mb-4 px-3 py-1 rounded-full bg-violet-500/10 border border-violet-500/20 text-[var(--accent)] text-xs font-medium tracking-widest uppercase">
             Intelligence concurrentielle
           </div>
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-violet-400 to-blue-400 bg-clip-text text-transparent mb-3">
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-[var(--accent)] to-[var(--accent-secondary)] bg-clip-text text-transparent mb-3">
             Spy Tool
           </h1>
-          <p className="text-zinc-400 text-base">
+          <p className="text-[var(--text-muted)] text-base">
             Analysez n&apos;importe quelle boutique Shopify en quelques secondes
           </p>
         </div>
 
         {/* Input */}
-        <div className="rounded-2xl bg-[#13131f] border border-white/5 p-6 mb-6 shadow-xl shadow-black/40">
-          <label className="block text-sm font-medium text-zinc-300 mb-3">
+        <div className="rounded-2xl bg-[var(--surface)] border border-[var(--border)] p-6 mb-6 shadow-xl shadow-black/40">
+          <label className="block text-sm font-medium text-[var(--text-muted)] mb-3">
             URL de la boutique concurrente
           </label>
           <div className="flex gap-3">
@@ -80,7 +96,7 @@ export default function SpyPage() {
               onChange={(e) => setUrl(e.target.value)}
               onKeyDown={handleKeyDown}
               placeholder="ex: boutique-exemple.com"
-              className="flex-1 bg-[#0d0d14] border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-zinc-600 focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition"
+              className="flex-1 bg-[var(--bg)] border border-[var(--border-strong)] rounded-xl px-4 py-3 text-sm text-[var(--text-primary)] placeholder-[var(--text-faint)] focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition"
             />
             <button
               onClick={handleAnalyze}
@@ -104,15 +120,15 @@ export default function SpyPage() {
 
         {/* Error */}
         {error && (
-          <div className="rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm px-4 py-3 mb-6">
+          <div className="rounded-xl bg-[var(--danger)]/10 border border-[var(--danger)]/20 text-[var(--danger)] text-sm px-4 py-3 mb-6">
             {error}
           </div>
         )}
 
         {/* Results */}
         {result && (
-          <div className="rounded-2xl bg-[#13131f] border border-white/5 p-6 shadow-xl shadow-black/40">
-            <h2 className="text-sm font-semibold text-zinc-400 uppercase tracking-widest mb-6">
+          <div className="rounded-2xl bg-[var(--surface)] border border-[var(--border)] p-6 shadow-xl shadow-black/40">
+            <h2 className="text-sm font-semibold text-[var(--text-muted)] uppercase tracking-widest mb-6">
               Résultats
             </h2>
 
@@ -141,13 +157,13 @@ export default function SpyPage() {
 
             {/* Revenue estimate */}
             <div className="rounded-xl bg-gradient-to-r from-violet-600/10 to-blue-600/10 border border-violet-500/20 p-5">
-              <p className="text-xs text-zinc-500 uppercase tracking-widest font-medium mb-1">
+              <p className="text-xs text-[var(--text-faint)] uppercase tracking-widest font-medium mb-1">
                 CA mensuel estimé
               </p>
-              <p className="text-3xl font-bold bg-gradient-to-r from-violet-300 to-blue-300 bg-clip-text text-transparent">
+              <p className="text-3xl font-bold bg-gradient-to-r from-[var(--accent)] to-[var(--accent-secondary)] bg-clip-text text-transparent">
                 {formatCurrency(result.estimatedRevenue)}
               </p>
-              <p className="text-xs text-zinc-600 mt-2">
+              <p className="text-xs text-[var(--text-faint)] mt-2">
                 5 000 visites × 2,5% conversion × prix moyen
               </p>
             </div>
@@ -167,6 +183,8 @@ function StatCard({
   value: string;
   accent: "violet" | "blue" | "indigo" | "purple";
 }) {
+  const isLight = useIsLightTheme();
+
   const border = {
     violet: "border-violet-500/20",
     blue: "border-blue-500/20",
@@ -175,17 +193,17 @@ function StatCard({
   }[accent];
 
   const text = {
-    violet: "text-violet-300",
-    blue: "text-blue-300",
-    indigo: "text-indigo-300",
-    purple: "text-purple-300",
+    violet: "text-[var(--accent)]",
+    blue: "text-[var(--accent-secondary)]",
+    indigo: isLight ? "text-indigo-600" : "text-indigo-300",
+    purple: isLight ? "text-purple-600" : "text-purple-300",
   }[accent];
 
   return (
     <div
-      className={`rounded-xl bg-white/[0.03] border ${border} px-4 py-4`}
+      className={`rounded-xl bg-[var(--surface-2)] border ${border} px-4 py-4`}
     >
-      <p className="text-xs text-zinc-500 mb-1">{label}</p>
+      <p className="text-xs text-[var(--text-faint)] mb-1">{label}</p>
       <p className={`text-xl font-bold ${text}`}>{value}</p>
     </div>
   );

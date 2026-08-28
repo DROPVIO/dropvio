@@ -36,56 +36,56 @@ export default function UtilisationDetailPage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-[#0d0d14] px-8 py-10">
+    <div className="min-h-screen bg-[var(--bg)] px-8 py-10">
       <div className="max-w-4xl mx-auto flex flex-col gap-8">
         <div>
-          <Link href="/dashboard" className="text-xs text-zinc-500 hover:text-zinc-300 transition-colors">
+          <Link href="/dashboard" className="text-xs text-[var(--text-faint)] hover:text-[var(--text-muted)] transition-colors">
             ← Dashboard
           </Link>
-          <h1 className="text-2xl font-bold text-white mt-3">Utilisation du plan</h1>
-          <p className="text-zinc-500 text-sm mt-1.5">
+          <h1 className="text-2xl font-bold text-[var(--text-primary)] mt-3">Utilisation du plan</h1>
+          <p className="text-[var(--text-faint)] text-sm mt-1.5">
             Ce que tu as consommé sur le plan {usage ? PLAN_LABEL[usage.plan] ?? usage.plan : "…"}.
           </p>
         </div>
 
         {loading ? (
-          <p className="text-zinc-600 text-sm text-center py-12">Chargement…</p>
+          <p className="text-[var(--text-faint)] text-sm text-center py-12">Chargement…</p>
         ) : error ? (
-          <div className="rounded-xl bg-red-500/10 border border-red-500/20 px-4 py-3 text-red-400 text-sm">{error}</div>
+          <div className="rounded-xl bg-[var(--danger)]/10 border border-[var(--danger)]/20 px-4 py-3 text-[var(--danger)] text-sm">{error}</div>
         ) : usage ? (
           <div className="flex flex-col gap-8">
-            <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-6 flex flex-col gap-3">
-              <p className="text-[11px] font-semibold text-zinc-500 uppercase tracking-widest">Ce mois-ci</p>
+            <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface-2)] p-6 flex flex-col gap-3">
+              <p className="text-[11px] font-semibold text-[var(--text-faint)] uppercase tracking-widest">Ce mois-ci</p>
               {usage.monthly.map((m) => (
                 <UsageMeter key={m.key} label={m.label} used={m.used} max={m.max} />
               ))}
             </div>
 
-            <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-6 flex flex-col gap-3">
-              <p className="text-[11px] font-semibold text-zinc-500 uppercase tracking-widest">Au total</p>
+            <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface-2)] p-6 flex flex-col gap-3">
+              <p className="text-[11px] font-semibold text-[var(--text-faint)] uppercase tracking-widest">Au total</p>
               {usage.total.map((m) => (
                 <UsageMeter key={m.key} label={m.label} used={m.used} max={m.max} />
               ))}
             </div>
 
-            <div className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-6 flex flex-col gap-3">
-              <p className="text-[11px] font-semibold text-zinc-500 uppercase tracking-widest">Catalogue & boutiques</p>
-              <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] px-4 py-3.5 flex items-center justify-between gap-4">
+            <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface-2)] p-6 flex flex-col gap-3">
+              <p className="text-[11px] font-semibold text-[var(--text-faint)] uppercase tracking-widest">Catalogue & boutiques</p>
+              <div className="rounded-xl border border-[var(--border)] bg-[var(--surface-2)] px-4 py-3.5 flex items-center justify-between gap-4">
                 <div>
-                  <p className="text-sm font-medium text-white">Produits gagnants accessibles</p>
-                  <p className="text-[11px] text-zinc-500 mt-0.5">Nombre de produits consultables dans le catalogue.</p>
+                  <p className="text-sm font-medium text-[var(--text-primary)]">Produits gagnants accessibles</p>
+                  <p className="text-[11px] text-[var(--text-faint)] mt-0.5">Nombre de produits consultables dans le catalogue.</p>
                 </div>
                 <p className="text-xs font-semibold shrink-0">
                   {usage.catalogue.max === null ? (
-                    <span className="text-emerald-400">Catalogue complet</span>
+                    <span className="text-[var(--success)]">Catalogue complet</span>
                   ) : (
-                    <span className="text-zinc-300">{usage.catalogue.max} premiers produits</span>
+                    <span className="text-[var(--text-muted)]">{usage.catalogue.max} premiers produits</span>
                   )}
                 </p>
               </div>
 
               {usage.boutiques.length === 0 ? (
-                <p className="text-[11px] text-zinc-600">
+                <p className="text-[11px] text-[var(--text-faint)]">
                   Tu n&apos;as pas encore de boutique — crée-en une depuis « Mode boutique ».
                 </p>
               ) : (

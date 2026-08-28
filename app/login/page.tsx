@@ -74,71 +74,71 @@ function LoginForm() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0d0d14] flex items-center justify-center px-4">
+    <div className="min-h-screen bg-[var(--bg)] flex items-center justify-center px-4">
       <div className="w-full max-w-sm">
         {/* Logo */}
         <div className="flex items-center justify-center gap-2 mb-10">
           <Logo className="w-7 h-7 text-[var(--logo-accent)]" />
-          <span className="text-xl font-bold bg-gradient-to-r from-violet-400 to-blue-400 bg-clip-text text-transparent">
+          <span className="text-xl font-bold bg-gradient-to-r from-[var(--accent)] to-[var(--accent-secondary)] bg-clip-text text-transparent">
             Dropvio
           </span>
         </div>
 
-        <div className="rounded-2xl bg-[#13131f] border border-white/5 p-8">
-          <h1 className="text-xl font-bold text-white mb-1">Connexion</h1>
-          <p className="text-zinc-500 text-sm mb-8">Accède à ton espace Dropvio</p>
+        <div className="rounded-2xl bg-[var(--surface)] border border-[var(--border)] p-8">
+          <h1 className="text-xl font-bold text-[var(--text-primary)] mb-1">Connexion</h1>
+          <p className="text-[var(--text-faint)] text-sm mb-8">Accède à ton espace Dropvio</p>
 
           {justConfirmed && !error && (
-            <div className="mb-5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 px-4 py-3 text-emerald-400 text-sm">
+            <div className="mb-5 rounded-xl bg-[var(--success)]/10 border border-[var(--success)]/20 px-4 py-3 text-[var(--success)] text-sm">
               Ton email est confirmé. Tu peux te connecter.
             </div>
           )}
 
           {error && (
-            <div className="mb-5 rounded-xl bg-red-500/10 border border-red-500/20 px-4 py-3 text-red-400 text-sm flex flex-col gap-2">
+            <div className="mb-5 rounded-xl bg-[var(--danger)]/10 border border-[var(--danger)]/20 px-4 py-3 text-[var(--danger)] text-sm flex flex-col gap-2">
               <span>{error}</span>
               {unconfirmed && (
                 resendState === "sent" ? (
-                  <span className="text-emerald-400 text-xs">Email renvoyé ! Vérifie ta boîte mail (et tes spams).</span>
+                  <span className="text-[var(--success)] text-xs">Email renvoyé ! Vérifie ta boîte mail (et tes spams).</span>
                 ) : (
                   <button
                     type="button"
                     onClick={handleResend}
                     disabled={resendState === "loading"}
-                    className="self-start text-xs text-violet-400 hover:text-violet-300 transition font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="self-start text-xs text-[var(--accent)] hover:opacity-80 transition font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {resendState === "loading" ? "Envoi…" : "Renvoyer l'email de confirmation"}
                   </button>
                 )
               )}
               {unconfirmed && resendState === "error" && resendError && (
-                <span className="text-red-300 text-xs">{resendError}</span>
+                <span className="text-[var(--danger)] text-xs">{resendError}</span>
               )}
             </div>
           )}
 
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-medium text-zinc-400 uppercase tracking-wider">Email</label>
+              <label className="text-xs font-medium text-[var(--text-muted)] uppercase tracking-wider">Email</label>
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="ton@email.com"
                 required
-                className="bg-[#0d0d14] border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-zinc-600 focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition"
+                className="bg-[var(--bg)] border border-[var(--border-strong)] rounded-xl px-4 py-3 text-sm text-[var(--text-primary)] placeholder-[var(--text-faint)] focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition"
               />
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-medium text-zinc-400 uppercase tracking-wider">Mot de passe</label>
+              <label className="text-xs font-medium text-[var(--text-muted)] uppercase tracking-wider">Mot de passe</label>
               <input
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
                 required
-                className="bg-[#0d0d14] border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-zinc-600 focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition"
+                className="bg-[var(--bg)] border border-[var(--border-strong)] rounded-xl px-4 py-3 text-sm text-[var(--text-primary)] placeholder-[var(--text-faint)] focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition"
               />
             </div>
 
@@ -151,9 +151,9 @@ function LoginForm() {
             </button>
           </form>
 
-          <p className="mt-6 text-center text-sm text-zinc-500">
+          <p className="mt-6 text-center text-sm text-[var(--text-faint)]">
             Pas encore de compte ?{" "}
-            <a href="/register" className="text-violet-400 hover:text-violet-300 font-medium transition">
+            <a href="/register" className="text-[var(--accent)] hover:opacity-80 font-medium transition">
               Créer un compte
             </a>
           </p>
@@ -166,7 +166,7 @@ function LoginForm() {
 export default function LoginPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-[#0d0d14] flex items-center justify-center text-zinc-500 text-sm">
+      <div className="min-h-screen bg-[var(--bg)] flex items-center justify-center text-[var(--text-faint)] text-sm">
         Chargement…
       </div>
     }>

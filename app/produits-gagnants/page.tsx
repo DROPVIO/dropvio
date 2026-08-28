@@ -178,86 +178,57 @@ export default function ProduitsGagnants() {
   const [alternativesProduit, setAlternativesProduit] = useState<Produit | null>(null);
 
   return (
-    <div style={{ minHeight: "100vh", background: "#0a0a0a", color: "#f1f1f1", fontFamily: "'Inter', -apple-system, sans-serif" }}>
+    <div className="min-h-screen bg-[var(--bg)] text-[var(--text-primary)] font-['Inter',-apple-system,sans-serif]">
 
       {/* Header */}
-      <div style={{ background: "#111", borderBottom: "1px solid #1f1f1f", padding: "24px 32px" }}>
-        <div style={{ maxWidth: 1200, margin: "0 auto", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+      <div className="bg-[var(--bg-sunken)] border-b border-[var(--border-strong)] px-8 py-6">
+        <div className="max-w-[1200px] mx-auto flex justify-between items-center">
           <div>
-            <h1 style={{ fontSize: 28, fontWeight: 700, margin: 0, color: "#fff" }}>
+            <h1 className="text-[28px] font-bold m-0 text-[var(--text-primary)]">
               🏆 Produits Gagnants
             </h1>
-            <p style={{ color: "#666", margin: "6px 0 0", fontSize: 14 }}>
+            <p className="text-[var(--text-faint)] mt-1.5 mb-0 text-sm">
               Les meilleurs produits AliExpress pour le dropshipping — sélectionnés par marge, avis et potentiel.
             </p>
           </div>
           {!loading && (
-            <div style={{ background: "#6366f122", border: "1px solid #6366f144", borderRadius: 10, padding: "8px 16px", textAlign: "center", minWidth: 80 }}>
-              <div style={{ fontSize: 22, fontWeight: 800, color: "#6366f1" }}>{produits.length}</div>
-              <div style={{ fontSize: 11, color: "#888" }}>produits chargés</div>
+            <div className="bg-violet-500/10 border border-violet-500/25 rounded-[10px] px-4 py-2 text-center min-w-[80px]">
+              <div className="text-[22px] font-extrabold text-[var(--accent)]">{produits.length}</div>
+              <div className="text-[11px] text-[var(--text-faint)]">produits chargés</div>
             </div>
           )}
         </div>
       </div>
 
-      <div style={{ maxWidth: 1200, margin: "0 auto", padding: "32px 24px" }}>
+      <div className="max-w-[1200px] mx-auto px-6 py-8">
 
         {/* Bouton choisir niche */}
-        <div style={{ marginBottom: 24 }}>
+        <div className="mb-6">
           <button
             onClick={() => setTiroirOpen(!tiroirOpen)}
-            style={{
-              background: tiroirOpen ? "#6366f1" : "#1a1a1a",
-              border: `1px solid ${tiroirOpen ? "#6366f1" : "#2e2e2e"}`,
-              color: "#fff",
-              padding: "14px 24px",
-              borderRadius: 12,
-              fontSize: 15,
-              fontWeight: 600,
-              cursor: "pointer",
-              display: "flex",
-              alignItems: "center",
-              gap: 10,
-              transition: "all 0.2s",
-            }}
+            className={`px-6 py-3.5 rounded-xl text-[15px] font-semibold cursor-pointer flex items-center gap-2.5 transition-all border ${
+              tiroirOpen ? "bg-violet-600 border-violet-600 text-white" : "bg-[var(--surface)] border-[var(--border-strong)] text-[var(--text-primary)]"
+            }`}
           >
             <span>🎯</span>
             {nicheSelectionnee ? `Niche : ${nicheSelectionnee.emoji} ${nicheSelectionnee.label}` : "Choisir une niche"}
-            <span style={{ marginLeft: "auto", fontSize: 12, opacity: 0.7 }}>{tiroirOpen ? "▲" : "▼"}</span>
+            <span className="ml-auto text-xs opacity-70">{tiroirOpen ? "▲" : "▼"}</span>
           </button>
 
           {/* Tiroir niches */}
           {tiroirOpen && (
-            <div style={{
-              marginTop: 8,
-              background: "#1a1a1a",
-              border: "1px solid #2a2a2a",
-              borderRadius: 16,
-              padding: 24,
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))",
-              gap: 10,
-            }}>
+            <div className="mt-2 bg-[var(--surface)] border border-[var(--border-strong)] rounded-2xl p-6 grid gap-2.5" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))" }}>
               {NICHES.map(niche => (
                 <button
                   key={niche.id}
                   onClick={() => { setNicheActive(niche.id); setTiroirOpen(false); setPage(1); }}
-                  style={{
-                    background: nicheActive === niche.id ? "#6366f1" : "#111",
-                    border: `1px solid ${nicheActive === niche.id ? "#6366f1" : "#2e2e2e"}`,
-                    color: "#fff",
-                    padding: "12px 16px",
-                    borderRadius: 10,
-                    fontSize: 13,
-                    fontWeight: 500,
-                    cursor: "pointer",
-                    textAlign: "left",
-                    transition: "all 0.15s",
-                  }}
+                  className={`px-4 py-3 rounded-[10px] text-[13px] font-medium cursor-pointer text-left transition-all border ${
+                    nicheActive === niche.id ? "bg-violet-600 border-violet-600 text-white" : "bg-[var(--bg-sunken)] border-[var(--border-strong)] text-[var(--text-primary)]"
+                  }`}
                 >
-                  <div style={{ fontSize: 18, marginBottom: 4 }}>{niche.emoji}</div>
-                  <div style={{ fontWeight: 600 }}>{niche.label}</div>
-                  <div style={{ fontSize: 11, color: "#888", marginTop: 2 }}>{niche.desc}</div>
+                  <div className="text-lg mb-1">{niche.emoji}</div>
+                  <div className="font-semibold">{niche.label}</div>
+                  <div className="text-[11px] text-[var(--text-faint)] mt-0.5">{niche.desc}</div>
                 </button>
               ))}
             </div>
@@ -265,8 +236,8 @@ export default function ProduitsGagnants() {
         </div>
 
         {/* Filtres */}
-        <div style={{ display: "flex", gap: 12, marginBottom: 28, flexWrap: "wrap", alignItems: "center" }}>
-          <span style={{ fontSize: 13, color: "#666" }}>Filtres :</span>
+        <div className="flex gap-3 mb-7 flex-wrap items-center">
+          <span className="text-[13px] text-[var(--text-faint)]">Filtres :</span>
 
           {[
             { label: "Tous les prix", val: "tous" },
@@ -277,16 +248,9 @@ export default function ProduitsGagnants() {
             <button
               key={f.val}
               onClick={() => { setFiltresPrix(f.val); setPage(1); }}
-              style={{
-                background: filtresPrix === f.val ? "#6366f1" : "#1a1a1a",
-                border: `1px solid ${filtresPrix === f.val ? "#6366f1" : "#2e2e2e"}`,
-                color: "#fff",
-                padding: "7px 14px",
-                borderRadius: 8,
-                fontSize: 12,
-                fontWeight: 500,
-                cursor: "pointer",
-              }}
+              className={`px-3.5 py-[7px] rounded-lg text-xs font-medium cursor-pointer border ${
+                filtresPrix === f.val ? "bg-violet-600 border-violet-600 text-white" : "bg-[var(--surface)] border-[var(--border-strong)] text-[var(--text-primary)]"
+              }`}
             >
               {f.label}
             </button>
@@ -300,16 +264,9 @@ export default function ProduitsGagnants() {
             <button
               key={f.val}
               onClick={() => { setFiltreMarge(f.val); setPage(1); }}
-              style={{
-                background: filtreMarge === f.val ? "#22c55e" : "#1a1a1a",
-                border: `1px solid ${filtreMarge === f.val ? "#22c55e" : "#2e2e2e"}`,
-                color: "#fff",
-                padding: "7px 14px",
-                borderRadius: 8,
-                fontSize: 12,
-                fontWeight: 500,
-                cursor: "pointer",
-              }}
+              className={`px-3.5 py-[7px] rounded-lg text-xs font-medium cursor-pointer border ${
+                filtreMarge === f.val ? "bg-emerald-600 border-emerald-600 text-white" : "bg-[var(--surface)] border-[var(--border-strong)] text-[var(--text-primary)]"
+              }`}
             >
               {f.label}
             </button>
@@ -317,23 +274,15 @@ export default function ProduitsGagnants() {
         </div>
 
         {/* Filtres avancés */}
-        <div style={{
-          background: "#1a1a1a",
-          border: "1px solid #2a2a2a",
-          borderRadius: 14,
-          padding: 20,
-          marginBottom: 28,
-          display: "grid",
-          gap: 18,
-        }}>
-          <div style={{ fontSize: 12, fontWeight: 600, color: "#888", textTransform: "uppercase", letterSpacing: "0.06em" }}>
+        <div className="bg-[var(--surface)] border border-[var(--border-strong)] rounded-[14px] p-5 mb-7 grid gap-4.5">
+          <div className="text-xs font-semibold text-[var(--text-faint)] uppercase tracking-[0.06em]">
             Filtres avancés
           </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
+          <div className="grid grid-cols-2 gap-5">
             {/* Commandes minimum */}
             <div>
-              <label style={{ display: "block", fontSize: 12.5, color: "#aaa", marginBottom: 8 }}>
+              <label className="block text-[12.5px] text-[var(--text-muted)] mb-2">
                 Volume de commandes minimum
               </label>
               <input
@@ -342,25 +291,15 @@ export default function ProduitsGagnants() {
                 placeholder="ex: 200"
                 value={commandesMin}
                 onChange={(e) => { setCommandesMin(e.target.value); setPage(1); }}
-                style={{
-                  width: "100%",
-                  background: "#111",
-                  border: "1px solid #2e2e2e",
-                  borderRadius: 8,
-                  padding: "9px 12px",
-                  color: "#f1f1f1",
-                  fontSize: 13.5,
-                  outline: "none",
-                  boxSizing: "border-box",
-                }}
+                className="w-full box-border bg-[var(--bg-sunken)] border border-[var(--border-strong)] rounded-lg px-3 py-2.5 text-[13.5px] text-[var(--text-primary)] outline-none"
               />
             </div>
 
             {/* Note minimum */}
             <div>
-              <label style={{ display: "flex", justifyContent: "space-between", fontSize: 12.5, color: "#aaa", marginBottom: 8 }}>
+              <label className="flex justify-between text-[12.5px] text-[var(--text-muted)] mb-2">
                 <span>Note minimum</span>
-                <span style={{ color: "#fbbf24", fontWeight: 600 }}>
+                <span className="text-[var(--warning)] font-semibold">
                   {noteMin > 0 ? `⭐ ${noteMin.toFixed(1)}+` : "Toutes"}
                 </span>
               </label>
@@ -371,68 +310,50 @@ export default function ProduitsGagnants() {
                 step={0.5}
                 value={noteMin}
                 onChange={(e) => { setNoteMin(parseFloat(e.target.value)); setPage(1); }}
-                style={{ width: "100%", accentColor: "#fbbf24" }}
+                className="w-full accent-[var(--warning)]"
               />
             </div>
           </div>
 
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 24, alignItems: "center" }}>
+          <div className="flex flex-wrap gap-6 items-center">
             {/* Sweet spot */}
-            <label style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 13, color: "#ccc", cursor: "pointer" }}>
+            <label className="flex items-center gap-2.5 text-[13px] text-[var(--text-muted)] cursor-pointer">
               <input
                 type="checkbox"
                 checked={sweetSpotActif}
                 onChange={(e) => { setSweetSpotActif(e.target.checked); setPage(1); }}
-                style={{ width: 16, height: 16, accentColor: "#22c55e" }}
+                className="w-4 h-4 accent-[var(--success)]"
               />
               🎯 Sweet spot saturation
             </label>
           </div>
 
           {sweetSpotActif && (
-            <div style={{
-              background: "#111",
-              borderRadius: 10,
-              padding: 16,
-              border: "1px solid #22c55e33",
-              display: "flex",
-              alignItems: "center",
-              gap: 16,
-              flexWrap: "wrap",
-            }}>
-              <span style={{ fontSize: 12, color: "#666" }}>
+            <div className="bg-[var(--bg-sunken)] rounded-[10px] p-4 border border-emerald-500/20 flex items-center gap-4 flex-wrap">
+              <span className="text-xs text-[var(--text-faint)]">
                 Ni invendable, ni déjà saturé — commandes entre :
               </span>
-              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <div className="flex items-center gap-2">
                 <input
                   type="number"
                   min={0}
                   value={sweetMin}
                   onChange={(e) => { setSweetMin(parseInt(e.target.value) || 0); setPage(1); }}
-                  style={{
-                    width: 90, background: "#0a0a0a", border: "1px solid #2e2e2e", borderRadius: 7,
-                    padding: "7px 10px", color: "#f1f1f1", fontSize: 13, outline: "none",
-                  }}
+                  className="w-[90px] bg-[var(--bg)] border border-[var(--border-strong)] rounded-[7px] px-2.5 py-1.5 text-[13px] text-[var(--text-primary)] outline-none"
                 />
-                <span style={{ color: "#555", fontSize: 12 }}>et</span>
+                <span className="text-[var(--text-faint)] text-xs">et</span>
                 <input
                   type="number"
                   min={0}
                   value={sweetMax}
                   onChange={(e) => { setSweetMax(parseInt(e.target.value) || 0); setPage(1); }}
-                  style={{
-                    width: 90, background: "#0a0a0a", border: "1px solid #2e2e2e", borderRadius: 7,
-                    padding: "7px 10px", color: "#f1f1f1", fontSize: 13, outline: "none",
-                  }}
+                  className="w-[90px] bg-[var(--bg)] border border-[var(--border-strong)] rounded-[7px] px-2.5 py-1.5 text-[13px] text-[var(--text-primary)] outline-none"
                 />
-                <span style={{ color: "#555", fontSize: 12 }}>commandes</span>
+                <span className="text-[var(--text-faint)] text-xs">commandes</span>
               </div>
               <button
                 onClick={() => { setSweetMin(SWEET_SPOT_DEFAUT.min); setSweetMax(SWEET_SPOT_DEFAUT.max); setPage(1); }}
-                style={{
-                  marginLeft: "auto", background: "transparent", border: "1px solid #333",
-                  color: "#888", padding: "6px 12px", borderRadius: 7, fontSize: 11.5, cursor: "pointer",
-                }}
+                className="ml-auto bg-transparent border border-[var(--border-strong)] text-[var(--text-faint)] px-3 py-1.5 rounded-[7px] text-[11.5px] cursor-pointer"
               >
                 Réinitialiser (500–5000)
               </button>
@@ -443,53 +364,36 @@ export default function ProduitsGagnants() {
         {/* Résultats */}
         <div ref={resultatsRef}>
         {loading ? (
-          <div style={{ textAlign: "center", padding: 80 }}>
-            <div style={{ fontSize: 32, marginBottom: 16 }}>⏳</div>
-            <div style={{ color: "#666", fontSize: 15 }}>Chargement des produits AliExpress...</div>
+          <div className="text-center py-20">
+            <div className="text-[32px] mb-4">⏳</div>
+            <div className="text-[var(--text-faint)] text-[15px]">Chargement des produits AliExpress...</div>
           </div>
         ) : erreur ? (
-          <div style={{
-            background: "#1f1010",
-            border: "1px solid #ef444433",
-            borderRadius: 12,
-            padding: 32,
-            textAlign: "center",
-            color: "#fca5a5",
-          }}>
-            <div style={{ fontSize: 24, marginBottom: 8 }}>⚠️</div>
-            <div style={{ fontSize: 14 }}>{erreur}</div>
+          <div className="bg-[var(--danger)]/10 border border-[var(--danger)]/20 rounded-xl p-8 text-center text-[var(--danger)]">
+            <div className="text-2xl mb-2">⚠️</div>
+            <div className="text-sm">{erreur}</div>
             <button
               onClick={chargerProduits}
-              style={{
-                marginTop: 16,
-                background: "#6366f1",
-                color: "#fff",
-                border: "none",
-                padding: "10px 20px",
-                borderRadius: 8,
-                cursor: "pointer",
-                fontSize: 13,
-                fontWeight: 600,
-              }}
+              className="mt-4 bg-violet-600 text-white border-none px-5 py-2.5 rounded-lg cursor-pointer text-[13px] font-semibold"
             >
               Réessayer
             </button>
           </div>
         ) : (
           <>
-            <div style={{ fontSize: 13, color: "#555", marginBottom: 16 }}>
+            <div className="text-[13px] text-[var(--text-faint)] mb-4">
               {totalProduits} produit{totalProduits > 1 ? "s" : ""} trouvé{totalProduits > 1 ? "s" : ""}
               {nicheSelectionnee && nicheActive !== "all" && ` dans ${nicheSelectionnee.emoji} ${nicheSelectionnee.label}`}
               {totalPages > 1 && ` · page ${page} sur ${totalPages}`}
             </div>
 
             {produits.length === 0 ? (
-              <div style={{ textAlign: "center", padding: 60, color: "#444", fontSize: 15 }}>
+              <div className="text-center py-16 text-[var(--text-faint)] text-[15px]">
                 Aucun produit pour ces filtres. Essaie de les élargir.
               </div>
             ) : (
               <>
-                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))", gap: 14 }}>
+                <div className="grid gap-3.5" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))" }}>
                   {produits.map(p => (
                     <CarteProduit
                       key={p.id}
@@ -503,43 +407,27 @@ export default function ProduitsGagnants() {
                 </div>
 
                 {totalPages > 1 && (
-                  <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 8, marginTop: 32 }}>
+                  <div className="flex justify-center items-center gap-2 mt-8">
                     <button
                       onClick={() => allerPage(page - 1)}
                       disabled={page <= 1}
-                      style={{
-                        background: "#1a1a1a",
-                        border: "1px solid #2e2e2e",
-                        color: page <= 1 ? "#444" : "#fff",
-                        padding: "9px 16px",
-                        borderRadius: 8,
-                        fontSize: 13,
-                        fontWeight: 600,
-                        cursor: page <= 1 ? "not-allowed" : "pointer",
-                        opacity: page <= 1 ? 0.5 : 1,
-                      }}
+                      className={`bg-[var(--surface)] border border-[var(--border-strong)] px-4 py-2.5 rounded-lg text-[13px] font-semibold ${
+                        page <= 1 ? "text-[var(--text-faint)] cursor-not-allowed opacity-50" : "text-[var(--text-primary)] cursor-pointer"
+                      }`}
                     >
                       ← Précédent
                     </button>
 
-                    <span style={{ fontSize: 13, color: "#888", padding: "0 10px" }}>
+                    <span className="text-[13px] text-[var(--text-faint)] px-2.5">
                       Page {page} sur {totalPages}
                     </span>
 
                     <button
                       onClick={() => allerPage(page + 1)}
                       disabled={page >= totalPages}
-                      style={{
-                        background: "#1a1a1a",
-                        border: "1px solid #2e2e2e",
-                        color: page >= totalPages ? "#444" : "#fff",
-                        padding: "9px 16px",
-                        borderRadius: 8,
-                        fontSize: 13,
-                        fontWeight: 600,
-                        cursor: page >= totalPages ? "not-allowed" : "pointer",
-                        opacity: page >= totalPages ? 0.5 : 1,
-                      }}
+                      className={`bg-[var(--surface)] border border-[var(--border-strong)] px-4 py-2.5 rounded-lg text-[13px] font-semibold ${
+                        page >= totalPages ? "text-[var(--text-faint)] cursor-not-allowed opacity-50" : "text-[var(--text-primary)] cursor-pointer"
+                      }`}
                     >
                       Suivant →
                     </button>
@@ -571,54 +459,42 @@ function TrendsModal({ produit, onClose }: { produit: Produit; onClose: () => vo
   return (
     <div
       onClick={onClose}
-      style={{
-        position: "fixed", inset: 0, background: "#000000cc", zIndex: 100,
-        display: "flex", alignItems: "center", justifyContent: "center", padding: 20,
-      }}
+      className="fixed inset-0 bg-black/80 z-[100] flex items-center justify-center p-5"
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        style={{
-          background: "#1a1a1a", border: "1px solid #2a2a2a", borderRadius: 16,
-          padding: 28, maxWidth: 560, width: "100%", maxHeight: "85vh", overflowY: "auto",
-        }}
+        className="bg-[var(--surface)] border border-[var(--border-strong)] rounded-2xl p-7 max-w-[560px] w-full max-h-[85vh] overflow-y-auto"
       >
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16, gap: 12 }}>
+        <div className="flex justify-between items-start mb-4 gap-3">
           <div>
-            <div style={{ fontSize: 12, color: "#666", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 4 }}>
+            <div className="text-xs text-[var(--text-faint)] uppercase tracking-[0.06em] mb-1">
               📈 Tendance de recherche · Google Trends France
             </div>
-            <h3 style={{ fontSize: 15, fontWeight: 600, color: "#e5e5e5", margin: 0, lineHeight: 1.4 }}>
+            <h3 className="text-[15px] font-semibold text-[var(--text-primary)] m-0 leading-snug">
               {produit.nom}
             </h3>
           </div>
           <button
             onClick={onClose}
-            style={{
-              background: "transparent", border: "1px solid #333", color: "#888",
-              width: 28, height: 28, borderRadius: 8, cursor: "pointer", flexShrink: 0, fontSize: 14,
-            }}
+            className="bg-transparent border border-[var(--border-strong)] text-[var(--text-faint)] w-7 h-7 rounded-lg cursor-pointer shrink-0 text-sm"
           >
             ✕
           </button>
         </div>
 
-        <div style={{ marginBottom: 20 }}>
-          <label style={{ display: "block", fontSize: 11.5, color: "#666", marginBottom: 6 }}>
+        <div className="mb-5">
+          <label className="block text-[11.5px] text-[var(--text-faint)] mb-1.5">
             Mot-clé recherché
           </label>
           <input
             type="text"
             value={motCle}
             onChange={(e) => setMotCle(e.target.value)}
-            style={{
-              width: "100%", background: "#111", border: "1px solid #2e2e2e", borderRadius: 8,
-              padding: "9px 12px", color: "#f1f1f1", fontSize: 13, outline: "none", boxSizing: "border-box",
-            }}
+            className="w-full box-border bg-[var(--bg-sunken)] border border-[var(--border-strong)] rounded-lg px-3 py-2.5 text-[13px] text-[var(--text-primary)] outline-none"
           />
         </div>
 
-        <p style={{ fontSize: 12.5, color: "#888", lineHeight: 1.6, marginBottom: 20 }}>
+        <p className="text-[12.5px] text-[var(--text-faint)] leading-relaxed mb-5">
           Consulte l&apos;évolution de la recherche pour ce produit en France sur Google Trends.
         </p>
 
@@ -626,19 +502,7 @@ function TrendsModal({ produit, onClose }: { produit: Produit; onClose: () => vo
           href={`https://trends.google.com/trends/explore?geo=FR&q=${encodeURIComponent(motCle)}`}
           target="_blank"
           rel="noopener noreferrer"
-          style={{
-            display: "block",
-            width: "100%",
-            textAlign: "center",
-            background: "#6366f1",
-            color: "#fff",
-            padding: "14px 20px",
-            borderRadius: 10,
-            fontSize: 14,
-            fontWeight: 700,
-            textDecoration: "none",
-            boxSizing: "border-box",
-          }}
+          className="block w-full box-border text-center bg-violet-600 text-white px-5 py-3.5 rounded-[10px] text-sm font-bold no-underline"
         >
           Voir la tendance sur Google Trends ↗
         </a>
@@ -664,262 +528,116 @@ function CarteProduit({
     produit.prixOriginal !== undefined && produit.prixOriginal > produit.prixFournisseur;
 
   return (
-    <div
-      style={{
-        background: "#1a1a1a",
-        border: "1px solid #2a2a2a",
-        borderRadius: 14,
-        overflow: "hidden",
-        transition: "border-color 0.2s, transform 0.2s",
-      }}
-      onMouseEnter={e => {
-        (e.currentTarget as HTMLDivElement).style.borderColor = "#6366f1";
-        (e.currentTarget as HTMLDivElement).style.transform = "translateY(-2px)";
-      }}
-      onMouseLeave={e => {
-        (e.currentTarget as HTMLDivElement).style.borderColor = "#2a2a2a";
-        (e.currentTarget as HTMLDivElement).style.transform = "translateY(0)";
-      }}
-    >
+    <div className="bg-[var(--surface)] border border-[var(--border-strong)] rounded-[14px] overflow-hidden transition-all duration-200 hover:border-violet-500 hover:-translate-y-0.5">
       {/* Image */}
-      <div style={{ height: 150, overflow: "hidden", background: "#111", position: "relative" }}>
+      <div className="h-[150px] overflow-hidden bg-[var(--bg-sunken)] relative">
         {produit.image ? (
           <img
             src={produit.image}
             alt={produit.nom}
-            style={{ width: "100%", height: "100%", objectFit: "cover" }}
+            className="w-full h-full object-cover"
             onError={(e) => {
               (e.currentTarget as HTMLImageElement).style.display = "none";
             }}
           />
         ) : (
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%", fontSize: 48 }}>🛍️</div>
+          <div className="flex items-center justify-center h-full text-5xl">🛍️</div>
         )}
         {produit.commission && (
-          <span style={{
-            position: "absolute",
-            top: 10,
-            right: 10,
-            background: "#6366f1cc",
-            color: "#fff",
-            fontSize: 11,
-            fontWeight: 700,
-            padding: "3px 8px",
-            borderRadius: 20,
-          }}>
+          <span className="absolute top-2.5 right-2.5 bg-violet-600/80 text-white text-[11px] font-bold px-2 py-[3px] rounded-full">
             💰 {produit.commission}% comm.
           </span>
         )}
       </div>
 
-      <div style={{ padding: "11px 13px" }}>
-        <h3 style={{ fontSize: 13, fontWeight: 600, margin: "0 0 10px", color: "#e5e5e5", lineHeight: 1.4, height: 40, overflow: "hidden" }}>
+      <div className="px-3.5 py-3">
+        <h3 className="text-[13px] font-semibold mt-0 mb-2.5 text-[var(--text-primary)] leading-snug h-10 overflow-hidden">
           {produit.nom}
         </h3>
 
         {/* Pricing block */}
-        <div style={{ marginBottom: 10, display: "flex", flexDirection: "column", gap: 5 }}>
+        <div className="mb-2.5 flex flex-col gap-1.5">
           {/* Prix AliExpress */}
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-            <span style={{ fontSize: 10, color: "#555", textTransform: "uppercase", letterSpacing: "0.04em" }}>
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] text-[var(--text-faint)] uppercase tracking-[0.04em]">
               Prix AliExpress
             </span>
-            <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+            <div className="flex items-center gap-1.5">
               {hasPrixOriginal && (
-                <span style={{ fontSize: 11, color: "#4a4a4a", textDecoration: "line-through" }}>
+                <span className="text-[11px] text-[var(--text-faint)] line-through">
                   {produit.prixOriginal!.toFixed(2)}€
                 </span>
               )}
-              <span style={{ fontSize: 13, fontWeight: 600, color: "#a1a1aa" }}>
+              <span className="text-[13px] font-semibold text-[var(--text-muted)]">
                 {produit.prixFournisseur.toFixed(2)}€
               </span>
             </div>
           </div>
 
           {/* Prix de vente suggéré */}
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-            <span style={{ fontSize: 10, color: "#555", textTransform: "uppercase", letterSpacing: "0.04em" }}>
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] text-[var(--text-faint)] uppercase tracking-[0.04em]">
               Prix de vente suggéré
             </span>
-            <span style={{ fontSize: 13, fontWeight: 700, color: "#a5b4fc" }}>
+            <span className="text-[13px] font-bold text-[var(--accent)]">
               {produit.prixVente.toFixed(2)}€
             </span>
           </div>
         </div>
 
         {/* Marge */}
-        <div style={{ background: "#111", borderRadius: 8, padding: "7px 10px", marginBottom: 12 }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <span style={{ fontSize: 10, color: "#555", textTransform: "uppercase", letterSpacing: "0.04em" }}>Marge est.</span>
-            <span style={{ fontSize: 15, fontWeight: 700, color: "#22c55e" }}>{produit.marge}%</span>
+        <div className="bg-[var(--bg-sunken)] rounded-lg px-2.5 py-1.5 mb-3">
+          <div className="flex justify-between items-center">
+            <span className="text-[10px] text-[var(--text-faint)] uppercase tracking-[0.04em]">Marge est.</span>
+            <span className="text-[15px] font-bold text-[var(--success)]">{produit.marge}%</span>
           </div>
         </div>
 
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 12, color: "#666", marginBottom: 14 }}>
+        <div className="flex justify-between items-center text-xs text-[var(--text-faint)] mb-3.5">
           <span>⭐ {(produit.note ?? 0).toFixed(1)} · {produit.commandes > 1000 ? `${(produit.commandes / 1000).toFixed(0)}k` : produit.commandes} cmd</span>
           {croissancePct !== undefined && (
-            <span style={{
-              fontSize: 11,
-              fontWeight: 700,
-              color: croissancePct >= 0 ? "#22c55e" : "#ef4444",
-              display: "flex",
-              alignItems: "center",
-              gap: 2,
-            }}>
+            <span className={`text-[11px] font-bold flex items-center gap-0.5 ${croissancePct >= 0 ? "text-[var(--success)]" : "text-[var(--danger)]"}`}>
               {croissancePct >= 0 ? "↑" : "↓"} {Math.abs(croissancePct).toFixed(0)}%
             </span>
           )}
         </div>
 
-        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+        <div className="flex flex-col gap-2">
           <a
             href={produit.lienAliExpress}
             target="_blank"
             rel="noopener noreferrer"
-            style={{
-              display: "block",
-              background: "#6366f1",
-              color: "#fff",
-              textAlign: "center",
-              padding: "10px",
-              borderRadius: 8,
-              fontSize: 13,
-              fontWeight: 600,
-              textDecoration: "none",
-            }}
+            className="block bg-violet-600 text-white text-center py-2.5 rounded-lg text-[13px] font-semibold no-underline"
           >
             Voir sur AliExpress →
           </a>
           <a
             href={`/site-builder?name=${encodeURIComponent(produit.nom)}&description=${encodeURIComponent(produit.nom)}&image=${encodeURIComponent(produit.image ?? "")}&rating=${(produit.note ?? 0).toFixed(1)}&orders=${produit.commandes}`}
-            style={{
-              display: "block",
-              background: "#1a1a2e",
-              border: "1px solid #6366f144",
-              color: "#a5b4fc",
-              textAlign: "center",
-              padding: "9px",
-              borderRadius: 8,
-              fontSize: 12,
-              fontWeight: 600,
-              textDecoration: "none",
-              transition: "background 0.15s, border-color 0.15s",
-            }}
-            onMouseEnter={e => {
-              (e.currentTarget as HTMLAnchorElement).style.background = "#2d2d4e";
-              (e.currentTarget as HTMLAnchorElement).style.borderColor = "#6366f1";
-            }}
-            onMouseLeave={e => {
-              (e.currentTarget as HTMLAnchorElement).style.background = "#1a1a2e";
-              (e.currentTarget as HTMLAnchorElement).style.borderColor = "#6366f144";
-            }}
+            className="block bg-violet-500/10 border border-violet-500/30 text-[var(--accent)] text-center py-2 rounded-lg text-xs font-semibold no-underline transition-colors hover:bg-violet-500/20"
           >
             ✨ Créer une landing page
           </a>
           <a
             href={`/tools/calculateur-marge?cout=${produit.prixFournisseur.toFixed(2)}`}
-            style={{
-              display: "block",
-              background: "transparent",
-              border: "1px solid #2e2e2e",
-              color: "#a1a1aa",
-              textAlign: "center",
-              padding: "9px",
-              borderRadius: 8,
-              fontSize: 12,
-              fontWeight: 600,
-              textDecoration: "none",
-              transition: "background 0.15s, border-color 0.15s",
-            }}
-            onMouseEnter={e => {
-              (e.currentTarget as HTMLAnchorElement).style.background = "#1a1a1a";
-              (e.currentTarget as HTMLAnchorElement).style.borderColor = "#444";
-            }}
-            onMouseLeave={e => {
-              (e.currentTarget as HTMLAnchorElement).style.background = "transparent";
-              (e.currentTarget as HTMLAnchorElement).style.borderColor = "#2e2e2e";
-            }}
+            className="block bg-transparent border border-[var(--border-strong)] text-[var(--text-muted)] text-center py-2 rounded-lg text-xs font-semibold no-underline transition-colors hover:bg-[var(--surface-2)]"
           >
             🧮 Calculer la marge
           </a>
           <button
             onClick={onAjouterBoutique}
-            style={{
-              display: "block",
-              width: "100%",
-              background: "#052e16",
-              border: "1px solid #16653433",
-              color: "#4ade80",
-              textAlign: "center",
-              padding: "9px",
-              borderRadius: 8,
-              fontSize: 12,
-              fontWeight: 600,
-              cursor: "pointer",
-              transition: "background 0.15s, border-color 0.15s",
-            }}
-            onMouseEnter={e => {
-              (e.currentTarget as HTMLButtonElement).style.background = "#064e26";
-              (e.currentTarget as HTMLButtonElement).style.borderColor = "#16a34a";
-            }}
-            onMouseLeave={e => {
-              (e.currentTarget as HTMLButtonElement).style.background = "#052e16";
-              (e.currentTarget as HTMLButtonElement).style.borderColor = "#16653433";
-            }}
+            className="block w-full bg-emerald-500/10 border border-emerald-500/25 text-[var(--success)] text-center py-2 rounded-lg text-xs font-semibold cursor-pointer transition-colors hover:bg-emerald-500/20"
           >
             🛍️ Ajouter à une boutique
           </button>
           <button
             onClick={onVoirTendance}
-            style={{
-              display: "block",
-              width: "100%",
-              background: "transparent",
-              border: "1px solid #2e2e2e",
-              color: "#a1a1aa",
-              textAlign: "center",
-              padding: "9px",
-              borderRadius: 8,
-              fontSize: 12,
-              fontWeight: 600,
-              cursor: "pointer",
-              transition: "background 0.15s, border-color 0.15s",
-            }}
-            onMouseEnter={e => {
-              (e.currentTarget as HTMLButtonElement).style.background = "#1a1a1a";
-              (e.currentTarget as HTMLButtonElement).style.borderColor = "#444";
-            }}
-            onMouseLeave={e => {
-              (e.currentTarget as HTMLButtonElement).style.background = "transparent";
-              (e.currentTarget as HTMLButtonElement).style.borderColor = "#2e2e2e";
-            }}
+            className="block w-full bg-transparent border border-[var(--border-strong)] text-[var(--text-muted)] text-center py-2 rounded-lg text-xs font-semibold cursor-pointer transition-colors hover:bg-[var(--surface-2)]"
           >
             📈 Tendance Google
           </button>
           <button
             onClick={onVoirAlternatives}
-            style={{
-              display: "block",
-              width: "100%",
-              background: "transparent",
-              border: "1px solid #2e2e2e",
-              color: "#a1a1aa",
-              textAlign: "center",
-              padding: "9px",
-              borderRadius: 8,
-              fontSize: 12,
-              fontWeight: 600,
-              cursor: "pointer",
-              transition: "background 0.15s, border-color 0.15s",
-            }}
-            onMouseEnter={e => {
-              (e.currentTarget as HTMLButtonElement).style.background = "#1a1a1a";
-              (e.currentTarget as HTMLButtonElement).style.borderColor = "#444";
-            }}
-            onMouseLeave={e => {
-              (e.currentTarget as HTMLButtonElement).style.background = "transparent";
-              (e.currentTarget as HTMLButtonElement).style.borderColor = "#2e2e2e";
-            }}
+            className="block w-full bg-transparent border border-[var(--border-strong)] text-[var(--text-muted)] text-center py-2 rounded-lg text-xs font-semibold cursor-pointer transition-colors hover:bg-[var(--surface-2)]"
           >
             🔎 Alternatives fiables
           </button>
@@ -982,90 +700,72 @@ function AlternativesModal({ produit, onClose }: { produit: Produit; onClose: ()
   return (
     <div
       onClick={onClose}
-      style={{
-        position: "fixed", inset: 0, background: "#000000cc", zIndex: 100,
-        display: "flex", alignItems: "center", justifyContent: "center", padding: 20,
-      }}
+      className="fixed inset-0 bg-black/80 z-[100] flex items-center justify-center p-5"
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        style={{
-          background: "#1a1a1a", border: "1px solid #2a2a2a", borderRadius: 16,
-          padding: 28, maxWidth: 640, width: "100%", maxHeight: "85vh", overflowY: "auto",
-        }}
+        className="bg-[var(--surface)] border border-[var(--border-strong)] rounded-2xl p-7 max-w-[640px] w-full max-h-[85vh] overflow-y-auto"
       >
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16, gap: 12 }}>
+        <div className="flex justify-between items-start mb-4 gap-3">
           <div>
-            <div style={{ fontSize: 12, color: "#666", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 4 }}>
+            <div className="text-xs text-[var(--text-faint)] uppercase tracking-[0.06em] mb-1">
               🔎 Alternatives fiables · tout le catalogue AliExpress
             </div>
-            <h3 style={{ fontSize: 15, fontWeight: 600, color: "#e5e5e5", margin: 0, lineHeight: 1.4 }}>
+            <h3 className="text-[15px] font-semibold text-[var(--text-primary)] m-0 leading-snug">
               {produit.nom}
             </h3>
           </div>
           <button
             onClick={onClose}
-            style={{
-              background: "transparent", border: "1px solid #333", color: "#888",
-              width: 28, height: 28, borderRadius: 8, cursor: "pointer", flexShrink: 0, fontSize: 14,
-            }}
+            className="bg-transparent border border-[var(--border-strong)] text-[var(--text-faint)] w-7 h-7 rounded-lg cursor-pointer shrink-0 text-sm"
           >
             ✕
           </button>
         </div>
 
         {loading ? (
-          <div style={{ textAlign: "center", padding: 40, color: "#666", fontSize: 13.5 }}>
+          <div className="text-center py-10 text-[var(--text-faint)] text-[13.5px]">
             ⏳ Recherche de vendeurs équivalents sur AliExpress...
           </div>
         ) : erreur ? (
-          <div style={{ color: "#fca5a5", fontSize: 13, textAlign: "center", padding: 20 }}>
+          <div className="text-[var(--danger)] text-[13px] text-center py-5">
             ⚠️ {erreur}
           </div>
         ) : !alternatives || alternatives.length === 0 ? (
-          <div style={{ color: "#a1a1aa", fontSize: 13, textAlign: "center", padding: 20, lineHeight: 1.6 }}>
+          <div className="text-[var(--text-muted)] text-[13px] text-center py-5 leading-relaxed">
             Aucune alternative fiable trouvée pour ce produit (même catégorie, prix comparable, note vendeur suffisante).
           </div>
         ) : (
-          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          <div className="flex flex-col gap-2.5">
             {alternatives.map((alt) => (
               <a
                 key={alt.productId}
                 href={alt.link ?? "#"}
                 target="_blank"
                 rel="noopener noreferrer"
-                style={{
-                  display: "flex",
-                  gap: 12,
-                  background: "#111",
-                  border: "1px solid #2a2a2a",
-                  borderRadius: 10,
-                  padding: 12,
-                  textDecoration: "none",
-                  color: "inherit",
-                }}
+                className="flex gap-3 bg-[var(--bg-sunken)] border border-[var(--border-strong)] rounded-[10px] p-3 no-underline text-inherit"
               >
                 {alt.image ? (
                   <img
                     src={alt.image}
                     alt={alt.title}
-                    style={{ width: 56, height: 56, borderRadius: 8, objectFit: "cover", flexShrink: 0, background: "#1a1a1a" }}
+                    className="w-14 h-14 rounded-lg object-cover shrink-0 bg-[var(--surface)]"
                   />
                 ) : (
-                  <div style={{ width: 56, height: 56, borderRadius: 8, background: "#1a1a1a", flexShrink: 0 }} />
+                  <div className="w-14 h-14 rounded-lg bg-[var(--surface)] shrink-0" />
                 )}
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 12.5, color: "#e5e5e5", fontWeight: 600, marginBottom: 4, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                <div className="flex-1 min-w-0">
+                  <div className="text-[12.5px] text-[var(--text-primary)] font-semibold mb-1 overflow-hidden text-ellipsis whitespace-nowrap">
                     {alt.title}
                   </div>
-                  <div style={{ fontSize: 11.5, color: "#888", marginBottom: 6 }}>
+                  <div className="text-[11.5px] text-[var(--text-faint)] mb-1.5">
                     {alt.shopName ?? "Boutique AliExpress"}
                   </div>
-                  <div style={{ display: "flex", gap: 12, flexWrap: "wrap", fontSize: 11.5, color: "#aaa" }}>
+                  <div className="flex gap-3 flex-wrap text-[11.5px] text-[var(--text-muted)]">
                     <span>💶 {alt.priceEUR.toFixed(2)}€</span>
                     <span>⭐ {alt.evaluateRate ?? "—"}</span>
                     <span>📦 {alt.orders > 1000 ? `${(alt.orders / 1000).toFixed(0)}k` : alt.orders} cmd</span>
-                    <span style={{ color: "#6366f1" }}>🎯 {Math.round(alt.similarityScore * 100)}% similaire</span>
+                    <span className="text-[var(--accent)]">🎯 {Math.round(alt.similarityScore * 100)}% similaire</span>
                   </div>
                 </div>
               </a>
@@ -1138,60 +838,47 @@ function AjouterBoutiqueModal({ produit, onClose }: { produit: Produit; onClose:
   return (
     <div
       onClick={onClose}
-      style={{
-        position: "fixed", inset: 0, background: "#000000cc", zIndex: 100,
-        display: "flex", alignItems: "center", justifyContent: "center", padding: 20,
-      }}
+      className="fixed inset-0 bg-black/80 z-[100] flex items-center justify-center p-5"
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        style={{
-          background: "#1a1a1a", border: "1px solid #2a2a2a", borderRadius: 16,
-          padding: 28, maxWidth: 560, width: "100%", maxHeight: "85vh", overflowY: "auto",
-        }}
+        className="bg-[var(--surface)] border border-[var(--border-strong)] rounded-2xl p-7 max-w-[560px] w-full max-h-[85vh] overflow-y-auto"
       >
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16, gap: 12 }}>
+        <div className="flex justify-between items-start mb-4 gap-3">
           <div>
-            <div style={{ fontSize: 12, color: "#666", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 4 }}>
+            <div className="text-xs text-[var(--text-faint)] uppercase tracking-[0.06em] mb-1">
               🛍️ Ajouter à une boutique
             </div>
-            <h3 style={{ fontSize: 15, fontWeight: 600, color: "#e5e5e5", margin: 0, lineHeight: 1.4 }}>
+            <h3 className="text-[15px] font-semibold text-[var(--text-primary)] m-0 leading-snug">
               {produit.nom}
             </h3>
           </div>
           <button
             onClick={onClose}
-            style={{
-              background: "transparent", border: "1px solid #333", color: "#888",
-              width: 28, height: 28, borderRadius: 8, cursor: "pointer", flexShrink: 0, fontSize: 14,
-            }}
+            className="bg-transparent border border-[var(--border-strong)] text-[var(--text-faint)] w-7 h-7 rounded-lg cursor-pointer shrink-0 text-sm"
           >
             ✕
           </button>
         </div>
 
         {boutiquesError ? (
-          <div style={{ color: "#fca5a5", fontSize: 13 }}>{boutiquesError}</div>
+          <div className="text-[var(--danger)] text-[13px]">{boutiquesError}</div>
         ) : boutiques === null ? (
-          <p style={{ fontSize: 13, color: "#888" }}>Chargement de tes boutiques…</p>
+          <p className="text-[13px] text-[var(--text-faint)]">Chargement de tes boutiques…</p>
         ) : boutiques.length === 0 ? (
-          <div style={{ fontSize: 13, color: "#a1a1aa", lineHeight: 1.6 }}>
+          <div className="text-[13px] text-[var(--text-muted)] leading-relaxed">
             Tu n&apos;as pas encore de boutique.{" "}
-            <Link href="/site-builder/boutique" style={{ color: "#a5b4fc" }}>Crée-en une →</Link>
+            <Link href="/site-builder/boutique" className="text-[var(--accent)]">Crée-en une →</Link>
           </div>
         ) : !added ? (
           <>
-            <label style={{ display: "block", fontSize: 11.5, color: "#666", marginBottom: 6 }}>
+            <label className="block text-[11.5px] text-[var(--text-faint)] mb-1.5">
               Boutique cible
             </label>
             <select
               value={selectedBoutiqueId}
               onChange={(e) => setSelectedBoutiqueId(e.target.value)}
-              style={{
-                width: "100%", background: "#111", border: "1px solid #2e2e2e", borderRadius: 8,
-                padding: "9px 12px", color: "#f1f1f1", fontSize: 13, outline: "none", boxSizing: "border-box",
-                marginBottom: 16,
-              }}
+              className="w-full box-border bg-[var(--bg-sunken)] border border-[var(--border-strong)] rounded-lg px-3 py-2.5 text-[13px] text-[var(--text-primary)] outline-none mb-4"
             >
               {boutiques.map((b) => (
                 <option key={b.id} value={b.id}>{b.nom}</option>
@@ -1199,28 +886,20 @@ function AjouterBoutiqueModal({ produit, onClose }: { produit: Produit; onClose:
             </select>
 
             {addError && (
-              <div style={{ color: "#fca5a5", fontSize: 12.5, marginBottom: 12 }}>{addError}</div>
+              <div className="text-[var(--danger)] text-[12.5px] mb-3">{addError}</div>
             )}
 
             <button
               onClick={handleAdd}
               disabled={adding}
-              style={{
-                display: "block", width: "100%", textAlign: "center",
-                background: "#6366f1", color: "#fff", padding: "14px 20px", borderRadius: 10,
-                fontSize: 14, fontWeight: 700, border: "none", cursor: adding ? "default" : "pointer",
-                opacity: adding ? 0.6 : 1, boxSizing: "border-box",
-              }}
+              className={`block w-full box-border text-center bg-violet-600 text-white px-5 py-3.5 rounded-[10px] text-sm font-bold border-none ${adding ? "cursor-default opacity-60" : "cursor-pointer"}`}
             >
               {adding ? "Ajout…" : "Ajouter à cette boutique"}
             </button>
           </>
         ) : (
-          <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-            <div style={{
-              background: "#052e16", border: "1px solid #16653433", color: "#4ade80",
-              borderRadius: 10, padding: "12px 16px", fontSize: 13, fontWeight: 600,
-            }}>
+          <div className="flex flex-col gap-5">
+            <div className="bg-emerald-500/10 border border-emerald-500/25 text-[var(--success)] rounded-[10px] px-4 py-3 text-[13px] font-semibold">
               ✓ Produit ajouté à la boutique.
             </div>
             <ProduitsSuggeres boutiqueId={selectedBoutiqueId} />

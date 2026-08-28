@@ -57,37 +57,37 @@ export default function MesSitesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0a0a0f] text-white font-sans px-4 py-16">
+    <div className="min-h-screen bg-[var(--bg)] text-[var(--text-primary)] font-sans px-4 py-16">
       <div className="max-w-4xl mx-auto">
 
         {/* Header */}
         <div className="mb-10">
-          <div className="inline-flex items-center gap-2 mb-4 px-3 py-1 rounded-full bg-violet-500/10 border border-violet-500/20 text-violet-400 text-xs font-medium tracking-widest uppercase">
+          <div className="inline-flex items-center gap-2 mb-4 px-3 py-1 rounded-full bg-violet-500/10 border border-violet-500/20 text-[var(--accent)] text-xs font-medium tracking-widest uppercase">
             <span className="w-1.5 h-1.5 rounded-full bg-violet-400" />
             Mes sites
           </div>
           <h1 className="text-3xl font-extrabold tracking-tight mb-2">
             Landing pages générées
           </h1>
-          <p className="text-zinc-400 text-sm">
+          <p className="text-[var(--text-muted)] text-sm">
             Toutes vos landing pages sauvegardées automatiquement après génération.
           </p>
         </div>
 
         {loading ? (
-          <div className="flex items-center justify-center py-24 text-zinc-500 text-sm gap-3">
-            <div className="w-5 h-5 rounded-full border-2 border-zinc-700 border-t-violet-500 animate-spin" />
+          <div className="flex items-center justify-center py-24 text-[var(--text-faint)] text-sm gap-3">
+            <div className="w-5 h-5 rounded-full border-2 border-[var(--border-strong)] border-t-violet-500 animate-spin" />
             Chargement…
           </div>
         ) : error ? (
-          <div className="rounded-2xl bg-red-500/10 border border-red-500/20 px-6 py-8 text-center text-red-400 text-sm">
+          <div className="rounded-2xl bg-[var(--danger)]/10 border border-[var(--danger)]/20 px-6 py-8 text-center text-[var(--danger)] text-sm">
             {error}
           </div>
         ) : sites.length === 0 ? (
-          <div className="rounded-2xl bg-[#13131f] border border-white/5 px-6 py-16 text-center flex flex-col items-center gap-4">
+          <div className="rounded-2xl bg-[var(--surface)] border border-[var(--border)] px-6 py-16 text-center flex flex-col items-center gap-4">
             <span className="text-4xl">🏗️</span>
-            <p className="text-white font-semibold">Aucun site généré pour l&apos;instant</p>
-            <p className="text-zinc-500 text-sm max-w-xs">
+            <p className="text-[var(--text-primary)] font-semibold">Aucun site généré pour l&apos;instant</p>
+            <p className="text-[var(--text-faint)] text-sm max-w-xs">
               Génère ta première landing page depuis le Site Builder et elle apparaîtra ici automatiquement.
             </p>
             <a
@@ -99,24 +99,24 @@ export default function MesSitesPage() {
           </div>
         ) : (
           <>
-            <p className="text-xs text-zinc-600 mb-4">
+            <p className="text-xs text-[var(--text-faint)] mb-4">
               {sites.length} site{sites.length > 1 ? "s" : ""} sauvegardé{sites.length > 1 ? "s" : ""}
             </p>
             <div className="grid gap-3 sm:grid-cols-2">
               {sites.map((site) => (
                 <div
                   key={site.id}
-                  className="rounded-2xl bg-[#13131f] border border-white/5 p-5 flex flex-col gap-4 hover:border-white/10 transition"
+                  className="rounded-2xl bg-[var(--surface)] border border-[var(--border)] p-5 flex flex-col gap-4 hover:border-[var(--border-strong)] transition"
                 >
                   <div className="flex items-start gap-3">
                     <div className="w-9 h-9 rounded-xl bg-violet-500/15 border border-violet-500/20 flex items-center justify-center text-base shrink-0">
                       🌐
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-white truncate">
+                      <p className="text-sm font-semibold text-[var(--text-primary)] truncate">
                         {site.nom_produit}
                       </p>
-                      <p className="text-[11px] text-zinc-500 mt-0.5">
+                      <p className="text-[11px] text-[var(--text-faint)] mt-0.5">
                         Généré le {formatDate(site.created_at)}
                       </p>
                     </div>
@@ -125,7 +125,7 @@ export default function MesSitesPage() {
                   <div className="flex gap-2">
                     <a
                       href="/site-builder"
-                      className="flex-1 py-2 rounded-xl border border-white/10 text-zinc-400 text-xs font-medium text-center hover:border-white/20 hover:text-white transition"
+                      className="flex-1 py-2 rounded-xl border border-[var(--border-strong)] text-[var(--text-muted)] text-xs font-medium text-center hover:border-[var(--accent)]/40 hover:text-[var(--text-primary)] transition"
                     >
                       Regénérer
                     </a>

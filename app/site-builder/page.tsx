@@ -249,12 +249,12 @@ function SiteBuilderContent() {
   const canGenerate = productName.trim() && description.trim() && salePrice.trim();
 
   return (
-    <div className="min-h-screen bg-[#0d0d14] text-white font-sans px-4 py-16">
+    <div className="min-h-screen bg-[var(--bg)] text-[var(--text-primary)] font-sans px-4 py-16">
       <div className="max-w-3xl mx-auto">
 
         {/* Header */}
         <div className="mb-12 text-center">
-          <div className="inline-flex items-center gap-2 mb-4 px-3 py-1 rounded-full bg-violet-500/10 border border-violet-500/20 text-violet-400 text-xs font-medium tracking-widest uppercase">
+          <div className="inline-flex items-center gap-2 mb-4 px-3 py-1 rounded-full bg-violet-500/10 border border-violet-500/20 text-[var(--accent)] text-xs font-medium tracking-widest uppercase">
             <span className="w-1.5 h-1.5 rounded-full bg-violet-400" />
             Site Builder
           </div>
@@ -263,14 +263,14 @@ function SiteBuilderContent() {
               <h1 className="text-3xl font-extrabold tracking-tight">
                 Générateur de Landing Page
               </h1>
-              <p className="text-zinc-400 text-sm max-w-md mt-3">
+              <p className="text-[var(--text-muted)] text-sm max-w-md mt-3">
                 Génère une landing page HTML complète pour ton produit dropshipping
                 en quelques secondes grâce à l&apos;IA.
               </p>
             </div>
             <Link
               href="/site-builder/boutique"
-              className="inline-flex items-center justify-center rounded-2xl border border-white/10 bg-white/5 px-5 py-3 text-sm font-semibold text-white transition hover:border-violet-500/40 hover:bg-violet-500/10"
+              className="inline-flex items-center justify-center rounded-2xl border border-[var(--border-strong)] bg-[var(--surface-2)] px-5 py-3 text-sm font-semibold text-[var(--text-primary)] transition hover:border-violet-500/40 hover:bg-violet-500/10"
             >
               Mode boutique
             </Link>
@@ -279,7 +279,7 @@ function SiteBuilderContent() {
 
         {/* Mode toggle */}
         <div className="flex justify-center mb-10">
-          <div className="inline-flex gap-1 p-1 rounded-xl bg-[#13131f] border border-white/5">
+          <div className="inline-flex gap-1 p-1 rounded-xl bg-[var(--surface)] border border-[var(--border)]">
             {(
               [
                 { id: "ia", label: "🤖 Génération IA" },
@@ -292,7 +292,7 @@ function SiteBuilderContent() {
                 className={`px-4 py-2 rounded-lg text-xs font-semibold transition-all ${
                   mode === m.id
                     ? "bg-violet-600 text-white"
-                    : "text-zinc-500 hover:text-zinc-300"
+                    : "text-[var(--text-faint)] hover:text-[var(--text-muted)]"
                 }`}
               >
                 {m.label}
@@ -314,17 +314,17 @@ function SiteBuilderContent() {
                   step === s
                     ? "bg-violet-600 border-violet-500 text-white"
                     : step > s
-                    ? "bg-violet-600/30 border-violet-500/40 text-violet-400"
-                    : "bg-transparent border-white/10 text-zinc-600"
+                    ? "bg-violet-600/30 border-violet-500/40 text-[var(--accent)]"
+                    : "bg-transparent border-[var(--border-strong)] text-[var(--text-faint)]"
                 }`}
               >
                 {step > s ? "✓" : s}
               </div>
-              <span className={`text-xs font-medium ${step >= s ? "text-zinc-300" : "text-zinc-600"}`}>
+              <span className={`text-xs font-medium ${step >= s ? "text-[var(--text-muted)]" : "text-[var(--text-faint)]"}`}>
                 {s === 1 ? "Infos produit" : s === 2 ? "Génération" : "Résultat"}
               </span>
               {s < 3 && (
-                <div className={`w-8 h-px ml-1 ${step > s ? "bg-violet-500/50" : "bg-white/10"}`} />
+                <div className={`w-8 h-px ml-1 ${step > s ? "bg-violet-500/50" : "bg-[var(--border-strong)]"}`} />
               )}
             </div>
           ))}
@@ -332,18 +332,18 @@ function SiteBuilderContent() {
 
         {/* Step 1: Product info form */}
         {step === 1 && (
-          <div className="rounded-2xl bg-[#13131f] border border-white/5 p-8 flex flex-col gap-6">
+          <div className="rounded-2xl bg-[var(--surface)] border border-[var(--border)] p-8 flex flex-col gap-6">
             {error && (
-              <div className="rounded-xl bg-red-500/10 border border-red-500/20 px-4 py-3 text-red-400 text-sm">
+              <div className="rounded-xl bg-[var(--danger)]/10 border border-[var(--danger)]/20 px-4 py-3 text-[var(--danger)] text-sm">
                 {error}
               </div>
             )}
 
             {/* AliExpress import */}
             <div className="flex flex-col gap-2">
-              <label className="text-sm font-medium text-zinc-300">
+              <label className="text-sm font-medium text-[var(--text-muted)]">
                 Importer depuis AliExpress{" "}
-                <span className="text-zinc-500 font-normal">(optionnel)</span>
+                <span className="text-[var(--text-faint)] font-normal">(optionnel)</span>
               </label>
               <div className="flex gap-2">
                 <input
@@ -351,71 +351,71 @@ function SiteBuilderContent() {
                   value={aliexpressUrl}
                   onChange={(e) => { setAliexpressUrl(e.target.value); setAliexpressError(null); }}
                   placeholder="https://www.aliexpress.com/item/123456789.html"
-                  className="flex-1 bg-[#0d0d14] border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-zinc-600 focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition"
+                  className="flex-1 bg-[var(--bg)] border border-[var(--border-strong)] rounded-xl px-4 py-3 text-sm text-[var(--text-primary)] placeholder-[var(--text-faint)] focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition"
                 />
                 <button
                   type="button"
                   onClick={handleImportAliexpress}
                   disabled={!aliexpressUrl.trim() || aliexpressLoading}
-                  className="px-4 py-3 rounded-xl bg-violet-600/20 border border-violet-500/30 text-violet-400 text-sm font-semibold hover:bg-violet-600/30 transition disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap"
+                  className="px-4 py-3 rounded-xl bg-violet-600/20 border border-violet-500/30 text-[var(--accent)] text-sm font-semibold hover:bg-violet-600/30 transition disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap"
                 >
                   {aliexpressLoading ? "…" : "Importer"}
                 </button>
               </div>
               {aliexpressError && (
-                <p className="text-xs text-red-400">{aliexpressError}</p>
+                <p className="text-xs text-[var(--danger)]">{aliexpressError}</p>
               )}
             </div>
 
-            <div className="border-t border-white/5" />
+            <div className="border-t border-[var(--border)]" />
 
             {/* Product name */}
             <div className="flex flex-col gap-2">
-              <label className="text-sm font-medium text-zinc-300">Nom du produit</label>
+              <label className="text-sm font-medium text-[var(--text-muted)]">Nom du produit</label>
               <input
                 type="text"
                 value={productName}
                 onChange={(e) => setProductName(e.target.value)}
                 placeholder="ex: Ceinture Chauffante Lombaire Pro"
-                className="bg-[#0d0d14] border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-zinc-600 focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition"
+                className="bg-[var(--bg)] border border-[var(--border-strong)] rounded-xl px-4 py-3 text-sm text-[var(--text-primary)] placeholder-[var(--text-faint)] focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition"
               />
             </div>
 
             {/* Description */}
             <div className="flex flex-col gap-2">
-              <label className="text-sm font-medium text-zinc-300">Description courte</label>
+              <label className="text-sm font-medium text-[var(--text-muted)]">Description courte</label>
               <textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 rows={3}
                 placeholder="ex: Soulage les douleurs lombaires grâce à la chaleur infrarouge. Idéal pour le bureau et le sport. Batterie longue durée 8h."
-                className="bg-[#0d0d14] border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-zinc-600 focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition resize-none"
+                className="bg-[var(--bg)] border border-[var(--border-strong)] rounded-xl px-4 py-3 text-sm text-[var(--text-primary)] placeholder-[var(--text-faint)] focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition resize-none"
               />
             </div>
 
             {/* Image URL */}
             <div className="flex flex-col gap-2">
-              <div className="rounded-xl bg-amber-500/[0.06] border border-amber-500/20 px-4 py-3 flex gap-2.5 items-start">
+              <div className="rounded-xl bg-amber-500/[0.08] border border-amber-500/20 px-4 py-3 flex gap-2.5 items-start">
                 <span className="shrink-0">📷</span>
-                <p className="text-xs text-amber-200/90 leading-relaxed">
+                <p className="text-xs text-[var(--warning)] leading-relaxed">
                   Ajoute l&apos;URL d&apos;une photo de ton produit ci-dessous. Sans image, ta landing page
                   n&apos;affichera <strong>aucune vraie photo produit</strong> — juste un visuel décoratif
                   générique (dégradé ou icône) à la place.
                 </p>
               </div>
-              <label className="text-sm font-medium text-zinc-300">
+              <label className="text-sm font-medium text-[var(--text-muted)]">
                 URL de l&apos;image produit{" "}
-                <span className="text-zinc-500 font-normal">(optionnel)</span>
+                <span className="text-[var(--text-faint)] font-normal">(optionnel)</span>
               </label>
               <input
                 type="url"
                 value={imageUrl}
                 onChange={(e) => setImageUrl(e.target.value)}
                 placeholder="https://exemple.com/image-produit.jpg"
-                className="bg-[#0d0d14] border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-zinc-600 focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition"
+                className="bg-[var(--bg)] border border-[var(--border-strong)] rounded-xl px-4 py-3 text-sm text-[var(--text-primary)] placeholder-[var(--text-faint)] focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition"
               />
               {imageUrl.trim() && (
-                <div className="mt-1 rounded-xl overflow-hidden border border-white/10 bg-[#0d0d14] h-32 flex items-center justify-center">
+                <div className="mt-1 rounded-xl overflow-hidden border border-[var(--border-strong)] bg-[var(--bg)] h-32 flex items-center justify-center">
                   <img
                     src={imageUrl}
                     alt="Aperçu"
@@ -429,8 +429,8 @@ function SiteBuilderContent() {
             {/* Prices */}
             <div className="flex gap-3">
               <div className="flex flex-col gap-2 flex-1">
-                <label className="text-sm font-medium text-zinc-300">
-                  Prix de vente <span className="text-red-400">*</span>
+                <label className="text-sm font-medium text-[var(--text-muted)]">
+                  Prix de vente <span className="text-[var(--danger)]">*</span>
                 </label>
                 <div className="relative">
                   <input
@@ -440,14 +440,14 @@ function SiteBuilderContent() {
                     value={salePrice}
                     onChange={(e) => setSalePrice(e.target.value)}
                     placeholder="29.99"
-                    className="w-full bg-[#0d0d14] border border-white/10 rounded-xl pl-4 pr-10 py-3 text-sm text-white placeholder-zinc-600 focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition"
+                    className="w-full bg-[var(--bg)] border border-[var(--border-strong)] rounded-xl pl-4 pr-10 py-3 text-sm text-[var(--text-primary)] placeholder-[var(--text-faint)] focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition"
                   />
-                  <span className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-500 text-sm">€</span>
+                  <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[var(--text-faint)] text-sm">€</span>
                 </div>
               </div>
               <div className="flex flex-col gap-2 flex-1">
-                <label className="text-sm font-medium text-zinc-300">
-                  Prix barré <span className="text-zinc-500 font-normal">(optionnel)</span>
+                <label className="text-sm font-medium text-[var(--text-muted)]">
+                  Prix barré <span className="text-[var(--text-faint)] font-normal">(optionnel)</span>
                 </label>
                 <div className="relative">
                   <input
@@ -457,9 +457,9 @@ function SiteBuilderContent() {
                     value={originalPrice}
                     onChange={(e) => setOriginalPrice(e.target.value)}
                     placeholder="59.99"
-                    className="w-full bg-[#0d0d14] border border-white/10 rounded-xl pl-4 pr-10 py-3 text-sm text-white placeholder-zinc-600 focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition"
+                    className="w-full bg-[var(--bg)] border border-[var(--border-strong)] rounded-xl pl-4 pr-10 py-3 text-sm text-[var(--text-primary)] placeholder-[var(--text-faint)] focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition"
                   />
-                  <span className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-500 text-sm">€</span>
+                  <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[var(--text-faint)] text-sm">€</span>
                 </div>
               </div>
             </div>
@@ -467,7 +467,7 @@ function SiteBuilderContent() {
             {/* Style chooser */}
             {!autoMode && (
               <div className="flex flex-col gap-2">
-                <label className="text-sm font-medium text-zinc-300">Style de la page</label>
+                <label className="text-sm font-medium text-[var(--text-muted)]">Style de la page</label>
 
                 {/* Trigger button */}
                 <button
@@ -476,26 +476,29 @@ function SiteBuilderContent() {
                   className={`flex items-center gap-3 rounded-xl px-4 py-3 text-left transition-all border ${
                     styleDrawerOpen
                       ? "border-violet-500/50 bg-violet-500/5"
-                      : "border-white/10 bg-[#0d0d14] hover:border-white/20"
+                      : "border-[var(--border-strong)] bg-[var(--bg)] hover:border-[var(--border-strong)]"
                   }`}
                 >
+                  {/* Aperçu de la palette choisie par l'utilisateur pour SA landing page —
+                      couleurs dynamiques réelles, sans rapport avec le thème de l'app : reste
+                      volontairement en inline style, jamais en tokens. */}
                   <div className="flex rounded-lg overflow-hidden shrink-0 w-7 h-7">
                     <div className="flex-1" style={{ background: palette.primary }} />
                     <div className="flex-1" style={{ background: palette.secondary }} />
                     <div className="flex-1" style={{ background: palette.accent }} />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-white leading-tight">
+                    <p className="text-sm font-semibold text-[var(--text-primary)] leading-tight">
                       {selectedStyle.icon} {selectedStyle.label}
                     </p>
-                    <p className="text-[11px] text-zinc-500 mt-0.5">{selectedStyle.desc}</p>
+                    <p className="text-[11px] text-[var(--text-faint)] mt-0.5">{selectedStyle.desc}</p>
                   </div>
-                  <span className="text-zinc-600 text-xs">{styleDrawerOpen ? "▲" : "▼"}</span>
+                  <span className="text-[var(--text-faint)] text-xs">{styleDrawerOpen ? "▲" : "▼"}</span>
                 </button>
 
                 {/* Drawer */}
                 {styleDrawerOpen && (
-                  <div className="rounded-xl border border-white/8 bg-[#0d0d14] overflow-hidden">
+                  <div className="rounded-xl border border-[var(--border-strong)] bg-[var(--bg)] overflow-hidden">
                     {editingStyleId === null ? (
                       /* ── Phase 1 : liste des styles ── */
                       <div className="p-3 flex flex-col gap-1">
@@ -510,15 +513,18 @@ function SiteBuilderContent() {
                                 setDraftPalette(s.defaultPalette);
                               }}
                               className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-left transition-all w-full ${
-                                sel ? "bg-violet-500/10 ring-1 ring-violet-500/40" : "hover:bg-white/[0.03]"
+                                sel ? "bg-violet-500/10 ring-1 ring-violet-500/40" : "hover:bg-[var(--surface-2)]"
                               }`}
                             >
+                              {/* Dégradé de prévisualisation du style — couleurs figées propres
+                                  à chaque style prédéfini (pas le thème de l'app), reste en
+                                  inline style volontairement. */}
                               <div className="w-8 h-8 rounded-lg shrink-0" style={{ background: `linear-gradient(135deg, ${s.from}, ${s.to})` }} />
                               <div className="flex-1 min-w-0">
-                                <p className="text-sm font-semibold text-white">{s.icon} {s.label}</p>
-                                <p className="text-[11px] text-zinc-500 mt-0.5">{s.desc}</p>
+                                <p className="text-sm font-semibold text-[var(--text-primary)]">{s.icon} {s.label}</p>
+                                <p className="text-[11px] text-[var(--text-faint)] mt-0.5">{s.desc}</p>
                               </div>
-                              <span className="text-zinc-600 text-xs shrink-0">Personnaliser →</span>
+                              <span className="text-[var(--text-faint)] text-xs shrink-0">Personnaliser →</span>
                             </button>
                           );
                         })}
@@ -535,16 +541,16 @@ function SiteBuilderContent() {
                         return (
                           <div className="flex flex-col">
                             {/* Header palette editor */}
-                            <div className="flex items-center gap-2 px-4 pt-4 pb-3 border-b border-white/5">
+                            <div className="flex items-center gap-2 px-4 pt-4 pb-3 border-b border-[var(--border)]">
                               <button
                                 type="button"
                                 onClick={() => setEditingStyleId(null)}
-                                className="text-zinc-500 hover:text-white transition text-sm"
+                                className="text-[var(--text-faint)] hover:text-[var(--text-primary)] transition text-sm"
                               >
                                 ← Retour
                               </button>
-                              <div className="w-px h-4 bg-white/10" />
-                              <span className="text-sm font-semibold text-white">{editingStyle.icon} {editingStyle.label}</span>
+                              <div className="w-px h-4 bg-[var(--border-strong)]" />
+                              <span className="text-sm font-semibold text-[var(--text-primary)]">{editingStyle.icon} {editingStyle.label}</span>
                             </div>
 
                             {/* Color pickers */}
@@ -558,19 +564,21 @@ function SiteBuilderContent() {
                                       onChange={(e) => setDraftPalette((p) => ({ ...p, [key]: e.target.value }))}
                                       className="w-10 h-10 rounded-xl cursor-pointer bg-transparent border-0 p-0"
                                     />
+                                    {/* Couleur choisie par l'utilisateur pour sa landing page —
+                                        inline style volontaire, valeur dynamique arbitraire. */}
                                     <div
                                       className="absolute inset-0 rounded-xl ring-1 ring-white/10 pointer-events-none"
                                       style={{ background: draftPalette[key] }}
                                     />
                                   </div>
                                   <div className="flex-1 min-w-0">
-                                    <p className="text-sm font-medium text-white">{label}</p>
-                                    <p className="text-[10px] text-zinc-500 mt-0.5">{hint} · <span className="font-mono">{draftPalette[key]}</span></p>
+                                    <p className="text-sm font-medium text-[var(--text-primary)]">{label}</p>
+                                    <p className="text-[10px] text-[var(--text-faint)] mt-0.5">{hint} · <span className="font-mono">{draftPalette[key]}</span></p>
                                   </div>
                                 </div>
                               ))}
 
-                              {/* Preview strip */}
+                              {/* Preview strip — couleurs dynamiques utilisateur, inline style volontaire */}
                               <div className="h-6 rounded-lg overflow-hidden flex">
                                 <div className="flex-1" style={{ background: draftPalette.primary }} />
                                 <div className="flex-1" style={{ background: draftPalette.secondary }} />
@@ -616,7 +624,7 @@ function SiteBuilderContent() {
                   handleGenerate(true);
                 }}
                 disabled={!canGenerate}
-                className="w-full py-3 rounded-xl border border-white/10 text-zinc-300 text-sm font-semibold hover:border-white/20 hover:text-white hover:bg-white/[0.03] transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                className="w-full py-3 rounded-xl border border-[var(--border-strong)] text-[var(--text-muted)] text-sm font-semibold hover:border-[var(--border-strong)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-2)] transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                 <span>🤖</span>
                 Génération automatique — l&apos;IA choisit le style
@@ -627,7 +635,7 @@ function SiteBuilderContent() {
 
         {/* Step 2: Loading */}
         {step === 2 && (
-          <div className="rounded-2xl bg-[#13131f] border border-white/5 p-16 flex flex-col items-center gap-6 text-center">
+          <div className="rounded-2xl bg-[var(--surface)] border border-[var(--border)] p-16 flex flex-col items-center gap-6 text-center">
             <div className="relative">
               <div className="w-16 h-16 rounded-full border-2 border-violet-500/20 border-t-violet-500 animate-spin" />
               <div className="absolute inset-0 flex items-center justify-center">
@@ -635,8 +643,8 @@ function SiteBuilderContent() {
               </div>
             </div>
             <div className="flex flex-col gap-2">
-              <p className="text-white font-semibold">L&apos;IA génère votre landing page…</p>
-              <p className="text-zinc-500 text-sm">Création du hero, bénéfices, preuve sociale et CTA</p>
+              <p className="text-[var(--text-primary)] font-semibold">L&apos;IA génère votre landing page…</p>
+              <p className="text-[var(--text-faint)] text-sm">Création du hero, bénéfices, preuve sociale et CTA</p>
             </div>
           </div>
         )}
@@ -645,25 +653,25 @@ function SiteBuilderContent() {
         {step === 3 && (
           <div className="flex flex-col gap-4">
             {saveWarning && (
-              <div className="rounded-xl bg-amber-500/10 border border-amber-500/20 px-4 py-3 text-amber-400 text-sm">
+              <div className="rounded-xl bg-amber-500/10 border border-amber-500/20 px-4 py-3 text-[var(--warning)] text-sm">
                 ⚠️ {saveWarning}
               </div>
             )}
             <div className="flex items-center justify-between">
-              <p className="text-sm text-zinc-400">
+              <p className="text-sm text-[var(--text-muted)]">
                 Landing page générée pour{" "}
-                <span className="text-white font-medium">{productName}</span>
+                <span className="text-[var(--text-primary)] font-medium">{productName}</span>
               </p>
               <div className="flex gap-2 flex-wrap justify-end">
                 <button
                   onClick={handleReset}
-                  className="px-4 py-2 rounded-xl border border-white/10 text-zinc-400 text-xs font-medium hover:border-white/20 hover:text-white transition"
+                  className="px-4 py-2 rounded-xl border border-[var(--border-strong)] text-[var(--text-muted)] text-xs font-medium hover:border-[var(--border-strong)] hover:text-[var(--text-primary)] transition"
                 >
                   Recommencer
                 </button>
                 <button
                   onClick={handleDownloadLiquid}
-                  className="px-4 py-2 rounded-xl border border-emerald-500/30 bg-emerald-500/10 text-emerald-400 text-xs font-semibold hover:bg-emerald-500/20 transition"
+                  className="px-4 py-2 rounded-xl border border-emerald-500/30 bg-emerald-500/10 text-[var(--success)] text-xs font-semibold hover:bg-emerald-500/20 transition"
                 >
                   ⬇ Fichier .liquid
                 </button>
@@ -676,15 +684,18 @@ function SiteBuilderContent() {
               </div>
             </div>
 
-            <div className="rounded-2xl border border-white/10 overflow-hidden">
-              <div className="flex items-center gap-1.5 px-4 py-3 bg-[#13131f] border-b border-white/5">
+            <div className="rounded-2xl border border-[var(--border-strong)] overflow-hidden">
+              <div className="flex items-center gap-1.5 px-4 py-3 bg-[var(--surface)] border-b border-[var(--border)]">
                 <div className="w-2.5 h-2.5 rounded-full bg-red-500/60" />
                 <div className="w-2.5 h-2.5 rounded-full bg-amber-500/60" />
                 <div className="w-2.5 h-2.5 rounded-full bg-emerald-500/60" />
-                <span className="ml-3 text-xs text-zinc-500 font-mono">
+                <span className="ml-3 text-xs text-[var(--text-faint)] font-mono">
                   {productName.replace(/\s+/g, "-").toLowerCase()}-landing.html
                 </span>
               </div>
+              {/* L'aperçu est toujours rendu sur fond blanc (background: "#fff") quel que
+                  soit le thème de l'app : c'est un aperçu fidèle de la landing page générée
+                  telle qu'elle apparaîtra réellement, pas un élément de chrome de l'app. */}
               <iframe
                 srcDoc={generatedHtml}
                 title="Landing page preview"
@@ -695,22 +706,22 @@ function SiteBuilderContent() {
             </div>
 
             {/* Publication Shopify */}
-            <div className="mt-6 rounded-2xl bg-[#13131f] border border-white/5 p-6">
+            <div className="mt-6 rounded-2xl bg-[var(--surface)] border border-[var(--border)] p-6">
               <div className="flex items-center gap-3 mb-5">
                 <div className="w-8 h-8 rounded-lg bg-emerald-500/15 border border-emerald-500/20 flex items-center justify-center text-base">🛍️</div>
                 <div>
-                  <h2 className="text-sm font-semibold text-white">Publier sur Shopify</h2>
-                  <p className="text-xs text-zinc-500 mt-0.5">
+                  <h2 className="text-sm font-semibold text-[var(--text-primary)]">Publier sur Shopify</h2>
+                  <p className="text-xs text-[var(--text-faint)] mt-0.5">
                     {shopifyConnected ? `Connecté à ${shopifyDomain}` : "Connecte ta boutique pour publier en un clic"}
                   </p>
                 </div>
               </div>
 
               {shopifyConnected === null ? (
-                <p className="text-xs text-zinc-600">Vérification de la connexion…</p>
+                <p className="text-xs text-[var(--text-faint)]">Vérification de la connexion…</p>
               ) : !shopifyConnected ? (
                 <div className="flex flex-col gap-3">
-                  <p className="text-xs text-zinc-500">
+                  <p className="text-xs text-[var(--text-faint)]">
                     Renseigne le domaine de ta boutique pour la connecter — tu n&apos;auras plus jamais besoin de copier-coller de code.
                   </p>
                   <div className="flex gap-2">
@@ -719,7 +730,7 @@ function SiteBuilderContent() {
                       value={shopifyDomainInput}
                       onChange={(e) => setShopifyDomainInput(e.target.value)}
                       placeholder="ma-boutique.myshopify.com"
-                      className="flex-1 bg-[#0d0d14] border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-zinc-600 focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition"
+                      className="flex-1 bg-[var(--bg)] border border-[var(--border-strong)] rounded-xl px-4 py-3 text-sm text-[var(--text-primary)] placeholder-[var(--text-faint)] focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition"
                     />
                     <button
                       type="button"
@@ -731,7 +742,7 @@ function SiteBuilderContent() {
                     </button>
                   </div>
                   {/* Fallback manuel, gardé pour ceux qui ne veulent pas connecter leur boutique */}
-                  <p className="text-[11px] text-zinc-600 mt-1">
+                  <p className="text-[11px] text-[var(--text-faint)] mt-1">
                     Tu préfères le faire toi-même ? Télécharge le HTML ou le fichier .liquid ci-dessus et colle-le dans ton admin Shopify.
                   </p>
                 </div>
@@ -744,8 +755,8 @@ function SiteBuilderContent() {
                       disabled={shopifyPushingMode !== null || !savedSiteId}
                       className="rounded-xl border border-blue-500/20 bg-blue-500/10 px-4 py-3 text-left transition hover:bg-blue-500/20 disabled:opacity-40 disabled:cursor-not-allowed"
                     >
-                      <p className="text-sm font-semibold text-white">📄 Page HTML standalone</p>
-                      <p className="text-[11px] text-zinc-500 mt-1">Idéal pour les pubs Facebook/TikTok</p>
+                      <p className="text-sm font-semibold text-[var(--text-primary)]">📄 Page HTML standalone</p>
+                      <p className="text-[11px] text-[var(--text-faint)] mt-1">Idéal pour les pubs Facebook/TikTok</p>
                     </button>
                     <button
                       type="button"
@@ -753,43 +764,43 @@ function SiteBuilderContent() {
                       disabled={shopifyPushingMode !== null || !savedSiteId}
                       className="rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-3 text-left transition hover:bg-emerald-500/20 disabled:opacity-40 disabled:cursor-not-allowed"
                     >
-                      <p className="text-sm font-semibold text-white">💧 Section Liquid du thème</p>
-                      <p className="text-[11px] text-zinc-500 mt-1">S&apos;intègre à ton thème existant</p>
+                      <p className="text-sm font-semibold text-[var(--text-primary)]">💧 Section Liquid du thème</p>
+                      <p className="text-[11px] text-[var(--text-faint)] mt-1">S&apos;intègre à ton thème existant</p>
                     </button>
                   </div>
 
                   {!savedSiteId && (
-                    <p className="text-[11px] text-amber-400">
+                    <p className="text-[11px] text-[var(--warning)]">
                       En attente de la sauvegarde de la page — réessaie dans un instant si les boutons restent grisés.
                     </p>
                   )}
 
                   {shopifyPushingMode && (
-                    <p className="text-xs text-zinc-400">Publication en cours ({shopifyPushingMode})…</p>
+                    <p className="text-xs text-[var(--text-muted)]">Publication en cours ({shopifyPushingMode})…</p>
                   )}
 
                   {shopifyPushError && (
-                    <div className="rounded-xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+                    <div className="rounded-xl border border-[var(--danger)]/20 bg-[var(--danger)]/10 px-4 py-3 text-sm text-[var(--danger)]">
                       {shopifyPushError}
                     </div>
                   )}
 
                   {shopifyPushResult && (
                     <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-4 flex flex-col gap-2">
-                      <p className="text-sm font-semibold text-emerald-300">
+                      <p className="text-sm font-semibold text-[var(--success)]">
                         {shopifyPushResult.mode === "liquid" && shopifyPushResult.autoAttached === false
                           ? "Section publiée — une étape manuelle reste à faire"
                           : "Publié sur Shopify 🎉"}
                       </p>
                       {shopifyPushResult.message && (
-                        <p className="text-xs text-zinc-400">{shopifyPushResult.message}</p>
+                        <p className="text-xs text-[var(--text-muted)]">{shopifyPushResult.message}</p>
                       )}
                       <div className="flex gap-3 mt-1">
                         <a
                           href={shopifyPushResult.url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-xs font-semibold text-emerald-400 hover:text-emerald-300 underline"
+                          className="text-xs font-semibold text-[var(--success)] hover:opacity-80 underline"
                         >
                           Voir la page →
                         </a>
@@ -797,7 +808,7 @@ function SiteBuilderContent() {
                           href={shopifyPushResult.admin_url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-xs font-semibold text-zinc-400 hover:text-zinc-300 underline"
+                          className="text-xs font-semibold text-[var(--text-muted)] hover:text-[var(--text-primary)] underline"
                         >
                           Ouvrir dans l&apos;admin Shopify →
                         </a>
@@ -819,7 +830,7 @@ function SiteBuilderContent() {
 export default function SiteBuilderPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-[#0d0d14] flex items-center justify-center text-zinc-500 text-sm">
+      <div className="min-h-screen bg-[var(--bg)] flex items-center justify-center text-[var(--text-faint)] text-sm">
         Chargement…
       </div>
     }>

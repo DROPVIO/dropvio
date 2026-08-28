@@ -92,31 +92,31 @@ export default function RegisterPage() {
 
   if (success) {
     return (
-      <div className="min-h-screen bg-[#0d0d14] flex items-center justify-center px-4">
-        <div className="w-full max-w-sm rounded-2xl bg-[#13131f] border border-white/5 p-8 text-center flex flex-col items-center gap-4">
+      <div className="min-h-screen bg-[var(--bg)] flex items-center justify-center px-4">
+        <div className="w-full max-w-sm rounded-2xl bg-[var(--surface)] border border-[var(--border)] p-8 text-center flex flex-col items-center gap-4">
           <span className="text-4xl">📧</span>
-          <h2 className="text-white font-bold text-lg">Vérifie ta boîte mail</h2>
-          <p className="text-zinc-400 text-sm leading-relaxed">
-            Un lien de confirmation a été envoyé à <span className="text-white font-medium">{email}</span>.
+          <h2 className="text-[var(--text-primary)] font-bold text-lg">Vérifie ta boîte mail</h2>
+          <p className="text-[var(--text-muted)] text-sm leading-relaxed">
+            Un lien de confirmation a été envoyé à <span className="text-[var(--text-primary)] font-medium">{email}</span>.
             Confirme ton compte avant de te connecter — le lien active ton accès.
           </p>
 
           {resendState === "sent" ? (
-            <p className="mt-1 text-sm text-emerald-400">Email renvoyé ! Vérifie ta boîte mail (et tes spams).</p>
+            <p className="mt-1 text-sm text-[var(--success)]">Email renvoyé ! Vérifie ta boîte mail (et tes spams).</p>
           ) : (
             <button
               onClick={handleResend}
               disabled={resendState === "loading"}
-              className="mt-1 text-sm text-violet-400 hover:text-violet-300 transition font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+              className="mt-1 text-sm text-[var(--accent)] hover:opacity-80 transition font-medium disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {resendState === "loading" ? "Envoi…" : "Renvoyer l'email de confirmation"}
             </button>
           )}
           {resendState === "error" && resendError && (
-            <p className="text-xs text-red-400">{resendError}</p>
+            <p className="text-xs text-[var(--danger)]">{resendError}</p>
           )}
 
-          <a href="/login" className="mt-2 text-sm text-zinc-500 hover:text-zinc-300 transition font-medium">
+          <a href="/login" className="mt-2 text-sm text-[var(--text-faint)] hover:text-[var(--text-muted)] transition font-medium">
             Retour à la connexion →
           </a>
         </div>
@@ -125,60 +125,60 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0d0d14] flex items-center justify-center px-4">
+    <div className="min-h-screen bg-[var(--bg)] flex items-center justify-center px-4">
       <div className="w-full max-w-sm">
         {/* Logo */}
         <div className="flex items-center justify-center gap-2 mb-10">
           <Logo className="w-7 h-7 text-[var(--logo-accent)]" />
-          <span className="text-xl font-bold bg-gradient-to-r from-violet-400 to-blue-400 bg-clip-text text-transparent">
+          <span className="text-xl font-bold bg-gradient-to-r from-[var(--accent)] to-[var(--accent-secondary)] bg-clip-text text-transparent">
             Dropvio
           </span>
         </div>
 
-        <div className="rounded-2xl bg-[#13131f] border border-white/5 p-8">
-          <h1 className="text-xl font-bold text-white mb-1">Créer un compte</h1>
-          <p className="text-zinc-500 text-sm mb-8">Rejoins Dropvio gratuitement</p>
+        <div className="rounded-2xl bg-[var(--surface)] border border-[var(--border)] p-8">
+          <h1 className="text-xl font-bold text-[var(--text-primary)] mb-1">Créer un compte</h1>
+          <p className="text-[var(--text-faint)] text-sm mb-8">Rejoins Dropvio gratuitement</p>
 
           {error && (
-            <div className="mb-5 rounded-xl bg-red-500/10 border border-red-500/20 px-4 py-3 text-red-400 text-sm">
+            <div className="mb-5 rounded-xl bg-[var(--danger)]/10 border border-[var(--danger)]/20 px-4 py-3 text-[var(--danger)] text-sm">
               {error}
             </div>
           )}
 
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-medium text-zinc-400 uppercase tracking-wider">Email</label>
+              <label className="text-xs font-medium text-[var(--text-muted)] uppercase tracking-wider">Email</label>
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="ton@email.com"
                 required
-                className="bg-[#0d0d14] border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-zinc-600 focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition"
+                className="bg-[var(--bg)] border border-[var(--border-strong)] rounded-xl px-4 py-3 text-sm text-[var(--text-primary)] placeholder-[var(--text-faint)] focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition"
               />
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-medium text-zinc-400 uppercase tracking-wider">Mot de passe</label>
+              <label className="text-xs font-medium text-[var(--text-muted)] uppercase tracking-wider">Mot de passe</label>
               <input
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Minimum 6 caractères"
                 required
-                className="bg-[#0d0d14] border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-zinc-600 focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition"
+                className="bg-[var(--bg)] border border-[var(--border-strong)] rounded-xl px-4 py-3 text-sm text-[var(--text-primary)] placeholder-[var(--text-faint)] focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition"
               />
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-medium text-zinc-400 uppercase tracking-wider">Confirmer le mot de passe</label>
+              <label className="text-xs font-medium text-[var(--text-muted)] uppercase tracking-wider">Confirmer le mot de passe</label>
               <input
                 type="password"
                 value={confirm}
                 onChange={(e) => setConfirm(e.target.value)}
                 placeholder="••••••••"
                 required
-                className="bg-[#0d0d14] border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-zinc-600 focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition"
+                className="bg-[var(--bg)] border border-[var(--border-strong)] rounded-xl px-4 py-3 text-sm text-[var(--text-primary)] placeholder-[var(--text-faint)] focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition"
               />
             </div>
 
@@ -191,9 +191,9 @@ export default function RegisterPage() {
             </button>
           </form>
 
-          <p className="mt-6 text-center text-sm text-zinc-500">
+          <p className="mt-6 text-center text-sm text-[var(--text-faint)]">
             Déjà un compte ?{" "}
-            <a href="/login" className="text-violet-400 hover:text-violet-300 font-medium transition">
+            <a href="/login" className="text-[var(--accent)] hover:opacity-80 font-medium transition">
               Se connecter
             </a>
           </p>

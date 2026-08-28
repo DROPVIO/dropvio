@@ -87,11 +87,11 @@ function StarRating({ rating }: { rating: number }) {
   return (
     <span className="flex items-center gap-0.5">
       {Array.from({ length: 5 }).map((_, i) => (
-        <svg key={i} viewBox="0 0 20 20" className={`w-3 h-3 ${i < full ? "text-yellow-400" : half && i === full ? "text-yellow-400/60" : "text-zinc-700"}`} fill="currentColor">
+        <svg key={i} viewBox="0 0 20 20" className={`w-3 h-3 ${i < full ? "text-yellow-400" : half && i === full ? "text-yellow-400/60" : "text-[var(--border-strong)]"}`} fill="currentColor">
           <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
         </svg>
       ))}
-      <span className="ml-1 text-xs text-zinc-400">{rating.toFixed(1)}</span>
+      <span className="ml-1 text-xs text-[var(--text-muted)]">{rating.toFixed(1)}</span>
     </span>
   );
 }
@@ -110,8 +110,8 @@ function FilterPill({
       onClick={onClick}
       className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-150 border ${
         active
-          ? "bg-violet-600/20 border-violet-500/50 text-violet-300"
-          : "bg-white/[0.03] border-white/8 text-zinc-400 hover:border-white/15 hover:text-zinc-200"
+          ? "bg-violet-600/20 border-violet-500/50 text-[var(--accent)]"
+          : "bg-[var(--surface-2)] border-[var(--border-strong)] text-[var(--text-muted)] hover:border-[var(--accent)]/40 hover:text-[var(--text-primary)]"
       }`}
     >
       {children}
@@ -122,16 +122,17 @@ function FilterPill({
 function ProductCard({ product }: { product: Product }) {
   const isBrandFree = product.brandStatus === "sans-marque";
   return (
-    <div className="group rounded-2xl bg-[#13131f] border border-white/5 overflow-hidden hover:border-violet-500/30 transition-all duration-200 hover:shadow-lg hover:shadow-violet-900/20 flex flex-col">
+    <div className="group rounded-2xl bg-[var(--surface)] border border-[var(--border)] overflow-hidden hover:border-violet-500/30 transition-all duration-200 hover:shadow-lg hover:shadow-violet-900/20 flex flex-col">
       {/* Image */}
-      <div className="relative overflow-hidden bg-[#0d0d14] h-48">
+      <div className="relative overflow-hidden bg-[var(--bg)] h-48">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={`https://picsum.photos/seed/${product.id}/320/200`}
           alt={product.name}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
         />
-        {/* Badge */}
+        {/* Badge — reste auto-contenu volontairement : posé sur une photo, pas sur le fond
+            de l'app, son contraste ne dépend donc pas du thème clair/sombre. */}
         <span
           className={`absolute top-2 right-2 text-[10px] font-semibold px-2 py-0.5 rounded-full border ${
             isBrandFree
@@ -141,7 +142,7 @@ function ProductCard({ product }: { product: Product }) {
         >
           {isBrandFree ? "✅ Sans marque" : "⚠️ Avec marque"}
         </span>
-        {/* Category */}
+        {/* Category — idem, badge auto-contenu sur photo (fond noir translucide fixe) */}
         <span className="absolute top-2 left-2 text-[10px] font-medium px-2 py-0.5 rounded-full bg-black/50 backdrop-blur-sm text-zinc-300 border border-white/10 capitalize">
           {product.category}
         </span>
@@ -149,19 +150,19 @@ function ProductCard({ product }: { product: Product }) {
 
       {/* Body */}
       <div className="p-4 flex flex-col gap-3 flex-1">
-        <h3 className="text-sm font-semibold text-white leading-snug line-clamp-2">
+        <h3 className="text-sm font-semibold text-[var(--text-primary)] leading-snug line-clamp-2">
           {product.name}
         </h3>
 
         <div className="flex items-center justify-between">
-          <span className="text-lg font-bold bg-gradient-to-r from-violet-300 to-blue-300 bg-clip-text text-transparent">
+          <span className="text-lg font-bold bg-gradient-to-r from-[var(--accent)] to-[var(--accent-secondary)] bg-clip-text text-transparent">
             {product.price.toFixed(2)} €
           </span>
           <StarRating rating={product.rating} />
         </div>
 
-        <div className="flex items-center gap-1 text-xs text-zinc-500">
-          <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5 text-zinc-600">
+        <div className="flex items-center gap-1 text-xs text-[var(--text-faint)]">
+          <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5 text-[var(--text-faint)]">
             <path d="M3 1a1 1 0 000 2h1.22l.305 1.222a.997.997 0 00.01.042l1.358 5.43-.893.892C3.74 11.846 4.632 14 6.414 14H15a1 1 0 000-2H6.414l1-1H14a1 1 0 00.894-.553l3-6A1 1 0 0017 3H6.28l-.31-1.243A1 1 0 005 1H3zM16 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM6.5 18a1.5 1.5 0 100-3 1.5 1.5 0 000 3z" />
           </svg>
           <span>{formatOrders(product.orders)} commandes AliExpress</span>
@@ -209,26 +210,26 @@ export default function ProductsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0d0d14] text-white font-sans px-4 py-12">
+    <div className="min-h-screen bg-[var(--bg)] text-[var(--text-primary)] font-sans px-4 py-12">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-10">
-          <div className="inline-flex items-center gap-2 mb-4 px-3 py-1 rounded-full bg-violet-500/10 border border-violet-500/20 text-violet-400 text-xs font-medium tracking-widest uppercase">
+          <div className="inline-flex items-center gap-2 mb-4 px-3 py-1 rounded-full bg-violet-500/10 border border-violet-500/20 text-[var(--accent)] text-xs font-medium tracking-widest uppercase">
             Dropshipping sans marque
           </div>
           <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
             <div>
-              <h1 className="text-4xl font-bold bg-gradient-to-r from-violet-400 to-blue-400 bg-clip-text text-transparent mb-2">
+              <h1 className="text-4xl font-bold bg-gradient-to-r from-[var(--accent)] to-[var(--accent-secondary)] bg-clip-text text-transparent mb-2">
                 Bibliothèque de produits
               </h1>
-              <p className="text-zinc-400 text-base">
+              <p className="text-[var(--text-muted)] text-base">
                 {filtered.length} produit{filtered.length !== 1 ? "s" : ""} trouvé{filtered.length !== 1 ? "s" : ""}
               </p>
             </div>
             {hasFilters && (
               <button
                 onClick={resetFilters}
-                className="text-xs text-zinc-500 hover:text-zinc-300 underline underline-offset-2 transition-colors"
+                className="text-xs text-[var(--text-faint)] hover:text-[var(--text-muted)] underline underline-offset-2 transition-colors"
               >
                 Réinitialiser les filtres
               </button>
@@ -237,14 +238,14 @@ export default function ProductsPage() {
         </div>
 
         {/* Search + Filters */}
-        <div className="rounded-2xl bg-[#13131f] border border-white/5 p-5 mb-8 shadow-xl shadow-black/30 space-y-5">
+        <div className="rounded-2xl bg-[var(--surface)] border border-[var(--border)] p-5 mb-8 shadow-xl shadow-black/30 space-y-5">
           {/* Search bar */}
           <div className="relative">
             <svg
               viewBox="0 0 20 20"
               fill="none"
               stroke="currentColor"
-              className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500 pointer-events-none"
+              className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--text-faint)] pointer-events-none"
             >
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M21 21l-4.35-4.35M17 11A6 6 0 111 11a6 6 0 0116 0z" />
             </svg>
@@ -253,7 +254,7 @@ export default function ProductsPage() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Rechercher un produit…"
-              className="w-full bg-[#0d0d14] border border-white/10 rounded-xl pl-10 pr-4 py-3 text-sm text-white placeholder-zinc-600 focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition"
+              className="w-full bg-[var(--bg)] border border-[var(--border-strong)] rounded-xl pl-10 pr-4 py-3 text-sm text-[var(--text-primary)] placeholder-[var(--text-faint)] focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition"
             />
           </div>
 
@@ -261,7 +262,7 @@ export default function ProductsPage() {
           <div className="flex flex-col gap-4">
             {/* Category */}
             <div>
-              <p className="text-[11px] font-semibold text-zinc-500 uppercase tracking-widest mb-2">
+              <p className="text-[11px] font-semibold text-[var(--text-faint)] uppercase tracking-widest mb-2">
                 Catégorie
               </p>
               <div className="flex flex-wrap gap-2">
@@ -279,7 +280,7 @@ export default function ProductsPage() {
 
             {/* Price */}
             <div>
-              <p className="text-[11px] font-semibold text-zinc-500 uppercase tracking-widest mb-2">
+              <p className="text-[11px] font-semibold text-[var(--text-faint)] uppercase tracking-widest mb-2">
                 Prix
               </p>
               <div className="flex flex-wrap gap-2">
@@ -297,7 +298,7 @@ export default function ProductsPage() {
 
             {/* Status */}
             <div>
-              <p className="text-[11px] font-semibold text-zinc-500 uppercase tracking-widest mb-2">
+              <p className="text-[11px] font-semibold text-[var(--text-faint)] uppercase tracking-widest mb-2">
                 Statut
               </p>
               <div className="flex flex-wrap gap-2">
@@ -327,13 +328,13 @@ export default function ProductsPage() {
           </div>
         ) : (
           <div className="flex flex-col items-center justify-center py-24 text-center">
-            <div className="w-16 h-16 rounded-2xl bg-white/[0.03] border border-white/8 flex items-center justify-center mb-4">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-7 h-7 text-zinc-600">
+            <div className="w-16 h-16 rounded-2xl bg-[var(--surface-2)] border border-[var(--border-strong)] flex items-center justify-center mb-4">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-7 h-7 text-[var(--text-faint)]">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-4.35-4.35M17 11A6 6 0 111 11a6 6 0 0116 0z" />
               </svg>
             </div>
-            <p className="text-zinc-400 font-medium mb-1">Aucun produit trouvé</p>
-            <p className="text-zinc-600 text-sm">Essayez de modifier vos filtres ou votre recherche</p>
+            <p className="text-[var(--text-muted)] font-medium mb-1">Aucun produit trouvé</p>
+            <p className="text-[var(--text-faint)] text-sm">Essayez de modifier vos filtres ou votre recherche</p>
           </div>
         )}
       </div>
