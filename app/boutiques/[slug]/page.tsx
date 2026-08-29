@@ -110,9 +110,8 @@ export default async function BoutiquePage({
       <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
         <div className="grid gap-12 lg:grid-cols-[0.9fr_0.45fr]">
           <div className="space-y-6">
-            <div className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-8 shadow-xl shadow-violet-500/10">
-              <p className="text-sm uppercase tracking-[0.3em] text-violet-300">Boutique</p>
-              <h1 className="mt-4 text-4xl font-bold text-[var(--text-primary)]">{boutique.nom}</h1>
+            <div id="collections" className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-8 shadow-xl shadow-violet-500/10 scroll-mt-24">
+              <p className="text-sm uppercase tracking-[0.3em] text-violet-300">Nos collections</p>
               <p className="mt-4 max-w-2xl text-sm leading-7 text-[var(--text-muted)]">{boutique.description || template.description}</p>
               <div className="mt-8 flex flex-wrap gap-3">
                 <Link
@@ -145,10 +144,10 @@ export default async function BoutiquePage({
               </div>
             </div>
 
-            <div className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-8">
+            <div id="catalogue" className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-8 scroll-mt-24">
               <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
                 <div>
-                  <h2 className="text-2xl font-semibold text-[var(--text-primary)]">Produits</h2>
+                  <h1 className="text-2xl font-semibold text-[var(--text-primary)]">Catalogue</h1>
                   <p className="mt-2 text-sm text-[var(--text-muted)]">Découvre tous les produits disponibles dans cette boutique.</p>
                 </div>
                 <div className="rounded-full bg-violet-500/10 px-4 py-2 text-sm text-[var(--accent)]">{produits?.length ?? 0} produit(s)</div>

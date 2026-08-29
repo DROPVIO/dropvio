@@ -10,7 +10,7 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
 
   const { data, error } = await supabase
     .from("boutiques")
-    .select("id, nom, slug, description, theme, settings, est_publique, created_at, updated_at")
+    .select("id, nom, slug, description, theme, settings, mentions_legales, est_publique, created_at, updated_at")
     .eq("id", params.id)
     .maybeSingle();
 
@@ -38,6 +38,7 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
     description: payload.description,
     theme: payload.theme,
     settings: payload.settings,
+    mentions_legales: payload.mentions_legales,
     est_publique: payload.est_publique,
     updated_at: new Date().toISOString(),
   };

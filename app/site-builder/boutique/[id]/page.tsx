@@ -15,6 +15,7 @@ type Boutique = {
   description: string | null;
   theme: string | null;
   settings: Record<string, unknown> | null;
+  mentions_legales: string | null;
   est_publique: boolean;
 };
 
@@ -102,6 +103,11 @@ export default function BoutiqueBuilderDetailPage() {
   const [reorderLoading, setReorderLoading] = useState(false);
   const [togglingPublic, setTogglingPublic] = useState(false);
 
+  const [mentionsLegales, setMentionsLegales] = useState("");
+  const [savingMentions, setSavingMentions] = useState(false);
+  const [mentionsError, setMentionsError] = useState<string | null>(null);
+  const [mentionsSuccess, setMentionsSuccess] = useState(false);
+
   const [shopifyConnected, setShopifyConnected] = useState<boolean | null>(null);
   const [shopifyDomain, setShopifyDomain] = useState<string | null>(null);
   const [shopifyPushing, setShopifyPushing] = useState(false);
@@ -180,9 +186,36 @@ export default function BoutiqueBuilderDetailPage() {
         return;
       }
       setBoutique(json.boutique ?? null);
+      setMentionsLegales(json.boutique?.mentions_legales ?? "");
     } catch {
       setGlobalError("Impossible de contacter le serveur.");
       setBoutique(null);
+    }
+  }
+
+  async function handleSaveMentionsLegales() {
+    if (!params?.id) return;
+    setSavingMentions(true);
+    setMentionsError(null);
+    setMentionsSuccess(false);
+    try {
+      const response = await fetch(`/api/boutiques/${params.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ mentions_legales: mentionsLegales }),
+      });
+      const json = await response.json();
+      if (!response.ok) {
+        setMentionsError(json.error || "Impossible d'enregistrer les mentions légales.");
+        return;
+      }
+      setBoutique((prev) => (prev ? { ...prev, mentions_legales: mentionsLegales } : prev));
+      setMentionsSuccess(true);
+      window.setTimeout(() => setMentionsSuccess(false), 2500);
+    } catch {
+      setMentionsError("Impossible de contacter le serveur.");
+    } finally {
+      setSavingMentions(false);
     }
   }
 
@@ -596,16 +629,53 @@ export default function BoutiqueBuilderDetailPage() {
               <div>
                 <p className="text-xs uppercase tracking-[0.3em] text-violet-400">Boutique</p>
                 <h2 className="mt-2 text-2xl font-semibold text-[var(--text-primary)]">{boutique?.nom || "Chargement..."}</h2>
-                <p className="mt-2 text-sm text-[var(--text-faint)]">
-                  URL : {boutique ? getBoutiquePublicUrl(boutique.slug) : "..."}
+                <div className="mt-2 flex flex-wrap items-center gap-2 text-sm text-[var(--text-faint)]">
+                  {boutique ? (
+                    <a
+                      href={getBoutiquePublicUrl(boutique.slug)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 rounded-xl border border-[var(--border)] bg-[var(--surface-2)] px-3 py-1.5 font-semibold text-[var(--text-primary)] transition hover:border-violet-500/40 hover:bg-violet-500/10"
+                    >
+                      Ouvrir la boutique publique ↗
+                    </a>
+                  ) : (
+                    "..."
+                  )}
                   {boutique ? (
                     boutique.est_publique ? (
-                      <span className="ml-2 text-[var(--success)]">— accessible à tous</span>
+                      <span className="text-[var(--success)]">— accessible à tous</span>
                     ) : (
-                      <span className="ml-2 text-[var(--warning)]">— privée, non accessible tant qu&apos;elle n&apos;est pas publiée</span>
+                      <span className="text-[var(--warning)]">— privée, non accessible tant qu&apos;elle n&apos;est pas publiée</span>
                     )
                   ) : null}
-                </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-6 rounded-3xl border border-[var(--border)] bg-[var(--surface-2)] p-4">
+              <h3 className="text-sm font-semibold text-[var(--text-primary)]">Mentions légales</h3>
+              <p className="mt-1 text-xs text-[var(--text-muted)]">
+                Affichées sur la page publique /mentions-legales de cette boutique.
+              </p>
+              <textarea
+                value={mentionsLegales}
+                onChange={(e) => setMentionsLegales(e.target.value)}
+                rows={5}
+                placeholder="Raison sociale, adresse, SIRET, hébergeur..."
+                className="mt-3 w-full rounded-2xl border border-[var(--border)] bg-[var(--bg-sunken)] px-4 py-3 text-sm text-[var(--text-primary)] outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
+              />
+              <div className="mt-3 flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={handleSaveMentionsLegales}
+                  disabled={!boutique || savingMentions}
+                  className="rounded-2xl bg-violet-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-violet-400 disabled:opacity-50"
+                >
+                  {savingMentions ? "Enregistrement..." : "Enregistrer"}
+                </button>
+                {mentionsSuccess ? <span className="text-sm text-[var(--success)]">Enregistré.</span> : null}
+                {mentionsError ? <span className="text-sm text-[var(--danger)]">{mentionsError}</span> : null}
               </div>
             </div>
 

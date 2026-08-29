@@ -7,7 +7,7 @@ export async function GET(request: NextRequest, context: { params: Promise<{ slu
 
   const { data: boutique, error: boutiqueError } = await supabase
     .from("boutiques")
-    .select("id, nom, slug, description, theme, settings")
+    .select("id, nom, slug, description, theme, settings, mentions_legales")
     .eq("slug", slug)
     .eq("est_publique", true)
     .maybeSingle();

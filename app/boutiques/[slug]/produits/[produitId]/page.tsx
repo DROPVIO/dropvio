@@ -1,9 +1,7 @@
 import type { Metadata } from "next";
 import AddToCartButton from "@/app/components/AddToCartButton";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getBaseUrl } from "@/lib/get-base-url";
-import { getBoutiqueBasePath } from "@/lib/boutique-links";
 import { getBoutiquePublicUrl } from "@/lib/boutique-subdomains";
 
 function formatPrice(value: number) {
@@ -67,7 +65,6 @@ export default async function ProduitPage({
 }) {
   const { slug, produitId } = await params;
   const baseUrl = await getBaseUrl();
-  const basePath = await getBoutiqueBasePath(slug);
 
   const produitRes = await fetch(`${baseUrl}/api/boutiques/slug/${slug}/produits/${produitId}`, {
     cache: "no-store",
@@ -97,18 +94,10 @@ export default async function ProduitPage({
       <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6 lg:px-8">
         <div className="grid gap-10 xl:grid-cols-[0.65fr_0.35fr]">
           <div className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-8 shadow-xl shadow-violet-500/10">
-            <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <p className="text-xs uppercase tracking-[0.3em] text-violet-300">Produit</p>
-                <h1 className="mt-2 text-4xl font-bold text-[var(--text-primary)]">{produit.nom}</h1>
-                <p className="mt-2 text-sm text-[var(--text-muted)]">{produit.boutique_categories?.nom ?? "Sans catégorie"}</p>
-              </div>
-              <Link
-                href={basePath || "/"}
-                className="rounded-2xl border border-[var(--border)] bg-[var(--surface-2)] px-4 py-3 text-sm font-semibold text-[var(--text-primary)] transition hover:border-violet-400/60 hover:bg-violet-500/10"
-              >
-                Retour à la boutique
-              </Link>
+            <div className="mb-8">
+              <p className="text-xs uppercase tracking-[0.3em] text-violet-300">Produit</p>
+              <h1 className="mt-2 text-4xl font-bold text-[var(--text-primary)]">{produit.nom}</h1>
+              <p className="mt-2 text-sm text-[var(--text-muted)]">{produit.boutique_categories?.nom ?? "Sans catégorie"}</p>
             </div>
             <div className="grid gap-6 lg:grid-cols-[0.8fr_0.4fr]">
               <div>
