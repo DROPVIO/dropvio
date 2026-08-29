@@ -53,47 +53,37 @@ type Product = {
   niche: string;
 };
 
-// Champs et tri identiques à l'appel historique (avant extraction dans lib/aliexpress.ts) —
-// pas de target_currency/ship_to_country ici, donc sale_price reste dans la devise d'origine
-// de chaque fiche (non homogène entre produits). C'est un comportement préexistant du seed,
-// non corrigé ici : il est hors périmètre de la fonctionnalité "Alternatives fiables", qui
-// dérive son propre prix EUR comparable via getProductDetail(target_currency=EUR) plutôt que
-// de faire confiance à prixFournisseur stocké en base.
+// Bug corrigé (voir investigation) : sale_price reste dans la devise d'origine de chaque
+// fiche (CNY la plupart du temps, non homogène entre produits) même avec target_currency
+// demandé — c'est target_sale_price qui est le seul champ réellement converti. Vérifié
+// empiriquement sur 4 produits : sale_price (CNY) valait ~7.6x target_sale_price (EUR), un
+// facteur constant (le taux de change CNY→EUR du moment), pas une erreur aléatoire. Même
+// approche que "Alternatives fiables" (app/api/finder/alternatives/route.ts), qui utilisait
+// déjà correctement target_sale_price + target_currency=EUR.
 const SEED_FIELDS =
-  "product_id,product_title,product_main_image_url,sale_price,original_price,commission_rate,evaluate_rate,product_detail_url,lastest_volume";
+  "product_id,product_title,product_main_image_url,target_sale_price,target_sale_price_currency,original_price,commission_rate,evaluate_rate,product_detail_url,lastest_volume";
 
 const PSYCHOLOGICAL_TIERS = [
   9.99, 14.99, 19.99, 24.99, 29.99, 39.99, 49.99, 59.99, 79.99,
   99.99, 129.99, 149.99, 199.99, 249.99, 299.99, 399.99, 499.99,
 ];
 
-// Plafond de prix d'achat pour qu'un produit reste un vrai "produit gagnant" dropshipping :
-// même avec une marge x2+ garantie par calculatePrixVente, un prix d'achat trop élevé
-// donne un prix de vente irréaliste pour de l'achat impulsif (ex: brosse à maquillage à
-// 25€ d'achat -> 60€ de vente, personne n'achète). Constaté aussi côté AliExpress : au-delà
-// d'une trentaine d'euros, "sale_price" reflète souvent un prix de lot/gros mal mappé sur
-// un article unitaire, pas un vrai prix consommateur. En dessous de 2€, trop d'articles sont
-// en réalité des pièces détachées/accessoires vendus à l'unité de gros, pas des produits
-// autonomes vendables tels quels.
-const MIN_PRIX_FOURNISSEUR = 2;
-const MAX_PRIX_FOURNISSEUR = 30;
-
-// Certaines niches (petits accessoires / consommables — encens, pinceaux, bijoux fantaisie,
-// soin visage) ont un coût réel unitaire bien inférieur au reste du catalogue : constaté sur
-// les données déjà seedées, leur "sale_price" AliExpress dans la tranche haute (20-30€)
-// ressemble à un prix de lot/gros mappé sur un article unitaire (ex: bâton d'encens à 25€
-// d'achat, alors qu'un bâton d'encens coûte réellement 1-3€). Plafond resserré pour ces
-// niches plutôt qu'un seul plafond global, qui laissait passer ce biais.
-const MAX_PRIX_FOURNISSEUR_PAR_NICHE: Partial<Record<string, number>> = {
-  yoga: 15,
-  beaute: 15,
-  selfcare: 15,
-  mode: 15,
-};
-
-function maxPrixFournisseurPourNiche(niche: string): number {
-  return MAX_PRIX_FOURNISSEUR_PAR_NICHE[niche] ?? MAX_PRIX_FOURNISSEUR;
-}
+// DÉSACTIVÉ pour ce run (voir investigation prix CNY/EUR) : ces seuils avaient été calibrés
+// sur prixFournisseur lu depuis sale_price (devise d'origine, CNY la plupart du temps) traité
+// à tort comme de l'EUR — un facteur ~7.6x d'inflation constaté empiriquement. Maintenant que
+// prixFournisseur vient de target_sale_price (vraie conversion EUR), ces bornes filtreraient
+// quasiment tout le catalogue (ex. échantillon réel observé : 0.02€–0.27€ pour ce type
+// d'articles, contre un plancher à 2€ ici). Conservées commentées pour mémoire — à
+// recalibrer sur les vrais prix EUR une fois ce run terminé et les données réelles observées,
+// pas en divisant à l'aveugle par 7.6.
+// const MIN_PRIX_FOURNISSEUR = 2;
+// const MAX_PRIX_FOURNISSEUR = 30;
+// const MAX_PRIX_FOURNISSEUR_PAR_NICHE: Partial<Record<string, number>> = {
+//   yoga: 15,
+//   beaute: 15,
+//   selfcare: 15,
+//   mode: 15,
+// };
 
 function calculatePrixVente(prixFournisseur: number): number {
   const minPrice = prixFournisseur * 2;
@@ -108,10 +98,13 @@ async function fetchPage(keywords: string, niche: string, pageNo: number): Promi
     pageSize: 20,
     sort: "SALE_PRICE_ASC",
     fields: SEED_FIELDS,
+    targetCurrency: "EUR",
   });
 
   return list.map((p) => {
-    const prixFournisseur = parseFloat(p.sale_price ?? "");
+    // target_sale_price est le seul champ réellement converti dans targetCurrency — voir le
+    // commentaire sur SEED_FIELDS ci-dessus.
+    const prixFournisseur = parseFloat(p.target_sale_price ?? "");
     const prixVente       = calculatePrixVente(prixFournisseur);
     const marge           = Math.round(((prixVente - prixFournisseur) / prixVente) * 100);
     return {
@@ -157,16 +150,13 @@ async function seedKeyword(niche: string, keywords: string): Promise<number> {
     const seen = new Map<string, Product>();
     for (const p of rawFlat) seen.set(p.id, p);
 
-    // Filtre "produit gagnant" : hors budget (trop cher pour une vraie marge x2 à un prix
-    // de vente raisonnable, ou trop proche de 0 pour être un vrai produit autonome) -> exclu
-    // avant même d'atteindre la base, cf. MIN/MAX_PRIX_FOURNISSEUR(_PAR_NICHE) plus haut.
-    const maxNiche = maxPrixFournisseurPourNiche(niche);
-    const products = Array.from(seen.values()).filter(
-      (p) => p.prixFournisseur >= MIN_PRIX_FOURNISSEUR && p.prixFournisseur <= maxNiche
-    );
+    // Filtre prix désactivé pour ce run (voir commentaire sur MIN/MAX_PRIX_FOURNISSEUR
+    // plus haut) — tous les produits reçus sont importés tels quels, pour observer la vraie
+    // distribution de prix EUR avant de redéfinir des seuils pertinents.
+    const products = Array.from(seen.values());
 
     if (products.length === 0) {
-      console.log(`  [${niche}] "${keywords}" pages ${startPage}–${endPage}: 0 produit dans le budget [${MIN_PRIX_FOURNISSEUR}-${maxNiche}]€ (sur ${rawFlat.length} reçus).`);
+      console.log(`  [${niche}] "${keywords}" pages ${startPage}–${endPage}: 0 produit reçu.`);
     } else {
       const { error } = await supabase
         .from("produits")
