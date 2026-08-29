@@ -52,3 +52,27 @@ export async function getServerUserAndPlan(): Promise<{
   };
   return { supabase, user, plan, formationOwned };
 }
+
+// Version allégée pour les routes qui n'ont besoin que de user.id + plan (ex. vérifier un
+// plafond de plan avant une requête de liste), sans jamais toucher formation_achats — mesuré
+// empiriquement sur /api/aliexpress/products : getServerUserAndPlan() coûtait 125-195ms par
+// appel à elle seule, sur CHAQUE changement de niche/page, pour une donnée (formationOwned)
+// jamais utilisée par ces routes. Même principe que la recommandation faite lors du
+// diagnostic dashboard précédent (route.ts appelant getServerUserAndPlan() pour un simple
+// contrôle d'accès n'a pas besoin du reste du payload).
+export async function getServerUserPlanOnly(): Promise<{
+  supabase: SupabaseClient;
+  user: User | null;
+  plan: Plan;
+}> {
+  const supabase = await createSupabaseServerClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { supabase, user: null, plan: "free" };
+  }
+
+  const { data: profil } = await supabase.from("profils").select("plan").eq("id", user.id).maybeSingle();
+  const plan = (profil?.plan as Plan | undefined) ?? "free";
+  return { supabase, user, plan };
+}

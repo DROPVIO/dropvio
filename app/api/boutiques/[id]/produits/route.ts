@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerUserAndPlan } from "@/lib/supabase-server";
+import { getServerUserPlanOnly } from "@/lib/supabase-server";
 import { PLAN_LIMITS, planLabel } from "@/lib/plan-limits";
 
 const DEFAULT_LIMIT = 20;
@@ -12,7 +12,7 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
   const from = (page - 1) * limit;
   const to = from + limit - 1;
 
-  const { supabase, user } = await getServerUserAndPlan();
+  const { supabase, user } = await getServerUserPlanOnly();
   if (!user) {
     return NextResponse.json({ error: "Connecte-toi pour voir les produits." }, { status: 401 });
   }
@@ -54,7 +54,7 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
 
 export async function POST(request: NextRequest, context: { params: Promise<{ id: string }> }) {
   const params = await context.params;
-  const { supabase, user, plan } = await getServerUserAndPlan();
+  const { supabase, user, plan } = await getServerUserPlanOnly();
   if (!user) {
     return NextResponse.json({ error: "Connecte-toi pour ajouter un produit." }, { status: 401 });
   }

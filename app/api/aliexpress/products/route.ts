@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
-import { getServerUserAndPlan } from "@/lib/supabase-server";
+import { getServerUserPlanOnly } from "@/lib/supabase-server";
 import { PLAN_LIMITS } from "@/lib/plan-limits";
 
 const DEFAULT_LIMIT = 20;
@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
   const to    = from + limit - 1;
 
   try {
-    const { plan } = await getServerUserAndPlan();
+    const { plan } = await getServerUserPlanOnly();
     const produitsMax = PLAN_LIMITS[plan].produitsMax; // null = illimité (Pro/Agency)
 
     // Plan Free : le catalogue accessible est plafonné à produitsMax, quels que soient
