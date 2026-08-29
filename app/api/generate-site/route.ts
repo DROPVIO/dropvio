@@ -17,6 +17,22 @@ const IA_TEXT_MUTED = "rgba(240,240,248,.6)";
 const IA_CARD_BG = "rgba(255,255,255,.04)";
 const IA_CARD_BORDER = "rgba(255,255,255,.1)";
 
+// Bloc de variables CSS custom properties injecté après coup dans le HTML généré par Claude
+// (juste avant </style>, donc prioritaire dans la cascade même si Claude a déclaré son propre
+// :root) — garantit que le panneau de personnalisation post-génération du Site Builder (voir
+// app/site-builder/page.tsx) trouve toujours un jeu de tokens exploitable, même si Claude n'a
+// pas suivi la consigne du prompt à la lettre pour son propre CSS. Mêmes noms de tokens que
+// lib/site-templates.ts (mode Éditeur de templates), pour que le panneau fonctionne à
+// l'identique quel que soit le mode de génération ayant produit la page.
+function buildColorTokensCss(tokens: Record<string, string>): string {
+  return `:root{${Object.entries(tokens).map(([k, v]) => `${k}:${v};`).join("")}}`;
+}
+
+function injectColorTokens(html: string, tokens: Record<string, string>): string {
+  const css = buildColorTokensCss(tokens);
+  return html.includes("</style>") ? html.replace("</style>", `${css}\n</style>`) : html;
+}
+
 // Appelle Claude avec relance automatique si la réponse est tronquée (max_tokens) — logique
 // partagée entre le mode produit unique et le mode boutique, seul le prompt initial diffère.
 async function generateHtmlViaClaude(prompt: string): Promise<string> {
@@ -62,7 +78,7 @@ async function generateHtmlViaClaude(prompt: string): Promise<string> {
 // pour éviter qu'il invente ou déforme des données réelles. Repli par simple insertion avant
 // </style>/</body> si Claude n'a pas laissé les marqueurs demandés tels quels.
 function injectProductGrid(html: string, produits: ProduitBoutique[], accent: string): string {
-  const gridCss = grilleStyles(accent, IA_CARD_BG, IA_CARD_BORDER, IA_TEXT, IA_TEXT_MUTED);
+  const gridCss = grilleStyles(accent, "var(--site-surface)", "var(--site-border)", "var(--site-text)", "var(--site-text-muted)");
   const gridHtml = productGridSection(produits, accent, "Commander");
   const gridScripts = produitsCheckoutScripts(produits);
 
@@ -147,6 +163,21 @@ export async function POST(request: NextRequest) {
   const secondaryColor = colorSecondary || "#1a0533";
   const accentColor    = colorAccent    || "#f59e0b";
 
+  // Mêmes rôles que lib/site-templates.ts (mode Éditeur de templates) : --site-accent =
+  // couleur principale (CTA), --site-accent-2 = accent secondaire (badges/détails),
+  // --site-bg-alt = fond des sections alternées. Injectés après coup (voir
+  // injectColorTokens), le prompt instruit par ailleurs Claude d'y référer son propre CSS.
+  const colorTokens: Record<string, string> = {
+    "--site-bg": IA_BG,
+    "--site-text": IA_TEXT,
+    "--site-text-muted": IA_TEXT_MUTED,
+    "--site-accent": primaryColor,
+    "--site-accent-2": accentColor,
+    "--site-bg-alt": secondaryColor,
+    "--site-surface": IA_CARD_BG,
+    "--site-border": IA_CARD_BORDER,
+  };
+
   const STYLE_PROMPTS: Record<string, string> = {
     premium:    "Ton et vocabulaire LUXUEUX : mots comme « exclusif », « raffiné », « d'exception », « prestige », « savoir-faire ». Typographie majestueuse, espacement généreux, palette sombre et dorée.",
     nature:     "Ton et vocabulaire ÉCO-RESPONSABLE : mots comme « naturel », « durable », « éco-conçu », « respectueux », « bienveillant ». Palette verte et bleue, style organique.",
@@ -172,7 +203,7 @@ export async function POST(request: NextRequest) {
 
   const socialProofSection = `5. PREUVE SOCIALE — section avec ${socialProofData.length} stats visuelles affichées en grille ou rangée de blocs :
 ${socialProofData.map((s) => `   • "${s}"`).join("\n")}
-   Chaque stat : grand chiffre ou texte en couleur brand, label en dessous, fond rgba(255,255,255,0.04), bordure rgba(255,255,255,0.08), padding généreux. Aucun nom de personne, aucune citation, aucun avis inventé.`;
+   Chaque stat : grand chiffre ou texte en couleur var(--site-accent), label en dessous, fond var(--site-surface), bordure var(--site-border), padding généreux. Aucun nom de personne, aucune citation, aucun avis inventé.`;
 
   const prompt = `Tu es un développeur front-end expert. Génère une landing page HTML standalone complète et fonctionnelle pour le produit suivant.
 
@@ -187,12 +218,12 @@ SECTIONS (dans cet ordre) :
 
 1. NAVBAR sticky — logo texte à gauche, bouton CTA à droite. Fond transparent → semi-transparent au scroll (JS scrollY).
 
-2. HERO (100vh) — fond dégradé animé linear-gradient(135deg, ${primaryColor}, ${accentColor}). Titre H1 Playfair Display, sous-titre Inter, badge "Édition Limitée" (couleur accent ${accentColor}), bouton CTA principal (couleur principale ${primaryColor}).
+2. HERO (100vh) — fond dégradé animé linear-gradient(135deg, var(--site-accent), var(--site-accent-2)). Titre H1 Playfair Display, sous-titre Inter, badge "Édition Limitée" (couleur accent var(--site-accent-2)), bouton CTA principal (couleur principale var(--site-accent)).
 ${imageUrl
   ? `Image hero : <img class="product-image-hero" src="${imageUrl}" alt="${productName}" style="max-width:480px;width:100%;border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,0.5)"> affichée en split-screen à droite du texte (flex row, gap 60px). Sur mobile : image en dessous du texte.`
   : "Bloc visuel coloré avec icône SVG simple en placeholder."}
 
-3. BÉNÉFICES — minimum 6 cartes (grille 3×2 sur desktop, 1 colonne mobile). Chaque carte : icône SVG inline pertinent au produit, titre court percutant, texte de 2-3 lignes avec argument concret et spécifique basé sur "${productName}" et sa description. Fond rgba(255,255,255,0.05), bordure rgba(255,255,255,0.1). Hover : translateY(-4px) + box-shadow. Les bénéfices doivent être 100% liés au produit réel, pas génériques.
+3. BÉNÉFICES — minimum 6 cartes (grille 3×2 sur desktop, 1 colonne mobile). Chaque carte : icône SVG inline pertinent au produit, titre court percutant, texte de 2-3 lignes avec argument concret et spécifique basé sur "${productName}" et sa description. Fond var(--site-surface), bordure var(--site-border). Hover : translateY(-4px) + box-shadow. Les bénéfices doivent être 100% liés au produit réel, pas génériques.
 
 4. DESCRIPTION PRODUIT — section en deux colonnes (desktop) : colonne gauche = texte détaillé avec caractéristiques techniques (liste à puces avec icône ✓, minimum 6 points), paragraphe de présentation approfondie basé sur la description fournie ; colonne droite = ${imageUrl ? `<img class="product-image-detail" src="${imageUrl}" alt="${productName} — détail" style="width:100%;max-width:420px;border-radius:12px;box-shadow:0 12px 40px rgba(0,0,0,0.4)">` : "bloc avec gradient et caractéristiques visuelles"}. Sur mobile : colonnes empilées.
 
@@ -202,9 +233,9 @@ ${imageUrl ? `6. GALERIE PRODUIT — 3 cartes côte à côte présentant le mêm
    • Carte 1 : <img class="product-image-gallery-1" src="${imageUrl}" alt="${productName} — vue principale" style="width:100%;aspect-ratio:1/1;object-fit:cover;border-radius:12px"> + légende "Vue principale"
    • Carte 2 : <img class="product-image-gallery-2" src="${imageUrl}" alt="${productName} — en situation" style="width:100%;aspect-ratio:1/1;object-fit:cover;border-radius:12px;filter:brightness(1.05) contrast(1.05)"> + légende "En situation"
    • Carte 3 : <img class="product-image-gallery-3" src="${imageUrl}" alt="${productName} — zoom détail" style="width:100%;aspect-ratio:1/1;object-fit:cover;border-radius:12px;object-position:center;transform:scale(1.08);overflow:hidden"> + légende "Détail"
-   Chaque carte : fond rgba(255,255,255,0.03), bordure rgba(255,255,255,0.08), overflow:hidden, hover scale(1.02). Sur mobile : grille 1 colonne.` : ""}
+   Chaque carte : fond var(--site-surface), bordure var(--site-border), overflow:hidden, hover scale(1.02). Sur mobile : grille 1 colonne.` : ""}
 
-${imageUrl ? "7." : "6."} CTA FINAL — section pleine largeur, fond dégradé linear-gradient(135deg, ${primaryColor}, ${secondaryColor}).${imageUrl ? ` Image produit <img class="product-image-cta" src="${imageUrl}" alt="${productName}" style="max-width:320px;width:100%;border-radius:12px;box-shadow:0 16px 48px rgba(0,0,0,0.5);margin:0 auto 32px;display:block"> affichée au-dessus du titre.` : ""} Titre Playfair Display, bouton blanc, texte garantie 30 jours.${salePrice ? ` Affiche le prix : ${originalPrice ? `<span style="text-decoration:line-through;opacity:0.5">${originalPrice}€</span> ` : ""}<strong style="font-size:2rem">${salePrice}€</strong>.` : ""}
+${imageUrl ? "7." : "6."} CTA FINAL — section pleine largeur, fond dégradé linear-gradient(135deg, var(--site-accent), var(--site-bg-alt)).${imageUrl ? ` Image produit <img class="product-image-cta" src="${imageUrl}" alt="${productName}" style="max-width:320px;width:100%;border-radius:12px;box-shadow:0 16px 48px rgba(0,0,0,0.5);margin:0 auto 32px;display:block"> affichée au-dessus du titre.` : ""} Titre Playfair Display, bouton blanc, texte garantie 30 jours.${salePrice ? ` Affiche le prix : ${originalPrice ? `<span style="text-decoration:line-through;opacity:0.5">${originalPrice}€</span> ` : ""}<strong style="font-size:2rem">${salePrice}€</strong>.` : ""}
 
 ${imageUrl ? "8." : "7."} FOOTER — logo texte, liens légaux (Mentions légales, CGV, Confidentialité), copyright. 1 ligne simple.
 
@@ -215,14 +246,16 @@ TYPOGRAPHIE :
 - Body : Inter
 
 COULEURS :
-- Fond global : #0a0a0f
-- Texte : #f0f0f8 · Texte secondaire : rgba(240,240,248,0.55)
-- Couleur principale (CTA, boutons, accents forts, liens hover) : ${primaryColor}
-- Couleur secondaire (fonds de sections alternées : utiliser rgba(${secondaryColor.replace("#","")},0.15) ou directement ${secondaryColor} en bg semi-transparent) : ${secondaryColor}
-- Couleur accent (badges, icônes, étoiles, détails, hover cards) : ${accentColor}
-- Cards : rgba(255,255,255,0.04)
-- Glow CTA : box-shadow 0 0 32px ${primaryColor}55
-- Dégradé hero : linear-gradient(135deg, ${primaryColor}, ${accentColor})
+- Fond global : var(--site-bg) (rendu actuel : ${IA_BG})
+- Texte : var(--site-text) (${IA_TEXT}) · Texte secondaire : var(--site-text-muted) (${IA_TEXT_MUTED})
+- Couleur principale (CTA, boutons, accents forts, liens hover) : var(--site-accent) (${primaryColor})
+- Couleur secondaire (fonds de sections alternées) : var(--site-bg-alt) (${secondaryColor})
+- Couleur accent (badges, icônes, étoiles, détails, hover cards) : var(--site-accent-2) (${accentColor})
+- Cards : var(--site-surface) (${IA_CARD_BG}), bordure var(--site-border) (${IA_CARD_BORDER})
+- Glow CTA : box-shadow 0 0 32px color-mix(in srgb, var(--site-accent) 33%, transparent)
+- Dégradé hero : linear-gradient(135deg, var(--site-accent), var(--site-accent-2))
+
+TOKENS CSS (OBLIGATOIRE) : --site-bg, --site-text, --site-text-muted, --site-accent, --site-accent-2, --site-bg-alt, --site-surface et --site-border sont DÉJÀ déclarées automatiquement dans un bloc :root — ne les redéclare surtout pas toi-même, et n'en déclare pas d'autres à la place. Utilise-les SYSTÉMATIQUEMENT via var(--nom) partout où le CSS ci-dessus mentionne une de ces couleurs : jamais de valeur hex ou rgba() en dur pour un fond, un texte ou un accent. Les valeurs entre parenthèses ci-dessus ne sont indiquées que pour que tu juges le rendu (contraste, harmonie) — ne les recopie jamais littéralement dans ton CSS.
 
 ANIMATIONS (simples uniquement) :
 - Fade-in au chargement : les éléments .reveal ont TOUJOURS opacity:1 et transform:none dans le CSS — ils sont visibles par défaut. Au chargement de la page, JS applique d'abord opacity:0 + translateY(20px) sur tous les .reveal, puis avec setTimeout décalé (100ms, 200ms, 300ms… par index) remet opacity:1 + translateY(0) + transition:0.5s. NE PAS utiliser IntersectionObserver (non fiable en iframe).
@@ -247,9 +280,9 @@ Ces règles sont non négociables. La page sera auditée sur ces critères préc
 
 - TYPOGRAPHIE STRICTE : exactement 2 polices (Playfair Display + Inter), exactement 3 niveaux de taille utilisés (H1 clamp(2.5rem,5vw,4rem) · H2 clamp(1.6rem,3vw,2.4rem) · body 1rem/1.05rem). Aucune taille intermédiaire inventée.
 
-- CTA UNIQUE ET CONTRASTÉ : un seul bouton CTA principal par section, couleur ${primaryColor} très contrastée sur fond sombre, visible IMMÉDIATEMENT sans scroll dans le hero. Texte du CTA orienté bénéfice et action : exemples valides "Obtenir le mien", "Je veux ce produit", "Commander maintenant${salePrice ? ` — ${salePrice}€` : ""}". INTERDIT d'utiliser simplement "Acheter" ou "En savoir plus".
+- CTA UNIQUE ET CONTRASTÉ : un seul bouton CTA principal par section, couleur var(--site-accent) très contrastée sur fond sombre, visible IMMÉDIATEMENT sans scroll dans le hero. Texte du CTA orienté bénéfice et action : exemples valides "Obtenir le mien", "Je veux ce produit", "Commander maintenant${salePrice ? ` — ${salePrice}€` : ""}". INTERDIT d'utiliser simplement "Acheter" ou "En savoir plus".
 
-- PRIX DANS LE HERO : ${salePrice ? `le prix ${salePrice}€ DOIT apparaître en GROS dans la section hero (font-size ≥ 2rem, couleur ${accentColor} ou blanc, font-weight 800) ET sur le bouton CTA final. Ne pas enterrer le prix hors du viewport initial.` : "aucun prix fourni : n'invente aucun prix."}
+- PRIX DANS LE HERO : ${salePrice ? `le prix ${salePrice}€ DOIT apparaître en GROS dans la section hero (font-size ≥ 2rem, couleur var(--site-accent-2) ou blanc, font-weight 800) ET sur le bouton CTA final. Ne pas enterrer le prix hors du viewport initial.` : "aucun prix fourni : n'invente aucun prix."}
 
 - PHRASES COURTES (niveau CM1-CM2) : tout le copywriting utilise des phrases de MOINS DE 12 MOTS. Vocabulaire courant, mots de tous les jours. Préfère les listes à puces aux paragraphes denses. Les bénéfices sont formulés en résultats chiffrés concrets ("économise 2h par semaine", "résultats en 7 jours") et jamais en vagues qualités ("haute qualité", "excellent produit").
 
@@ -262,7 +295,8 @@ INTERDIT : noms de marques, journaux, magazines, médias, célébrités, platefo
 Réponds UNIQUEMENT avec le code HTML, sans explication ni balise markdown.`;
 
   try {
-    const html = await generateHtmlViaClaude(prompt);
+    const rawHtml = await generateHtmlViaClaude(prompt);
+    const html = injectColorTokens(rawHtml, colorTokens);
     return NextResponse.json({ html });
   } catch (err) {
     console.error("[generate-site] Erreur Anthropic complète :", err);
@@ -311,6 +345,17 @@ async function handleGenerateBoutique(body: {
   const secondaryColor = colorSecondary || "#1a0533";
   const accentColor    = colorAccent    || "#f59e0b";
 
+  const colorTokens: Record<string, string> = {
+    "--site-bg": IA_BG,
+    "--site-text": IA_TEXT,
+    "--site-text-muted": IA_TEXT_MUTED,
+    "--site-accent": primaryColor,
+    "--site-accent-2": accentColor,
+    "--site-bg-alt": secondaryColor,
+    "--site-surface": IA_CARD_BG,
+    "--site-border": IA_CARD_BORDER,
+  };
+
   const STYLE_PROMPTS: Record<string, string> = {
     premium:    "Ton et vocabulaire LUXUEUX : mots comme « exclusif », « raffiné », « d'exception », « prestige », « savoir-faire ». Typographie majestueuse, espacement généreux.",
     nature:     "Ton et vocabulaire ÉCO-RESPONSABLE : mots comme « naturel », « durable », « éco-conçu », « respectueux », « bienveillant ».",
@@ -340,13 +385,15 @@ ${apercuProduits}
 COULEURS (fixes, ne pas dévier) : Principale ${primaryColor} | Secondaire ${secondaryColor} | Accent ${accentColor}
 STYLE & TON : ${stylePrompt}
 
+TOKENS CSS (OBLIGATOIRE) : --site-bg, --site-text, --site-text-muted, --site-accent (= couleur principale ci-dessus), --site-accent-2 (= accent), --site-bg-alt (= secondaire), --site-surface et --site-border sont DÉJÀ déclarées automatiquement dans un bloc :root — ne les redéclare surtout pas toi-même. Utilise-les SYSTÉMATIQUEMENT via var(--nom) partout où tu écrirais une des couleurs ci-dessus : jamais de valeur hex ou rgba() en dur pour un fond, un texte ou un accent.
+
 SECTIONS (dans cet ordre, RIEN D'AUTRE) :
 
 1. NAVBAR sticky — logo texte "${nomBoutique}" à gauche, bouton CTA "Voir les produits" à droite (ancre href="#produits"). Fond transparent → semi-transparent au scroll (JS scrollY).
 
-2. HERO (80vh) — fond dégradé animé linear-gradient(135deg, ${primaryColor}, ${accentColor}). Titre H1 = accroche de la boutique dans son ensemble (jamais le nom d'un produit précis), sous-titre = reformulation persuasive de la description en 1-2 phrases. Bouton CTA vers #produits.
+2. HERO (80vh) — fond dégradé animé linear-gradient(135deg, var(--site-accent), var(--site-accent-2)). Titre H1 = accroche de la boutique dans son ensemble (jamais le nom d'un produit précis), sous-titre = reformulation persuasive de la description en 1-2 phrases. Bouton CTA vers #produits.
 
-3. CONFIANCE — section avec 4 stats visuelles en grille : "🚚 Livraison rapide & sécurisée", "🔒 Paiement 100% sécurisé", "↩ Satisfait ou remboursé 30 jours", "💬 Support client réactif". Fond rgba(255,255,255,0.04), bordure rgba(255,255,255,0.08).
+3. CONFIANCE — section avec 4 stats visuelles en grille : "🚚 Livraison rapide & sécurisée", "🔒 Paiement 100% sécurisé", "↩ Satisfait ou remboursé 30 jours", "💬 Support client réactif". Fond var(--site-surface), bordure var(--site-border).
 
 4. Sur sa propre ligne, EXACTEMENT ce commentaire HTML, sans rien avant ni après, sans l'expliquer ni le modifier :
 <!-- GRILLE_PRODUITS -->
@@ -358,7 +405,7 @@ TYPOGRAPHIE :
 - H1 : clamp(2.2rem, 5vw, 4rem), Playfair Display · H2 : clamp(1.6rem, 3vw, 2.4rem), Playfair Display · Body : Inter
 
 COULEURS DE BASE (fixes, ne pas dévier — la grille injectée s'y cale) :
-- Fond global : ${IA_BG} · Texte : ${IA_TEXT} · Texte secondaire : ${IA_TEXT_MUTED}
+- Fond global : var(--site-bg) (${IA_BG}) · Texte : var(--site-text) (${IA_TEXT}) · Texte secondaire : var(--site-text-muted) (${IA_TEXT_MUTED})
 
 ANIMATIONS (simples uniquement) :
 - Fade-in au chargement : éléments .reveal opacity:1/transform:none par défaut dans le CSS ; JS applique opacity:0+translateY(20px) au chargement puis setTimeout décalé (100/200/300ms) remet l'état normal avec transition 0.5s. Pas d'IntersectionObserver (non fiable en iframe).
@@ -378,7 +425,8 @@ Réponds UNIQUEMENT avec le code HTML, sans explication ni balise markdown.`;
 
   try {
     const rawHtml = await generateHtmlViaClaude(prompt);
-    const html = injectProductGrid(rawHtml, produits, primaryColor);
+    const htmlWithTokens = injectColorTokens(rawHtml, colorTokens);
+    const html = injectProductGrid(htmlWithTokens, produits, "var(--site-accent)");
     return NextResponse.json({ html });
   } catch (err) {
     console.error("[generate-site] Erreur Anthropic complète (mode boutique) :", err);

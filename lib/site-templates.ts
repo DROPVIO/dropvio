@@ -331,7 +331,7 @@ export function grilleStyles(accent: string, cardBg: string, cardBorder: string,
   .grille-carte { background:${cardBg}; border:1px solid ${cardBorder}; border-radius:16px; overflow:hidden; display:flex; flex-direction:column; }
   .grille-img { aspect-ratio:1; overflow:hidden; background:${cardBorder}; }
   .grille-img img { width:100%; height:100%; object-fit:cover; }
-  .grille-img-placeholder { width:100%; height:100%; background:linear-gradient(135deg,${accent}33,${accent}11); }
+  .grille-img-placeholder { width:100%; height:100%; background:linear-gradient(135deg,color-mix(in srgb, ${accent} 20%, transparent),color-mix(in srgb, ${accent} 7%, transparent)); }
   .grille-body { padding:18px; display:flex; flex-direction:column; gap:10px; flex:1; }
   .grille-body h3 { font-size:1.05rem; color:${textColor}; }
   .grille-desc { font-size:var(--fs-small); color:${mutedColor}; line-height:1.5; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
@@ -373,8 +373,8 @@ export function produitsCheckoutScripts(produits: ProduitBoutique[]): string {
 // ─── Template TECH — sombre, néon, split-screen, bento grid ──────────────────
 
 function templateTech(c: ContenuTexte, images: ImagesSite, prixVente: string, prixBarre: string, reassurance: Reassurance): string {
-  const accent = "#22d3ee";
-  const accent2 = "#7c3aed";
+  const accent = "var(--site-accent)";
+  const accent2 = "var(--site-accent-2)";
   const galerie = galerieImgs(images);
   return `<!DOCTYPE html>
 <html lang="fr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -383,47 +383,51 @@ function templateTech(c: ContenuTexte, images: ImagesSite, prixVente: string, pr
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
 <style>
   * { margin:0; padding:0; box-sizing:border-box; }
-  :root { --fs-h1:clamp(2.2rem,5vw,3.4rem); --fs-h2:clamp(1.6rem,3vw,2.2rem); --fs-body:1rem; --fs-small:.8rem; }
-  body { background:#0a0a0f; color:#f0f0f8; font-family:'Inter',sans-serif; line-height:1.6; }
+  :root {
+    --site-bg:#0a0a0f; --site-text:#f0f0f8; --site-text-muted:rgba(240,240,248,.6);
+    --site-accent:#22d3ee; --site-accent-2:#7c3aed; --site-surface:#16161d; --site-border:rgba(255,255,255,.1);
+    --fs-h1:clamp(2.2rem,5vw,3.4rem); --fs-h2:clamp(1.6rem,3vw,2.2rem); --fs-body:1rem; --fs-small:.8rem;
+  }
+  body { background:var(--site-bg); color:var(--site-text); font-family:'Inter',sans-serif; line-height:1.6; }
   h1,h2 { font-family:'Space Grotesk',sans-serif; }
   .wrap { max-width:1100px; margin:0 auto; padding:0 24px; }
   .hero { min-height:90vh; display:flex; align-items:center; padding:60px 0; background:
-    radial-gradient(circle at 80% 20%, ${accent2}22, transparent 50%),
-    radial-gradient(circle at 20% 80%, ${accent}22, transparent 50%); }
+    radial-gradient(circle at 80% 20%, color-mix(in srgb, ${accent2} 13%, transparent), transparent 50%),
+    radial-gradient(circle at 20% 80%, color-mix(in srgb, ${accent} 13%, transparent), transparent 50%); }
   .hero .wrap { display:flex; align-items:center; gap:60px; flex-wrap:wrap; }
   .hero-text { flex:1; min-width:280px; }
-  .badge { display:inline-block; padding:6px 14px; border-radius:999px; background:${accent}1a; border:1px solid ${accent}44; color:${accent}; font-size:var(--fs-small); font-weight:600; letter-spacing:.06em; text-transform:uppercase; margin-bottom:20px; }
+  .badge { display:inline-block; padding:6px 14px; border-radius:999px; background:color-mix(in srgb, ${accent} 10%, transparent); border:1px solid color-mix(in srgb, ${accent} 27%, transparent); color:${accent}; font-size:var(--fs-small); font-weight:600; letter-spacing:.06em; text-transform:uppercase; margin-bottom:20px; }
   .hero h1 { font-size:var(--fs-h1); font-weight:700; line-height:1.1; margin-bottom:18px; }
-  .hero .sous { color:rgba(240,240,248,.6); font-size:var(--fs-body); margin-bottom:28px; }
+  .hero .sous { color:var(--site-text-muted); font-size:var(--fs-body); margin-bottom:28px; }
   .hero-img { flex:1; min-width:280px; display:flex; justify-content:center; }
-  .hero-img img { max-width:420px; width:100%; border-radius:16px; box-shadow:0 20px 60px rgba(34,211,238,.25); }
+  .hero-img img { max-width:420px; width:100%; border-radius:16px; box-shadow:0 20px 60px color-mix(in srgb, ${accent} 25%, transparent); }
   .hero-img .placeholder { width:100%; max-width:420px; aspect-ratio:1; border-radius:16px; background:linear-gradient(135deg,${accent2},${accent}); }
   .prix { font-size:var(--fs-h2); font-weight:700; margin-bottom:24px; }
-  .cta { display:inline-block; padding:16px 32px; border-radius:10px; background:${accent}; color:#04141a; font-weight:700; text-decoration:none; box-shadow:0 0 32px ${accent}55; }
+  .cta { display:inline-block; padding:16px 32px; border-radius:10px; background:${accent}; color:#04141a; font-weight:700; text-decoration:none; box-shadow:0 0 32px color-mix(in srgb, ${accent} 33%, transparent); }
   section { padding:70px 0; }
   .bento { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; }
   .bento > div:first-child { grid-column:span 2; }
-  .card { background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.08); border-radius:14px; padding:26px; }
+  .card { background:var(--site-surface); border:1px solid var(--site-border); border-radius:14px; padding:26px; }
   .card b { display:block; margin-bottom:8px; font-size:var(--fs-body); }
   h2 { font-size:var(--fs-h2); margin-bottom:32px; }
   ul.bullets { list-style:none; }
-  ul.bullets li { padding:12px 0; border-bottom:1px solid rgba(255,255,255,.06); display:flex; gap:10px; }
+  ul.bullets li { padding:12px 0; border-bottom:1px solid var(--site-border); display:flex; gap:10px; }
   ul.bullets li::before { content:"▸"; color:${accent}; }
   .galerie { display:flex; gap:14px; overflow-x:auto; padding-bottom:10px; }
   .galerie img { height:220px; border-radius:12px; flex-shrink:0; }
-  .reassurance { border-top:1px solid rgba(255,255,255,.08); }
+  .reassurance { border-top:1px solid var(--site-border); }
   .reassurance-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:20px; }
   .reassurance-item { display:flex; gap:12px; align-items:flex-start; }
   .reassurance-icon { font-size:var(--fs-h2); }
   .reassurance-titre { font-weight:600; font-size:var(--fs-body); }
-  .reassurance-texte { font-size:var(--fs-small); color:rgba(240,240,248,.55); margin-top:2px; }
-  .cta-final { text-align:center; background:linear-gradient(135deg,${accent2},#0a0a0f); border-radius:20px; padding:60px 30px; margin:0 24px 24px; }
-  footer { text-align:center; padding:30px; color:rgba(240,240,248,.4); font-size:var(--fs-small); }
+  .reassurance-texte { font-size:var(--fs-small); color:var(--site-text-muted); margin-top:2px; }
+  .cta-final { text-align:center; background:linear-gradient(135deg,${accent2},var(--site-bg)); border-radius:20px; padding:60px 30px; margin:0 24px 24px; }
+  footer { text-align:center; padding:30px; color:var(--site-text-muted); font-size:var(--fs-small); }
   @media(max-width:700px){ .bento{grid-template-columns:1fr} .bento>div:first-child{grid-column:span 1} .reassurance-grid{grid-template-columns:1fr} }
   ${checkoutStyles({
-    qtyBg: "rgba(255,255,255,.08)", qtyBorder: "rgba(255,255,255,.2)", qtyColor: "#fff",
-    cardBg: "rgba(255,255,255,.06)", inputBg: "rgba(255,255,255,.08)", inputBorder: "rgba(255,255,255,.2)", textColor: "#fff",
-    modalBg: "#13131a", modalText: "#f0f0f8",
+    qtyBg: "var(--site-surface)", qtyBorder: "var(--site-border)", qtyColor: "var(--site-text)",
+    cardBg: "var(--site-surface)", inputBg: "var(--site-surface)", inputBorder: "var(--site-border)", textColor: "var(--site-text)",
+    modalBg: "var(--site-surface)", modalText: "var(--site-text)",
   })}
 </style></head>
 <body>
@@ -474,7 +478,7 @@ function templateTech(c: ContenuTexte, images: ImagesSite, prixVente: string, pr
 // ─── Template MAISON — chaleureux, crème/terracotta, centré, zigzag ──────────
 
 function templateMaison(c: ContenuTexte, images: ImagesSite, prixVente: string, prixBarre: string, reassurance: Reassurance): string {
-  const accent = "#c2703d";
+  const accent = "var(--site-accent)";
   const galerie = galerieImgs(images);
   return `<!DOCTYPE html>
 <html lang="fr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -483,15 +487,19 @@ function templateMaison(c: ContenuTexte, images: ImagesSite, prixVente: string, 
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
 <style>
   * { margin:0; padding:0; box-sizing:border-box; }
-  :root { --fs-h1:clamp(2rem,5vw,3rem); --fs-h2:clamp(1.5rem,3vw,2rem); --fs-body:1rem; --fs-small:.8rem; }
-  body { background:#faf7f2; color:#2b2620; font-family:'Inter',sans-serif; line-height:1.65; }
+  :root {
+    --site-bg:#faf7f2; --site-text:#2b2620; --site-text-muted:#6b5f4f;
+    --site-accent:#c2703d; --site-surface:#f1ece2; --site-border:#e0d5c7;
+    --fs-h1:clamp(2rem,5vw,3rem); --fs-h2:clamp(1.5rem,3vw,2rem); --fs-body:1rem; --fs-small:.8rem;
+  }
+  body { background:var(--site-bg); color:var(--site-text); font-family:'Inter',sans-serif; line-height:1.65; }
   h1,h2 { font-family:'Fraunces',serif; font-weight:600; }
   .wrap { max-width:920px; margin:0 auto; padding:0 24px; }
   .hero { text-align:center; padding:90px 24px 60px; }
   .hero h1 { font-size:var(--fs-h1); margin-bottom:16px; }
-  .hero .sous { color:#6b5f4f; font-size:var(--fs-body); max-width:520px; margin:0 auto 28px; }
+  .hero .sous { color:var(--site-text-muted); font-size:var(--fs-body); max-width:520px; margin:0 auto 28px; }
   .hero img { max-width:460px; width:100%; border-radius:20px; margin:20px auto 0; display:block; box-shadow:0 24px 50px rgba(43,38,32,.15); }
-  .hero .placeholder { max-width:460px; width:100%; aspect-ratio:4/3; margin:20px auto 0; border-radius:20px; background:linear-gradient(135deg,${accent}33,#7c8f6e33); }
+  .hero .placeholder { max-width:460px; width:100%; aspect-ratio:4/3; margin:20px auto 0; border-radius:20px; background:linear-gradient(135deg,color-mix(in srgb, ${accent} 20%, transparent),color-mix(in srgb, #7c8f6e 20%, transparent)); }
   .prix { font-size:var(--fs-h2); font-weight:700; margin-bottom:20px; }
   .cta { display:inline-block; padding:15px 30px; border-radius:999px; background:${accent}; color:#fff; font-weight:600; text-decoration:none; }
   section { padding:60px 0; }
@@ -501,26 +509,30 @@ function templateMaison(c: ContenuTexte, images: ImagesSite, prixVente: string, 
   .zigzag-item:nth-child(even) { flex-direction:row-reverse; }
   .zigzag-num { font-family:'Fraunces',serif; font-size:var(--fs-h1); color:${accent}; flex-shrink:0; width:60px; }
   .zigzag-text { flex:1; font-size:var(--fs-body); }
-  .desc { background:#f1ece2; border-radius:20px; padding:44px; text-align:center; }
-  .desc p { max-width:600px; margin:0 auto; color:#4a4236; }
+  .desc { background:var(--site-surface); border-radius:20px; padding:44px; text-align:center; }
+  .desc p { max-width:600px; margin:0 auto; color:var(--site-text-muted); }
   .galerie { display:grid; grid-template-columns:1.2fr 1fr 1fr; gap:16px; align-items:center; }
   .galerie img:first-child { border-radius:50%; aspect-ratio:1; object-fit:cover; }
   .galerie img { width:100%; border-radius:14px; aspect-ratio:1; object-fit:cover; }
-  .reassurance { background:#f1ece2; }
+  .reassurance { background:var(--site-surface); }
   .reassurance-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:24px; text-align:center; }
   .reassurance-item { display:flex; flex-direction:column; align-items:center; gap:8px; }
   .reassurance-icon { font-size:var(--fs-h2); }
   .reassurance-titre { font-weight:600; font-size:var(--fs-body); }
-  .reassurance-texte { font-size:var(--fs-small); color:#6b5f4f; }
+  .reassurance-texte { font-size:var(--fs-small); color:var(--site-text-muted); }
   .cta-final { text-align:center; background:${accent}; color:#fff; border-radius:24px; padding:60px 30px; margin:0 24px 24px; }
   .cta-final h2 { color:#fff; }
   .cta-final .cta { background:#fff; color:${accent}; }
-  footer { text-align:center; padding:30px; color:#8a7d6a; font-size:var(--fs-small); }
+  footer { text-align:center; padding:30px; color:var(--site-text-muted); font-size:var(--fs-small); }
   @media(max-width:700px){ .zigzag-item,.zigzag-item:nth-child(even){flex-direction:column;text-align:center} .galerie{grid-template-columns:1fr} .reassurance-grid{grid-template-columns:1fr} }
   ${checkoutStyles({
+    // Checkout intégré au bandeau CTA final, à fond accent plein (inversion volontaire de
+    // contraste) — pas rattaché à --site-surface/--site-text globaux pour rester lisible
+    // quelle que soit la couleur d'accent choisie ensuite (même logique que le bouton CTA
+    // ci-dessus, voir cta-final .cta). modalBg/modalText restent alignés sur la page (safe).
     qtyBg: "rgba(255,255,255,.15)", qtyBorder: "rgba(255,255,255,.35)", qtyColor: "#fff",
     cardBg: "#fff", inputBg: "#faf7f2", inputBorder: "#e0d5c7", textColor: "#2b2620",
-    modalBg: "#faf7f2", modalText: "#2b2620",
+    modalBg: "var(--site-bg)", modalText: "var(--site-text)",
   })}
 </style></head>
 <body>
@@ -565,7 +577,7 @@ function templateMaison(c: ContenuTexte, images: ImagesSite, prixVente: string, 
 // ─── Template BEAUTÉ — pastel, élégant, avant/après ───────────────────────────
 
 function templateBeaute(c: ContenuTexte, images: ImagesSite, prixVente: string, prixBarre: string, reassurance: Reassurance): string {
-  const accent = "#ec4899";
+  const accent = "var(--site-accent)";
   const galerie = galerieImgs(images);
   const hasAvantApres = images.avant && images.apres;
   return `<!DOCTYPE html>
@@ -575,42 +587,46 @@ function templateBeaute(c: ContenuTexte, images: ImagesSite, prixVente: string, 
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
 <style>
   * { margin:0; padding:0; box-sizing:border-box; }
-  :root { --fs-h1:clamp(2.4rem,6vw,3.6rem); --fs-h2:clamp(1.6rem,3vw,2.2rem); --fs-body:1rem; --fs-small:.8rem; }
-  body { background:linear-gradient(180deg,#fff1f5,#f3e8ff 40%,#fff 80%); color:#3a2e35; font-family:'Inter',sans-serif; line-height:1.65; }
+  :root {
+    --site-bg:linear-gradient(180deg,#fff1f5,#f3e8ff 40%,#fff 80%); --site-text:#3a2e35; --site-text-muted:#5c4a53;
+    --site-accent:#ec4899; --site-surface:#fff; --site-border:color-mix(in srgb, #ec4899 20%, transparent);
+    --fs-h1:clamp(2.4rem,6vw,3.6rem); --fs-h2:clamp(1.6rem,3vw,2.2rem); --fs-body:1rem; --fs-small:.8rem;
+  }
+  body { background:var(--site-bg); color:var(--site-text); font-family:'Inter',sans-serif; line-height:1.65; }
   h1,h2 { font-family:'Cormorant Garamond',serif; font-weight:700; }
   .wrap { max-width:900px; margin:0 auto; padding:0 24px; }
   .hero { text-align:center; padding:80px 24px 40px; position:relative; }
   .hero h1 { font-size:var(--fs-h1); margin-bottom:14px; }
-  .hero .sous { color:#5c4a53; font-size:var(--fs-body); max-width:480px; margin:0 auto 26px; }
+  .hero .sous { color:var(--site-text-muted); font-size:var(--fs-body); max-width:480px; margin:0 auto 26px; }
   .hero-img-wrap { position:relative; width:320px; height:320px; margin:24px auto 0; }
-  .hero-img-wrap::before { content:""; position:absolute; inset:-14px; border-radius:50%; background:linear-gradient(135deg,${accent}33,#d4a57433); }
-  .hero-img-wrap img { width:100%; height:100%; object-fit:cover; border-radius:50%; position:relative; box-shadow:0 20px 50px rgba(236,72,153,.2); }
+  .hero-img-wrap::before { content:""; position:absolute; inset:-14px; border-radius:50%; background:linear-gradient(135deg,color-mix(in srgb, ${accent} 20%, transparent),color-mix(in srgb, #d4a574 20%, transparent)); }
+  .hero-img-wrap img { width:100%; height:100%; object-fit:cover; border-radius:50%; position:relative; box-shadow:0 20px 50px color-mix(in srgb, ${accent} 20%, transparent); }
   .hero-img-wrap .placeholder { width:100%; height:100%; border-radius:50%; background:linear-gradient(135deg,${accent},#d4a574); position:relative; }
   .prix { font-size:var(--fs-h2); font-weight:700; margin-bottom:22px; }
   .cta { display:inline-block; padding:15px 34px; border-radius:999px; background:${accent}; color:#fff; font-weight:600; text-decoration:none; letter-spacing:.02em; }
   section { padding:56px 0; }
   h2 { font-size:var(--fs-h2); text-align:center; margin-bottom:32px; }
   .pills { display:flex; flex-wrap:wrap; gap:12px; justify-content:center; }
-  .pill { background:#fff; border:1px solid ${accent}33; border-radius:999px; padding:12px 22px; font-size:var(--fs-body); box-shadow:0 4px 16px rgba(236,72,153,.08); }
-  .desc { text-align:center; max-width:560px; margin:0 auto; color:#5c4a53; }
+  .pill { background:var(--site-surface); border:1px solid var(--site-border); border-radius:999px; padding:12px 22px; font-size:var(--fs-body); box-shadow:0 4px 16px color-mix(in srgb, ${accent} 8%, transparent); }
+  .desc { text-align:center; max-width:560px; margin:0 auto; color:var(--site-text-muted); }
   .avant-apres { display:grid; grid-template-columns:1fr 1fr; gap:16px; max-width:600px; margin:0 auto; }
   .avant-apres figure { margin:0; text-align:center; }
   .avant-apres img { width:100%; aspect-ratio:1; object-fit:cover; border-radius:16px; }
-  .avant-apres figcaption { margin-top:8px; font-size:var(--fs-small); font-weight:600; color:#5c4a53; text-transform:uppercase; letter-spacing:.06em; }
+  .avant-apres figcaption { margin-top:8px; font-size:var(--fs-small); font-weight:600; color:var(--site-text-muted); text-transform:uppercase; letter-spacing:.06em; }
   .galerie { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; }
   .galerie img { width:100%; aspect-ratio:1; object-fit:cover; border-radius:16px; }
   .reassurance-grid { display:flex; justify-content:center; gap:32px; flex-wrap:wrap; text-align:center; }
   .reassurance-item { max-width:180px; }
   .reassurance-icon { font-size:var(--fs-h2); display:block; margin-bottom:6px; }
   .reassurance-titre { font-weight:600; font-size:var(--fs-body); }
-  .reassurance-texte { font-size:var(--fs-small); color:#5c4a53; margin-top:2px; }
-  .cta-final { text-align:center; background:#fff; border:1px solid ${accent}33; border-radius:28px; padding:56px 30px; margin:0 24px 24px; }
-  footer { text-align:center; padding:30px; color:#9c8a93; font-size:var(--fs-small); }
+  .reassurance-texte { font-size:var(--fs-small); color:var(--site-text-muted); margin-top:2px; }
+  .cta-final { text-align:center; background:var(--site-surface); border:1px solid var(--site-border); border-radius:28px; padding:56px 30px; margin:0 24px 24px; }
+  footer { text-align:center; padding:30px; color:var(--site-text-muted); font-size:var(--fs-small); }
   @media(max-width:700px){ .galerie{grid-template-columns:1fr 1fr} .hero-img-wrap{width:240px;height:240px} }
   ${checkoutStyles({
-    qtyBg: "#fff", qtyBorder: `${accent}33`, qtyColor: accent,
-    cardBg: "#fdf2f7", inputBg: "#fff", inputBorder: `${accent}33`, textColor: "#3a2e35",
-    modalBg: "#fff", modalText: "#3a2e35",
+    qtyBg: "var(--site-surface)", qtyBorder: "var(--site-border)", qtyColor: accent,
+    cardBg: "color-mix(in srgb, " + accent + " 4%, var(--site-surface))", inputBg: "var(--site-surface)", inputBorder: "var(--site-border)", textColor: "var(--site-text)",
+    modalBg: "var(--site-surface)", modalText: "var(--site-text)",
   })}
 </style></head>
 <body>
@@ -660,7 +676,7 @@ function templateBeaute(c: ContenuTexte, images: ImagesSite, prixVente: string, 
 // ─── Template GÉNÉRIQUE — neutre, universel, structure classique ─────────────
 
 function templateGenerique(c: ContenuTexte, images: ImagesSite, prixVente: string, prixBarre: string, reassurance: Reassurance): string {
-  const accent = "#2563eb";
+  const accent = "var(--site-accent)";
   const galerie = galerieImgs(images);
   return `<!DOCTYPE html>
 <html lang="fr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -669,42 +685,50 @@ function templateGenerique(c: ContenuTexte, images: ImagesSite, prixVente: strin
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
 <style>
   * { margin:0; padding:0; box-sizing:border-box; }
-  :root { --fs-h1:clamp(2rem,4.5vw,2.8rem); --fs-h2:clamp(1.4rem,3vw,1.9rem); --fs-body:1rem; --fs-small:.8rem; }
-  body { background:#fff; color:#111827; font-family:'Inter',system-ui,sans-serif; line-height:1.6; }
+  :root {
+    --site-bg:#fff; --site-text:#111827; --site-text-muted:#4b5563;
+    --site-accent:#2563eb; --site-surface:#f9fafb; --site-border:#e5e7eb;
+    --fs-h1:clamp(2rem,4.5vw,2.8rem); --fs-h2:clamp(1.4rem,3vw,1.9rem); --fs-body:1rem; --fs-small:.8rem;
+  }
+  body { background:var(--site-bg); color:var(--site-text); font-family:'Inter',system-ui,sans-serif; line-height:1.6; }
   .wrap { max-width:960px; margin:0 auto; padding:0 24px; }
   .hero-block { display:flex; flex-direction:column; }
   .hero-img-full { width:100%; max-height:420px; object-fit:cover; }
-  .hero-img-full.placeholder { height:320px; background:linear-gradient(135deg,${accent}22,#47556922); }
+  .hero-img-full.placeholder { height:320px; background:linear-gradient(135deg,color-mix(in srgb, ${accent} 13%, transparent),color-mix(in srgb, #475569 13%, transparent)); }
   .hero { text-align:center; padding:50px 24px 60px; }
   .hero h1 { font-size:var(--fs-h1); font-weight:800; margin-bottom:14px; }
-  .hero .sous { color:#4b5563; font-size:var(--fs-body); max-width:520px; margin:0 auto 26px; }
+  .hero .sous { color:var(--site-text-muted); font-size:var(--fs-body); max-width:520px; margin:0 auto 26px; }
   .prix { font-size:var(--fs-h2); font-weight:800; margin-bottom:22px; }
   .cta { display:inline-block; padding:14px 30px; border-radius:8px; background:${accent}; color:#fff; font-weight:600; text-decoration:none; }
   section { padding:56px 0; }
   h2 { font-size:var(--fs-h2); font-weight:800; text-align:center; margin-bottom:32px; }
   .grid3 { display:grid; grid-template-columns:repeat(3,1fr); gap:20px; }
-  .card { border:1px solid #e5e7eb; border-radius:12px; padding:24px; }
-  .card p { font-size:var(--fs-body); color:#374151; }
-  .desc { max-width:640px; margin:0 auto; text-align:center; color:#374151; }
+  .card { border:1px solid var(--site-border); border-radius:12px; padding:24px; }
+  .card p { font-size:var(--fs-body); color:var(--site-text-muted); }
+  .desc { max-width:640px; margin:0 auto; text-align:center; color:var(--site-text-muted); }
   .galerie { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; }
   .galerie img { width:100%; aspect-ratio:1; object-fit:cover; border-radius:10px; }
-  .reassurance { background:#f9fafb; border-top:1px solid #e5e7eb; border-bottom:1px solid #e5e7eb; }
+  .reassurance { background:var(--site-surface); border-top:1px solid var(--site-border); border-bottom:1px solid var(--site-border); }
   .reassurance-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:20px; text-align:center; }
   .reassurance-icon { font-size:var(--fs-h2); display:block; margin-bottom:6px; }
   .reassurance-titre { font-weight:600; font-size:var(--fs-body); }
-  .reassurance-texte { font-size:var(--fs-small); color:#6b7280; margin-top:2px; }
+  .reassurance-texte { font-size:var(--fs-small); color:var(--site-text-muted); margin-top:2px; }
   .cta-final { text-align:center; background:#111827; color:#fff; border-radius:16px; padding:56px 30px; margin:0 24px 24px; }
   .cta-final .cta { background:${accent}; }
-  footer { text-align:center; padding:30px; color:#9ca3af; font-size:var(--fs-small); }
+  footer { text-align:center; padding:30px; color:var(--site-text-muted); font-size:var(--fs-small); }
   @media(max-width:700px){
     .grid3,.galerie,.reassurance-grid{grid-template-columns:1fr}
     .hero-block .hero-img-full{order:2}
     .hero-block .hero{order:1}
   }
   ${checkoutStyles({
+    // Checkout intégré au bandeau CTA final sombre (#111827), volontairement indépendant de
+    // --site-bg/--site-text globaux (page claire) pour rester lisible quelle que soit la
+    // combinaison choisie — même exception que templateMaison. modalBg/modalText restent
+    // alignés sur la page (safe, hors du bandeau inversé).
     qtyBg: "rgba(255,255,255,.08)", qtyBorder: "rgba(255,255,255,.2)", qtyColor: "#fff",
     cardBg: "rgba(255,255,255,.05)", inputBg: "rgba(255,255,255,.08)", inputBorder: "rgba(255,255,255,.2)", textColor: "#fff",
-    modalBg: "#fff", modalText: "#111827",
+    modalBg: "var(--site-bg)", modalText: "var(--site-text)",
   })}
 </style></head>
 <body>
@@ -753,8 +777,8 @@ function templateGenerique(c: ContenuTexte, images: ImagesSite, prixVente: strin
 // #produits au lieu d'un unique bloc de commande ; chaque carte gère sa propre commande.
 
 function templateTechBoutique(nomBoutique: string, descriptionBoutique: string, produits: ProduitBoutique[], reassurance: Reassurance, ctaLabel: string): string {
-  const accent = "#22d3ee";
-  const accent2 = "#7c3aed";
+  const accent = "var(--site-accent)";
+  const accent2 = "var(--site-accent-2)";
   return `<!DOCTYPE html>
 <html lang="fr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>${escapeHtml(nomBoutique)}</title>
@@ -762,33 +786,37 @@ function templateTechBoutique(nomBoutique: string, descriptionBoutique: string, 
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
 <style>
   * { margin:0; padding:0; box-sizing:border-box; }
-  :root { --fs-h1:clamp(2.2rem,5vw,3.4rem); --fs-h2:clamp(1.6rem,3vw,2.2rem); --fs-body:1rem; --fs-small:.8rem; }
-  body { background:#0a0a0f; color:#f0f0f8; font-family:'Inter',sans-serif; line-height:1.6; }
+  :root {
+    --site-bg:#0a0a0f; --site-text:#f0f0f8; --site-text-muted:rgba(240,240,248,.6);
+    --site-accent:#22d3ee; --site-accent-2:#7c3aed; --site-surface:#16161d; --site-border:rgba(255,255,255,.1);
+    --fs-h1:clamp(2.2rem,5vw,3.4rem); --fs-h2:clamp(1.6rem,3vw,2.2rem); --fs-body:1rem; --fs-small:.8rem;
+  }
+  body { background:var(--site-bg); color:var(--site-text); font-family:'Inter',sans-serif; line-height:1.6; }
   h1,h2 { font-family:'Space Grotesk',sans-serif; }
   .wrap { max-width:1100px; margin:0 auto; padding:0 24px; }
   .hero { min-height:60vh; display:flex; align-items:center; padding:60px 0; background:
-    radial-gradient(circle at 80% 20%, ${accent2}22, transparent 50%),
-    radial-gradient(circle at 20% 80%, ${accent}22, transparent 50%); text-align:center; }
+    radial-gradient(circle at 80% 20%, color-mix(in srgb, ${accent2} 13%, transparent), transparent 50%),
+    radial-gradient(circle at 20% 80%, color-mix(in srgb, ${accent} 13%, transparent), transparent 50%); text-align:center; }
   .hero .wrap { display:flex; flex-direction:column; align-items:center; }
-  .badge { display:inline-block; padding:6px 14px; border-radius:999px; background:${accent}1a; border:1px solid ${accent}44; color:${accent}; font-size:var(--fs-small); font-weight:600; letter-spacing:.06em; text-transform:uppercase; margin-bottom:20px; }
+  .badge { display:inline-block; padding:6px 14px; border-radius:999px; background:color-mix(in srgb, ${accent} 10%, transparent); border:1px solid color-mix(in srgb, ${accent} 27%, transparent); color:${accent}; font-size:var(--fs-small); font-weight:600; letter-spacing:.06em; text-transform:uppercase; margin-bottom:20px; }
   .hero h1 { font-size:var(--fs-h1); font-weight:700; line-height:1.1; margin-bottom:18px; }
-  .hero .sous { color:rgba(240,240,248,.6); font-size:var(--fs-body); margin-bottom:28px; max-width:560px; }
-  .cta { display:inline-block; padding:16px 32px; border-radius:10px; background:${accent}; color:#04141a; font-weight:700; text-decoration:none; box-shadow:0 0 32px ${accent}55; }
+  .hero .sous { color:var(--site-text-muted); font-size:var(--fs-body); margin-bottom:28px; max-width:560px; }
+  .cta { display:inline-block; padding:16px 32px; border-radius:10px; background:${accent}; color:#04141a; font-weight:700; text-decoration:none; box-shadow:0 0 32px color-mix(in srgb, ${accent} 33%, transparent); }
   section { padding:70px 0; }
   h2 { font-size:var(--fs-h2); margin-bottom:32px; text-align:center; }
-  .reassurance { border-top:1px solid rgba(255,255,255,.08); }
+  .reassurance { border-top:1px solid var(--site-border); }
   .reassurance-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:20px; }
   .reassurance-item { display:flex; gap:12px; align-items:flex-start; }
   .reassurance-icon { font-size:var(--fs-h2); }
   .reassurance-titre { font-weight:600; font-size:var(--fs-body); }
-  .reassurance-texte { font-size:var(--fs-small); color:rgba(240,240,248,.55); margin-top:2px; }
-  footer { text-align:center; padding:30px; color:rgba(240,240,248,.4); font-size:var(--fs-small); }
+  .reassurance-texte { font-size:var(--fs-small); color:var(--site-text-muted); margin-top:2px; }
+  footer { text-align:center; padding:30px; color:var(--site-text-muted); font-size:var(--fs-small); }
   @media(max-width:700px){ .reassurance-grid{grid-template-columns:1fr} }
-  ${grilleStyles(accent, "rgba(255,255,255,.04)", "rgba(255,255,255,.1)", "#f0f0f8", "rgba(240,240,248,.6)")}
+  ${grilleStyles(accent, "var(--site-surface)", "var(--site-border)", "var(--site-text)", "var(--site-text-muted)")}
   ${checkoutStyles({
-    qtyBg: "rgba(255,255,255,.08)", qtyBorder: "rgba(255,255,255,.2)", qtyColor: "#fff",
-    cardBg: "rgba(255,255,255,.06)", inputBg: "rgba(255,255,255,.08)", inputBorder: "rgba(255,255,255,.2)", textColor: "#fff",
-    modalBg: "#13131a", modalText: "#f0f0f8",
+    qtyBg: "var(--site-surface)", qtyBorder: "var(--site-border)", qtyColor: "var(--site-text)",
+    cardBg: "var(--site-surface)", inputBg: "var(--site-surface)", inputBorder: "var(--site-border)", textColor: "var(--site-text)",
+    modalBg: "var(--site-surface)", modalText: "var(--site-text)",
   })}
 </style></head>
 <body>
@@ -810,7 +838,7 @@ function templateTechBoutique(nomBoutique: string, descriptionBoutique: string, 
 }
 
 function templateMaisonBoutique(nomBoutique: string, descriptionBoutique: string, produits: ProduitBoutique[], reassurance: Reassurance, ctaLabel: string): string {
-  const accent = "#c2703d";
+  const accent = "var(--site-accent)";
   return `<!DOCTYPE html>
 <html lang="fr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>${escapeHtml(nomBoutique)}</title>
@@ -818,31 +846,37 @@ function templateMaisonBoutique(nomBoutique: string, descriptionBoutique: string
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
 <style>
   * { margin:0; padding:0; box-sizing:border-box; }
-  :root { --fs-h1:clamp(2rem,5vw,3rem); --fs-h2:clamp(1.5rem,3vw,2rem); --fs-body:1rem; --fs-small:.8rem; }
-  body { background:#faf7f2; color:#2b2620; font-family:'Inter',sans-serif; line-height:1.65; }
+  :root {
+    --site-bg:#faf7f2; --site-text:#2b2620; --site-text-muted:#6b5f4f;
+    --site-accent:#c2703d; --site-surface:#f1ece2; --site-border:#e0d5c7;
+    --fs-h1:clamp(2rem,5vw,3rem); --fs-h2:clamp(1.5rem,3vw,2rem); --fs-body:1rem; --fs-small:.8rem;
+  }
+  body { background:var(--site-bg); color:var(--site-text); font-family:'Inter',sans-serif; line-height:1.65; }
   h1,h2 { font-family:'Fraunces',serif; font-weight:600; }
   .wrap { max-width:1000px; margin:0 auto; padding:0 24px; }
   .hero { text-align:center; padding:90px 24px 60px; }
   .hero h1 { font-size:var(--fs-h1); margin-bottom:16px; }
-  .hero .sous { color:#6b5f4f; font-size:var(--fs-body); max-width:520px; margin:0 auto 28px; }
+  .hero .sous { color:var(--site-text-muted); font-size:var(--fs-body); max-width:520px; margin:0 auto 28px; }
   .cta { display:inline-block; padding:15px 30px; border-radius:999px; background:${accent}; color:#fff; font-weight:600; text-decoration:none; }
   section { padding:60px 0; }
   h2 { font-size:var(--fs-h2); text-align:center; margin-bottom:40px; }
-  .reassurance { background:#f1ece2; }
+  .reassurance { background:var(--site-surface); }
   .reassurance-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:24px; text-align:center; }
   .reassurance-item { display:flex; flex-direction:column; align-items:center; gap:8px; }
   .reassurance-icon { font-size:var(--fs-h2); }
   .reassurance-titre { font-weight:600; font-size:var(--fs-body); }
-  .reassurance-texte { font-size:var(--fs-small); color:#6b5f4f; }
-  footer { text-align:center; padding:30px; color:#8a7d6a; font-size:var(--fs-small); }
+  .reassurance-texte { font-size:var(--fs-small); color:var(--site-text-muted); }
+  footer { text-align:center; padding:30px; color:var(--site-text-muted); font-size:var(--fs-small); }
   @media(max-width:700px){ .reassurance-grid{grid-template-columns:1fr} }
-  ${grilleStyles(accent, "#fff", "#e0d5c7", "#2b2620", "#6b5f4f")}
+  ${grilleStyles(accent, "var(--site-surface)", "var(--site-border)", "var(--site-text)", "var(--site-text-muted)")}
   ${checkoutStyles({
-    // Cartes produit à fond blanc ici (contrairement au bloc CTA final sombre du template
-    // produit d'origine) — qty/texte foncés, pas blancs, sous peine d'être invisibles.
-    qtyBg: "#f1ece2", qtyBorder: "#e0d5c7", qtyColor: "#2b2620",
-    cardBg: "#f1ece2", inputBg: "#fff", inputBorder: "#e0d5c7", textColor: "#2b2620",
-    modalBg: "#faf7f2", modalText: "#2b2620",
+    // Pas de bloc CTA final sombre ici (mode boutique — chaque carte gère sa propre commande
+    // sur le fond clair de la grille) : contrairement à templateMaison (mono-produit), rien
+    // n'empêche de rattacher entièrement ce bloc aux tokens globaux — qty/texte foncés sur
+    // fond clair, cohérent avec le reste de la page quelle que soit la couleur d'accent.
+    qtyBg: "var(--site-surface)", qtyBorder: "var(--site-border)", qtyColor: "var(--site-text)",
+    cardBg: "var(--site-surface)", inputBg: "var(--site-bg)", inputBorder: "var(--site-border)", textColor: "var(--site-text)",
+    modalBg: "var(--site-bg)", modalText: "var(--site-text)",
   })}
 </style></head>
 <body>
@@ -863,7 +897,7 @@ function templateMaisonBoutique(nomBoutique: string, descriptionBoutique: string
 }
 
 function templateBeauteBoutique(nomBoutique: string, descriptionBoutique: string, produits: ProduitBoutique[], reassurance: Reassurance, ctaLabel: string): string {
-  const accent = "#ec4899";
+  const accent = "var(--site-accent)";
   return `<!DOCTYPE html>
 <html lang="fr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>${escapeHtml(nomBoutique)}</title>
@@ -871,13 +905,17 @@ function templateBeauteBoutique(nomBoutique: string, descriptionBoutique: string
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
 <style>
   * { margin:0; padding:0; box-sizing:border-box; }
-  :root { --fs-h1:clamp(2.4rem,6vw,3.6rem); --fs-h2:clamp(1.6rem,3vw,2.2rem); --fs-body:1rem; --fs-small:.8rem; }
-  body { background:linear-gradient(180deg,#fff1f5,#f3e8ff 40%,#fff 80%); color:#3a2e35; font-family:'Inter',sans-serif; line-height:1.65; }
+  :root {
+    --site-bg:linear-gradient(180deg,#fff1f5,#f3e8ff 40%,#fff 80%); --site-text:#3a2e35; --site-text-muted:#5c4a53;
+    --site-accent:#ec4899; --site-surface:#fff; --site-border:color-mix(in srgb, #ec4899 20%, transparent);
+    --fs-h1:clamp(2.4rem,6vw,3.6rem); --fs-h2:clamp(1.6rem,3vw,2.2rem); --fs-body:1rem; --fs-small:.8rem;
+  }
+  body { background:var(--site-bg); color:var(--site-text); font-family:'Inter',sans-serif; line-height:1.65; }
   h1,h2 { font-family:'Cormorant Garamond',serif; font-weight:700; }
   .wrap { max-width:960px; margin:0 auto; padding:0 24px; }
   .hero { text-align:center; padding:80px 24px 40px; }
   .hero h1 { font-size:var(--fs-h1); margin-bottom:14px; }
-  .hero .sous { color:#5c4a53; font-size:var(--fs-body); max-width:480px; margin:0 auto 26px; }
+  .hero .sous { color:var(--site-text-muted); font-size:var(--fs-body); max-width:480px; margin:0 auto 26px; }
   .cta { display:inline-block; padding:15px 34px; border-radius:999px; background:${accent}; color:#fff; font-weight:600; text-decoration:none; letter-spacing:.02em; }
   section { padding:56px 0; }
   h2 { font-size:var(--fs-h2); text-align:center; margin-bottom:32px; }
@@ -885,13 +923,13 @@ function templateBeauteBoutique(nomBoutique: string, descriptionBoutique: string
   .reassurance-item { max-width:180px; }
   .reassurance-icon { font-size:var(--fs-h2); display:block; margin-bottom:6px; }
   .reassurance-titre { font-weight:600; font-size:var(--fs-body); }
-  .reassurance-texte { font-size:var(--fs-small); color:#5c4a53; margin-top:2px; }
-  footer { text-align:center; padding:30px; color:#9c8a93; font-size:var(--fs-small); }
-  ${grilleStyles(accent, "#fff", `${accent}33`, "#3a2e35", "#5c4a53")}
+  .reassurance-texte { font-size:var(--fs-small); color:var(--site-text-muted); margin-top:2px; }
+  footer { text-align:center; padding:30px; color:var(--site-text-muted); font-size:var(--fs-small); }
+  ${grilleStyles(accent, "var(--site-surface)", "var(--site-border)", "var(--site-text)", "var(--site-text-muted)")}
   ${checkoutStyles({
-    qtyBg: "#fff", qtyBorder: `${accent}33`, qtyColor: accent,
-    cardBg: "#fdf2f7", inputBg: "#fff", inputBorder: `${accent}33`, textColor: "#3a2e35",
-    modalBg: "#fff", modalText: "#3a2e35",
+    qtyBg: "var(--site-surface)", qtyBorder: "var(--site-border)", qtyColor: accent,
+    cardBg: "color-mix(in srgb, " + accent + " 4%, var(--site-surface))", inputBg: "var(--site-surface)", inputBorder: "var(--site-border)", textColor: "var(--site-text)",
+    modalBg: "var(--site-surface)", modalText: "var(--site-text)",
   })}
 </style></head>
 <body>
@@ -912,7 +950,7 @@ function templateBeauteBoutique(nomBoutique: string, descriptionBoutique: string
 }
 
 function templateGeneriqueBoutique(nomBoutique: string, descriptionBoutique: string, produits: ProduitBoutique[], reassurance: Reassurance, ctaLabel: string): string {
-  const accent = "#2563eb";
+  const accent = "var(--site-accent)";
   return `<!DOCTYPE html>
 <html lang="fr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>${escapeHtml(nomBoutique)}</title>
@@ -920,29 +958,33 @@ function templateGeneriqueBoutique(nomBoutique: string, descriptionBoutique: str
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
 <style>
   * { margin:0; padding:0; box-sizing:border-box; }
-  :root { --fs-h1:clamp(2rem,4.5vw,2.8rem); --fs-h2:clamp(1.4rem,3vw,1.9rem); --fs-body:1rem; --fs-small:.8rem; }
-  body { background:#fff; color:#111827; font-family:'Inter',system-ui,sans-serif; line-height:1.6; }
+  :root {
+    --site-bg:#fff; --site-text:#111827; --site-text-muted:#4b5563;
+    --site-accent:#2563eb; --site-surface:#f9fafb; --site-border:#e5e7eb;
+    --fs-h1:clamp(2rem,4.5vw,2.8rem); --fs-h2:clamp(1.4rem,3vw,1.9rem); --fs-body:1rem; --fs-small:.8rem;
+  }
+  body { background:var(--site-bg); color:var(--site-text); font-family:'Inter',system-ui,sans-serif; line-height:1.6; }
   .wrap { max-width:1040px; margin:0 auto; padding:0 24px; }
   .hero { text-align:center; padding:70px 24px 60px; }
   .hero h1 { font-size:var(--fs-h1); font-weight:800; margin-bottom:14px; }
-  .hero .sous { color:#4b5563; font-size:var(--fs-body); max-width:520px; margin:0 auto 26px; }
+  .hero .sous { color:var(--site-text-muted); font-size:var(--fs-body); max-width:520px; margin:0 auto 26px; }
   .cta { display:inline-block; padding:14px 30px; border-radius:8px; background:${accent}; color:#fff; font-weight:600; text-decoration:none; }
   section { padding:56px 0; }
   h2 { font-size:var(--fs-h2); font-weight:800; text-align:center; margin-bottom:32px; }
-  .reassurance { background:#f9fafb; border-top:1px solid #e5e7eb; border-bottom:1px solid #e5e7eb; }
+  .reassurance { background:var(--site-surface); border-top:1px solid var(--site-border); border-bottom:1px solid var(--site-border); }
   .reassurance-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:20px; text-align:center; }
   .reassurance-icon { font-size:var(--fs-h2); display:block; margin-bottom:6px; }
   .reassurance-titre { font-weight:600; font-size:var(--fs-body); }
-  .reassurance-texte { font-size:var(--fs-small); color:#6b7280; margin-top:2px; }
-  footer { text-align:center; padding:30px; color:#9ca3af; font-size:var(--fs-small); }
+  .reassurance-texte { font-size:var(--fs-small); color:var(--site-text-muted); margin-top:2px; }
+  footer { text-align:center; padding:30px; color:var(--site-text-muted); font-size:var(--fs-small); }
   @media(max-width:700px){ .reassurance-grid{grid-template-columns:1fr} }
-  ${grilleStyles(accent, "#fff", "#e5e7eb", "#111827", "#6b7280")}
+  ${grilleStyles(accent, "var(--site-surface)", "var(--site-border)", "var(--site-text)", "var(--site-text-muted)")}
   ${checkoutStyles({
-    // Cartes produit à fond blanc ici (contrairement au bloc CTA final sombre du template
-    // produit d'origine) — qty/texte foncés, pas blancs, sous peine d'être invisibles.
-    qtyBg: "#f3f4f6", qtyBorder: "#e5e7eb", qtyColor: "#111827",
-    cardBg: "#f9fafb", inputBg: "#fff", inputBorder: "#e5e7eb", textColor: "#111827",
-    modalBg: "#fff", modalText: "#111827",
+    // Pas de bloc CTA final sombre ici (mode boutique) : contrairement à templateGenerique
+    // (mono-produit), rien n'empêche de rattacher entièrement ce bloc aux tokens globaux.
+    qtyBg: "var(--site-bg)", qtyBorder: "var(--site-border)", qtyColor: "var(--site-text)",
+    cardBg: "var(--site-surface)", inputBg: "var(--site-bg)", inputBorder: "var(--site-border)", textColor: "var(--site-text)",
+    modalBg: "var(--site-bg)", modalText: "var(--site-text)",
   })}
 </style></head>
 <body>

@@ -15,6 +15,8 @@ import {
   type Reassurance,
 } from "@/lib/site-templates";
 import type { BoutiqueDraft } from "@/lib/site-builder-handoff";
+import { applyTokenOverrides } from "@/lib/color-tokens";
+import ColorTokenPanel from "@/components/site-builder/ColorTokenPanel";
 
 type AuditLive = {
   score_global: number;
@@ -76,6 +78,13 @@ export default function TemplateEditor({ boutiqueDraft }: { boutiqueDraft?: Bout
     [categorie, contenu, images, prixVente, prixBarre, reassurance, boutiqueDraft]
   );
 
+  // Personnalisation post-génération (couleurs, voir ColorTokenPanel) — html ci-dessus est
+  // recalculé à chaque changement de champ (useMemo), donc les couleurs choisies ne peuvent
+  // pas vivre "dans" ce HTML directement : elles seraient écrasées par les valeurs par défaut
+  // du template au prochain recalcul. On les garde à part et on les réapplique par-dessus.
+  const [colorOverrides, setColorOverrides] = useState<Record<string, string>>({});
+  const finalHtml = useMemo(() => applyTokenOverrides(html, colorOverrides), [html, colorOverrides]);
+
   // Score d'audit IA live — débouncé, réutilise l'auditeur existant (/api/audit-site)
   const [auditResult, setAuditResult] = useState<AuditLive | null>(null);
   const [auditLoading, setAuditLoading] = useState(false);
@@ -114,6 +123,9 @@ export default function TemplateEditor({ boutiqueDraft }: { boutiqueDraft?: Bout
   function changerCategorie(id: Categorie) {
     setCategorie(id);
     setContenu(TEXTES_DEFAUT[id]);
+    // Chaque catégorie a sa propre palette par défaut (lib/site-templates.ts) — un override
+    // choisi pour "tech" n'a pas de sens réappliqué tel quel sur "maison".
+    setColorOverrides({});
   }
 
   function reinitialiserTextes() {
@@ -156,7 +168,7 @@ export default function TemplateEditor({ boutiqueDraft }: { boutiqueDraft?: Bout
 
   async function handleDownload() {
     const nom = isBoutiqueMode ? boutiqueDraft?.nomBoutique || "Boutique" : contenu.titre || "Landing page";
-    const blob = new Blob([html], { type: "text/html;charset=utf-8" });
+    const blob = new Blob([finalHtml], { type: "text/html;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
@@ -169,7 +181,7 @@ export default function TemplateEditor({ boutiqueDraft }: { boutiqueDraft?: Bout
       const res = await fetch("/api/sites-generes", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ nom_produit: nom, html_content: html, boutique_id: boutiqueId }),
+        body: JSON.stringify({ nom_produit: nom, html_content: finalHtml, boutique_id: boutiqueId }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -482,6 +494,12 @@ export default function TemplateEditor({ boutiqueDraft }: { boutiqueDraft?: Bout
         {saveError && (
           <p className="text-[11px] text-[var(--danger)]">{saveError}</p>
         )}
+
+        <ColorTokenPanel
+          html={finalHtml}
+          onTokenChange={(name, value) => setColorOverrides((prev) => ({ ...prev, [name]: value }))}
+        />
+
         <div className="flex flex-col lg:flex-row gap-5 items-start">
           {/* Desktop */}
           <div className="flex-1 min-w-0 w-full rounded-2xl border border-[var(--border-strong)] overflow-hidden">
@@ -494,7 +512,7 @@ export default function TemplateEditor({ boutiqueDraft }: { boutiqueDraft?: Bout
             {/* Aperçu toujours rendu sur fond blanc, indépendamment du thème de l'app —
                 reflet fidèle du rendu réel de la landing page générée. */}
             <iframe
-              srcDoc={html}
+              srcDoc={finalHtml}
               title="Aperçu bureau de la landing page"
               className="w-full"
               style={{ height: "70vh", border: "none", background: "#fff" }}
@@ -508,7 +526,7 @@ export default function TemplateEditor({ boutiqueDraft }: { boutiqueDraft?: Bout
             <div className="rounded-[28px] border-4 border-[var(--border-strong)] bg-[var(--surface)] p-1.5 shadow-xl">
               <div className="rounded-[20px] overflow-hidden" style={{ width: 300, height: 620 }}>
                 <iframe
-                  srcDoc={html}
+                  srcDoc={finalHtml}
                   title="Aperçu mobile de la landing page"
                   style={{ width: 300, height: 620, border: "none", background: "#fff" }}
                   sandbox="allow-same-origin"

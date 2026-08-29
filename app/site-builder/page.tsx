@@ -5,6 +5,8 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import TemplateEditor from "./TemplateEditor";
 import BoutiqueProduitsEditor from "@/components/site-builder/BoutiqueProduitsEditor";
+import ColorTokenPanel from "@/components/site-builder/ColorTokenPanel";
+import { applyTokenValue } from "@/lib/color-tokens";
 import { htmlToLiquidSection } from "@/lib/html-to-liquid";
 import { readAndClearBoutiqueDraft, type BoutiqueDraft } from "@/lib/site-builder-handoff";
 
@@ -84,6 +86,18 @@ function SiteBuilderContent() {
   const [error, setError] = useState<string | null>(null);
   const [saveWarning, setSaveWarning] = useState<string | null>(null);
   const [savedSiteId, setSavedSiteId] = useState<string | null>(null);
+
+  // Personnalisation post-génération (couleurs, voir ColorTokenPanel) — sauvegarde la
+  // version modifiée dans sites_generes (PATCH), possible seulement une fois savedSiteId
+  // connu (la sauvegarde initiale, non bloquante, se termine après le passage à l'étape 3).
+  const [savingColors, setSavingColors] = useState(false);
+  const [colorSaveError, setColorSaveError] = useState<string | null>(null);
+  const [colorSaveSuccess, setColorSaveSuccess] = useState(false);
+  // true dès qu'une couleur a été changée sans être encore enregistrée — la publication
+  // Shopify (handlePushToShopify) lit html_content côté serveur depuis sites_generes, pas
+  // l'état generatedHtml du navigateur : sans ce garde-fou visuel, publier après avoir changé
+  // une couleur sans cliquer "Enregistrer" republierait silencieusement l'ancienne version.
+  const [colorsDirty, setColorsDirty] = useState(false);
 
   // Shopify
   const [shopifyConnected, setShopifyConnected] = useState<boolean | null>(null);
@@ -277,6 +291,35 @@ function SiteBuilderContent() {
     a.download = `${nom.replace(/\s+/g, "-").toLowerCase()}-section.liquid`;
     a.click();
     URL.revokeObjectURL(url);
+  }
+
+  async function handleSaveColors() {
+    if (!savedSiteId) {
+      setColorSaveError("Sauvegarde initiale du site pas encore terminée, réessaie dans un instant.");
+      return;
+    }
+    setSavingColors(true);
+    setColorSaveError(null);
+    setColorSaveSuccess(false);
+    try {
+      const response = await fetch(`/api/sites-generes/${savedSiteId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ html_content: generatedHtml }),
+      });
+      const json = await response.json();
+      if (!response.ok) {
+        setColorSaveError(json.error || "Impossible d'enregistrer ces couleurs.");
+        return;
+      }
+      setColorSaveSuccess(true);
+      setColorsDirty(false);
+      window.setTimeout(() => setColorSaveSuccess(false), 2500);
+    } catch {
+      setColorSaveError("Impossible de contacter le serveur.");
+    } finally {
+      setSavingColors(false);
+    }
   }
 
   function handleReset() {
@@ -792,6 +835,20 @@ function SiteBuilderContent() {
               />
             </div>
 
+            <div className="mt-6">
+              <ColorTokenPanel
+                html={generatedHtml}
+                onTokenChange={(name, value) => {
+                  setGeneratedHtml((prev) => applyTokenValue(prev, name, value));
+                  setColorsDirty(true);
+                }}
+                onSave={handleSaveColors}
+                saving={savingColors}
+                saveError={colorSaveError}
+                saveSuccess={colorSaveSuccess}
+              />
+            </div>
+
             {/* Publication Shopify */}
             <div className="mt-6 rounded-2xl bg-[var(--surface)] border border-[var(--border)] p-6">
               <div className="flex items-center gap-3 mb-5">
@@ -803,6 +860,12 @@ function SiteBuilderContent() {
                   </p>
                 </div>
               </div>
+
+              {colorsDirty ? (
+                <div className="mb-4 rounded-xl bg-amber-500/10 border border-amber-500/20 px-4 py-3 text-[var(--warning)] text-xs">
+                  ⚠️ Couleurs modifiées non enregistrées — clique "Enregistrer ces couleurs" ci-dessus avant de publier, sinon Shopify recevra l&apos;ancienne version.
+                </div>
+              ) : null}
 
               {shopifyConnected === null ? (
                 <p className="text-xs text-[var(--text-faint)]">Vérification de la connexion…</p>
