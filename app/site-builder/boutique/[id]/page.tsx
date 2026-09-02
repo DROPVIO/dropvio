@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { getBoutiquePublicUrl } from "@/lib/boutique-subdomains";
 import { slugify } from "@/lib/slugify";
 import ProduitsSuggeres from "@/components/ProduitsSuggeres";
 import { BOUTIQUE_PRODUITS_CAP, writeBoutiqueDraft } from "@/lib/site-builder-handoff";
@@ -101,7 +100,6 @@ export default function BoutiqueBuilderDetailPage() {
   const [suggestionsRefreshKey, setSuggestionsRefreshKey] = useState(0);
 
   const [reorderLoading, setReorderLoading] = useState(false);
-  const [togglingPublic, setTogglingPublic] = useState(false);
   const [savingColorMode, setSavingColorMode] = useState(false);
   const [savingAfficherStock, setSavingAfficherStock] = useState(false);
 
@@ -218,29 +216,6 @@ export default function BoutiqueBuilderDetailPage() {
       setMentionsError("Impossible de contacter le serveur.");
     } finally {
       setSavingMentions(false);
-    }
-  }
-
-  async function toggleEstPublique() {
-    if (!boutique) return;
-    setTogglingPublic(true);
-    setGlobalError(null);
-    try {
-      const response = await fetch(`/api/boutiques/${params?.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ est_publique: !boutique.est_publique }),
-      });
-      const json = await response.json();
-      if (!response.ok) {
-        setGlobalError(json.error || "Impossible de changer la visibilité de la boutique.");
-        return;
-      }
-      setBoutique({ ...boutique, est_publique: !boutique.est_publique });
-    } catch {
-      setGlobalError("Impossible de contacter le serveur.");
-    } finally {
-      setTogglingPublic(false);
     }
   }
 
@@ -642,22 +617,6 @@ export default function BoutiqueBuilderDetailPage() {
             </p>
           </div>
           <div className="flex flex-wrap gap-3">
-            <button
-              type="button"
-              onClick={toggleEstPublique}
-              disabled={!boutique || togglingPublic}
-              className={`rounded-2xl border px-4 py-3 text-sm font-semibold transition disabled:opacity-50 ${
-                boutique?.est_publique
-                  ? "border-emerald-500/40 bg-emerald-500/10 text-[var(--success)] hover:bg-emerald-500/20"
-                  : "border-[var(--border)] bg-[var(--surface-2)] text-[var(--text-primary)] hover:border-violet-500/40 hover:bg-violet-500/10"
-              }`}
-            >
-              {togglingPublic
-                ? "…"
-                : boutique?.est_publique
-                ? "🟢 Publique — rendre privée"
-                : "⚪ Privée — rendre publique"}
-            </button>
             <Link
               href="/site-builder/boutique"
               className="rounded-2xl border border-[var(--border)] bg-[var(--surface-2)] px-4 py-3 text-sm font-semibold text-[var(--text-primary)] transition hover:border-violet-500/40 hover:bg-violet-500/10"
@@ -679,27 +638,6 @@ export default function BoutiqueBuilderDetailPage() {
               <div>
                 <p className="text-xs uppercase tracking-[0.3em] text-violet-400">Boutique</p>
                 <h2 className="mt-2 text-2xl font-semibold text-[var(--text-primary)]">{boutique?.nom || "Chargement..."}</h2>
-                <div className="mt-2 flex flex-wrap items-center gap-2 text-sm text-[var(--text-faint)]">
-                  {boutique ? (
-                    <a
-                      href={getBoutiquePublicUrl(boutique.slug)}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1 rounded-xl border border-[var(--border)] bg-[var(--surface-2)] px-3 py-1.5 font-semibold text-[var(--text-primary)] transition hover:border-violet-500/40 hover:bg-violet-500/10"
-                    >
-                      Ouvrir la boutique publique ↗
-                    </a>
-                  ) : (
-                    "..."
-                  )}
-                  {boutique ? (
-                    boutique.est_publique ? (
-                      <span className="text-[var(--success)]">— accessible à tous</span>
-                    ) : (
-                      <span className="text-[var(--warning)]">— privée, non accessible tant qu&apos;elle n&apos;est pas publiée</span>
-                    )
-                  ) : null}
-                </div>
               </div>
             </div>
 
