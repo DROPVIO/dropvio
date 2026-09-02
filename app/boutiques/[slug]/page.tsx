@@ -227,7 +227,9 @@ export default async function BoutiquePage({
                 <p>↩ Retour sous 14 jours</p>
               </div>
             </div>
-            <BoutiqueCart />
+            <div id="panier" className="scroll-mt-24">
+              <BoutiqueCart />
+            </div>
           </aside>
         </div>
       </section>
