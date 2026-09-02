@@ -172,6 +172,7 @@ export default function ParametresModal({
   const [profileMsg, setProfileMsg] = useState<{ ok: boolean; text: string } | null>(null);
 
   // Password
+  const [currentPwd, setCurrentPwd] = useState("");
   const [newPwd, setNewPwd] = useState("");
   const [confirmPwd, setConfirmPwd] = useState("");
   const [changingPwd, setChangingPwd] = useState(false);
@@ -323,17 +324,33 @@ export default function ParametresModal({
   }
 
   async function handleChangePassword() {
+    if (!currentPwd) { setPwdMsg({ ok: false, text: "Saisis ton mot de passe actuel." }); return; }
     if (!newPwd || newPwd.length < 6) { setPwdMsg({ ok: false, text: "Minimum 6 caractères." }); return; }
     if (newPwd !== confirmPwd) { setPwdMsg({ ok: false, text: "Les mots de passe ne correspondent pas." }); return; }
+    if (!user.email) { setPwdMsg({ ok: false, text: "Impossible de vérifier ton mot de passe actuel." }); return; }
     setChangingPwd(true);
     setPwdMsg(null);
+
+    // Supabase n'expose pas de vérification directe du mot de passe actuel : on ré-authentifie
+    // avec signInWithPassword (échoue si le mot de passe actuel est faux) avant d'autoriser
+    // updateUser, pour ne pas permettre de changer le mot de passe avec juste une session active.
+    const { error: verifyError } = await supabase.auth.signInWithPassword({
+      email: user.email,
+      password: currentPwd,
+    });
+    if (verifyError) {
+      setChangingPwd(false);
+      setPwdMsg({ ok: false, text: "Mot de passe actuel incorrect." });
+      return;
+    }
+
     const { error } = await supabase.auth.updateUser({ password: newPwd });
     setChangingPwd(false);
     if (error) {
       setPwdMsg({ ok: false, text: error.message });
     } else {
       setPwdMsg({ ok: true, text: "Mot de passe modifié avec succès." });
-      setNewPwd(""); setConfirmPwd("");
+      setCurrentPwd(""); setNewPwd(""); setConfirmPwd("");
       setTimeout(() => setPwdMsg(null), 3000);
     }
   }
@@ -467,6 +484,10 @@ export default function ParametresModal({
 
       <div className="flex flex-col gap-4">
         <div>
+          <label className={LABEL}>Mot de passe actuel</label>
+          <input type="password" value={currentPwd} onChange={(e) => setCurrentPwd(e.target.value)} placeholder="••••••••" className={FIELD} />
+        </div>
+        <div>
           <label className={LABEL}>Nouveau mot de passe</label>
           <input type="password" value={newPwd} onChange={(e) => setNewPwd(e.target.value)} placeholder="Minimum 6 caractères" className={FIELD} />
         </div>
@@ -477,7 +498,7 @@ export default function ParametresModal({
       </div>
 
       <div className="flex items-center gap-3">
-        <button onClick={handleChangePassword} disabled={changingPwd || !newPwd || !confirmPwd} className={BTN_V}>
+        <button onClick={handleChangePassword} disabled={changingPwd || !currentPwd || !newPwd || !confirmPwd} className={BTN_V}>
           {changingPwd ? "Modification…" : "Changer le mot de passe"}
         </button>
         {pwdMsg && <p className={pwdMsg.ok ? MSG_OK : MSG_ERR}>{pwdMsg.text}</p>}
