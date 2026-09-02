@@ -102,6 +102,8 @@ export default function BoutiqueBuilderDetailPage() {
 
   const [reorderLoading, setReorderLoading] = useState(false);
   const [togglingPublic, setTogglingPublic] = useState(false);
+  const [savingColorMode, setSavingColorMode] = useState(false);
+  const [savingAfficherStock, setSavingAfficherStock] = useState(false);
 
   const [mentionsLegales, setMentionsLegales] = useState("");
   const [savingMentions, setSavingMentions] = useState(false);
@@ -239,6 +241,54 @@ export default function BoutiqueBuilderDetailPage() {
       setGlobalError("Impossible de contacter le serveur.");
     } finally {
       setTogglingPublic(false);
+    }
+  }
+
+  async function handleSetColorMode(colorMode: "light" | "dark") {
+    if (!boutique) return;
+    const nextSettings = { ...(boutique.settings ?? {}), colorMode };
+    setSavingColorMode(true);
+    setGlobalError(null);
+    try {
+      const response = await fetch(`/api/boutiques/${params?.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ settings: nextSettings }),
+      });
+      const json = await response.json();
+      if (!response.ok) {
+        setGlobalError(json.error || "Impossible de changer le thème de la boutique.");
+        return;
+      }
+      setBoutique({ ...boutique, settings: nextSettings });
+    } catch {
+      setGlobalError("Impossible de contacter le serveur.");
+    } finally {
+      setSavingColorMode(false);
+    }
+  }
+
+  async function handleSetAfficherStock(afficherStock: boolean) {
+    if (!boutique) return;
+    const nextSettings = { ...(boutique.settings ?? {}), afficherStock };
+    setSavingAfficherStock(true);
+    setGlobalError(null);
+    try {
+      const response = await fetch(`/api/boutiques/${params?.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ settings: nextSettings }),
+      });
+      const json = await response.json();
+      if (!response.ok) {
+        setGlobalError(json.error || "Impossible de changer l'affichage du stock.");
+        return;
+      }
+      setBoutique({ ...boutique, settings: nextSettings });
+    } catch {
+      setGlobalError("Impossible de contacter le serveur.");
+    } finally {
+      setSavingAfficherStock(false);
     }
   }
 
@@ -679,7 +729,60 @@ export default function BoutiqueBuilderDetailPage() {
               </div>
             </div>
 
-            <div className="grid gap-4 sm:grid-cols-3">
+            <div className="mt-6 rounded-3xl border border-[var(--border)] bg-[var(--surface-2)] p-4">
+              <h3 className="text-sm font-semibold text-[var(--text-primary)]">Paramètres</h3>
+              <p className="mt-1 text-xs text-[var(--text-muted)]">
+                Mode d&apos;affichage par défaut de la boutique publique pour tes visiteurs.
+              </p>
+              <div className="mt-3 inline-flex rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-1">
+                {(["light", "dark"] as const).map((mode) => {
+                  const currentMode = (boutique?.settings?.colorMode as string | undefined) ?? "dark";
+                  const active = currentMode === mode;
+                  return (
+                    <button
+                      key={mode}
+                      type="button"
+                      onClick={() => handleSetColorMode(mode)}
+                      disabled={!boutique || savingColorMode}
+                      className={`rounded-xl px-4 py-2 text-sm font-semibold transition disabled:opacity-50 ${
+                        active
+                          ? "bg-violet-500 text-white"
+                          : "text-[var(--text-muted)] hover:bg-[var(--surface-2)] hover:text-[var(--text-primary)]"
+                      }`}
+                    >
+                      {mode === "light" ? "☀️ Clair" : "🌙 Sombre"}
+                    </button>
+                  );
+                })}
+              </div>
+
+              <p className="mt-4 text-xs text-[var(--text-muted)]">
+                Affiche le stock disponible (quantité + statut) sur la fiche produit de la boutique publique.
+              </p>
+              <div className="mt-3 inline-flex rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-1">
+                {([true, false] as const).map((value) => {
+                  const currentValue = (boutique?.settings?.afficherStock as boolean | undefined) ?? true;
+                  const active = currentValue === value;
+                  return (
+                    <button
+                      key={String(value)}
+                      type="button"
+                      onClick={() => handleSetAfficherStock(value)}
+                      disabled={!boutique || savingAfficherStock}
+                      className={`rounded-xl px-4 py-2 text-sm font-semibold transition disabled:opacity-50 ${
+                        active
+                          ? "bg-violet-500 text-white"
+                          : "text-[var(--text-muted)] hover:bg-[var(--surface-2)] hover:text-[var(--text-primary)]"
+                      }`}
+                    >
+                      {value ? "Afficher le stock" : "Masquer le stock"}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="mt-6 grid gap-4 sm:grid-cols-3">
               <div className="rounded-3xl border border-[var(--border)] bg-[var(--surface-2)] p-4">
                 <p className="text-xs uppercase tracking-[0.2em] text-[var(--text-muted)]">Thème</p>
                 <p className="mt-2 text-sm text-[var(--text-primary)]">{boutique?.theme || "Standard"}</p>

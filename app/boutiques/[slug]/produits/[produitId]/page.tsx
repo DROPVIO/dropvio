@@ -66,13 +66,22 @@ export default async function ProduitPage({
   const { slug, produitId } = await params;
   const baseUrl = await getBaseUrl();
 
-  const produitRes = await fetch(`${baseUrl}/api/boutiques/slug/${slug}/produits/${produitId}`, {
-    cache: "no-store",
-  });
+  // Même URL/options que le fetch fait par le layout parent (app/boutiques/[slug]/layout.tsx) —
+  // dédupliqué automatiquement par Next.js pendant le rendu de cette requête, pas de coût
+  // réseau supplémentaire (même pattern que generateMetadata ci-dessus).
+  const [produitRes, boutiqueRes] = await Promise.all([
+    fetch(`${baseUrl}/api/boutiques/slug/${slug}/produits/${produitId}`, { cache: "no-store" }),
+    fetch(`${baseUrl}/api/boutiques/slug/${slug}`, { cache: "no-store" }),
+  ]);
 
   if (!produitRes.ok) {
     notFound();
   }
+
+  const afficherStock = boutiqueRes.ok
+    ? ((await boutiqueRes.json()) as { boutique: { settings: Record<string, unknown> | null } }).boutique.settings
+        ?.afficherStock !== false
+    : true;
 
   const { produit } = (await produitRes.json()) as {
     produit: {
@@ -124,7 +133,11 @@ export default async function ProduitPage({
                     <span className="text-3xl font-bold text-[var(--text-primary)]">{formatPrice(produit.prix_vente)}</span>
                     {produit.prix_original ? <span className="text-sm text-[var(--text-faint)] line-through">{formatPrice(produit.prix_original)}</span> : null}
                   </div>
-                  <p className="mt-4 text-sm text-[var(--text-muted)]">Stock : {produit.stock} ({produit.stock_status === "in_stock" ? "En stock" : "Rupture"})</p>
+                  {afficherStock ? (
+                    <p className="mt-4 text-sm text-[var(--text-muted)]">
+                      Stock : {produit.stock} ({produit.stock_status === "in_stock" ? "En stock" : "Rupture"})
+                    </p>
+                  ) : null}
                 </div>
                 <div className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-6">
                   <h2 className="text-xl font-semibold text-[var(--text-primary)]">Commander</h2>

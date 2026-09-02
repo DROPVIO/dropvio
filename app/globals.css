@@ -56,6 +56,47 @@
   --danger: #dc2626;
 }
 
+/* Boutique publique : mode clair/sombre choisi par le marchand (boutiques.settings.colorMode,
+   voir app/boutiques/[slug]/layout.tsx), indépendant du data-theme du visiteur sur <html>.
+   Attribut dédié (pas data-theme) et sélecteur non restreint à :root pour pouvoir s'appliquer
+   sur le wrapper du layout boutique et écraser ce qui a cascadé depuis <html> — duplique donc
+   les deux blocs ci-dessus plutôt que de les référencer. */
+[data-boutique-theme="dark"] {
+  --bg: #0d0d14;
+  --bg-sunken: #09090f;
+  --surface: #13131f;
+  --surface-2: rgba(255, 255, 255, 0.05);
+  --surface-3: rgba(255, 255, 255, 0.10);
+  --border: rgba(255, 255, 255, 0.06);
+  --border-strong: rgba(255, 255, 255, 0.12);
+  --text-primary: #ffffff;
+  --text-muted: #a1a1aa;
+  --text-faint: #71717a;
+  --accent: #7c3aed;
+  --accent-secondary: #60a5fa;
+  --success: #10b981;
+  --warning: #fbbf24;
+  --danger: #ef4444;
+}
+
+[data-boutique-theme="light"] {
+  --bg: #f7f7f9;
+  --bg-sunken: #eeeef2;
+  --surface: #ffffff;
+  --surface-2: rgba(0, 0, 0, 0.035);
+  --surface-3: rgba(0, 0, 0, 0.07);
+  --border: rgba(0, 0, 0, 0.08);
+  --border-strong: rgba(0, 0, 0, 0.14);
+  --text-primary: #18181b;
+  --text-muted: #52525b;
+  --text-faint: #a1a1aa;
+  --accent: #7c3aed;
+  --accent-secondary: #3b82f6;
+  --success: #059669;
+  --warning: #d97706;
+  --danger: #dc2626;
+}
+
 @theme inline {
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
