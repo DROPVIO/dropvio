@@ -13,7 +13,6 @@ type Boutique = {
   nom: string;
   slug: string;
   description: string | null;
-  theme: string | null;
   settings: Record<string, unknown> | null;
   mentions_legales: string | null;
   est_publique: boolean;
@@ -750,11 +749,7 @@ export default function BoutiqueBuilderDetailPage() {
               </select>
             </div>
 
-            <div className="mt-6 grid gap-4 sm:grid-cols-3">
-              <div className="rounded-3xl border border-[var(--border)] bg-[var(--surface-2)] p-4">
-                <p className="text-xs uppercase tracking-[0.2em] text-[var(--text-muted)]">Thème</p>
-                <p className="mt-2 text-sm text-[var(--text-primary)]">{boutique?.theme || "Standard"}</p>
-              </div>
+            <div className="mt-6 grid gap-4 sm:grid-cols-2">
               <div className="rounded-3xl border border-[var(--border)] bg-[var(--surface-2)] p-4">
                 <p className="text-xs uppercase tracking-[0.2em] text-[var(--text-muted)]">Produits affichés</p>
                 <p className="mt-2 text-sm text-[var(--text-primary)]">{products.length} / {DEFAULT_PAGE_SIZE} par page</p>

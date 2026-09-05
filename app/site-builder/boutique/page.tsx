@@ -9,7 +9,6 @@ type Boutique = {
   nom: string;
   slug: string;
   description: string | null;
-  theme: string | null;
   est_publique: boolean;
 };
 
@@ -29,7 +28,6 @@ export default function BoutiqueBuilderListPage() {
   const [nom, setNom] = useState("");
   const [slug, setSlug] = useState("");
   const [description, setDescription] = useState("");
-  const [theme, setTheme] = useState("");
   const [creating, setCreating] = useState(false);
 
   useEffect(() => {
@@ -72,7 +70,7 @@ export default function BoutiqueBuilderListPage() {
       const res = await fetch("/api/boutiques", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ nom, slug: computedSlug, description, theme, settings: {} }),
+        body: JSON.stringify({ nom, slug: computedSlug, description, settings: {} }),
       });
       const json = await res.json();
       if (!res.ok) {
@@ -82,7 +80,6 @@ export default function BoutiqueBuilderListPage() {
       setNom("");
       setSlug("");
       setDescription("");
-      setTheme("");
       void router.refresh();
       await fetchBoutiques();
       router.push(`/site-builder/boutique/${json.id}`);
@@ -200,16 +197,6 @@ export default function BoutiqueBuilderListPage() {
                   rows={3}
                   className="mt-2 w-full rounded-2xl border border-[var(--border)] bg-[var(--bg-sunken)] px-4 py-3 text-sm text-[var(--text-primary)] outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 resize-none"
                   placeholder="Description courte de la boutique"
-                />
-              </div>
-
-              <div>
-                <label className="text-sm font-medium text-[var(--text-muted)]">Thème</label>
-                <input
-                  value={theme}
-                  onChange={(e) => setTheme(e.target.value)}
-                  className="mt-2 w-full rounded-2xl border border-[var(--border)] bg-[var(--bg-sunken)] px-4 py-3 text-sm text-[var(--text-primary)] outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
-                  placeholder="Ex: premium"
                 />
               </div>
 
