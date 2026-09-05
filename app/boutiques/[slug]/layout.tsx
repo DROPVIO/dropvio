@@ -85,7 +85,7 @@ export default async function BoutiquePublicLayout({
             {categories?.map((category) => (
               <Link
                 key={category.id}
-                href={`${home}?categoryId=${category.id}`}
+                href={`${basePath}/collections/${category.slug}`}
                 className="shrink-0 transition hover:text-[var(--text-primary)]"
               >
                 {category.nom}
