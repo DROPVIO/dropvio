@@ -46,6 +46,7 @@ export default async function BoutiquePublicLayout({
     ? ({
         "--boutique-palette-primary": rawPalette!.primary,
         "--boutique-palette-accent": rawPalette!.accent,
+        ...(typeof rawPalette!.secondary === "string" ? { "--boutique-palette-secondary": rawPalette!.secondary } : {}),
       } as CSSProperties)
     : undefined;
 

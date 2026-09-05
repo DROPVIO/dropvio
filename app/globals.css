@@ -157,10 +157,9 @@
    — ces règles ne font que les router vers les bons éléments. Placé après le bloc niche :
    si une boutique a une niche ET une palette personnalisée, la palette gagne (choix
    explicite de l'utilisateur, prioritaire sur l'accent saisonnier automatique). La
-   couleur "secondaire" de la palette (fonds de section alternés) n'a pas d'équivalent
-   visuel sur les pages boutique publiques actuelles (design à une seule surface, pas de
-   sections alternées) — stockée dans settings.palette pour un usage futur, pas encore
-   appliquée ici. */
+   couleur "secondaire" de la palette (pensée à l'origine comme fond de sections
+   alternées) est utilisée sur .boutique-reassurance ci-dessous — seul emplacement
+   aujourd'hui, volontairement : pas la peine de la disperser sur plusieurs éléments. */
 [data-boutique-palette="custom"] .bg-violet-500,
 [data-boutique-palette="custom"] .hover\:bg-violet-400:hover {
   background-color: var(--boutique-palette-primary);
@@ -192,6 +191,14 @@
 
 [data-boutique-palette="custom"] .price-tag {
   color: var(--boutique-palette-accent);
+}
+
+/* Mélangé plutôt qu'en couleur pleine : la valeur "secondaire" choisie peut être très
+   claire (proche du blanc, cas courant pour un fond de section) — un color-mix garde la
+   bande lisible quelle que soit sa luminosité, plutôt que de dépendre entièrement d'un
+   choix de couleur externe pour le contraste du texte qu'elle contient. */
+[data-boutique-palette="custom"] .boutique-reassurance {
+  background-color: color-mix(in srgb, var(--boutique-palette-secondary, var(--surface)) 18%, var(--surface));
 }
 
 @theme inline {

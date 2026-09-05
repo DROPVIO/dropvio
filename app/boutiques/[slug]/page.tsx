@@ -121,8 +121,10 @@ export default async function BoutiquePage({
         </div>
       </section>
 
-      {/* RÉASSURANCE — bande fine pleine largeur, pas une carte de dashboard */}
-      <section className="border-b border-[var(--border)] bg-[var(--surface)]">
+      {/* RÉASSURANCE — bande fine pleine largeur, pas une carte de dashboard. Classe
+          boutique-reassurance : seul emplacement où la couleur "secondaire" de la palette
+          personnalisée s'applique (voir app/globals.css). */}
+      <section className="boutique-reassurance border-b border-[var(--border)] bg-[var(--surface)]">
         <div className="mx-auto grid max-w-7xl grid-cols-1 gap-3 px-4 py-6 text-center text-sm text-[var(--text-muted)] sm:grid-cols-3 sm:px-6 lg:px-8">
           <div>🚚 Livraison suivie</div>
           <div>↩ Retour sous 14 jours</div>
