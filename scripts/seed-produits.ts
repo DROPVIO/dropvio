@@ -33,6 +33,18 @@ const NICHE_KEYWORDS: Record<string, string[]> = {
   ecologie: ["eco friendly sustainable"],
   photo:    ["camera accessories photography", "camera accessories", "phone camera", "photography gear"],
   selfcare: ["self care wellness beauty", "skincare tools", "beauty accessories", "personal care"],
+  // Mots-clés utilisés lors du sourcing manuel de la niche Halloween (voir migration des
+  // 5256 produits initiaux) — présents ici pour permettre un futur re-seed via ce même
+  // script plutôt que de garder cette niche comme un cas à part.
+  halloween: [
+    "halloween costume adult", "witch costume women", "vampire costume adult", "halloween costume kids",
+    "pirate costume halloween", "dog halloween costume", "cat halloween costume",
+    "halloween party decoration", "halloween pumpkin decoration", "halloween skeleton decoration",
+    "animatronic halloween decoration", "halloween animated prop", "halloween led lights",
+    "halloween makeup kit", "fake blood halloween", "halloween witch hat", "halloween mask",
+    "halloween wig", "halloween treat bag", "halloween banner", "halloween foil balloons",
+    "halloween advent calendar", "gothic home decor", "halloween pillow cover",
+  ],
 };
 
 const PAGES_PER_NICHE = 50;
