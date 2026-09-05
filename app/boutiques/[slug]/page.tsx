@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import ProductGrid, { formatPrice } from "@/app/components/boutique/ProductGrid";
+import TestimonialsMarquee, { type Temoignage } from "@/app/components/boutique/TestimonialsMarquee";
 import { TEXTES_DEFAUT } from "@/lib/site-templates";
 import { getBaseUrl } from "@/lib/get-base-url";
 import { getBoutiqueBasePath } from "@/lib/boutique-links";
@@ -85,6 +86,14 @@ export default async function BoutiquePage({ params }: { params: Promise<{ slug:
     ? ((await spotlightRes.json()) as { products: ProduitCarte[] })
     : { products: [] };
   const spotlight = spotlightResults[0] ?? null;
+
+  // Pas d'avis natifs côté Shopify (vérifié avant de construire ce composant : aucun scope
+  // Admin API dédié, l'app officielle "Product Reviews" a fermé en mai 2024 — les avis
+  // viennent aujourd'hui exclusivement d'apps tierces type Judge.me/Loox/Yotpo, chacune
+  // avec sa propre API, distincte de l'intégration Shopify déjà en place). Reste
+  // volontairement vide tant qu'aucune synchronisation réelle n'est branchée —
+  // TestimonialsMarquee ne rend rien dans ce cas, jamais de faux avis affiché.
+  const avis: Temoignage[] = [];
 
   const template = TEXTES_DEFAUT.generique;
   const basePath = await getBoutiqueBasePath(slug);
@@ -194,6 +203,11 @@ export default async function BoutiquePage({ params }: { params: Promise<{ slug:
           Voir tout le catalogue →
         </Link>
       </section>
+
+      {/* AVIS CLIENTS — tout en bas de la page. Ne rend rien tant que `avis` est vide (voir
+          plus haut) : pas de titre "Avis clients" ni de section orpheline sans donnée
+          réelle derrière. */}
+      <TestimonialsMarquee avis={avis} />
     </main>
   );
 }

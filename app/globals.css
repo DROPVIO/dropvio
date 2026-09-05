@@ -244,6 +244,45 @@
   }
 }
 
+/* Bande d'avis clients en défilement vertical continu (voir
+   app/components/boutique/TestimonialsMarquee.tsx) — masque en dégradé haut/bas pour que
+   les bulles apparaissent/disparaissent en fondu plutôt que d'être coupées net. La piste
+   contient la liste dupliquée deux fois : translateY(-50%) ramène exactement à la position
+   de départ, donc la boucle ne saute jamais. */
+.boutique-testimonials-marquee {
+  max-height: 420px;
+  overflow: hidden;
+  mask-image: linear-gradient(to bottom, transparent, black 12%, black 88%, transparent);
+  -webkit-mask-image: linear-gradient(to bottom, transparent, black 12%, black 88%, transparent);
+}
+
+.boutique-testimonials-track {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  animation: boutique-testimonials-scroll 24s linear infinite;
+}
+
+@keyframes boutique-testimonials-scroll {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(-50%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .boutique-testimonials-track {
+    animation: none;
+  }
+  .boutique-testimonials-marquee {
+    overflow-y: auto;
+    mask-image: none;
+    -webkit-mask-image: none;
+  }
+}
+
 @theme inline {
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
