@@ -125,7 +125,7 @@ export default async function ProduitPage({
                 </div>
                 <div className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-6">
                   <h2 className="text-xl font-semibold text-[var(--text-primary)]">Commander</h2>
-                  <p className="mt-4 text-sm text-[var(--text-muted)]">Ajoute ce produit au panier puis passe à la caisse. Paiement sécurisé — bientôt disponible.</p>
+                  <p className="mt-4 text-sm text-[var(--text-muted)]">Ajoute ce produit au panier puis passe à la caisse.</p>
                   <AddToCartButton
                     boutiqueSlug={slug}
                     produitId={produit.id}

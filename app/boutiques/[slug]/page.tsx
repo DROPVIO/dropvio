@@ -176,9 +176,8 @@ export default async function BoutiquePage({
               <p className="mt-4 text-sm leading-7 text-[var(--text-muted)]">{boutique.description || template.sousTitre}</p>
             </div>
             <div className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-6">
-              <h2 className="text-lg font-semibold text-[var(--text-primary)]">Paiement</h2>
+              <h2 className="text-lg font-semibold text-[var(--text-primary)]">Nos engagements</h2>
               <div className="mt-4 space-y-3 text-sm text-[var(--text-muted)]">
-                <p>🔒 Paiement sécurisé — bientôt disponible</p>
                 <p>🚚 Livraison suivie</p>
                 <p>↩ Retour sous 14 jours</p>
               </div>
