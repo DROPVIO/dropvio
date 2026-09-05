@@ -46,6 +46,7 @@ const PRODUITS_PAR_PAGE = 40;
 
 export default function ProduitsGagnants() {
   const [nicheActive, setNicheActive] = useState<string>("all");
+  const isHalloweenNiche = nicheActive === "halloween";
   const [tiroirOpen, setTiroirOpen] = useState(false);
   const [filtresPrix, setFiltresPrix] = useState<string>("tous");
   const [filtreMarge, setFiltreMarge] = useState<number>(0);
@@ -169,6 +170,32 @@ export default function ProduitsGagnants() {
   return (
     <div className="min-h-screen bg-[var(--bg)] text-[var(--text-primary)] font-['Inter',-apple-system,sans-serif]">
 
+      {/* Décoration toile d'araignée — coin supérieur droit de la FENÊTRE (position: fixed,
+          jamais absolute : ancrée au viewport, pas à un conteneur interne). Placée en tout
+          premier enfant de la racine (qui n'a ni overflow-hidden ni transform/filter — ces
+          propriétés créeraient un nouveau containing block et casseraient l'ancrage viewport
+          de fixed) pour ne dépendre d'aucun conteneur parent. z-50 explicite : ni le header ni
+          les filtres ci-dessous ne posent de z-index, donc rien ne peut passer devant sans
+          valeur supérieure explicite (les modals de cette page utilisent z-[100], au-dessus).
+          pointer-events-none : purement décoratif, ne doit intercepter aucun clic. */}
+      {isHalloweenNiche && (
+        <svg
+          aria-hidden="true"
+          className="pointer-events-none fixed top-0 right-0 z-50 opacity-25"
+          width="160"
+          height="160"
+          viewBox="0 0 160 160"
+          fill="none"
+          stroke="#e5e5e5"
+          strokeWidth="1"
+        >
+          <path d="M160,0 L10,0 M160,0 L17.4,46.4 M160,0 L38.6,88.2 M160,0 L71.8,121.4 M160,0 L113.6,142.6 M160,0 L160,150" />
+          <path d="M115,0 L117.2,13.9 L123.6,26.5 L133.5,36.4 L146.1,42.8 L160,45" />
+          <path d="M70,0 L74.4,27.8 L87.2,52.9 L107.1,72.8 L132.2,85.6 L160,90" />
+          <path d="M30,0 L36.4,40.2 L54.8,76.4 L83.6,105.2 L119.8,123.6 L160,130" />
+        </svg>
+      )}
+
       {/* Header */}
       <div className="bg-[var(--bg-sunken)] border-b border-[var(--border-strong)] px-8 py-6">
         <div className="max-w-[1200px] mx-auto flex justify-between items-center">
@@ -206,7 +233,11 @@ export default function ProduitsGagnants() {
                   key={niche.id}
                   onClick={() => { setNicheActive(niche.id); setTiroirOpen(false); setPage(1); }}
                   className={`px-4 py-3 rounded-[10px] text-[13px] font-medium cursor-pointer text-left transition-all border ${
-                    nicheActive === niche.id ? "bg-violet-600 border-violet-600 text-white" : "bg-[var(--bg-sunken)] border-[var(--border-strong)] text-[var(--text-primary)]"
+                    nicheActive === niche.id
+                      ? niche.id === "halloween"
+                        ? "bg-[#e07b2e] border-[#e07b2e] text-white shadow-[0_0_16px_rgba(224,123,46,0.45)]"
+                        : "bg-violet-600 border-violet-600 text-white"
+                      : "bg-[var(--bg-sunken)] border-[var(--border-strong)] text-[var(--text-primary)]"
                   }`}
                 >
                   <div className="text-lg mb-1">{niche.emoji}</div>
@@ -232,7 +263,11 @@ export default function ProduitsGagnants() {
               key={f.val}
               onClick={() => { setFiltresPrix(f.val); setPage(1); }}
               className={`px-3.5 py-[7px] rounded-lg text-xs font-medium cursor-pointer border ${
-                filtresPrix === f.val ? "bg-violet-600 border-violet-600 text-white" : "bg-[var(--surface)] border-[var(--border-strong)] text-[var(--text-primary)]"
+                filtresPrix === f.val
+                  ? isHalloweenNiche
+                    ? "bg-[#e07b2e] border-[#e07b2e] text-white"
+                    : "bg-violet-600 border-violet-600 text-white"
+                  : "bg-[var(--surface)] border-[var(--border-strong)] text-[var(--text-primary)]"
               }`}
             >
               {f.label}
@@ -382,6 +417,7 @@ export default function ProduitsGagnants() {
                       key={p.id}
                       produit={p}
                       croissancePct={croissance[p.id]}
+                      isHalloweenNiche={isHalloweenNiche}
                       onVoirTendance={() => setTrendsProduit(p)}
                       onAjouterBoutique={() => setAjouterBoutiqueProduit(p)}
                       onVoirAlternatives={() => setAlternativesProduit(p)}
@@ -497,12 +533,14 @@ function TrendsModal({ produit, onClose }: { produit: Produit; onClose: () => vo
 function CarteProduit({
   produit,
   croissancePct,
+  isHalloweenNiche,
   onVoirTendance,
   onAjouterBoutique,
   onVoirAlternatives,
 }: {
   produit: Produit;
   croissancePct?: number;
+  isHalloweenNiche?: boolean;
   onVoirTendance: () => void;
   onAjouterBoutique: () => void;
   onVoirAlternatives: () => void;
@@ -511,7 +549,11 @@ function CarteProduit({
     produit.prixOriginal !== undefined && produit.prixOriginal > produit.prixFournisseur;
 
   return (
-    <div className="bg-[var(--surface)] border border-[var(--border-strong)] rounded-[14px] overflow-hidden transition-all duration-200 hover:border-violet-500 hover:-translate-y-0.5">
+    <div
+      className={`bg-[var(--surface)] border border-[var(--border-strong)] rounded-[14px] overflow-hidden transition-all duration-200 hover:-translate-y-0.5 ${
+        isHalloweenNiche ? "hover:border-[#e07b2e]" : "hover:border-violet-500"
+      }`}
+    >
       {/* Image */}
       <div className="h-[150px] overflow-hidden bg-[var(--bg-sunken)] relative">
         {produit.image ? (
@@ -527,7 +569,7 @@ function CarteProduit({
           <div className="flex items-center justify-center h-full text-5xl">🛍️</div>
         )}
         {produit.commission && (
-          <span className="absolute top-2.5 right-2.5 bg-violet-600/80 text-white text-[11px] font-bold px-2 py-[3px] rounded-full">
+          <span className={`absolute top-2.5 right-2.5 text-white text-[11px] font-bold px-2 py-[3px] rounded-full ${isHalloweenNiche ? "bg-[#e07b2e]/80" : "bg-violet-600/80"}`}>
             💰 {produit.commission}% comm.
           </span>
         )}
@@ -590,13 +632,17 @@ function CarteProduit({
             href={produit.lienAliExpress}
             target="_blank"
             rel="noopener noreferrer"
-            className="block bg-violet-600 text-white text-center py-2.5 rounded-lg text-[13px] font-semibold no-underline"
+            className={`block text-white text-center py-2.5 rounded-lg text-[13px] font-semibold no-underline ${isHalloweenNiche ? "bg-[#e07b2e]" : "bg-violet-600"}`}
           >
             Voir sur AliExpress →
           </a>
           <a
             href={`/site-builder?name=${encodeURIComponent(produit.nom)}&description=${encodeURIComponent(produit.nom)}&image=${encodeURIComponent(produit.image ?? "")}&rating=${(produit.note ?? 0).toFixed(1)}&orders=${produit.commandes}`}
-            className="block bg-violet-500/10 border border-violet-500/30 text-[var(--accent)] text-center py-2 rounded-lg text-xs font-semibold no-underline transition-colors hover:bg-violet-500/20"
+            className={`block text-center py-2 rounded-lg text-xs font-semibold no-underline transition-colors ${
+              isHalloweenNiche
+                ? "bg-[#e07b2e]/10 border border-[#e07b2e]/30 text-[#e07b2e] hover:bg-[#e07b2e]/20"
+                : "bg-violet-500/10 border border-violet-500/30 text-[var(--accent)] hover:bg-violet-500/20"
+            }`}
           >
             ✨ Créer une landing page
           </a>
