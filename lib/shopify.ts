@@ -323,8 +323,6 @@ export type BoutiqueProduitRow = {
   image_urls: string[] | null;
   prix_vente: number;
   prix_original: number | null;
-  stock: number;
-  stock_status: string;
   shopify_product_id: number | null;
 };
 
@@ -334,22 +332,23 @@ export type BoutiqueCategoryRow = {
   shopify_collection_id: number | null;
 };
 
+// stock/stock_status ne sont plus lus ici (voir historique : l'UI Dropvio qui les
+// pilotait a été retirée, ces colonnes ne sont donc plus jamais tenues à jour côté
+// dropvio). status reste toujours "active" plutôt que dépendre d'un stock_status
+// figé, et inventory_management n'est pas déclaré : Shopify traite les produits
+// comme disponibles par défaut et gère son propre inventaire, cohérent avec le fait
+// que Shopify est désormais la vraie vitrine.
 export function produitToShopifyPayload(p: BoutiqueProduitRow) {
   return {
     product: {
       title: p.nom,
       body_html: p.description ?? "",
-      status: p.stock_status === "out_of_stock" ? "draft" : "active",
+      status: "active",
       images: (p.image_urls ?? []).filter(Boolean).map((src) => ({ src })),
       variants: [
         {
           price: p.prix_vente.toFixed(2),
           compare_at_price: p.prix_original ? p.prix_original.toFixed(2) : null,
-          // inventory_quantity n'est honoré par l'API REST qu'à la création (l'update
-          // d'un variant existant ignore ce champ — il faudrait l'API InventoryLevels
-          // dédiée, hors scope de cette première version).
-          inventory_management: "shopify",
-          inventory_quantity: p.stock ?? 0,
           sku: p.id,
         },
       ],

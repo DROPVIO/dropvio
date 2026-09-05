@@ -77,8 +77,6 @@ export default function ProduitsSuggeres({
           image_urls: suggestion.image ? [suggestion.image] : [],
           prix_vente: suggestion.prixVente,
           prix_original: null,
-          stock: 0,
-          stock_status: "in_stock",
           source_produit_id: suggestion.id,
           meta: {},
         }),

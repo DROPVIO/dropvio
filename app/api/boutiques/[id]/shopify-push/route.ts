@@ -66,7 +66,7 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
     supabase.from("boutique_categories").select("id, nom, shopify_collection_id").eq("boutique_id", id),
     supabase
       .from("boutique_produits")
-      .select("id, nom, description, image_urls, prix_vente, prix_original, stock, stock_status, category_id, shopify_product_id")
+      .select("id, nom, description, image_urls, prix_vente, prix_original, category_id, shopify_product_id")
       .eq("boutique_id", id),
   ]);
   if (categoriesError) return NextResponse.json({ error: categoriesError.message }, { status: 500 });

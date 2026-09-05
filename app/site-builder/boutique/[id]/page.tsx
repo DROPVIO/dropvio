@@ -34,8 +34,6 @@ type BoutiqueProduct = {
   image_urls: string[];
   prix_vente: number;
   prix_original?: number | null;
-  stock: number;
-  stock_status: string;
   category_id?: string | null;
   boutique_categories?: { nom: string; slug: string } | null;
   position: number;
@@ -92,8 +90,6 @@ export default function BoutiqueBuilderDetailPage() {
   const [productImageUrl, setProductImageUrl] = useState("");
   const [productPrixVente, setProductPrixVente] = useState("");
   const [productPrixOriginal, setProductPrixOriginal] = useState("");
-  const [productStock, setProductStock] = useState("0");
-  const [productStockStatus, setProductStockStatus] = useState("in_stock");
   const [productCategoryId, setProductCategoryId] = useState<string>("");
   const [savingProduct, setSavingProduct] = useState(false);
   // Rempli quand le formulaire vient d'un import AliExpress réussi (product-from-url
@@ -104,7 +100,6 @@ export default function BoutiqueBuilderDetailPage() {
 
   const [reorderLoading, setReorderLoading] = useState(false);
   const [savingColorMode, setSavingColorMode] = useState(false);
-  const [savingAfficherStock, setSavingAfficherStock] = useState(false);
   const [savingNiche, setSavingNiche] = useState(false);
 
   const [mentionsLegales, setMentionsLegales] = useState("");
@@ -247,30 +242,6 @@ export default function BoutiqueBuilderDetailPage() {
     }
   }
 
-  async function handleSetAfficherStock(afficherStock: boolean) {
-    if (!boutique) return;
-    const nextSettings = { ...(boutique.settings ?? {}), afficherStock };
-    setSavingAfficherStock(true);
-    setGlobalError(null);
-    try {
-      const response = await fetch(`/api/boutiques/${params?.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ settings: nextSettings }),
-      });
-      const json = await response.json();
-      if (!response.ok) {
-        setGlobalError(json.error || "Impossible de changer l'affichage du stock.");
-        return;
-      }
-      setBoutique({ ...boutique, settings: nextSettings });
-    } catch {
-      setGlobalError("Impossible de contacter le serveur.");
-    } finally {
-      setSavingAfficherStock(false);
-    }
-  }
-
   async function handleSetNiche(niche: string) {
     if (!boutique) return;
     const nextSettings = { ...(boutique.settings ?? {}) };
@@ -397,8 +368,6 @@ export default function BoutiqueBuilderDetailPage() {
     setProductImageUrl("");
     setProductPrixVente("");
     setProductPrixOriginal("");
-    setProductStock("0");
-    setProductStockStatus("in_stock");
     setProductCategoryId("");
     setProductFormError(null);
     setProductFormSuccess(null);
@@ -413,8 +382,6 @@ export default function BoutiqueBuilderDetailPage() {
     setProductImageUrl(product.image_urls?.[0] ?? "");
     setProductPrixVente(product.prix_vente.toString());
     setProductPrixOriginal(product.prix_original?.toString() ?? "");
-    setProductStock(product.stock.toString());
-    setProductStockStatus(product.stock_status);
     setProductCategoryId(product.category_id ?? "");
     setProductFormError(null);
     setProductFormSuccess(null);
@@ -510,7 +477,6 @@ export default function BoutiqueBuilderDetailPage() {
 
     const prixVente = Number(productPrixVente);
     const prixOriginal = productPrixOriginal.trim() ? Number(productPrixOriginal) : null;
-    const stock = Number(productStock) || 0;
     if (Number.isNaN(prixVente) || prixVente <= 0) {
       setProductFormError("Le prix de vente doit être un nombre valide.");
       return;
@@ -525,8 +491,6 @@ export default function BoutiqueBuilderDetailPage() {
         image_urls: productImageUrl.trim() ? [productImageUrl.trim()] : [],
         prix_vente: prixVente,
         prix_original: prixOriginal,
-        stock,
-        stock_status: productStockStatus,
         category_id: productCategoryId || null,
         // Uniquement sur création : relie le produit boutique au catalogue quand il vient
         // d'un import AliExpress réussi, exploité par les suggestions de produits
@@ -771,31 +735,6 @@ export default function BoutiqueBuilderDetailPage() {
               </div>
 
               <p className="mt-4 text-xs text-[var(--text-muted)]">
-                Affiche le stock disponible (quantité + statut) sur la fiche produit de la boutique publique.
-              </p>
-              <div className="mt-3 inline-flex rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-1">
-                {([true, false] as const).map((value) => {
-                  const currentValue = (boutique?.settings?.afficherStock as boolean | undefined) ?? true;
-                  const active = currentValue === value;
-                  return (
-                    <button
-                      key={String(value)}
-                      type="button"
-                      onClick={() => handleSetAfficherStock(value)}
-                      disabled={!boutique || savingAfficherStock}
-                      className={`rounded-xl px-4 py-2 text-sm font-semibold transition disabled:opacity-50 ${
-                        active
-                          ? "bg-violet-500 text-white"
-                          : "text-[var(--text-muted)] hover:bg-[var(--surface-2)] hover:text-[var(--text-primary)]"
-                      }`}
-                    >
-                      {value ? "Afficher le stock" : "Masquer le stock"}
-                    </button>
-                  );
-                })}
-              </div>
-
-              <p className="mt-4 text-xs text-[var(--text-muted)]">
                 Niche de la boutique — filtre les suggestions de produits et applique le thème visuel associé (quand il existe) sur la boutique publique.
               </p>
               <select
@@ -1023,7 +962,6 @@ export default function BoutiqueBuilderDetailPage() {
                         <th className="px-4 py-3">Produit</th>
                         <th className="px-4 py-3">Catégorie</th>
                         <th className="px-4 py-3">Prix</th>
-                        <th className="px-4 py-3">Stock</th>
                         <th className="px-4 py-3">Actions</th>
                       </tr>
                     </thead>
@@ -1040,14 +978,11 @@ export default function BoutiqueBuilderDetailPage() {
                           <td className="px-4 py-3 align-top text-sm text-[var(--text-primary)]">
                             {formatPrice(product.prix_vente)}{product.prix_original ? ` · ${formatPrice(product.prix_original)}` : ""}
                           </td>
-                          <td className="px-4 py-3 align-top text-sm text-[var(--text-muted)]">
-                            {product.stock} / {product.stock_status === "in_stock" ? "En stock" : "Rupture"}
-                          </td>
                           <td className="px-4 py-3 align-top space-y-2">
                             <button
                               type="button"
                               onClick={() => populateProductForm(product)}
-                              className="rounded-xl bg-[var(--surface-2)] px-3 py-2 text-xs font-semibold text-[var(--text-primary)] transition hover:bg-[var(--surface-3)]"
+                              className="w-full rounded-xl bg-violet-500 px-3 py-2.5 text-sm font-semibold text-white transition hover:bg-violet-400"
                             >
                               Éditer
                             </button>
@@ -1226,30 +1161,6 @@ export default function BoutiqueBuilderDetailPage() {
                     className="mt-2 w-full rounded-2xl border border-[var(--border)] bg-[var(--bg-sunken)] px-4 py-3 text-sm text-[var(--text-primary)] outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
                     placeholder="59.99"
                   />
-                </label>
-              </div>
-
-              <div className="grid gap-4 sm:grid-cols-2">
-                <label className="block text-sm text-[var(--text-muted)]">
-                  Stock
-                  <input
-                    type="number"
-                    min="0"
-                    value={productStock}
-                    onChange={(event) => setProductStock(event.target.value)}
-                    className="mt-2 w-full rounded-2xl border border-[var(--border)] bg-[var(--bg-sunken)] px-4 py-3 text-sm text-[var(--text-primary)] outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
-                  />
-                </label>
-                <label className="block text-sm text-[var(--text-muted)]">
-                  Statut de stock
-                  <select
-                    value={productStockStatus}
-                    onChange={(event) => setProductStockStatus(event.target.value)}
-                    className="mt-2 w-full rounded-2xl border border-[var(--border)] bg-[var(--bg-sunken)] px-4 py-3 text-sm text-[var(--text-primary)] outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
-                  >
-                    <option value="in_stock">En stock</option>
-                    <option value="out_of_stock">Rupture</option>
-                  </select>
                 </label>
               </div>
 

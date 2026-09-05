@@ -60,7 +60,7 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
   }
 
   const payload = await request.json();
-  const { nom, slug, description, image_urls, prix_vente, prix_original, stock, stock_status, category_id, source_produit_id, meta } = payload;
+  const { nom, slug, description, image_urls, prix_vente, prix_original, category_id, source_produit_id, meta } = payload;
 
   if (!nom || !slug || typeof prix_vente !== "number") {
     return NextResponse.json({ error: "nom, slug et prix_vente sont requis." }, { status: 400 });
@@ -97,8 +97,6 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
       image_urls: image_urls ?? [],
       prix_vente,
       prix_original,
-      stock: stock ?? 0,
-      stock_status: stock_status ?? "in_stock",
       position: 0,
       meta: meta ?? {},
     })

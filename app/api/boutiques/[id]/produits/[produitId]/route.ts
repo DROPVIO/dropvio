@@ -17,8 +17,6 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
     image_urls: payload.image_urls,
     prix_vente: payload.prix_vente,
     prix_original: payload.prix_original,
-    stock: payload.stock,
-    stock_status: payload.stock_status,
     position: payload.position,
     meta: payload.meta,
     updated_at: new Date().toISOString(),

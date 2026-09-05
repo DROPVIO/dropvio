@@ -845,8 +845,6 @@ function AjouterBoutiqueModal({ produit, onClose }: { produit: Produit; onClose:
           image_urls: produit.image ? [produit.image] : [],
           prix_vente: produit.prixVente,
           prix_original: null,
-          stock: 0,
-          stock_status: "in_stock",
           source_produit_id: produit.id,
           meta: {},
         }),
