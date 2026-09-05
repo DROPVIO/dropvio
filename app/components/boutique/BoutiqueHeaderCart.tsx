@@ -164,7 +164,7 @@ export default function BoutiqueHeaderCart({ fullCartHref }: BoutiqueHeaderCartP
 
               <div className="mt-4 flex items-center justify-between border-t border-[var(--border)] pt-3 text-sm">
                 <span className="text-[var(--text-muted)]">Total</span>
-                <strong className="text-[var(--text-primary)]">{totalPrice.toFixed(2)}€</strong>
+                <strong className="price-tag text-[var(--text-primary)]">{totalPrice.toFixed(2)}€</strong>
               </div>
 
               <Link

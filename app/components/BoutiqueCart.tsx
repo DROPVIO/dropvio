@@ -126,7 +126,7 @@ export default function BoutiqueCart({ title = "Mon panier" }: BoutiqueCartProps
           <div className="rounded-3xl border border-[var(--border)] bg-[var(--surface-2)] p-4">
             <div className="flex items-center justify-between text-sm text-[var(--text-muted)]">
               <span>Total</span>
-              <strong className="text-[var(--text-primary)]">{totalPrice.toFixed(2)}€</strong>
+              <strong className="price-tag text-[var(--text-primary)]">{totalPrice.toFixed(2)}€</strong>
             </div>
             <button disabled className="mt-4 w-full rounded-2xl bg-[var(--surface-3)] px-4 py-3 text-sm font-semibold text-[var(--text-faint)] opacity-80">
               Payer — bientôt disponible

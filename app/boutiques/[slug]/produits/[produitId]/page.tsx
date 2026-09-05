@@ -130,7 +130,7 @@ export default async function ProduitPage({
                 <div className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-6">
                   <h2 className="text-xl font-semibold text-[var(--text-primary)]">Prix</h2>
                   <div className="mt-4 flex items-center gap-3">
-                    <span className="text-3xl font-bold text-[var(--text-primary)]">{formatPrice(produit.prix_vente)}</span>
+                    <span className="price-tag text-3xl font-bold text-[var(--text-primary)]">{formatPrice(produit.prix_vente)}</span>
                     {produit.prix_original ? <span className="text-sm text-[var(--text-faint)] line-through">{formatPrice(produit.prix_original)}</span> : null}
                   </div>
                   {afficherStock ? (

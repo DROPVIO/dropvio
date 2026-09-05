@@ -97,6 +97,58 @@
   --danger: #dc2626;
 }
 
+/* Niche boutique : reflets visuels discrets appliqués automatiquement sur les pages boutique
+   publiques quand boutiques.settings.niche correspond (voir app/boutiques/[slug]/layout.tsx,
+   attribut data-boutique-niche posé à côté de data-boutique-theme). Volontairement PAS une
+   palette complète : le fond/texte/surfaces restent ceux de data-boutique-theme (sombre par
+   défaut) — seuls quelques éléments ciblés (CTA, prix, bordures) reçoivent un accent. Ces
+   règles ne sont pas dans un @layer Tailwind (contrairement aux classes violettes qu'elles
+   remplacent ici) : les règles hors layer l'emportent toujours sur les
+   règles en layer quel que soit leur poids de spécificité — pas besoin de !important.
+   .price-tag est une classe crochet ajoutée à la poignée d'éléments prix qui n'utilisaient
+   pas déjà une classe violette ciblable (voir app/boutiques/[slug]/page.tsx,
+   produits/[produitId]/page.tsx, BoutiqueCart.tsx, BoutiqueHeaderCart.tsx). */
+[data-boutique-niche="halloween"] {
+  --niche-accent: #e07b2e;
+  --niche-accent-strong: #ff9a4d;
+  --niche-glow: rgba(224, 123, 46, 0.35);
+}
+
+[data-boutique-niche="halloween"] .bg-violet-500,
+[data-boutique-niche="halloween"] .hover\:bg-violet-400:hover {
+  background-color: var(--niche-accent);
+  box-shadow: 0 0 20px var(--niche-glow);
+}
+
+[data-boutique-niche="halloween"] .bg-violet-500\/10,
+[data-boutique-niche="halloween"] .bg-violet-500\/15,
+[data-boutique-niche="halloween"] .hover\:bg-violet-500\/10:hover {
+  background-color: color-mix(in srgb, var(--niche-accent) 12%, transparent);
+}
+
+[data-boutique-niche="halloween"] .border-violet-400,
+[data-boutique-niche="halloween"] .border-violet-500,
+[data-boutique-niche="halloween"] .border-violet-400\/60,
+[data-boutique-niche="halloween"] .border-violet-500\/40,
+[data-boutique-niche="halloween"] .hover\:border-violet-400\/60:hover,
+[data-boutique-niche="halloween"] .hover\:border-violet-500\/40:hover,
+[data-boutique-niche="halloween"] .focus\:border-violet-500:focus {
+  border-color: var(--niche-accent);
+}
+
+[data-boutique-niche="halloween"] .text-violet-300 {
+  color: var(--niche-accent-strong);
+}
+
+[data-boutique-niche="halloween"] .focus\:ring-violet-500:focus {
+  --tw-ring-color: var(--niche-accent);
+}
+
+[data-boutique-niche="halloween"] .price-tag {
+  color: var(--niche-accent-strong);
+  text-shadow: 0 0 14px var(--niche-glow);
+}
+
 @theme inline {
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);

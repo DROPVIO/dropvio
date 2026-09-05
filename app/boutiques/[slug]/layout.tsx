@@ -35,9 +35,10 @@ export default async function BoutiquePublicLayout({
 
   const rawColorMode = boutique.settings?.colorMode;
   const colorMode = rawColorMode === "light" || rawColorMode === "dark" ? rawColorMode : undefined;
+  const niche = typeof boutique.settings?.niche === "string" ? boutique.settings.niche : undefined;
 
   return (
-    <div className="min-h-screen bg-[var(--bg)]" data-boutique-theme={colorMode}>
+    <div className="min-h-screen bg-[var(--bg)]" data-boutique-theme={colorMode} data-boutique-niche={niche}>
       <header className="border-b border-[var(--border)] bg-[var(--surface)]">
         <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-4 px-4 py-4 sm:px-6 lg:px-8">
           <Link href={home} className="shrink-0 text-lg font-bold text-[var(--text-primary)]">

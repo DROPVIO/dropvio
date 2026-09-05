@@ -199,7 +199,7 @@ export default async function BoutiquePage({
                           </span>
                         </div>
                         <div className="flex items-center justify-between gap-4 text-sm text-[var(--text-primary)]/90">
-                          <span className="font-semibold">{formatPrice(produit.prix_vente)}</span>
+                          <span className="price-tag font-semibold">{formatPrice(produit.prix_vente)}</span>
                           {produit.prix_original ? <span className="text-[var(--text-faint)] line-through">{formatPrice(produit.prix_original)}</span> : null}
                         </div>
                       </div>
