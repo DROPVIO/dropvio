@@ -56,6 +56,12 @@ type Produit = {
 // Plage par défaut du "sweet spot" : ni invendable (trop peu de commandes), ni déjà saturé
 const SWEET_SPOT_DEFAUT = { min: 500, max: 5000 };
 
+// Envoyé explicitement (plutôt que de changer DEFAULT_LIMIT dans la route, partagée avec
+// tout futur appelant) pour que ce réglage reste local à cette page — vérifié : /api/
+// aliexpress/products n'est aujourd'hui appelée que d'ici, et le total/totalPages renvoyés
+// par la route s'adaptent déjà à n'importe quel limit reçu, aucun changement serveur requis.
+const PRODUITS_PAR_PAGE = 40;
+
 export default function ProduitsGagnants() {
   const [nicheActive, setNicheActive] = useState<string>("all");
   const [tiroirOpen, setTiroirOpen] = useState(false);
@@ -96,6 +102,7 @@ export default function ProduitsGagnants() {
       if (noteMin > 0) params.set("noteMin", String(noteMin));
       if (filtreMarge > 0) params.set("margeMin", String(filtreMarge));
       params.set("page", String(page));
+      params.set("limit", String(PRODUITS_PAR_PAGE));
 
       const url = `/api/aliexpress/products?${params.toString()}`;
       const res = await fetch(url);
@@ -191,12 +198,6 @@ export default function ProduitsGagnants() {
               Les meilleurs produits AliExpress pour le dropshipping — sélectionnés par marge, avis et potentiel.
             </p>
           </div>
-          {!loading && (
-            <div className="bg-violet-500/10 border border-violet-500/25 rounded-[10px] px-4 py-2 text-center min-w-[80px]">
-              <div className="text-[22px] font-extrabold text-[var(--accent)]">{produits.length}</div>
-              <div className="text-[11px] text-[var(--text-faint)]">produits chargés</div>
-            </div>
-          )}
         </div>
       </div>
 
