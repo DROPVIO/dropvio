@@ -3,6 +3,7 @@ import AddToCartButton from "@/app/components/AddToCartButton";
 import { notFound } from "next/navigation";
 import { getBaseUrl } from "@/lib/get-base-url";
 import { getBoutiquePublicUrl } from "@/lib/boutique-subdomains";
+import { fetchBoutiqueApi } from "@/lib/boutique-internal-fetch";
 
 function formatPrice(value: number) {
   return `${value.toFixed(2)}€`;
@@ -25,8 +26,8 @@ export async function generateMetadata({
   const baseUrl = await getBaseUrl();
 
   const [boutiqueRes, produitRes] = await Promise.all([
-    fetch(`${baseUrl}/api/boutiques/slug/${slug}`, { cache: "no-store" }),
-    fetch(`${baseUrl}/api/boutiques/slug/${slug}/produits/${produitId}`, { cache: "no-store" }),
+    fetchBoutiqueApi(`${baseUrl}/api/boutiques/slug/${slug}`),
+    fetchBoutiqueApi(`${baseUrl}/api/boutiques/slug/${slug}/produits/${produitId}`),
   ]);
 
   if (!produitRes.ok) {
@@ -66,9 +67,7 @@ export default async function ProduitPage({
   const { slug, produitId } = await params;
   const baseUrl = await getBaseUrl();
 
-  const produitRes = await fetch(`${baseUrl}/api/boutiques/slug/${slug}/produits/${produitId}`, {
-    cache: "no-store",
-  });
+  const produitRes = await fetchBoutiqueApi(`${baseUrl}/api/boutiques/slug/${slug}/produits/${produitId}`);
 
   if (!produitRes.ok) {
     notFound();

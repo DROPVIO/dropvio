@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getBaseUrl } from "@/lib/get-base-url";
 import { getBoutiqueBasePath } from "@/lib/boutique-links";
+import { fetchBoutiqueApi } from "@/lib/boutique-internal-fetch";
 import BoutiqueHeaderCart from "@/app/components/boutique/BoutiqueHeaderCart";
 
 // Layout partagé par toutes les pages boutique publique (page.tsx, produits/[produitId],
@@ -21,7 +22,7 @@ export default async function BoutiquePublicLayout({
   const { slug } = await params;
   const baseUrl = await getBaseUrl();
 
-  const boutiqueRes = await fetch(`${baseUrl}/api/boutiques/slug/${slug}`, { cache: "no-store" });
+  const boutiqueRes = await fetchBoutiqueApi(`${baseUrl}/api/boutiques/slug/${slug}`);
   if (!boutiqueRes.ok) {
     notFound();
   }

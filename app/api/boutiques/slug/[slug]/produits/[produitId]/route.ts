@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
+import { canViewBoutique } from "@/lib/boutique-access";
 
 export async function GET(request: NextRequest, context: { params: Promise<{ slug: string; produitId: string }> }) {
   const { slug, produitId } = await context.params;
@@ -7,16 +8,15 @@ export async function GET(request: NextRequest, context: { params: Promise<{ slu
 
   const { data: boutique, error: boutiqueError } = await supabase
     .from("boutiques")
-    .select("id")
+    .select("id, est_publique, user_id")
     .eq("slug", slug)
-    .eq("est_publique", true)
     .maybeSingle();
 
   if (boutiqueError) {
     return NextResponse.json({ error: boutiqueError.message }, { status: 500 });
   }
 
-  if (!boutique) {
+  if (!boutique || !(await canViewBoutique(boutique.est_publique, boutique.user_id))) {
     return NextResponse.json({ error: "Boutique introuvable." }, { status: 404 });
   }
 

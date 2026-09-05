@@ -7,6 +7,7 @@ import { TEXTES_DEFAUT } from "@/lib/site-templates";
 import { getBaseUrl } from "@/lib/get-base-url";
 import { getBoutiqueBasePath } from "@/lib/boutique-links";
 import { getBoutiquePublicUrl } from "@/lib/boutique-subdomains";
+import { fetchBoutiqueApi } from "@/lib/boutique-internal-fetch";
 
 const PAGE_SIZE = 12;
 
@@ -25,7 +26,7 @@ export async function generateMetadata({
   const { slug } = await params;
   const baseUrl = await getBaseUrl();
 
-  const boutiqueRes = await fetch(`${baseUrl}/api/boutiques/slug/${slug}`, { cache: "no-store" });
+  const boutiqueRes = await fetchBoutiqueApi(`${baseUrl}/api/boutiques/slug/${slug}`);
   if (!boutiqueRes.ok) {
     return { title: "Boutique introuvable" };
   }
@@ -69,7 +70,7 @@ export default async function BoutiquePage({
 
   const baseUrl = await getBaseUrl();
 
-  const boutiqueRes = await fetch(`${baseUrl}/api/boutiques/slug/${slug}`, { cache: "no-store" });
+  const boutiqueRes = await fetchBoutiqueApi(`${baseUrl}/api/boutiques/slug/${slug}`);
   if (!boutiqueRes.ok) {
     notFound();
   }
@@ -82,9 +83,7 @@ export default async function BoutiquePage({
   if (categoryId) productsParams.set("categoryId", categoryId);
   if (searchTerm) productsParams.set("search", searchTerm);
 
-  const productsRes = await fetch(`${baseUrl}/api/boutiques/slug/${slug}/produits?${productsParams.toString()}`, {
-    cache: "no-store",
-  });
+  const productsRes = await fetchBoutiqueApi(`${baseUrl}/api/boutiques/slug/${slug}/produits?${productsParams.toString()}`);
   const { products: produits } = productsRes.ok
     ? ((await productsRes.json()) as {
         products: {

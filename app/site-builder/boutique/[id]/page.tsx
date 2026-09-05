@@ -7,6 +7,7 @@ import { slugify } from "@/lib/slugify";
 import ProduitsSuggeres from "@/components/ProduitsSuggeres";
 import { BOUTIQUE_PRODUITS_CAP, writeBoutiqueDraft } from "@/lib/site-builder-handoff";
 import { NICHES } from "@/lib/niches";
+import { getBoutiquePublicUrl } from "@/lib/boutique-subdomains";
 
 type Boutique = {
   id: string;
@@ -656,6 +657,17 @@ export default function BoutiqueBuilderDetailPage() {
             </p>
           </div>
           <div className="flex flex-wrap gap-3">
+            {boutique ? (
+              <a
+                href={getBoutiquePublicUrl(boutique.slug)}
+                target="_blank"
+                rel="noopener noreferrer"
+                title={boutique.est_publique ? "Ouvrir la boutique publique" : "Aperçu réservé au propriétaire — la boutique reste privée pour les visiteurs"}
+                className="rounded-2xl border border-[var(--border)] bg-[var(--surface-2)] px-4 py-3 text-sm font-semibold text-[var(--text-primary)] transition hover:border-violet-500/40 hover:bg-violet-500/10"
+              >
+                👁 Aperçu
+              </a>
+            ) : null}
             <Link
               href="/site-builder/boutique"
               className="rounded-2xl border border-[var(--border)] bg-[var(--surface-2)] px-4 py-3 text-sm font-semibold text-[var(--text-primary)] transition hover:border-violet-500/40 hover:bg-violet-500/10"

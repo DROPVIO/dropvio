@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getBaseUrl } from "@/lib/get-base-url";
+import { fetchBoutiqueApi } from "@/lib/boutique-internal-fetch";
 
 export async function generateMetadata({
   params,
@@ -10,7 +11,7 @@ export async function generateMetadata({
   const { slug } = await params;
   const baseUrl = await getBaseUrl();
 
-  const boutiqueRes = await fetch(`${baseUrl}/api/boutiques/slug/${slug}`, { cache: "no-store" });
+  const boutiqueRes = await fetchBoutiqueApi(`${baseUrl}/api/boutiques/slug/${slug}`);
   if (!boutiqueRes.ok) {
     return { title: "À propos" };
   }
@@ -27,7 +28,7 @@ export default async function AProposPage({
   const { slug } = await params;
   const baseUrl = await getBaseUrl();
 
-  const boutiqueRes = await fetch(`${baseUrl}/api/boutiques/slug/${slug}`, { cache: "no-store" });
+  const boutiqueRes = await fetchBoutiqueApi(`${baseUrl}/api/boutiques/slug/${slug}`);
   if (!boutiqueRes.ok) {
     notFound();
   }
