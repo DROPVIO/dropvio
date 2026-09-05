@@ -69,7 +69,14 @@ async function generateHtmlViaClaude(prompt: string): Promise<string> {
     });
   }
 
-  return html;
+  // Malgré la consigne, Claude enveloppe parfois sa réponse dans une balise markdown —
+  // même nettoyage que app/api/audit-site/html/route.ts et
+  // app/api/boutiques/[id]/generer-contenu/route.ts. Appliqué une seule fois sur le texte
+  // final concaténé (pas par chunk) : seule la toute première tentative peut porter une
+  // balise ouvrante, seule la toute dernière peut porter une balise fermante.
+  return html.startsWith("```")
+    ? html.replace(/^```(?:html)?\n?/, "").replace(/\n?```$/, "").trim()
+    : html;
 }
 
 // Injecte la grille de produits (construite déterministiquement, voir lib/site-templates.ts)
