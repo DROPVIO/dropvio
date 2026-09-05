@@ -16,7 +16,7 @@ export const SHOPIFY_API_VERSION = "2024-10";
 // Un changement de cette liste force la ré-authentification des marchands déjà connectés :
 // Shopify n'octroie jamais un nouveau scope sur un token existant.
 const SHOPIFY_SCOPES =
-  "read_products,write_products,read_content,write_content,read_themes,write_themes,read_orders,read_returns,read_shopify_payments_disputes";
+  "read_products,write_products,write_inventory,read_content,write_content,read_themes,write_themes,read_orders,read_returns,read_shopify_payments_disputes";
 
 export function isShopifyConfigured(): boolean {
   return Boolean(process.env.SHOPIFY_CLIENT_ID && process.env.SHOPIFY_CLIENT_SECRET);
