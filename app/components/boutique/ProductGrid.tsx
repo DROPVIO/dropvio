@@ -10,7 +10,7 @@ export type BoutiqueProduitCarte = {
   boutique_categories: { nom: string; slug: string } | null;
 };
 
-function formatPrice(value: number) {
+export function formatPrice(value: number) {
   return `${value.toFixed(2)}€`;
 }
 

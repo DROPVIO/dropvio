@@ -113,7 +113,7 @@ export default async function BoutiquePublicLayout({
                 {category.nom}
               </Link>
             ))}
-            <Link href={`${home}#produits`} className="shrink-0 transition hover:text-[var(--text-primary)]">
+            <Link href={`${basePath}/produits`} className="shrink-0 transition hover:text-[var(--text-primary)]">
               Catalogue
             </Link>
             <Link

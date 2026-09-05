@@ -29,28 +29,31 @@ export async function GET(request: NextRequest, context: { params: Promise<{ slu
     return NextResponse.json({ error: "Boutique introuvable." }, { status: 404 });
   }
 
-  // Bestsellers = triés par produits.commandes (nombre de commandes fournisseur, la seule
-  // donnée de popularité disponible aujourd'hui), via boutique_produits.source_produit_id.
-  // Tri fait en JS après coup plutôt qu'en SQL : PostgREST n'ordonne pas nativement sur une
-  // colonne d'une table jointe via .order(). Si aucun produit n'a de commandes connues
-  // (import manuel, jamais lié au catalogue), renvoie une liste vide plutôt que de désigner
-  // arbitrairement des "bestsellers" sans donnée réelle derrière.
-  if (searchParams.get("bestsellers") === "1") {
-    const { data: withSource, error: bestsellersError } = await supabase
+  // Bestsellers/spotlight = triés par produits.commandes (nombre de commandes fournisseur,
+  // la seule donnée de popularité disponible aujourd'hui), via
+  // boutique_produits.source_produit_id. Tri fait en JS après coup plutôt qu'en SQL :
+  // PostgREST n'ordonne pas nativement sur une colonne d'une table jointe via .order().
+  // Rang 1 = spotlight, rangs 2-4 = bestsellers — jamais le même produit dans les deux
+  // (voir app/boutiques/[slug]/page.tsx). Si aucun produit n'a de commandes connues (import
+  // manuel, jamais lié au catalogue), renvoie une liste vide plutôt que de désigner
+  // arbitrairement des "bestsellers"/un "spotlight" sans donnée réelle derrière.
+  if (searchParams.get("bestsellers") === "1" || searchParams.get("spotlight") === "1") {
+    const { data: withSource, error: rankedError } = await supabase
       .from("boutique_produits")
       .select("*, boutique_categories(nom, slug), produits(commandes)")
       .eq("boutique_id", boutique.id);
 
-    if (bestsellersError) {
-      return NextResponse.json({ error: bestsellersError.message }, { status: 500 });
+    if (rankedError) {
+      return NextResponse.json({ error: rankedError.message }, { status: 500 });
     }
 
-    const bestsellers = (withSource ?? [])
+    const ranked = (withSource ?? [])
       .filter((p) => typeof p.produits?.commandes === "number")
-      .sort((a, b) => b.produits.commandes - a.produits.commandes)
-      .slice(0, 3);
+      .sort((a, b) => b.produits.commandes - a.produits.commandes);
 
-    return NextResponse.json({ products: bestsellers, total: bestsellers.length, page: 1, limit: 3, totalPages: 1 });
+    const products = searchParams.get("spotlight") === "1" ? ranked.slice(0, 1) : ranked.slice(1, 4);
+
+    return NextResponse.json({ products, total: products.length, page: 1, limit: products.length || 1, totalPages: 1 });
   }
 
   let query = supabase
