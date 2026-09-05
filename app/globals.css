@@ -149,6 +149,51 @@
   text-shadow: 0 0 14px var(--niche-glow);
 }
 
+/* Palette boutique personnalisée (voir app/api/boutiques/[id]/generer-contenu/route.ts
+   et boutiques.settings.palette) : même mécanisme que le bloc niche ci-dessus (attribut
+   data + règles hors @layer, donc pas de !important), sur les mêmes classes violettes
+   fixes. Les valeurs hex elles-mêmes sont posées en inline style sur le conteneur par
+   app/boutiques/[slug]/layout.tsx (--boutique-palette-primary/--boutique-palette-accent)
+   — ces règles ne font que les router vers les bons éléments. Placé après le bloc niche :
+   si une boutique a une niche ET une palette personnalisée, la palette gagne (choix
+   explicite de l'utilisateur, prioritaire sur l'accent saisonnier automatique). La
+   couleur "secondaire" de la palette (fonds de section alternés) n'a pas d'équivalent
+   visuel sur les pages boutique publiques actuelles (design à une seule surface, pas de
+   sections alternées) — stockée dans settings.palette pour un usage futur, pas encore
+   appliquée ici. */
+[data-boutique-palette="custom"] .bg-violet-500,
+[data-boutique-palette="custom"] .hover\:bg-violet-400:hover {
+  background-color: var(--boutique-palette-primary);
+}
+
+[data-boutique-palette="custom"] .bg-violet-500\/10,
+[data-boutique-palette="custom"] .bg-violet-500\/15,
+[data-boutique-palette="custom"] .hover\:bg-violet-500\/10:hover {
+  background-color: color-mix(in srgb, var(--boutique-palette-primary) 12%, transparent);
+}
+
+[data-boutique-palette="custom"] .border-violet-400,
+[data-boutique-palette="custom"] .border-violet-500,
+[data-boutique-palette="custom"] .border-violet-400\/60,
+[data-boutique-palette="custom"] .border-violet-500\/40,
+[data-boutique-palette="custom"] .hover\:border-violet-400\/60:hover,
+[data-boutique-palette="custom"] .hover\:border-violet-500\/40:hover,
+[data-boutique-palette="custom"] .focus\:border-violet-500:focus {
+  border-color: var(--boutique-palette-primary);
+}
+
+[data-boutique-palette="custom"] .text-violet-300 {
+  color: var(--boutique-palette-accent);
+}
+
+[data-boutique-palette="custom"] .focus\:ring-violet-500:focus {
+  --tw-ring-color: var(--boutique-palette-primary);
+}
+
+[data-boutique-palette="custom"] .price-tag {
+  color: var(--boutique-palette-accent);
+}
+
 @theme inline {
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);

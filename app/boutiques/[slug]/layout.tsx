@@ -1,3 +1,4 @@
+import type { CSSProperties } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getBaseUrl } from "@/lib/get-base-url";
@@ -38,8 +39,24 @@ export default async function BoutiquePublicLayout({
   const colorMode = rawColorMode === "light" || rawColorMode === "dark" ? rawColorMode : undefined;
   const niche = typeof boutique.settings?.niche === "string" ? boutique.settings.niche : undefined;
 
+  const rawPalette = boutique.settings?.palette as { primary?: unknown; secondary?: unknown; accent?: unknown } | undefined;
+  const hasCustomPalette =
+    typeof rawPalette?.primary === "string" && typeof rawPalette?.accent === "string";
+  const paletteStyle = hasCustomPalette
+    ? ({
+        "--boutique-palette-primary": rawPalette!.primary,
+        "--boutique-palette-accent": rawPalette!.accent,
+      } as CSSProperties)
+    : undefined;
+
   return (
-    <div className="min-h-screen bg-[var(--bg)]" data-boutique-theme={colorMode} data-boutique-niche={niche}>
+    <div
+      className="min-h-screen bg-[var(--bg)]"
+      data-boutique-theme={colorMode}
+      data-boutique-niche={niche}
+      data-boutique-palette={hasCustomPalette ? "custom" : undefined}
+      style={paletteStyle}
+    >
       <header className="border-b border-[var(--border)] bg-[var(--surface)]">
         <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-4 px-4 py-4 sm:px-6 lg:px-8">
           <Link href={home} className="shrink-0 text-lg font-bold text-[var(--text-primary)]">
