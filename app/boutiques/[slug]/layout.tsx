@@ -95,8 +95,14 @@ export default async function BoutiquePublicLayout({
               Catalogue
             </Link>
             <Link
-              href={`${basePath}/mentions-legales`}
+              href={`${basePath}/a-propos`}
               className="shrink-0 transition hover:text-[var(--text-primary)] ml-auto"
+            >
+              À propos
+            </Link>
+            <Link
+              href={`${basePath}/mentions-legales`}
+              className="shrink-0 transition hover:text-[var(--text-primary)]"
             >
               Mentions légales
             </Link>
