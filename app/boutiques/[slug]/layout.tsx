@@ -91,7 +91,10 @@ export default async function BoutiquePublicLayout({
             >
               👤
             </span>
-            <BoutiqueHeaderCart fullCartHref={`${home}#panier`} />
+            {/* La page d'accueil n'a plus de panneau panier statique (doublon avec ce
+                tiroir, retiré lors de la refonte de la page d'accueil) — "Voir mon panier"
+                ramène simplement à l'accueil de la boutique. */}
+            <BoutiqueHeaderCart fullCartHref={home} />
           </div>
         </div>
 

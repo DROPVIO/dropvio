@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import BoutiqueCart from "@/app/components/BoutiqueCart";
 import ProductGrid from "@/app/components/boutique/ProductGrid";
 import { TEXTES_DEFAUT } from "@/lib/site-templates";
 import { getBaseUrl } from "@/lib/get-base-url";
@@ -100,91 +99,90 @@ export default async function BoutiquePage({
 
   const template = TEXTES_DEFAUT.generique;
   const basePath = await getBoutiqueBasePath(slug);
+  const tagline = boutique.description || template.description;
 
   return (
     <main className="min-h-screen bg-[var(--bg)] text-[var(--text-primary)]">
-      <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
-        <div className="grid gap-12 lg:grid-cols-[0.9fr_0.45fr]">
-          <div className="space-y-6">
-            <div id="collections" className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-8 shadow-xl shadow-violet-500/10 scroll-mt-24">
-              <p className="text-sm uppercase tracking-[0.3em] text-violet-300">Nos collections</p>
-              <p className="mt-4 max-w-2xl text-sm leading-7 text-[var(--text-muted)]">{boutique.description || template.description}</p>
-              <div className="mt-8 flex flex-wrap gap-3">
-                <Link
-                  href={`${basePath || "/"}${searchTerm ? `?search=${encodeURIComponent(searchTerm)}` : ""}`}
-                  className={`rounded-full border px-4 py-2 text-sm transition ${
-                    !categoryId
-                      ? "border-violet-400 bg-violet-500/15 text-[var(--text-primary)]"
-                      : "border-[var(--border)] bg-[var(--surface-2)] text-[var(--text-primary)] hover:border-violet-400/60 hover:bg-violet-500/10"
-                  }`}
-                >
-                  Toutes les catégories
-                </Link>
-                {categories?.map((category) => {
-                  const active = category.id === categoryId;
-                  const href = `${basePath}?categoryId=${category.id}${searchTerm ? `&search=${encodeURIComponent(searchTerm)}` : ""}`;
-                  return (
-                    <Link
-                      key={category.id}
-                      href={href}
-                      className={`rounded-full border px-4 py-2 text-sm transition ${
-                        active
-                          ? "border-violet-400 bg-violet-500/15 text-[var(--text-primary)]"
-                          : "border-[var(--border)] bg-[var(--surface-2)] text-[var(--text-primary)] hover:border-violet-400/60 hover:bg-violet-500/10"
-                      }`}
-                    >
-                      {category.nom}
-                    </Link>
-                  );
-                })}
-              </div>
-            </div>
+      {/* HERO — pleine largeur, seule utilisation de boutique.description sur cette page
+          (avant : dupliqué entre "Nos collections" et "À propos"). Dégradé calé sur la
+          palette personnalisée de la boutique si elle en a une (voir
+          app/boutiques/[slug]/layout.tsx, --boutique-palette-*), sinon les tokens d'accent
+          par défaut de l'app. */}
+      <section className="relative overflow-hidden border-b border-[var(--border)] bg-gradient-to-br from-[var(--boutique-palette-primary,var(--accent))] to-[var(--boutique-palette-accent,var(--accent-secondary))]">
+        <div className="mx-auto max-w-5xl px-4 py-20 text-center sm:px-6 lg:px-8">
+          <h1 className="text-4xl font-bold text-white sm:text-5xl">{boutique.nom}</h1>
+          <p className="mx-auto mt-4 max-w-2xl text-base leading-7 text-white/90">{tagline}</p>
+          <a
+            href="#produits"
+            className="mt-8 inline-block rounded-full bg-white px-6 py-3 text-sm font-semibold text-[var(--bg)] transition hover:bg-white/90"
+          >
+            Voir les produits
+          </a>
+        </div>
+      </section>
 
-            <div id="catalogue" className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-8 scroll-mt-24">
-              <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-                <div>
-                  <h1 className="text-2xl font-semibold text-[var(--text-primary)]">Catalogue</h1>
-                  <p className="mt-2 text-sm text-[var(--text-muted)]">Découvre tous les produits disponibles dans cette boutique.</p>
-                </div>
-                <div className="rounded-full bg-violet-500/10 px-4 py-2 text-sm text-[var(--accent)]">{produits?.length ?? 0} produit(s)</div>
-              </div>
-              <form method="get" className="mb-6 grid gap-4 sm:grid-cols-[1fr_auto]">
-                <div className="grid gap-4 sm:grid-cols-[1fr_auto]">
-                  <input
-                    name="search"
-                    defaultValue={searchTerm}
-                    placeholder="Recherche nom ou description"
-                    className="w-full rounded-2xl border border-[var(--border)] bg-[var(--bg-sunken)] px-4 py-3 text-sm text-[var(--text-primary)] outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
-                  />
-                  <input type="hidden" name="categoryId" value={categoryId} />
-                </div>
-                <button
-                  type="submit"
-                  className="rounded-2xl bg-violet-500 px-4 py-3 text-sm font-semibold text-white transition hover:bg-violet-400"
-                >
-                  Filtrer
-                </button>
-              </form>
-              <ProductGrid produits={produits} basePath={basePath} />
-            </div>
+      {/* RÉASSURANCE — bande fine pleine largeur, pas une carte de dashboard */}
+      <section className="border-b border-[var(--border)] bg-[var(--surface)]">
+        <div className="mx-auto grid max-w-7xl grid-cols-1 gap-3 px-4 py-6 text-center text-sm text-[var(--text-muted)] sm:grid-cols-3 sm:px-6 lg:px-8">
+          <div>🚚 Livraison suivie</div>
+          <div>↩ Retour sous 14 jours</div>
+          <div>🔒 Boutique vérifiée Dropvio</div>
+        </div>
+      </section>
+
+      {/* FILTRES + GRILLE PRODUITS — pleine largeur */}
+      <section id="produits" className="mx-auto max-w-7xl scroll-mt-24 px-4 pt-12 sm:px-6 lg:px-8">
+        <div className="flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <h2 className="text-2xl font-semibold text-[var(--text-primary)]">
+              {searchTerm ? `Résultats pour « ${searchTerm} »` : "Nos produits"}
+            </h2>
+            {searchTerm ? (
+              <Link
+                href={`${basePath || "/"}${categoryId ? `?categoryId=${categoryId}` : ""}`}
+                className="mt-1 inline-block text-sm text-[var(--text-muted)] underline underline-offset-2 hover:text-[var(--text-primary)]"
+              >
+                ✕ Effacer la recherche
+              </Link>
+            ) : null}
           </div>
+          <span className="rounded-full bg-violet-500/10 px-4 py-2 text-sm text-[var(--accent)]">
+            {produits?.length ?? 0} produit(s)
+          </span>
+        </div>
 
-          <aside className="space-y-6">
-            <div className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-6">
-              <h2 className="text-lg font-semibold text-[var(--text-primary)]">À propos</h2>
-              <p className="mt-4 text-sm leading-7 text-[var(--text-muted)]">{boutique.description || template.sousTitre}</p>
-            </div>
-            <div className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-6">
-              <h2 className="text-lg font-semibold text-[var(--text-primary)]">Nos engagements</h2>
-              <div className="mt-4 space-y-3 text-sm text-[var(--text-muted)]">
-                <p>🚚 Livraison suivie</p>
-                <p>↩ Retour sous 14 jours</p>
-              </div>
-            </div>
-            <div id="panier" className="scroll-mt-24">
-              <BoutiqueCart />
-            </div>
-          </aside>
+        <div className="mt-6 flex flex-wrap gap-3">
+          <Link
+            href={`${basePath || "/"}${searchTerm ? `?search=${encodeURIComponent(searchTerm)}` : ""}`}
+            className={`rounded-full border px-4 py-2 text-sm transition ${
+              !categoryId
+                ? "border-violet-400 bg-violet-500/15 text-[var(--text-primary)]"
+                : "border-[var(--border)] bg-[var(--surface-2)] text-[var(--text-primary)] hover:border-violet-400/60 hover:bg-violet-500/10"
+            }`}
+          >
+            Toutes les catégories
+          </Link>
+          {categories?.map((category) => {
+            const active = category.id === categoryId;
+            const href = `${basePath}?categoryId=${category.id}${searchTerm ? `&search=${encodeURIComponent(searchTerm)}` : ""}`;
+            return (
+              <Link
+                key={category.id}
+                href={href}
+                className={`rounded-full border px-4 py-2 text-sm transition ${
+                  active
+                    ? "border-violet-400 bg-violet-500/15 text-[var(--text-primary)]"
+                    : "border-[var(--border)] bg-[var(--surface-2)] text-[var(--text-primary)] hover:border-violet-400/60 hover:bg-violet-500/10"
+                }`}
+              >
+                {category.nom}
+              </Link>
+            );
+          })}
+        </div>
+
+        <div className="mt-8 pb-16">
+          <ProductGrid produits={produits} basePath={basePath} />
         </div>
       </section>
     </main>

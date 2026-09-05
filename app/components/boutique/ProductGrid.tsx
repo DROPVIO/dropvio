@@ -34,14 +34,14 @@ export default function ProductGrid({
   }
 
   return (
-    <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
+    <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
       {produits.map((produit) => (
         <Link
           key={produit.id}
           href={`${basePath}/produits/${produit.id}`}
-          className="group overflow-hidden rounded-3xl border border-[var(--border)] bg-[var(--surface)] transition hover:border-violet-500/40 hover:bg-[var(--surface-2)]"
+          className="group overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)] transition hover:border-violet-500/40 hover:shadow-lg"
         >
-          <div className="relative h-64 overflow-hidden bg-[var(--surface-2)]">
+          <div className="relative aspect-square overflow-hidden bg-[var(--surface-2)]">
             {produit.image_urls?.[0] ? (
               <img
                 src={produit.image_urls[0]}
@@ -51,18 +51,15 @@ export default function ProductGrid({
             ) : (
               <div className="flex h-full w-full items-center justify-center text-3xl text-[var(--text-faint)]">🖼️</div>
             )}
-          </div>
-          <div className="space-y-3 p-6">
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <h3 className="text-lg font-semibold text-[var(--text-primary)]">{produit.nom}</h3>
-                <p className="mt-2 text-sm text-[var(--text-muted)] line-clamp-2">{produit.description || "Pas de description disponible."}</p>
-              </div>
-              <span className="rounded-full bg-violet-500/10 px-3 py-1 text-xs uppercase tracking-[0.3em] text-[var(--accent)]">
-                {produit.boutique_categories?.nom ?? "Sans catégorie"}
+            {produit.boutique_categories?.nom ? (
+              <span className="absolute left-3 top-3 rounded-full bg-[var(--bg)]/90 px-3 py-1 text-[11px] uppercase tracking-[0.2em] text-[var(--accent)]">
+                {produit.boutique_categories.nom}
               </span>
-            </div>
-            <div className="flex items-center justify-between gap-4 text-sm text-[var(--text-primary)]/90">
+            ) : null}
+          </div>
+          <div className="space-y-1.5 p-4">
+            <h3 className="text-base font-semibold text-[var(--text-primary)] line-clamp-1">{produit.nom}</h3>
+            <div className="flex items-center gap-2 text-sm">
               <span className="price-tag font-semibold">{formatPrice(produit.prix_vente)}</span>
               {produit.prix_original ? <span className="text-[var(--text-faint)] line-through">{formatPrice(produit.prix_original)}</span> : null}
             </div>
