@@ -100,9 +100,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Connecte-toi pour générer une landing page." }, { status: 401 });
   }
 
-  // Garde-fou technique indépendant du quota métier (sitesParMoisMax, illimité en Pro/
-  // Agency) : chaque appel déclenche un appel Claude facturé, donc même un plan illimité
-  // ne doit pas pouvoir enchaîner des centaines de générations d'affilée (script, compte
+  // Garde-fou technique indépendant du quota métier (sitesParMoisMax) : chaque appel
+  // déclenche un appel Claude facturé, donc même un plan avec du quota restant ne doit
+  // pas pouvoir enchaîner des centaines de générations en une heure (script, compte
   // compromis...).
   if (!checkRateLimit(`generate-site:${user.id}`, { max: 10, windowMs: 3_600_000 })) {
     return NextResponse.json(
@@ -130,7 +130,9 @@ export async function POST(request: NextRequest) {
     if ((count ?? 0) >= maxSites) {
       return NextResponse.json(
         {
-          error: `Tu as atteint la limite de ${maxSites} sites générés ce mois-ci sur le plan ${planLabel(plan)}. Passe Pro pour un accès illimité.`,
+          error: `Tu as atteint la limite de ${maxSites} sites générés ce mois-ci sur le plan ${planLabel(plan)}. ${
+            plan === "free" ? "Passe Pro pour 20 sites par mois." : plan === "pro" ? "Passe Agency pour 50 sites par mois." : "La limite se réinitialise le mois prochain."
+          }`,
         },
         { status: 403 }
       );

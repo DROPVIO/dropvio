@@ -67,7 +67,9 @@ export async function POST(request: NextRequest) {
     if ((count ?? 0) >= max) {
       return NextResponse.json(
         {
-          error: `Tu as atteint la limite de ${max} sites générés ce mois-ci sur le plan ${planLabel(plan)}. Passe Pro pour un accès illimité.`,
+          error: `Tu as atteint la limite de ${max} sites générés ce mois-ci sur le plan ${planLabel(plan)}. ${
+            plan === "free" ? "Passe Pro pour 20 sites par mois." : plan === "pro" ? "Passe Agency pour 50 sites par mois." : "La limite se réinitialise le mois prochain."
+          }`,
         },
         { status: 403 }
       );

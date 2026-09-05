@@ -74,7 +74,7 @@ export async function POST(request: NextRequest) {
 
     const message = await client.messages.create({
       model: "claude-sonnet-4-6",
-      max_tokens: 8192,
+      max_tokens: 16000,
       system:
         "Tu es un expert HTML/CSS pour landing pages e-commerce. Retourne UNIQUEMENT le HTML corrigé complet — pas de markdown, pas de balises de code, pas de commentaires sur ta démarche. Juste le HTML brut avec les corrections appliquées.",
       messages: [
