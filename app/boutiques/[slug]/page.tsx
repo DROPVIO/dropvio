@@ -82,39 +82,51 @@ export default async function BoutiquePage({
   if (categoryId) productsParams.set("categoryId", categoryId);
   if (searchTerm) productsParams.set("search", searchTerm);
 
-  const productsRes = await fetchBoutiqueApi(`${baseUrl}/api/boutiques/slug/${slug}/produits?${productsParams.toString()}`);
+  type ProduitCarte = {
+    id: string;
+    nom: string;
+    description: string | null;
+    prix_vente: number;
+    prix_original: number | null;
+    image_urls: string[] | null;
+    boutique_categories: { nom: string; slug: string } | null;
+  };
+
+  const [productsRes, bestsellersRes] = await Promise.all([
+    fetchBoutiqueApi(`${baseUrl}/api/boutiques/slug/${slug}/produits?${productsParams.toString()}`),
+    fetchBoutiqueApi(`${baseUrl}/api/boutiques/slug/${slug}/produits?bestsellers=1`),
+  ]);
   const { products: produits } = productsRes.ok
-    ? ((await productsRes.json()) as {
-        products: {
-          id: string;
-          nom: string;
-          description: string | null;
-          prix_vente: number;
-          prix_original: number | null;
-          image_urls: string[] | null;
-          boutique_categories: { nom: string; slug: string } | null;
-        }[];
-      })
+    ? ((await productsRes.json()) as { products: ProduitCarte[] })
+    : { products: [] };
+  const { products: bestsellers } = bestsellersRes.ok
+    ? ((await bestsellersRes.json()) as { products: ProduitCarte[] })
     : { products: [] };
 
   const template = TEXTES_DEFAUT.generique;
   const basePath = await getBoutiqueBasePath(slug);
-  const tagline = boutique.description || template.description;
 
   return (
     <main className="min-h-screen bg-[var(--bg)] text-[var(--text-primary)]">
-      {/* HERO — pleine largeur, seule utilisation de boutique.description sur cette page
-          (avant : dupliqué entre "Nos collections" et "À propos"). Dégradé calé sur la
-          palette personnalisée de la boutique si elle en a une (voir
-          app/boutiques/[slug]/layout.tsx, --boutique-palette-*), sinon les tokens d'accent
-          par défaut de l'app. */}
-      <section className="relative overflow-hidden border-b border-[var(--border)] bg-gradient-to-br from-[var(--boutique-palette-primary,var(--accent))] to-[var(--boutique-palette-accent,var(--accent-secondary))]">
+      {/* HERO — pleine largeur, accroche générique fixe (jamais boutique.description : le
+          vrai texte de la boutique est l'exclusivité de la section "À propos" plus bas,
+          pour ne pas recréer le doublon corrigé plus tôt ce soir). Dégradé en style inline
+          plutôt qu'en classe Tailwind arbitraire : var(--x, var(--y)) imbriqué dans un
+          crochet Tailwind ne compile jamais (bug constaté et corrigé ici même) — un style
+          inline est évalué directement par le navigateur, sans passer par Tailwind. */}
+      <section
+        className="relative overflow-hidden border-b border-[var(--border)]"
+        style={{
+          backgroundImage:
+            "linear-gradient(to bottom right, var(--boutique-palette-primary, var(--accent)), var(--boutique-palette-accent, var(--accent-secondary)))",
+        }}
+      >
         <div className="mx-auto max-w-5xl px-4 py-20 text-center sm:px-6 lg:px-8">
           <h1 className="text-4xl font-bold text-white sm:text-5xl">{boutique.nom}</h1>
-          <p className="mx-auto mt-4 max-w-2xl text-base leading-7 text-white/90">{tagline}</p>
+          <p className="mx-auto mt-4 max-w-2xl text-base leading-7 text-white/90">{template.sousTitre}</p>
           <a
             href="#produits"
-            className="mt-8 inline-block rounded-full bg-white px-6 py-3 text-sm font-semibold text-[var(--bg)] transition hover:bg-white/90"
+            className="mt-8 inline-block rounded-full bg-white px-6 py-3 text-sm font-semibold text-[var(--bg)] transition hover:scale-[1.03] hover:bg-white/90"
           >
             Voir les produits
           </a>
@@ -131,6 +143,28 @@ export default async function BoutiquePage({
           <div>🔒 Boutique vérifiée Dropvio</div>
         </div>
       </section>
+
+      {/* À PROPOS — seule utilisation de boutique.description sur cette page (avant :
+          dupliquée entre "Nos collections" et "À propos" ; ce soir, remplacée par une
+          accroche fixe dans le hero pour éviter de recréer ce doublon). Bloc texte centré,
+          sans bordure ni carte, même traitement visuel que le hero. */}
+      <section id="a-propos" className="mx-auto max-w-3xl scroll-mt-24 px-4 py-16 text-center sm:px-6 lg:px-8">
+        <p className="text-sm uppercase tracking-[0.3em] text-violet-300">À propos</p>
+        <p className="mt-4 text-base leading-7 text-[var(--text-muted)]">{boutique.description || template.description}</p>
+      </section>
+
+      {/* BESTSELLERS — jusqu'à 3 produits, triés par commandes réelles (produits.commandes
+          via source_produit_id). Absente si aucun produit n'a de donnée de commandes
+          connue (import manuel, jamais lié au catalogue) — pas de "bestseller" arbitraire
+          sans donnée réelle derrière. Réutilise ProductGrid tel quel. */}
+      {bestsellers.length > 0 ? (
+        <section className="mx-auto max-w-7xl px-4 pt-4 sm:px-6 lg:px-8">
+          <h2 className="text-2xl font-semibold text-[var(--text-primary)]">🔥 Nos bestsellers</h2>
+          <div className="mt-6">
+            <ProductGrid produits={bestsellers} basePath={basePath} />
+          </div>
+        </section>
+      ) : null}
 
       {/* FILTRES + GRILLE PRODUITS — pleine largeur */}
       <section id="produits" className="mx-auto max-w-7xl scroll-mt-24 px-4 pt-12 sm:px-6 lg:px-8">

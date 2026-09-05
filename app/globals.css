@@ -201,6 +201,49 @@
   background-color: color-mix(in srgb, var(--boutique-palette-secondary, var(--surface)) 18%, var(--surface));
 }
 
+/* Ombre/lift des cartes produit boutique publique + fondu d'entrée de la grille — pas de
+   gate [data-boutique-palette] ici contrairement aux règles ci-dessus : var(...) retombe
+   nativement sur --accent (violet par défaut de l'app) quand aucune palette personnalisée
+   n'existe, donc une seule règle couvre les deux cas sans duplication. Écrit en CSS brut
+   plutôt qu'en valeur arbitraire Tailwind — un var() imbriqué avec repli dans une classe
+   Tailwind ne compile jamais (voir le bug du dégradé du hero, corrigé au même moment).*/
+.boutique-product-card {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+}
+
+.boutique-product-card:hover {
+  transform: translateY(-4px);
+  border-color: color-mix(in srgb, var(--boutique-palette-primary, var(--accent)) 40%, transparent);
+  box-shadow: 0 16px 32px -12px color-mix(in srgb, var(--boutique-palette-primary, var(--accent)) 45%, transparent);
+}
+
+@keyframes boutique-fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.boutique-fade-in {
+  animation: boutique-fade-in-up 0.5s ease both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .boutique-product-card,
+  .boutique-product-card:hover {
+    transition: none;
+    transform: none;
+  }
+  .boutique-fade-in {
+    animation: none;
+  }
+}
+
 @theme inline {
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);

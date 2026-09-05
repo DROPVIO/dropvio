@@ -35,11 +35,12 @@ export default function ProductGrid({
 
   return (
     <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-      {produits.map((produit) => (
+      {produits.map((produit, index) => (
         <Link
           key={produit.id}
           href={`${basePath}/produits/${produit.id}`}
-          className="group overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)] transition hover:border-violet-500/40 hover:shadow-lg"
+          className="boutique-product-card boutique-fade-in group overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)]"
+          style={{ animationDelay: `${Math.min(index, 8) * 60}ms` }}
         >
           <div className="relative aspect-square overflow-hidden bg-[var(--surface-2)]">
             {produit.image_urls?.[0] ? (
@@ -52,7 +53,7 @@ export default function ProductGrid({
               <div className="flex h-full w-full items-center justify-center text-3xl text-[var(--text-faint)]">🖼️</div>
             )}
             {produit.boutique_categories?.nom ? (
-              <span className="absolute left-3 top-3 rounded-full bg-[var(--bg)]/90 px-3 py-1 text-[11px] uppercase tracking-[0.2em] text-[var(--accent)]">
+              <span className="absolute left-3 top-3 rounded-full bg-[var(--bg)]/90 px-3 py-1 text-[11px] uppercase tracking-[0.2em] text-violet-300">
                 {produit.boutique_categories.nom}
               </span>
             ) : null}
