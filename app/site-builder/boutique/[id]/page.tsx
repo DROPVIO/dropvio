@@ -87,6 +87,8 @@ export default function BoutiqueBuilderDetailPage() {
   const [productName, setProductName] = useState("");
   const [productSlug, setProductSlug] = useState("");
   const [productDescription, setProductDescription] = useState("");
+  const [reformulatingNom, setReformulatingNom] = useState(false);
+  const [generatingDescription, setGeneratingDescription] = useState(false);
   const [productImageUrl, setProductImageUrl] = useState("");
   const [productPrixVente, setProductPrixVente] = useState("");
   const [productPrixOriginal, setProductPrixOriginal] = useState("");
@@ -448,6 +450,52 @@ export default function BoutiqueBuilderDetailPage() {
       setImportError("Impossible de contacter le serveur.");
     } finally {
       setImportLoading(false);
+    }
+  }
+
+  async function handleReformulerNom() {
+    if (!productName.trim()) return;
+    setReformulatingNom(true);
+    setProductFormError(null);
+    try {
+      const response = await fetch("/api/generer-texte-produit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ champ: "nom", titre: productName }),
+      });
+      const json = await response.json();
+      if (!response.ok) {
+        setProductFormError(json.error || "Impossible de reformuler le nom.");
+        return;
+      }
+      setProductName(json.texte);
+    } catch {
+      setProductFormError("Impossible de contacter le serveur.");
+    } finally {
+      setReformulatingNom(false);
+    }
+  }
+
+  async function handleGenererDescription() {
+    if (!productName.trim()) return;
+    setGeneratingDescription(true);
+    setProductFormError(null);
+    try {
+      const response = await fetch("/api/generer-texte-produit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ champ: "description", titre: productName }),
+      });
+      const json = await response.json();
+      if (!response.ok) {
+        setProductFormError(json.error || "Impossible de générer la description.");
+        return;
+      }
+      setProductDescription(json.texte);
+    } catch {
+      setProductFormError("Impossible de contacter le serveur.");
+    } finally {
+      setGeneratingDescription(false);
     }
   }
 
@@ -1090,7 +1138,17 @@ export default function BoutiqueBuilderDetailPage() {
 
               <div className="grid gap-4 sm:grid-cols-2">
                 <label className="block text-sm text-[var(--text-muted)]">
-                  Nom du produit
+                  <div className="flex items-center justify-between gap-2">
+                    <span>Nom du produit</span>
+                    <button
+                      type="button"
+                      onClick={handleReformulerNom}
+                      disabled={!productName.trim() || reformulatingNom}
+                      className="shrink-0 rounded-xl border border-[var(--border)] bg-[var(--surface-2)] px-2.5 py-1 text-xs font-semibold text-[var(--text-primary)] transition hover:border-violet-500/40 hover:bg-violet-500/10 disabled:opacity-50"
+                    >
+                      {reformulatingNom ? "…" : "✨ Reformuler"}
+                    </button>
+                  </div>
                   <input
                     type="text"
                     value={productName}
@@ -1112,7 +1170,18 @@ export default function BoutiqueBuilderDetailPage() {
               </div>
 
               <label className="block text-sm text-[var(--text-muted)]">
-                Description
+                <div className="flex items-center justify-between gap-2">
+                  <span>Description</span>
+                  <button
+                    type="button"
+                    onClick={handleGenererDescription}
+                    disabled={!productName.trim() || generatingDescription}
+                    className="shrink-0 rounded-xl border border-[var(--border)] bg-[var(--surface-2)] px-2.5 py-1 text-xs font-semibold text-[var(--text-primary)] transition hover:border-violet-500/40 hover:bg-violet-500/10 disabled:opacity-50"
+                    title={!productName.trim() ? "Renseigne d'abord un nom de produit" : undefined}
+                  >
+                    {generatingDescription ? "…" : "✨ Générer une description"}
+                  </button>
+                </div>
                 <textarea
                   value={productDescription}
                   onChange={(event) => setProductDescription(event.target.value)}
