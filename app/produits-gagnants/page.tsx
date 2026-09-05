@@ -5,7 +5,7 @@ import Link from "next/link";
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
 import { slugify } from "@/lib/slugify";
 import ProduitsSuggeres from "@/components/ProduitsSuggeres";
-import { NICHES as NICHES_CATALOGUE } from "@/lib/niches";
+import { NICHES as NICHES_CATALOGUE, nicheLabel } from "@/lib/niches";
 // Simplifie un titre produit AliExpress (souvent long et bruité) en mot-clé exploitable sur Google Trends
 function simplifierMotCle(nom: string): string {
   const mots = nom
@@ -760,7 +760,7 @@ function AlternativesModal({ produit, onClose }: { produit: Produit; onClose: ()
   );
 }
 
-type BoutiqueOption = { id: string; nom: string };
+type BoutiqueOption = { id: string; nom: string; settings: { niche?: string } | null };
 
 function AjouterBoutiqueModal({ produit, onClose }: { produit: Produit; onClose: () => void }) {
   const [boutiques, setBoutiques] = useState<BoutiqueOption[] | null>(null);
@@ -861,12 +861,23 @@ function AjouterBoutiqueModal({ produit, onClose }: { produit: Produit; onClose:
             <select
               value={selectedBoutiqueId}
               onChange={(e) => setSelectedBoutiqueId(e.target.value)}
-              className="w-full box-border bg-[var(--bg-sunken)] border border-[var(--border-strong)] rounded-lg px-3 py-2.5 text-[13px] text-[var(--text-primary)] outline-none mb-4"
+              className="w-full box-border bg-[var(--bg-sunken)] border border-[var(--border-strong)] rounded-lg px-3 py-2.5 text-[13px] text-[var(--text-primary)] outline-none mb-2"
             >
               {boutiques.map((b) => (
                 <option key={b.id} value={b.id}>{b.nom}</option>
               ))}
             </select>
+
+            {(() => {
+              const cible = boutiques.find((b) => b.id === selectedBoutiqueId);
+              const nicheCible = cible?.settings?.niche;
+              if (!nicheCible || nicheCible === produit.niche) return null;
+              return (
+                <div className="bg-amber-500/10 border border-amber-500/25 text-[var(--warning)] rounded-lg px-3 py-2.5 text-[12.5px] mb-4">
+                  ⚠️ Cette boutique est réglée sur la niche {nicheLabel(nicheCible)}, différente de la niche {nicheLabel(produit.niche)} de ce produit. Tu peux quand même l&apos;ajouter.
+                </div>
+              );
+            })()}
 
             {addError && (
               <div className="text-[var(--danger)] text-[12.5px] mb-3">{addError}</div>

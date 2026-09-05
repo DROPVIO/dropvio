@@ -6,6 +6,7 @@ import { useParams, useRouter } from "next/navigation";
 import { slugify } from "@/lib/slugify";
 import ProduitsSuggeres from "@/components/ProduitsSuggeres";
 import { BOUTIQUE_PRODUITS_CAP, writeBoutiqueDraft } from "@/lib/site-builder-handoff";
+import { NICHES } from "@/lib/niches";
 
 type Boutique = {
   id: string;
@@ -102,6 +103,7 @@ export default function BoutiqueBuilderDetailPage() {
   const [reorderLoading, setReorderLoading] = useState(false);
   const [savingColorMode, setSavingColorMode] = useState(false);
   const [savingAfficherStock, setSavingAfficherStock] = useState(false);
+  const [savingNiche, setSavingNiche] = useState(false);
 
   const [mentionsLegales, setMentionsLegales] = useState("");
   const [savingMentions, setSavingMentions] = useState(false);
@@ -264,6 +266,32 @@ export default function BoutiqueBuilderDetailPage() {
       setGlobalError("Impossible de contacter le serveur.");
     } finally {
       setSavingAfficherStock(false);
+    }
+  }
+
+  async function handleSetNiche(niche: string) {
+    if (!boutique) return;
+    const nextSettings = { ...(boutique.settings ?? {}) };
+    if (niche) nextSettings.niche = niche;
+    else delete nextSettings.niche;
+    setSavingNiche(true);
+    setGlobalError(null);
+    try {
+      const response = await fetch(`/api/boutiques/${params?.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ settings: nextSettings }),
+      });
+      const json = await response.json();
+      if (!response.ok) {
+        setGlobalError(json.error || "Impossible de changer la niche de la boutique.");
+        return;
+      }
+      setBoutique({ ...boutique, settings: nextSettings });
+    } catch {
+      setGlobalError("Impossible de contacter le serveur.");
+    } finally {
+      setSavingNiche(false);
     }
   }
 
@@ -718,6 +746,21 @@ export default function BoutiqueBuilderDetailPage() {
                   );
                 })}
               </div>
+
+              <p className="mt-4 text-xs text-[var(--text-muted)]">
+                Niche de la boutique — filtre les suggestions de produits et applique le thème visuel associé (quand il existe) sur la boutique publique.
+              </p>
+              <select
+                value={(boutique?.settings?.niche as string | undefined) ?? ""}
+                onChange={(event) => handleSetNiche(event.target.value)}
+                disabled={!boutique || savingNiche}
+                className="mt-3 w-full max-w-xs rounded-2xl border border-[var(--border)] bg-[var(--surface)] px-4 py-2 text-sm text-[var(--text-primary)] outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 disabled:opacity-50"
+              >
+                <option value="">Aucune niche définie</option>
+                {NICHES.map((n) => (
+                  <option key={n.id} value={n.id}>{n.emoji} {n.label}</option>
+                ))}
+              </select>
             </div>
 
             <div className="mt-6 grid gap-4 sm:grid-cols-3">

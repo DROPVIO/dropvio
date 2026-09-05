@@ -18,7 +18,7 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
 
   const { data: boutique, error: boutiqueError } = await supabase
     .from("boutiques")
-    .select("id")
+    .select("id, settings")
     .eq("id", id)
     .eq("user_id", user.id)
     .maybeSingle();
@@ -35,30 +35,43 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
     new Set((existants ?? []).map((p) => p.source_produit_id).filter((v): v is string => Boolean(v)))
   );
 
-  // Pas de produit relié au catalogue (boutique vide, ou uniquement des ajouts manuels
-  // sans lien catalogue) -> aucun signal de niche exploitable. Pas de suggestion plutôt
-  // qu'une suggestion non pertinente.
-  if (sourceIds.length === 0) {
-    return NextResponse.json({ suggestions: [], basedOnNiches: [] });
+  // Niche explicite (boutiques.settings.niche, réglable dans Paramètres) prioritaire sur
+  // l'inférence à partir des produits déjà en boutique — permet des suggestions dès une
+  // boutique vide plutôt que d'attendre un premier produit catalogue pour avoir un signal.
+  const nicheExplicite = (boutique.settings as { niche?: string } | null)?.niche;
+
+  let niches: string[];
+  let prixMin: number | undefined;
+  let prixMax: number | undefined;
+
+  if (nicheExplicite) {
+    niches = [nicheExplicite];
+  } else {
+    // Pas de produit relié au catalogue (boutique vide, ou uniquement des ajouts manuels
+    // sans lien catalogue) -> aucun signal de niche exploitable. Pas de suggestion plutôt
+    // qu'une suggestion non pertinente.
+    if (sourceIds.length === 0) {
+      return NextResponse.json({ suggestions: [], basedOnNiches: [] });
+    }
+
+    const { data: sourceProduits, error: sourceError } = await supabase
+      .from("produits")
+      .select("niche, prixVente")
+      .in("id", sourceIds);
+    if (sourceError) return NextResponse.json({ error: sourceError.message }, { status: 500 });
+
+    niches = Array.from(new Set((sourceProduits ?? []).map((p) => p.niche).filter(Boolean) as string[]));
+    if (niches.length === 0) {
+      return NextResponse.json({ suggestions: [], basedOnNiches: [] });
+    }
+
+    const prixConnus = (sourceProduits ?? [])
+      .map((p) => p.prixVente)
+      .filter((v): v is number => typeof v === "number");
+    const prixMoyen = prixConnus.length ? prixConnus.reduce((a, b) => a + b, 0) / prixConnus.length : null;
+    prixMin = prixMoyen !== null ? prixMoyen * 0.5 : undefined;
+    prixMax = prixMoyen !== null ? prixMoyen * 2 : undefined;
   }
-
-  const { data: sourceProduits, error: sourceError } = await supabase
-    .from("produits")
-    .select("niche, prixVente")
-    .in("id", sourceIds);
-  if (sourceError) return NextResponse.json({ error: sourceError.message }, { status: 500 });
-
-  const niches = Array.from(new Set((sourceProduits ?? []).map((p) => p.niche).filter(Boolean) as string[]));
-  if (niches.length === 0) {
-    return NextResponse.json({ suggestions: [], basedOnNiches: [] });
-  }
-
-  const prixConnus = (sourceProduits ?? [])
-    .map((p) => p.prixVente)
-    .filter((v): v is number => typeof v === "number");
-  const prixMoyen = prixConnus.length ? prixConnus.reduce((a, b) => a + b, 0) / prixConnus.length : null;
-  const prixMin = prixMoyen !== null ? prixMoyen * 0.5 : undefined;
-  const prixMax = prixMoyen !== null ? prixMoyen * 2 : undefined;
 
   // produits_dedup (voir supabase/migrations/027_produits_dedup_view.sql) : les candidats
   // suggérés sont un affichage catalogue comme /api/aliexpress/products, donc soumis au même
