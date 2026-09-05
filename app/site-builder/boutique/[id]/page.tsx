@@ -809,10 +809,23 @@ export default function BoutiqueBuilderDetailPage() {
           <p className="text-xs uppercase tracking-[0.3em] text-violet-400">Site Builder</p>
           <h3 className="mt-2 text-lg font-semibold text-[var(--text-primary)]">Créer un site pour cette boutique</h3>
           {totalProduits > 1 ? (
-            <p className="mt-1 text-sm text-[var(--text-faint)]">
-              Cette boutique a {totalProduits} produits — génère un site multi-produits (jusqu&apos;à{" "}
-              {BOUTIQUE_PRODUITS_CAP} importés) avec l&apos;IA ou l&apos;éditeur de templates.
-            </p>
+            <>
+              <div className="mt-3 rounded-2xl border border-violet-500/30 bg-violet-500/10 p-4">
+                <p className="text-sm font-semibold text-[var(--text-primary)]">
+                  💡 Pour une vraie boutique multi-page (fiches produit, catégories, panier), pousse directement vers Shopify plutôt que de générer une page unique ci-dessous.
+                </p>
+                <a
+                  href="#shopify-push"
+                  className="mt-2 inline-block text-sm font-semibold text-violet-300 underline underline-offset-2 hover:text-violet-200"
+                >
+                  Aller à &quot;Pousser vers Shopify&quot; ↓
+                </a>
+              </div>
+              <p className="mt-3 text-sm text-[var(--text-faint)]">
+                Les boutons ci-dessous génèrent une page promotionnelle unique pour cette boutique (jusqu&apos;à{" "}
+                {BOUTIQUE_PRODUITS_CAP} produits affichés) — utile en complément (page d&apos;atterrissage publicitaire), mais ce n&apos;est pas la boutique elle-même.
+              </p>
+            </>
           ) : (
             <p className="mt-1 text-sm text-[var(--text-faint)]">
               Génère une landing page prérempli avec le nom et la description de la boutique — au choix, avec l&apos;IA ou l&apos;éditeur de templates.
@@ -861,7 +874,7 @@ export default function BoutiqueBuilderDetailPage() {
         </section>
 
         {/* Push Shopify */}
-        <section className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-6">
+        <section id="shopify-push" className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-6 scroll-mt-24">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <p className="text-xs uppercase tracking-[0.3em] text-violet-400">Shopify</p>
