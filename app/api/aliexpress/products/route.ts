@@ -39,8 +39,14 @@ export async function GET(request: NextRequest) {
 
     const cappedTo = produitsMax !== null ? Math.min(to, produitsMax - 1) : to;
 
+    // produits_dedup (supabase/migrations/027_produits_dedup_view.sql) : vue DISTINCT ON
+    // (nom, niche) qui masque les relistings AliExpress au titre identique (id/lienAliExpress
+    // toujours distincts, jamais un vrai doublon de clé primaire) — garde la ligne la plus
+    // commandée par (nom, niche). Table produits inchangée, seule cette lecture catalogue en
+    // bénéficie ; les lookups par id exact ailleurs (snapshots, produit collé par URL...)
+    // restent sur produits, une ligne "perdante" exclue de la vue devant toujours être trouvable.
     let query = supabase
-      .from("produits")
+      .from("produits_dedup")
       .select("*", { count: "exact" })
       .order("commandes", { ascending: false })
       .range(from, cappedTo);

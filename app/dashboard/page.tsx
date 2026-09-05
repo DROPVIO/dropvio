@@ -99,7 +99,10 @@ export default function DashboardPage() {
           // ci-dessous ET au graphique d'activité (DashboardActiviteChart), qui n'a plus
           // sa propre requête sur cette table.
           supabase.from("sites_generes").select("id, created_at").eq("user_id", user.id).limit(1000),
-          supabase.from("produits").select("*", { count: "exact", head: true }),
+          // produits_dedup (supabase/migrations/027_produits_dedup_view.sql) : compte le
+          // catalogue tel que l'utilisateur le voit réellement dans produits-gagnants
+          // (dédupliqué par (nom, niche)), pas le nombre brut de lignes sourcées.
+          supabase.from("produits_dedup").select("*", { count: "exact", head: true }),
           supabase.from("simulations_marge").select("resultats, created_at").eq("user_id", user.id).limit(500),
           supabase.from("audits_realises").select("score_total, created_at").eq("user_id", user.id).limit(500),
           // "boutiques" a aussi une policy select_public (boutiques d'autres utilisateurs

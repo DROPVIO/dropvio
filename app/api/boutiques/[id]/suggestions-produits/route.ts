@@ -60,8 +60,12 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
   const prixMin = prixMoyen !== null ? prixMoyen * 0.5 : undefined;
   const prixMax = prixMoyen !== null ? prixMoyen * 2 : undefined;
 
+  // produits_dedup (voir supabase/migrations/027_produits_dedup_view.sql) : les candidats
+  // suggérés sont un affichage catalogue comme /api/aliexpress/products, donc soumis au même
+  // bruit de relistings AliExpress au titre identique — la requête ci-dessous en bénéficie.
+  // Le lookup sourceProduits plus haut (par id exact) reste volontairement sur produits.
   let candidatsQuery = supabase
-    .from("produits")
+    .from("produits_dedup")
     .select("id, nom, image, prixFournisseur, prixVente, niche, commandes, note")
     .in("niche", niches)
     .order("commandes", { ascending: false })
