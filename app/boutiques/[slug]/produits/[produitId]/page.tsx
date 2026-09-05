@@ -41,7 +41,7 @@ export async function generateMetadata({
     ? ((await boutiqueRes.json()) as { boutique: { nom: string } }).boutique.nom
     : null;
 
-  const title = boutiqueNom ? `${produit.nom} — ${boutiqueNom} · Dropvio` : `${produit.nom} · Dropvio`;
+  const title = boutiqueNom ? `${produit.nom} — ${boutiqueNom}` : produit.nom;
   const description = produit.description?.trim()
     ? truncate(produit.description.trim(), 155)
     : `${produit.nom} à ${produit.prix_vente.toFixed(2)}€.`;

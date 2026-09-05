@@ -2,7 +2,7 @@ import { ImageResponse } from "next/og";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
 import { getOrRenderOgImage, hashContent } from "@/lib/og-cache";
 
-export const alt = "Boutique Dropvio";
+export const alt = "Image de la boutique";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -90,6 +90,6 @@ export default async function Image({ params }: { params: Promise<{ slug: string
     );
   } catch (err) {
     console.error("[opengraph-image boutique]", err);
-    return fallbackImage("Dropvio");
+    return fallbackImage("Boutique");
   }
 }

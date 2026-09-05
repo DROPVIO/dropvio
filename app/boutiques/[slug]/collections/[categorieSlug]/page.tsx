@@ -30,7 +30,7 @@ export async function generateMetadata({
     return { title: "Collection introuvable" };
   }
 
-  const title = `${categorie.nom} — ${boutique.nom} · Dropvio`;
+  const title = `${categorie.nom} — ${boutique.nom}`;
   const boutiqueUrl = getBoutiquePublicUrl(slug);
   const absoluteBoutiqueUrl = boutiqueUrl.startsWith("http") ? boutiqueUrl : `${baseUrl}${boutiqueUrl}`;
   const canonical = `${absoluteBoutiqueUrl}/collections/${categorieSlug}`;

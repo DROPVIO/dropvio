@@ -31,10 +31,10 @@ export async function generateMetadata({
     boutique: { nom: string; description: string | null };
   };
 
-  const title = `${boutique.nom} · Dropvio`;
+  const title = boutique.nom;
   const description = boutique.description?.trim()
     ? truncate(boutique.description.trim(), 155)
-    : `Découvre les produits de ${boutique.nom} sur Dropvio.`;
+    : `Découvre les produits de ${boutique.nom}.`;
 
   const boutiqueUrl = getBoutiquePublicUrl(slug);
   const canonical = boutiqueUrl.startsWith("http") ? boutiqueUrl : `${baseUrl}${boutiqueUrl}`;
@@ -123,7 +123,7 @@ export default async function BoutiquePage({ params }: { params: Promise<{ slug:
         <div className="mx-auto grid max-w-7xl grid-cols-1 gap-3 px-4 py-6 text-center text-sm text-[var(--text-muted)] sm:grid-cols-3 sm:px-6 lg:px-8">
           <div>🚚 Livraison suivie</div>
           <div>↩ Retour sous 14 jours</div>
-          <div>🔒 Boutique vérifiée Dropvio</div>
+          <div>🔒 Boutique vérifiée</div>
         </div>
       </section>
 

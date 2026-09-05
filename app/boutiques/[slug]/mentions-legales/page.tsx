@@ -17,7 +17,7 @@ export async function generateMetadata({
   }
   const { boutique } = (await boutiqueRes.json()) as { boutique: { nom: string } };
 
-  return { title: `Mentions légales — ${boutique.nom} · Dropvio` };
+  return { title: `Mentions légales — ${boutique.nom}` };
 }
 
 export default async function MentionsLegalesPage({
