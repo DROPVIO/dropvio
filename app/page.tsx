@@ -460,10 +460,9 @@ export default function LandingPage() {
               <h3>Free</h3>
               <span className="amount">0€<span>/mois</span></span>
               <ul>
-                <li>3 audits IA par mois</li>
-                <li>5 niches de produits gagnants sur 20</li>
+                <li>Audit IA réservé à Pro et Agency</li>
                 <li>Calculateur de marge illimité</li>
-                <li>1 page générée avec le site builder</li>
+                <li>5 pages générées avec le site builder par mois</li>
                 <li>Export HTML simple</li>
               </ul>
               <Link href="/register" className="price-btn">Commencer</Link>
@@ -473,9 +472,8 @@ export default function LandingPage() {
               <h3>Pro</h3>
               <span className="amount">29€<span>/mois</span></span>
               <ul>
-                <li>Audits IA illimités</li>
-                <li>20 niches de produits gagnants en temps réel</li>
-                <li>Site builder complet, pages illimitées</li>
+                <li>30 audits IA par mois</li>
+                <li>20 pages avec le site builder par mois</li>
                 <li>Palettes et prix personnalisés</li>
                 <li>Export HTML corrigé par l&apos;IA</li>
                 <li>Guide d&apos;intégration Shopify</li>
@@ -486,7 +484,9 @@ export default function LandingPage() {
               <h3>Agency</h3>
               <span className="amount">59€<span>/mois</span></span>
               <ul>
-                <li>Tout Pro inclus</li>
+                <li>100 audits IA par mois</li>
+                <li>50 pages avec le site builder par mois</li>
+                <li>Tout le reste de Pro inclus</li>
                 <li>Jusqu&apos;à 10 boutiques gérées</li>
                 <li>Comptes clients séparés</li>
                 <li>Export en lot des pages</li>
