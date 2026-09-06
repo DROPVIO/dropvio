@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import ProductGrid, { formatPrice } from "@/app/components/boutique/ProductGrid";
 import TestimonialsMarquee, { type Temoignage } from "@/app/components/boutique/TestimonialsMarquee";
+import VideoCarousel from "@/app/components/boutique/VideoCarousel";
 import { TEXTES_DEFAUT } from "@/lib/site-templates";
 import { getBaseUrl } from "@/lib/get-base-url";
 import { getBoutiqueBasePath } from "@/lib/boutique-links";
@@ -192,6 +193,11 @@ export default async function BoutiquePage({ params }: { params: Promise<{ slug:
           </div>
         </section>
       ) : null}
+
+      {/* VIDÉOS — juste après le spotlight (voir la vidéo du produit qu'on vient de
+          présenter en détail), avant le renvoi vers le catalogue complet. Indépendant du
+          bandeau texte défilant (SecondaryBanner, sous le header) depuis ce soir. */}
+      <VideoCarousel videos={(boutique.settings as Record<string, unknown> | null)?.bandeauVideos as string[] | undefined} />
 
       {/* Le catalogue complet (filtres, recherche, pagination) vit sur /produits — la page
           d'accueil ne montre plus qu'un aperçu (bestsellers + spotlight ci-dessus). */}

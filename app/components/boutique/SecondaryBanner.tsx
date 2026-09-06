@@ -1,49 +1,28 @@
-import { resolveVideoEmbed } from "@/lib/video-embed";
+// Bandeau texte défilant, saisi par le marchand dans les Paramètres (settings.bandeauTexte)
+// — indépendant des vidéos (voir VideoCarousel.tsx, settings.bandeauVideos), les deux
+// n'ont plus besoin d'exister ensemble. Ne rend rien tant qu'aucun texte n'a été
+// renseigné — pas de bande vide.
+const REPEAT_COUNT = 8;
 
-export type Bandeau = {
-  texte?: string | null;
-  videos?: string[];
-};
+export default function SecondaryBanner({ texte }: { texte: string | null | undefined }) {
+  const trimmed = texte?.trim();
+  if (!trimmed) return null;
 
-// Bandeau secondaire, saisi par le marchand dans les Paramètres (settings.bandeau) — pas
-// de synchronisation Shopify, même limite technique que les avis clients (aucune donnée
-// générique de ce type récupérable via l'API Admin déjà connectée). Ne rend rien tant
-// qu'aucun texte ni aucune vidéo n'a été renseigné — pas de section vide.
-export default function SecondaryBanner({ bandeau }: { bandeau: Bandeau | null | undefined }) {
-  const texte = bandeau?.texte?.trim();
-  const videos = (bandeau?.videos ?? []).map((v) => v.trim()).filter(Boolean);
-
-  if (!texte && videos.length === 0) return null;
+  // Répété plusieurs fois pour remplir la largeur en continu (pas un unique passage avec
+  // un grand vide), puis dupliqué une fois de plus pour la boucle : translateX(-50%) sur
+  // une piste faite de deux moitiés identiques revient exactement à la position de départ,
+  // donc la boucle ne saute jamais.
+  const singleSet = Array.from({ length: REPEAT_COUNT }, () => trimmed);
+  const items = [...singleSet, ...singleSet];
 
   return (
-    <div className="border-b border-[var(--border)] bg-[var(--surface)]">
-      <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-        {texte ? <p className="text-center text-sm leading-6 text-[var(--text-muted)]">{texte}</p> : null}
-        {videos.length > 0 ? (
-          <div className={`flex snap-x snap-mandatory gap-4 overflow-x-auto pb-1 ${texte ? "mt-4" : ""}`}>
-            {videos.map((url, index) => {
-              const embed = resolveVideoEmbed(url);
-              return (
-                <div
-                  key={`${url}-${index}`}
-                  className="aspect-video w-64 shrink-0 snap-start overflow-hidden rounded-2xl bg-[var(--surface-2)] transition-transform duration-300 hover:scale-105"
-                >
-                  {embed.type === "direct" ? (
-                    <video src={embed.url} controls className="h-full w-full object-cover" />
-                  ) : (
-                    <iframe
-                      src={embed.embedUrl}
-                      title={`Vidéo ${index + 1}`}
-                      className="h-full w-full"
-                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                      allowFullScreen
-                    />
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        ) : null}
+    <div className="boutique-announcement-marquee border-b border-[var(--border)] bg-[var(--surface)]">
+      <div className="boutique-announcement-track py-3">
+        {items.map((t, i) => (
+          <span key={i} className="shrink-0 whitespace-nowrap px-6 text-sm text-[var(--text-muted)]">
+            {t}
+          </span>
+        ))}
       </div>
     </div>
   );

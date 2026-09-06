@@ -198,9 +198,8 @@ export default function BoutiqueBuilderDetailPage() {
       }
       setBoutique(json.boutique ?? null);
       setMentionsLegales(json.boutique?.mentions_legales ?? "");
-      const bandeau = json.boutique?.settings?.bandeau as { texte?: string; videos?: string[] } | undefined;
-      setBandeauTexte(bandeau?.texte ?? "");
-      setBandeauVideos(bandeau?.videos ?? []);
+      setBandeauTexte(json.boutique?.settings?.bandeauTexte ?? "");
+      setBandeauVideos(json.boutique?.settings?.bandeauVideos ?? []);
     } catch {
       setGlobalError("Impossible de contacter le serveur.");
       setBoutique(null);
@@ -239,7 +238,7 @@ export default function BoutiqueBuilderDetailPage() {
     setBandeauError(null);
     setBandeauSuccess(false);
     const videos = bandeauVideos.map((v) => v.trim()).filter(Boolean);
-    const nextSettings = { ...(boutique.settings ?? {}), bandeau: { texte: bandeauTexte, videos } };
+    const nextSettings = { ...(boutique.settings ?? {}), bandeauTexte, bandeauVideos: videos };
     try {
       const response = await fetch(`/api/boutiques/${params.id}`, {
         method: "PATCH",

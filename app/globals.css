@@ -283,6 +283,45 @@
   }
 }
 
+/* Bandeau texte en défilement horizontal continu (voir
+   app/components/boutique/SecondaryBanner.tsx) — même principe que le marquee d'avis
+   ci-dessus (piste dupliquée deux fois, translateX(-50%) revient exactement à la position
+   de départ, boucle sans à-coup), transposé à l'horizontale avec un masque en dégradé
+   gauche/droite plutôt que haut/bas. width: max-content sur la piste : sa largeur suit son
+   contenu réel (texte répété), la translation à -50% correspond donc toujours exactement à
+   une moitié de piste quelle que soit la longueur du texte. */
+.boutique-announcement-marquee {
+  overflow: hidden;
+  mask-image: linear-gradient(to right, transparent, black 4%, black 96%, transparent);
+  -webkit-mask-image: linear-gradient(to right, transparent, black 4%, black 96%, transparent);
+}
+
+.boutique-announcement-track {
+  display: flex;
+  width: max-content;
+  animation: boutique-announcement-scroll 20s linear infinite;
+}
+
+@keyframes boutique-announcement-scroll {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .boutique-announcement-track {
+    animation: none;
+  }
+  .boutique-announcement-marquee {
+    overflow-x: auto;
+    mask-image: none;
+    -webkit-mask-image: none;
+  }
+}
+
 @theme inline {
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);

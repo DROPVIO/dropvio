@@ -132,7 +132,7 @@ export default async function BoutiquePublicLayout({
           </div>
         </nav>
       </header>
-      <SecondaryBanner bandeau={boutique.settings?.bandeau as { texte?: string | null; videos?: string[] } | undefined} />
+      <SecondaryBanner texte={boutique.settings?.bandeauTexte as string | null | undefined} />
       {children}
 
       {/* Footer — présent sur toutes les pages boutique publiques (ce layout les wrap
