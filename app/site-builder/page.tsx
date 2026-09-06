@@ -39,6 +39,9 @@ function SiteBuilderContent() {
   const [productName, setProductName] = useState(searchParams.get("name") ?? "");
   const [description, setDescription] = useState(searchParams.get("description") ?? "");
   const [imageUrl, setImageUrl] = useState(searchParams.get("image") ?? "");
+  const [reformulatingNom, setReformulatingNom] = useState(false);
+  const [generatingDescription, setGeneratingDescription] = useState(false);
+  const [texteIaError, setTexteIaError] = useState<string | null>(null);
   const rating = searchParams.get("rating") ?? undefined;
   const orders = searchParams.get("orders") ?? undefined;
   // Préremplissage depuis "Créer un site pour cette boutique" (page de gestion boutique) —
@@ -185,6 +188,52 @@ function SiteBuilderContent() {
       setAliexpressError("Impossible de contacter l'API");
     } finally {
       setAliexpressLoading(false);
+    }
+  }
+
+  async function handleReformulerNom() {
+    if (!productName.trim()) return;
+    setReformulatingNom(true);
+    setTexteIaError(null);
+    try {
+      const response = await fetch("/api/generer-texte-produit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ champ: "nom", titre: productName }),
+      });
+      const json = await response.json();
+      if (!response.ok) {
+        setTexteIaError(json.error || "Impossible de reformuler le nom.");
+        return;
+      }
+      setProductName(json.texte);
+    } catch {
+      setTexteIaError("Impossible de contacter le serveur.");
+    } finally {
+      setReformulatingNom(false);
+    }
+  }
+
+  async function handleGenererDescription() {
+    if (!productName.trim()) return;
+    setGeneratingDescription(true);
+    setTexteIaError(null);
+    try {
+      const response = await fetch("/api/generer-texte-produit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ champ: "description", titre: productName }),
+      });
+      const json = await response.json();
+      if (!response.ok) {
+        setTexteIaError(json.error || "Impossible de générer la description.");
+        return;
+      }
+      setDescription(json.texte);
+    } catch {
+      setTexteIaError("Impossible de contacter le serveur.");
+    } finally {
+      setGeneratingDescription(false);
     }
   }
 
@@ -499,7 +548,17 @@ function SiteBuilderContent() {
 
             {/* Product name */}
             <div className="flex flex-col gap-2">
-              <label className="text-sm font-medium text-[var(--text-muted)]">Nom du produit</label>
+              <div className="flex items-center justify-between gap-2">
+                <label className="text-sm font-medium text-[var(--text-muted)]">Nom du produit</label>
+                <button
+                  type="button"
+                  onClick={handleReformulerNom}
+                  disabled={!productName.trim() || reformulatingNom}
+                  className="shrink-0 rounded-xl border border-[var(--border-strong)] bg-[var(--bg)] px-2.5 py-1 text-xs font-semibold text-[var(--text-primary)] transition hover:border-violet-500/40 hover:bg-violet-500/10 disabled:opacity-50"
+                >
+                  {reformulatingNom ? "…" : "✨ Reformuler"}
+                </button>
+              </div>
               <input
                 type="text"
                 value={productName}
@@ -511,7 +570,18 @@ function SiteBuilderContent() {
 
             {/* Description */}
             <div className="flex flex-col gap-2">
-              <label className="text-sm font-medium text-[var(--text-muted)]">Description courte</label>
+              <div className="flex items-center justify-between gap-2">
+                <label className="text-sm font-medium text-[var(--text-muted)]">Description courte</label>
+                <button
+                  type="button"
+                  onClick={handleGenererDescription}
+                  disabled={!productName.trim() || generatingDescription}
+                  className="shrink-0 rounded-xl border border-[var(--border-strong)] bg-[var(--bg)] px-2.5 py-1 text-xs font-semibold text-[var(--text-primary)] transition hover:border-violet-500/40 hover:bg-violet-500/10 disabled:opacity-50"
+                  title={!productName.trim() ? "Renseigne d'abord un nom de produit" : undefined}
+                >
+                  {generatingDescription ? "…" : "✨ Générer une description"}
+                </button>
+              </div>
               <textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
@@ -519,6 +589,7 @@ function SiteBuilderContent() {
                 placeholder="ex: Soulage les douleurs lombaires grâce à la chaleur infrarouge. Idéal pour le bureau et le sport. Batterie longue durée 8h."
                 className="bg-[var(--bg)] border border-[var(--border-strong)] rounded-xl px-4 py-3 text-sm text-[var(--text-primary)] placeholder-[var(--text-faint)] focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition resize-none"
               />
+              {texteIaError ? <p className="text-xs text-[var(--danger)]">{texteIaError}</p> : null}
             </div>
 
             {/* Image URL */}
