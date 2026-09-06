@@ -5,6 +5,7 @@ import { getBaseUrl } from "@/lib/get-base-url";
 import { getBoutiqueBasePath } from "@/lib/boutique-links";
 import { fetchBoutiqueApi } from "@/lib/boutique-internal-fetch";
 import BoutiqueHeaderCart from "@/app/components/boutique/BoutiqueHeaderCart";
+import SecondaryBanner from "@/app/components/boutique/SecondaryBanner";
 
 // Layout partagé par toutes les pages boutique publique (page.tsx, produits/[produitId],
 // mentions-legales). Porte le header standard (logo, recherche, collections, icônes
@@ -131,6 +132,7 @@ export default async function BoutiquePublicLayout({
           </div>
         </nav>
       </header>
+      <SecondaryBanner bandeau={boutique.settings?.bandeau as { texte?: string | null; videos?: string[] } | undefined} />
       {children}
     </div>
   );

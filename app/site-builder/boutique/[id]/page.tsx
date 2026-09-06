@@ -113,6 +113,12 @@ export default function BoutiqueBuilderDetailPage() {
   const [mentionsError, setMentionsError] = useState<string | null>(null);
   const [mentionsSuccess, setMentionsSuccess] = useState(false);
 
+  const [bandeauTexte, setBandeauTexte] = useState("");
+  const [bandeauVideos, setBandeauVideos] = useState<string[]>([]);
+  const [savingBandeau, setSavingBandeau] = useState(false);
+  const [bandeauError, setBandeauError] = useState<string | null>(null);
+  const [bandeauSuccess, setBandeauSuccess] = useState(false);
+
   const [shopifyConnected, setShopifyConnected] = useState<boolean | null>(null);
   const [shopifyDomain, setShopifyDomain] = useState<string | null>(null);
   const [shopifyPushing, setShopifyPushing] = useState(false);
@@ -192,6 +198,9 @@ export default function BoutiqueBuilderDetailPage() {
       }
       setBoutique(json.boutique ?? null);
       setMentionsLegales(json.boutique?.mentions_legales ?? "");
+      const bandeau = json.boutique?.settings?.bandeau as { texte?: string; videos?: string[] } | undefined;
+      setBandeauTexte(bandeau?.texte ?? "");
+      setBandeauVideos(bandeau?.videos ?? []);
     } catch {
       setGlobalError("Impossible de contacter le serveur.");
       setBoutique(null);
@@ -221,6 +230,34 @@ export default function BoutiqueBuilderDetailPage() {
       setMentionsError("Impossible de contacter le serveur.");
     } finally {
       setSavingMentions(false);
+    }
+  }
+
+  async function handleSaveBandeau() {
+    if (!params?.id || !boutique) return;
+    setSavingBandeau(true);
+    setBandeauError(null);
+    setBandeauSuccess(false);
+    const videos = bandeauVideos.map((v) => v.trim()).filter(Boolean);
+    const nextSettings = { ...(boutique.settings ?? {}), bandeau: { texte: bandeauTexte, videos } };
+    try {
+      const response = await fetch(`/api/boutiques/${params.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ settings: nextSettings }),
+      });
+      const json = await response.json();
+      if (!response.ok) {
+        setBandeauError(json.error || "Impossible d'enregistrer le bandeau.");
+        return;
+      }
+      setBoutique({ ...boutique, settings: nextSettings });
+      setBandeauSuccess(true);
+      window.setTimeout(() => setBandeauSuccess(false), 2500);
+    } catch {
+      setBandeauError("Impossible de contacter le serveur.");
+    } finally {
+      setSavingBandeau(false);
     }
   }
 
@@ -742,6 +779,63 @@ export default function BoutiqueBuilderDetailPage() {
                 </button>
                 {mentionsSuccess ? <span className="text-sm text-[var(--success)]">Enregistré.</span> : null}
                 {mentionsError ? <span className="text-sm text-[var(--danger)]">{mentionsError}</span> : null}
+              </div>
+            </div>
+
+            <div className="mt-6 rounded-3xl border border-[var(--border)] bg-[var(--surface-2)] p-4">
+              <h3 className="text-sm font-semibold text-[var(--text-primary)]">Bandeau secondaire</h3>
+              <p className="mt-1 text-xs text-[var(--text-muted)]">
+                Affiché en haut de toutes les pages publiques de cette boutique, juste sous l&apos;en-tête. Laisse
+                vide (texte et vidéos) pour ne rien afficher — pas de synchronisation Shopify, à saisir ici
+                directement.
+              </p>
+              <textarea
+                value={bandeauTexte}
+                onChange={(e) => setBandeauTexte(e.target.value)}
+                rows={2}
+                placeholder="Ex : Livraison offerte dès 50€ d'achat"
+                className="mt-3 w-full rounded-2xl border border-[var(--border)] bg-[var(--bg-sunken)] px-4 py-3 text-sm text-[var(--text-primary)] outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
+              />
+              <div className="mt-3 space-y-2">
+                {bandeauVideos.map((url, index) => (
+                  <div key={index} className="flex items-center gap-2">
+                    <input
+                      value={url}
+                      onChange={(e) =>
+                        setBandeauVideos((prev) => prev.map((v, i) => (i === index ? e.target.value : v)))
+                      }
+                      placeholder="URL YouTube, Vimeo ou fichier vidéo direct"
+                      className="w-full rounded-2xl border border-[var(--border)] bg-[var(--bg-sunken)] px-4 py-2.5 text-sm text-[var(--text-primary)] outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setBandeauVideos((prev) => prev.filter((_, i) => i !== index))}
+                      aria-label="Retirer cette vidéo"
+                      className="shrink-0 rounded-full border border-[var(--border)] px-3 py-2 text-sm text-[var(--text-faint)] transition hover:border-[var(--danger)]/40 hover:text-[var(--danger)]"
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
+                <button
+                  type="button"
+                  onClick={() => setBandeauVideos((prev) => [...prev, ""])}
+                  className="rounded-2xl border border-dashed border-[var(--border)] px-4 py-2 text-sm text-[var(--text-muted)] transition hover:border-violet-400/60 hover:text-[var(--text-primary)]"
+                >
+                  + Ajouter une vidéo
+                </button>
+              </div>
+              <div className="mt-3 flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={handleSaveBandeau}
+                  disabled={!boutique || savingBandeau}
+                  className="rounded-2xl bg-violet-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-violet-400 disabled:opacity-50"
+                >
+                  {savingBandeau ? "Enregistrement..." : "Enregistrer"}
+                </button>
+                {bandeauSuccess ? <span className="text-sm text-[var(--success)]">Enregistré.</span> : null}
+                {bandeauError ? <span className="text-sm text-[var(--danger)]">{bandeauError}</span> : null}
               </div>
             </div>
 
