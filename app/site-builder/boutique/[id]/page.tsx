@@ -401,7 +401,6 @@ export default function BoutiqueBuilderDetailPage() {
         body: JSON.stringify({
           description: reviewDescription,
           settings: { ...(boutique.settings ?? {}), palette: reviewPalette },
-          logGenerationTrace: true,
         }),
       });
       const json = await res.json();
@@ -417,6 +416,37 @@ export default function BoutiqueBuilderDetailPage() {
       );
       setReviewDescription(null);
       setReviewPalette(null);
+
+      // Capture le vrai rendu de la boutique (déjà à jour avec la description/palette
+      // qu'on vient d'enregistrer) et le sauvegarde comme un vrai site dans "Mes sites" —
+      // via /api/sites-generes (pas un insert à part) pour que sitesParMoisMax soit
+      // décompté normalement, puisque c'est cette fois un vrai fichier généré. Un échec
+      // ici (export ou quota atteint) n'annule pas la sauvegarde de la boutique déjà
+      // réussie — juste un avertissement, pas une erreur bloquante.
+      try {
+        const exportRes = await fetch(`/api/boutiques/${params.id}/export-html`, { method: "POST" });
+        const exportJson = await exportRes.json();
+        if (exportRes.ok) {
+          const saveRes = await fetch("/api/sites-generes", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              nom_produit: exportJson.nom ?? boutique.nom,
+              html_content: exportJson.html,
+              boutique_id: params.id,
+            }),
+          });
+          if (!saveRes.ok) {
+            const saveJson = await saveRes.json().catch(() => ({}));
+            setContenuError(saveJson.error ?? "Boutique mise à jour, mais l'export HTML n'a pas pu être sauvegardé dans « Mes sites ».");
+          }
+        } else {
+          setContenuError(exportJson.error ?? "Boutique mise à jour, mais l'export HTML a échoué.");
+        }
+      } catch {
+        setContenuError("Boutique mise à jour, mais l'export HTML n'a pas pu être sauvegardé (serveur injoignable).");
+      }
+
       window.open(getBoutiquePublicUrl(boutique.slug), "_blank", "noopener,noreferrer");
     } catch {
       setContenuError("Impossible de contacter le serveur.");
