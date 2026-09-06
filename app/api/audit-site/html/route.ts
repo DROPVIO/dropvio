@@ -3,6 +3,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { getServerUserAndPlan } from "@/lib/supabase-server";
 import { PLAN_LIMITS, planLabel, getMonthlyUsage, incrementMonthlyUsage } from "@/lib/plan-limits";
 import { checkRateLimit } from "@/lib/rate-limit";
+import { AUDIT_HTML_MAX_CHARS } from "@/lib/audit-config";
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
@@ -70,11 +71,15 @@ export async function POST(request: NextRequest) {
       .join("\n\n");
 
     const truncated =
-      html.length > 20000 ? html.slice(0, 20000) + "\n<!-- [tronqué] -->" : html;
+      html.length > AUDIT_HTML_MAX_CHARS ? html.slice(0, AUDIT_HTML_MAX_CHARS) + "\n<!-- [tronqué] -->" : html;
 
     const message = await client.messages.create({
       model: "claude-sonnet-4-6",
-      max_tokens: 16000,
+      // Mesuré en direct sur une vraie page à 100 000 caractères (AUDIT_HTML_MAX_CHARS) :
+      // 16000 tronque (stop_reason: max_tokens), 24000 complète naturellement à ~20 480
+      // tokens de sortie. Contrairement au scoring, cette route doit reproduire une bonne
+      // partie du HTML d'origine — sa sortie grandit avec la taille de l'entrée.
+      max_tokens: 24000,
       system:
         "Tu es un expert HTML/CSS pour landing pages e-commerce. Retourne UNIQUEMENT le HTML corrigé complet — pas de markdown, pas de balises de code, pas de commentaires sur ta démarche. Juste le HTML brut avec les corrections appliquées.",
       messages: [

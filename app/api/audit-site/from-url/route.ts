@@ -3,8 +3,9 @@ import { getServerUserAndPlan } from "@/lib/supabase-server";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { isUrlAllowed, normalizeUrl } from "@/lib/ssrf-guard";
 
-const MAX_BYTES = 2 * 1024 * 1024; // 2 Mo — l'audit tronque de toute façon à 20 000 caractères,
-// ce plafond n'existe que pour éviter de télécharger une réponse énorme avant d'en arriver là.
+const MAX_BYTES = 2 * 1024 * 1024; // 2 Mo — l'audit tronque de toute façon à 100 000 caractères
+// (AUDIT_HTML_MAX_CHARS, lib/audit-config.ts), ce plafond n'existe que pour éviter de
+// télécharger une réponse énorme avant d'en arriver là.
 const FETCH_TIMEOUT_MS = 10_000;
 
 // Récupère le HTML d'une URL fournie par l'utilisateur, protection SSRF identique au Spy

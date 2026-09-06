@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useCallback } from "react";
+import { AUDIT_HTML_MAX_CHARS } from "@/lib/audit-config";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -223,7 +224,7 @@ export default function AuditPage() {
   }
 
   const charCount = html.length;
-  const willTruncate = charCount > 20000;
+  const willTruncate = charCount > AUDIT_HTML_MAX_CHARS;
 
   return (
     <div className="min-h-screen bg-[var(--bg)] px-8 py-10">
@@ -305,7 +306,7 @@ export default function AuditPage() {
             <p className="text-[11px] text-[var(--text-faint)]">
               {charCount.toLocaleString("fr-FR")} caractères
               {willTruncate && (
-                <span className="text-[var(--warning)] ml-2">· sera tronqué à 20 000 chars</span>
+                <span className="text-[var(--warning)] ml-2">· sera tronqué à {AUDIT_HTML_MAX_CHARS.toLocaleString("fr-FR")} chars</span>
               )}
             </p>
           )}

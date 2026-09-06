@@ -3,6 +3,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { getServerUserAndPlan } from "@/lib/supabase-server";
 import { PLAN_LIMITS, planLabel, getMonthlyUsage, incrementMonthlyUsage } from "@/lib/plan-limits";
 import { checkRateLimit } from "@/lib/rate-limit";
+import { AUDIT_HTML_MAX_CHARS } from "@/lib/audit-config";
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
@@ -225,7 +226,9 @@ export async function POST(request: NextRequest) {
     }
 
     const truncated =
-      html.length > 20000 ? html.slice(0, 20000) + "\n<!-- [tronqué à 20 000 chars] -->" : html;
+      html.length > AUDIT_HTML_MAX_CHARS
+        ? html.slice(0, AUDIT_HTML_MAX_CHARS) + `\n<!-- [tronqué à ${AUDIT_HTML_MAX_CHARS.toLocaleString("fr-FR")} chars] -->`
+        : html;
 
     const message = await client.messages.create({
       model: "claude-sonnet-4-6",
