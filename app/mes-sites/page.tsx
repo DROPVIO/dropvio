@@ -26,6 +26,12 @@ export default function MesSitesPage() {
   const [downloading, setDownloading] = useState<string | null>(null);
   const [deleting, setDeleting] = useState<string | null>(null);
 
+  const [shopifyConnected, setShopifyConnected] = useState<boolean | null>(null);
+  const [shopifyDomainInput, setShopifyDomainInput] = useState("");
+  const [pushingId, setPushingId] = useState<string | null>(null);
+  const [pushErrors, setPushErrors] = useState<Record<string, string>>({});
+  const [pushResults, setPushResults] = useState<Record<string, { url: string; admin_url: string }>>({});
+
   useEffect(() => {
     fetch("/api/sites-generes")
       .then((r) => r.json())
@@ -35,7 +41,44 @@ export default function MesSitesPage() {
       })
       .catch(() => setError("Impossible de charger les sites"))
       .finally(() => setLoading(false));
+
+    fetch("/api/shopify/status")
+      .then((r) => r.json())
+      .then((json) => setShopifyConnected(Boolean(json.connected)))
+      .catch(() => setShopifyConnected(false));
   }, []);
+
+  function handleConnectShopify() {
+    const shop = shopifyDomainInput.trim().toLowerCase();
+    if (!/^[a-z0-9][a-z0-9-]*\.myshopify\.com$/.test(shop)) {
+      alert("Format attendu : ma-boutique.myshopify.com");
+      return;
+    }
+    const returnTo = window.location.pathname;
+    window.location.href = `/api/shopify/connect?shop=${encodeURIComponent(shop)}&returnTo=${encodeURIComponent(returnTo)}`;
+  }
+
+  async function handlePushShopify(site: Site) {
+    setPushingId(site.id);
+    setPushErrors((prev) => ({ ...prev, [site.id]: "" }));
+    try {
+      const res = await fetch(`/api/sites-generes/${site.id}/shopify-push`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ mode: "html" }),
+      });
+      const json = await res.json();
+      if (!res.ok) {
+        setPushErrors((prev) => ({ ...prev, [site.id]: json.error || "Impossible de publier sur Shopify." }));
+        return;
+      }
+      setPushResults((prev) => ({ ...prev, [site.id]: { url: json.url, admin_url: json.admin_url } }));
+    } catch {
+      setPushErrors((prev) => ({ ...prev, [site.id]: "Impossible de contacter le serveur." }));
+    } finally {
+      setPushingId(null);
+    }
+  }
 
   async function handleDownload(site: Site) {
     setDownloading(site.id);
@@ -118,6 +161,29 @@ export default function MesSitesPage() {
           </p>
         </div>
 
+        {shopifyConnected === false && (
+          <div className="mb-6 rounded-2xl bg-[var(--surface)] border border-[var(--border)] p-4 flex flex-col sm:flex-row sm:items-center gap-3">
+            <p className="text-xs text-[var(--text-muted)] flex-1">
+              Connecte ta boutique Shopify pour publier tes landing pages directement dessus.
+            </p>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={shopifyDomainInput}
+                onChange={(e) => setShopifyDomainInput(e.target.value)}
+                placeholder="ma-boutique.myshopify.com"
+                className="flex-1 sm:w-56 px-3 py-2 rounded-xl bg-[var(--bg)] border border-[var(--border-strong)] text-xs text-[var(--text-primary)] placeholder:text-[var(--text-faint)] focus:outline-none focus:border-[var(--accent)]/40"
+              />
+              <button
+                onClick={handleConnectShopify}
+                className="px-4 py-2 rounded-xl bg-gradient-to-r from-violet-600 to-blue-600 text-white text-xs font-semibold hover:from-violet-500 hover:to-blue-500 transition-all whitespace-nowrap"
+              >
+                Connecter
+              </button>
+            </div>
+          </div>
+        )}
+
         {loading ? (
           <div className="flex items-center justify-center py-24 text-[var(--text-faint)] text-sm gap-3">
             <div className="w-5 h-5 rounded-full border-2 border-[var(--border-strong)] border-t-violet-500 animate-spin" />
@@ -188,6 +254,32 @@ export default function MesSitesPage() {
                       {downloading === site.id ? "…" : "Télécharger le HTML"}
                     </button>
                   </div>
+                  {shopifyConnected && (
+                    <button
+                      onClick={() => handlePushShopify(site)}
+                      disabled={pushingId === site.id}
+                      className="py-2 rounded-xl border border-[var(--border-strong)] text-[var(--text-muted)] text-xs font-medium text-center hover:border-[var(--accent)]/40 hover:text-[var(--text-primary)] transition disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {pushingId === site.id ? "Publication…" : "Publier sur Shopify"}
+                    </button>
+                  )}
+                  {pushErrors[site.id] && (
+                    <p className="text-[11px] text-[var(--danger)]">{pushErrors[site.id]}</p>
+                  )}
+                  {pushResults[site.id] && (
+                    <p className="text-[11px] text-[var(--text-faint)]">
+                      Publié :{" "}
+                      <a
+                        href={pushResults[site.id].url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-[var(--accent)] hover:underline"
+                      >
+                        voir la page
+                      </a>
+                    </p>
+                  )}
+
                   <button
                     onClick={() => handleDelete(site)}
                     disabled={deleting === site.id}
