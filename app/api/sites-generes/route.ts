@@ -59,6 +59,7 @@ export async function POST(request: NextRequest) {
       .from("sites_generes")
       .select("id", { count: "exact", head: true })
       .eq("user_id", user.id)
+      .eq("is_trace", false)
       .gte("created_at", debutMois);
 
     if (countError) {

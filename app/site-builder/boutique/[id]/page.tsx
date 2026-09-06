@@ -401,6 +401,7 @@ export default function BoutiqueBuilderDetailPage() {
         body: JSON.stringify({
           description: reviewDescription,
           settings: { ...(boutique.settings ?? {}), palette: reviewPalette },
+          logGenerationTrace: true,
         }),
       });
       const json = await res.json();
