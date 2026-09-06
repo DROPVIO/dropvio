@@ -11,8 +11,11 @@ export async function GET() {
 
   const { data, error } = await supabase
     .from("sites_generes")
-    .select("id, nom_produit, created_at")
+    .select("id, nom_produit, created_at, est_favori")
     .eq("user_id", user.id)
+    // Favoris en premier, ordre chronologique conservé à l'intérieur de chaque groupe
+    // (app/mes-sites/page.tsx).
+    .order("est_favori", { ascending: false })
     .order("created_at", { ascending: false });
 
   if (error) {

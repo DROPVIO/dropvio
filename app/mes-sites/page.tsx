@@ -6,13 +6,25 @@ type Site = {
   id: string;
   nom_produit: string;
   created_at: string;
+  est_favori: boolean;
 };
+
+// Favoris en premier, ordre chronologique conservé à l'intérieur de chaque groupe — même
+// tri que le serveur (app/api/sites-generes/route.ts), réutilisé ici pour retrier
+// immédiatement après un toggle optimiste, sans attendre un rechargement complet.
+function sortSites(list: Site[]): Site[] {
+  return [...list].sort((a, b) => {
+    if (a.est_favori !== b.est_favori) return a.est_favori ? -1 : 1;
+    return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+  });
+}
 
 export default function MesSitesPage() {
   const [sites, setSites] = useState<Site[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [downloading, setDownloading] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState<string | null>(null);
 
   useEffect(() => {
     fetch("/api/sites-generes")
@@ -43,6 +55,38 @@ export default function MesSitesPage() {
       alert("Erreur lors du téléchargement.");
     } finally {
       setDownloading(null);
+    }
+  }
+
+  async function handleDelete(site: Site) {
+    if (!confirm(`Supprimer « ${site.nom_produit} » ? Cette action est irréversible.`)) return;
+    setDeleting(site.id);
+    try {
+      const res = await fetch(`/api/sites-generes/${site.id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error();
+      setSites((prev) => prev.filter((s) => s.id !== site.id));
+    } catch {
+      alert("Erreur lors de la suppression.");
+    } finally {
+      setDeleting(null);
+    }
+  }
+
+  // Optimiste : met à jour et retrie immédiatement, avant même la réponse serveur — annule
+  // et revient à l'état précédent si la requête échoue.
+  async function handleToggleFavori(site: Site) {
+    const nextFavori = !site.est_favori;
+    setSites((prev) => sortSites(prev.map((s) => (s.id === site.id ? { ...s, est_favori: nextFavori } : s))));
+    try {
+      const res = await fetch(`/api/sites-generes/${site.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ est_favori: nextFavori }),
+      });
+      if (!res.ok) throw new Error();
+    } catch {
+      setSites((prev) => sortSites(prev.map((s) => (s.id === site.id ? { ...s, est_favori: !nextFavori } : s))));
+      alert("Erreur lors de la mise à jour du favori.");
     }
   }
 
@@ -120,6 +164,13 @@ export default function MesSitesPage() {
                         Généré le {formatDate(site.created_at)}
                       </p>
                     </div>
+                    <button
+                      onClick={() => handleToggleFavori(site)}
+                      aria-label={site.est_favori ? "Retirer des favoris" : "Ajouter aux favoris"}
+                      className="shrink-0 text-lg leading-none transition hover:scale-110"
+                    >
+                      {site.est_favori ? "⭐" : "☆"}
+                    </button>
                   </div>
 
                   <div className="flex gap-2">
@@ -137,6 +188,13 @@ export default function MesSitesPage() {
                       {downloading === site.id ? "…" : "Télécharger le HTML"}
                     </button>
                   </div>
+                  <button
+                    onClick={() => handleDelete(site)}
+                    disabled={deleting === site.id}
+                    className="text-xs text-[var(--text-faint)] hover:text-[var(--danger)] transition disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {deleting === site.id ? "Suppression…" : "Supprimer"}
+                  </button>
                 </div>
               ))}
             </div>
