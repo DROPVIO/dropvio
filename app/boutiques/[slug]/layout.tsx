@@ -134,6 +134,34 @@ export default async function BoutiquePublicLayout({
       </header>
       <SecondaryBanner bandeau={boutique.settings?.bandeau as { texte?: string | null; videos?: string[] } | undefined} />
       {children}
+
+      {/* Footer — présent sur toutes les pages boutique publiques (ce layout les wrap
+          toutes), pas seulement l'accueil, pour que ces liens restent joignables peu
+          importe où le visiteur navigue. Mêmes cibles que la nav du header ci-dessus.
+          "Nos collections" pointe vers /produits (pas de page "toutes les collections"
+          dédiée aujourd'hui, /produits porte déjà les filtres par catégorie) et disparaît
+          s'il n'y a aucune catégorie — pas de lien mort. */}
+      <footer className="border-t border-[var(--border)] bg-[var(--surface)]">
+        <div className="mx-auto flex max-w-7xl flex-col items-center gap-3 px-4 py-8 text-sm text-[var(--text-muted)] sm:flex-row sm:justify-between sm:px-6 lg:px-8">
+          <span className="font-semibold text-[var(--text-primary)]">{boutique.nom}</span>
+          <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2">
+            <Link href={`${basePath}/mentions-legales`} className="transition hover:text-[var(--text-primary)]">
+              Mentions légales
+            </Link>
+            <Link href={`${home}#a-propos`} className="transition hover:text-[var(--text-primary)]">
+              À propos
+            </Link>
+            <Link href={`${basePath}/produits`} className="transition hover:text-[var(--text-primary)]">
+              Catalogue
+            </Link>
+            {categories && categories.length > 0 ? (
+              <Link href={`${basePath}/produits`} className="transition hover:text-[var(--text-primary)]">
+                Nos collections
+              </Link>
+            ) : null}
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }
