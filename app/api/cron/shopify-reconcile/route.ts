@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
-import { shopifyFetch, ShopifyApiError } from "@/lib/shopify";
+import { shopifyFetch, ShopifyApiError, buildCommandeAPreparerRow, ShopifyOrderForPreparation } from "@/lib/shopify";
 import { decryptSecret } from "@/lib/crypto";
 
 // Rattrapage périodique : repasse sur les commandes récentes de chaque boutique connectée
@@ -26,7 +26,11 @@ type Connection = {
   disputes_scope_granted: boolean;
 };
 
-type OrderRow = { id: number; financial_status?: string; total_price?: string; currency?: string };
+type OrderRow = ShopifyOrderForPreparation & {
+  financial_status?: string;
+  total_price?: string;
+  currency?: string;
+};
 type RefundRow = {
   id: number;
   order_id: number;
@@ -71,6 +75,12 @@ export async function GET(request: NextRequest) {
       );
 
       for (const order of ordersRes.orders ?? []) {
+        // Rattrapage d'un éventuel orders/create manqué — idempotent via la contrainte
+        // unique (user_id, shopify_order_id) sur commandes_a_preparer, sûr à répéter même
+        // si le webhook a déjà traité cette commande.
+        const commandeRow = await buildCommandeAPreparerRow(admin, conn.user_id, order);
+        await admin.from("commandes_a_preparer").upsert(commandeRow, { onConflict: "user_id,shopify_order_id" });
+
         if (order.financial_status !== "refunded" && order.financial_status !== "partially_refunded") {
           continue;
         }

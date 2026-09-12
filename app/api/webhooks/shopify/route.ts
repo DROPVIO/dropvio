@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
-import { readShopifyWebhook } from "@/lib/shopify";
+import { readShopifyWebhook, buildCommandeAPreparerRow, ShopifyOrderForPreparation } from "@/lib/shopify";
 
 // Confirmation explicite (voir échange précédent) : la vérification HMAC lit le corps de
 // la requête en texte brut AVANT tout parsing JSON — c'est readShopifyWebhook() dans
@@ -67,6 +67,12 @@ export async function POST(request: NextRequest) {
   const nowIso = new Date().toISOString();
 
   switch (topic) {
+    case "orders/create": {
+      const row = await buildCommandeAPreparerRow(admin, connection.user_id, payload as ShopifyOrderForPreparation);
+      await admin.from("commandes_a_preparer").upsert(row, { onConflict: "user_id,shopify_order_id" });
+      break;
+    }
+
     case "refunds/create": {
       const p = payload as RefundPayload;
       const montant = (p.transactions ?? []).reduce((sum, t) => sum + (parseFloat(t.amount ?? "0") || 0), 0);

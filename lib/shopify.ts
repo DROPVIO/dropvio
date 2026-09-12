@@ -1,4 +1,5 @@
 import crypto from "crypto";
+import { SupabaseClient } from "@supabase/supabase-js";
 import { createSupabaseAdminClient } from "./supabase-admin";
 import { encryptSecret, decryptSecret } from "./crypto";
 
@@ -115,7 +116,7 @@ export async function readShopifyWebhook(request: Request): Promise<ShopifyWebho
   };
 }
 
-const CORE_WEBHOOK_TOPICS = ["orders/updated", "refunds/create", "app/uninstalled"];
+const CORE_WEBHOOK_TOPICS = ["orders/create", "orders/updated", "refunds/create", "app/uninstalled"];
 const DISPUTE_WEBHOOK_TOPICS = ["disputes/create", "disputes/update"];
 
 // Enregistrement best-effort : une reconnexion (même boutique, token renouvelé) retente
@@ -362,5 +363,93 @@ export function categoryToShopifyPayload(c: BoutiqueCategoryRow) {
       title: c.nom,
       published: true,
     },
+  };
+}
+
+// ---- Préparation d'achat AliExpress à la commande (v1 "assist manuel", voir commandes_a_preparer) ----
+
+export type ShopifyOrderLineItem = {
+  product_id: number | null;
+  variant_title?: string | null;
+  quantity: number;
+  title: string;
+};
+
+export type ShopifyOrderAddress = {
+  name?: string | null;
+  address1?: string | null;
+  address2?: string | null;
+  city?: string | null;
+  province?: string | null;
+  zip?: string | null;
+  country?: string | null;
+  phone?: string | null;
+};
+
+export type ShopifyOrderForPreparation = {
+  id: number;
+  name?: string | null;
+  line_items?: ShopifyOrderLineItem[];
+  shipping_address?: ShopifyOrderAddress | null;
+  customer?: { first_name?: string | null; last_name?: string | null; phone?: string | null } | null;
+};
+
+// Résout chaque ligne de commande vers son produit AliExpress source (via
+// boutique_produits.shopify_product_id -> source_produit_id -> produits.lienAliExpress) et
+// construit la ligne à upsert dans commandes_a_preparer. Partagé entre le webhook
+// orders/create et le cron de réconciliation pour ne jamais avoir deux implémentations de
+// cette résolution qui divergent.
+export async function buildCommandeAPreparerRow(
+  admin: SupabaseClient,
+  userId: string,
+  order: ShopifyOrderForPreparation
+): Promise<Record<string, unknown>> {
+  const lineItems = order.line_items ?? [];
+  const productIds = [...new Set(lineItems.map((li) => li.product_id).filter((id): id is number => Boolean(id)))];
+
+  const sourceProduitIdByShopifyId = new Map<number, string | null>();
+  if (productIds.length > 0) {
+    const { data } = await admin
+      .from("boutique_produits")
+      .select("shopify_product_id, source_produit_id")
+      .in("shopify_product_id", productIds);
+    for (const row of data ?? []) {
+      if (row.shopify_product_id) sourceProduitIdByShopifyId.set(row.shopify_product_id, row.source_produit_id ?? null);
+    }
+  }
+
+  const sourceProduitIds = [...new Set([...sourceProduitIdByShopifyId.values()].filter((v): v is string => Boolean(v)))];
+  const lienByProduitId = new Map<string, string | null>();
+  if (sourceProduitIds.length > 0) {
+    const { data } = await admin.from("produits").select("id, lienAliExpress").in("id", sourceProduitIds);
+    for (const row of data ?? []) lienByProduitId.set(row.id, row.lienAliExpress ?? null);
+  }
+
+  const lignes = lineItems.map((li) => {
+    const sourceProduitId = li.product_id ? sourceProduitIdByShopifyId.get(li.product_id) ?? null : null;
+    return {
+      shopify_product_id: li.product_id,
+      source_produit_id: sourceProduitId,
+      nom: li.title,
+      quantite: li.quantity,
+      variant_title: li.variant_title ?? null,
+      lien_aliexpress: sourceProduitId ? lienByProduitId.get(sourceProduitId) ?? null : null,
+    };
+  });
+
+  const addr = order.shipping_address ?? null;
+  const nomComplet = [order.customer?.first_name, order.customer?.last_name].filter(Boolean).join(" ").trim();
+  const clientNom = addr?.name ?? (nomComplet || null);
+
+  return {
+    user_id: userId,
+    shopify_order_id: order.id,
+    shopify_order_name: order.name ?? null,
+    adresse_livraison: addr,
+    client_nom: clientNom,
+    client_telephone: addr?.phone ?? order.customer?.phone ?? null,
+    lignes,
+    raw_payload: order,
+    updated_at: new Date().toISOString(),
   };
 }
