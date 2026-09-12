@@ -63,6 +63,12 @@ export default function ShopifyDetailPage() {
           </Link>
           <h1 className="text-2xl font-bold text-[var(--text-primary)] mt-3">Shopify — Remboursements & litiges</h1>
           <p className="text-[var(--text-faint)] text-sm mt-1.5">Synchronisé automatiquement depuis ta boutique Shopify.</p>
+          <Link
+            href="/dashboard/shopify/commandes"
+            className="inline-block mt-3 text-xs font-semibold text-[var(--accent)] hover:underline"
+          >
+            Commandes à préparer sur AliExpress →
+          </Link>
         </div>
 
         {status && !status.connected ? (
