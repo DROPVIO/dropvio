@@ -2,16 +2,7 @@
 
 import { Suspense, useState, useEffect, useMemo } from "react";
 import { useSearchParams } from "next/navigation";
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-} from "recharts";
+import dynamic from "next/dynamic";
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
 import type { User } from "@supabase/supabase-js";
 import {
@@ -64,19 +55,17 @@ const MARGE_BORDER: Record<ReturnType<typeof margeTier>, string> = {
   danger: "border-red-500/20",
 };
 
-// Couleurs recharts non-Tailwind (props SVG littérales — pas de résolution de var() CSS
-// possible, cf. DashboardActiviteChart.tsx) — recalculées selon le thème.
-function useIsLightTheme(): boolean {
-  const [isLight, setIsLight] = useState(false);
-  useEffect(() => {
-    const read = () => setIsLight(document.documentElement.getAttribute("data-theme") === "light");
-    read();
-    const observer = new MutationObserver(read);
-    observer.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
-    return () => observer.disconnect();
-  }, []);
-  return isLight;
-}
+// recharts (~390 KB) ne doit jamais faire partie du bundle initial de cette page — chargé
+// à la demande. ssr: false : recharts mesure le DOM au montage (ResponsiveContainer), un
+// rendu serveur n'apporterait rien et créerait un mismatch d'hydratation.
+const MargeBarChart = dynamic(() => import("@/components/tools/MargeBarChart"), {
+  ssr: false,
+  loading: () => (
+    <div className="h-[240px] flex items-center justify-center">
+      <div className="w-5 h-5 rounded-full border-2 border-[var(--accent)] border-t-transparent animate-spin" />
+    </div>
+  ),
+});
 
 export default function CalculateurMarge() {
   return (
@@ -88,7 +77,6 @@ export default function CalculateurMarge() {
 
 function CalculateurMargeInner() {
   const searchParams = useSearchParams();
-  const isLight = useIsLightTheme();
 
   const [mode, setMode] = useState<Mode>("france");
 
@@ -527,21 +515,7 @@ function CalculateurMargeInner() {
                 Marge brute vs marge nette
               </h2>
               <div className="bg-[var(--bg-sunken)] rounded-xl border border-[var(--border)] pt-4 px-2 pb-2">
-                <ResponsiveContainer width="100%" height={240}>
-                  <BarChart data={chartData} margin={{ top: 4, right: 8, left: -12, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke={isLight ? "rgba(0,0,0,0.06)" : "rgba(255,255,255,0.06)"} vertical={false} />
-                    <XAxis dataKey="name" tick={{ fill: isLight ? "#a1a1aa" : "#71717a", fontSize: 11 }} axisLine={false} tickLine={false} />
-                    <YAxis tick={{ fill: isLight ? "#a1a1aa" : "#71717a", fontSize: 11 }} axisLine={false} tickLine={false} width={46} />
-                    <Tooltip
-                      contentStyle={{ background: "var(--surface)", border: "1px solid var(--border-strong)", borderRadius: 10, fontSize: 12 }}
-                      labelStyle={{ color: "var(--text-faint)" }}
-                      formatter={(value) => `${Number(value).toFixed(2)} €`}
-                    />
-                    <Legend wrapperStyle={{ fontSize: 11, color: isLight ? "#52525b" : "#a1a1aa" }} />
-                    <Bar dataKey="margeBrute" name="Marge brute" fill="#7c3aed" radius={[6, 6, 0, 0]} />
-                    <Bar dataKey="margeNette" name="Marge nette" fill={isLight ? "#059669" : "#10b981"} radius={[6, 6, 0, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
+                <MargeBarChart chartData={chartData} />
               </div>
             </div>
           </div>

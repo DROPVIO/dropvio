@@ -2,9 +2,23 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
 import { PLAN_LIMITS, getMonthlyUsage, type Plan } from "@/lib/plan-limits";
-import DashboardActiviteChart, { type DashboardChartData } from "@/components/DashboardActiviteChart";
+import type { DashboardChartData } from "@/components/DashboardActiviteChart";
+
+// recharts (~390 KB) ne doit jamais faire partie du bundle initial du dashboard — chargé à
+// la demande, après le premier rendu. ssr: false : recharts mesure le DOM au montage
+// (ResponsiveContainer), un rendu serveur n'apporterait rien et créerait un mismatch
+// d'hydratation.
+const DashboardActiviteChart = dynamic(() => import("@/components/DashboardActiviteChart"), {
+  ssr: false,
+  loading: () => (
+    <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-6 h-[420px] flex items-center justify-center">
+      <div className="w-5 h-5 rounded-full border-2 border-[var(--accent)] border-t-transparent animate-spin" />
+    </div>
+  ),
+});
 
 type Profile = { nom_complet: string | null; plan: string };
 
