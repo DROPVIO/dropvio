@@ -194,6 +194,9 @@ export default function ProduitsGagnants() {
             <p className="text-[var(--text-faint)] mt-1.5 mb-0 text-sm">
               Les meilleurs produits AliExpress pour le dropshipping — sélectionnés par marge, avis et potentiel.
             </p>
+            <div className="bg-amber-500/10 border border-amber-500/25 text-[var(--warning)] rounded-lg px-3 py-2.5 text-[12.5px] mt-3">
+              ⚠️ Avant de vendre un produit, commande-le toi-même pour vérifier sa qualité, les délais de livraison réels et la fiabilité du fournisseur.
+            </div>
           </div>
         </div>
       </div>
