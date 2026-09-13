@@ -248,23 +248,17 @@ export default function Sidebar({
           {/* Links */}
           {NAV_ITEMS.map(({ href, label, icon, soon, onboardingTarget }) => {
             const isActive = pathname.startsWith(href);
-            return (
-              <a
-                key={href}
-                href={soon ? undefined : href}
-                title={collapsed ? label : undefined}
-                data-onboarding-target={onboardingTarget}
-                onClick={soon ? (e) => e.preventDefault() : undefined}
-                className={`relative flex items-center gap-3 rounded-lg text-sm transition-all duration-150 shrink-0 ${
-                  collapsed ? "w-10 h-10 mx-auto justify-center" : "px-3 py-2.5"
-                } ${
-                  soon
-                    ? "opacity-40 cursor-not-allowed text-[var(--text-faint)]"
-                    : isActive
-                    ? "bg-[var(--surface-3)] text-[var(--text-primary)]"
-                    : "text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-2)]"
-                }`}
-              >
+            const className = `relative flex items-center gap-3 rounded-lg text-sm transition-all duration-150 shrink-0 ${
+              collapsed ? "w-10 h-10 mx-auto justify-center" : "px-3 py-2.5"
+            } ${
+              soon
+                ? "opacity-40 cursor-not-allowed text-[var(--text-faint)]"
+                : isActive
+                ? "bg-[var(--surface-3)] text-[var(--text-primary)]"
+                : "text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-2)]"
+            }`;
+            const inner = (
+              <>
                 {/* Active pill */}
                 {isActive && !collapsed && (
                   <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 bg-[var(--accent)] rounded-r-full" />
@@ -284,7 +278,26 @@ export default function Sidebar({
                     )}
                   </>
                 )}
-              </a>
+              </>
+            );
+
+            // "soon" (aucun NAV_ITEM aujourd'hui, mais le type le permet) : jamais un vrai
+            // lien, donc pas de Link (pas de prefetch/navigation vers une route qui n'a
+            // rien à afficher) — un <span> non cliquable garde le même rendu visuel.
+            return soon ? (
+              <span key={href} title={collapsed ? label : undefined} className={className}>
+                {inner}
+              </span>
+            ) : (
+              <Link
+                key={href}
+                href={href}
+                title={collapsed ? label : undefined}
+                data-onboarding-target={onboardingTarget}
+                className={className}
+              >
+                {inner}
+              </Link>
             );
           })}
 
