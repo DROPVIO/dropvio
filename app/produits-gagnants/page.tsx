@@ -6,15 +6,6 @@ import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
 import { slugify } from "@/lib/slugify";
 import ProduitsSuggeres from "@/components/ProduitsSuggeres";
 import { NICHES as NICHES_CATALOGUE, nicheLabel } from "@/lib/niches";
-// Simplifie un titre produit AliExpress (souvent long et bruité) en mot-clé exploitable sur Google Trends
-function simplifierMotCle(nom: string): string {
-  const mots = nom
-    .replace(/[^\p{L}\p{N}\s]/gu, " ")
-    .split(/\s+/)
-    .filter(Boolean);
-  return mots.slice(0, 4).join(" ");
-}
-
 const NICHES = [
   { id: "all", label: "Voir tout", emoji: "🗂️", desc: "Toutes les niches confondues" },
   ...NICHES_CATALOGUE,
@@ -157,9 +148,6 @@ export default function ProduitsGagnants() {
   }, [produits]);
 
   const nicheSelectionnee = NICHES.find(n => n.id === nicheActive);
-
-  // Bloc 3 — Google Trends
-  const [trendsProduit, setTrendsProduit] = useState<Produit | null>(null);
 
   // Bloc 4 — Ajouter à une boutique
   const [ajouterBoutiqueProduit, setAjouterBoutiqueProduit] = useState<Produit | null>(null);
@@ -418,7 +406,6 @@ export default function ProduitsGagnants() {
                       produit={p}
                       croissancePct={croissance[p.id]}
                       isHalloweenNiche={isHalloweenNiche}
-                      onVoirTendance={() => setTrendsProduit(p)}
                       onAjouterBoutique={() => setAjouterBoutiqueProduit(p)}
                       onVoirAlternatives={() => setAlternativesProduit(p)}
                     />
@@ -459,9 +446,6 @@ export default function ProduitsGagnants() {
         </div>
       </div>
 
-      {trendsProduit && (
-        <TrendsModal produit={trendsProduit} onClose={() => setTrendsProduit(null)} />
-      )}
       {ajouterBoutiqueProduit && (
         <AjouterBoutiqueModal produit={ajouterBoutiqueProduit} onClose={() => setAjouterBoutiqueProduit(null)} />
       )}
@@ -472,76 +456,16 @@ export default function ProduitsGagnants() {
   );
 }
 
-function TrendsModal({ produit, onClose }: { produit: Produit; onClose: () => void }) {
-  const [motCle, setMotCle] = useState(simplifierMotCle(produit.nom));
-
-  return (
-    <div
-      onClick={onClose}
-      className="fixed inset-0 bg-black/80 z-[100] flex items-center justify-center p-5"
-    >
-      <div
-        onClick={(e) => e.stopPropagation()}
-        className="bg-[var(--surface)] border border-[var(--border-strong)] rounded-2xl p-7 max-w-[560px] w-full max-h-[85vh] overflow-y-auto"
-      >
-        <div className="flex justify-between items-start mb-4 gap-3">
-          <div>
-            <div className="text-xs text-[var(--text-faint)] uppercase tracking-[0.06em] mb-1">
-              📈 Tendance de recherche · Google Trends France
-            </div>
-            <h3 className="text-[15px] font-semibold text-[var(--text-primary)] m-0 leading-snug">
-              {produit.nom}
-            </h3>
-          </div>
-          <button
-            onClick={onClose}
-            className="bg-transparent border border-[var(--border-strong)] text-[var(--text-faint)] w-7 h-7 rounded-lg cursor-pointer shrink-0 text-sm"
-          >
-            ✕
-          </button>
-        </div>
-
-        <div className="mb-5">
-          <label className="block text-[11.5px] text-[var(--text-faint)] mb-1.5">
-            Mot-clé recherché
-          </label>
-          <input
-            type="text"
-            value={motCle}
-            onChange={(e) => setMotCle(e.target.value)}
-            className="w-full box-border bg-[var(--bg-sunken)] border border-[var(--border-strong)] rounded-lg px-3 py-2.5 text-[13px] text-[var(--text-primary)] outline-none"
-          />
-        </div>
-
-        <p className="text-[12.5px] text-[var(--text-faint)] leading-relaxed mb-5">
-          Consulte l&apos;évolution de la recherche pour ce produit en France sur Google Trends.
-        </p>
-
-        <a
-          href={`https://trends.google.com/trends/explore?geo=FR&q=${encodeURIComponent(motCle)}`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="block w-full box-border text-center bg-violet-600 text-white px-5 py-3.5 rounded-[10px] text-sm font-bold no-underline"
-        >
-          Voir la tendance sur Google Trends ↗
-        </a>
-      </div>
-    </div>
-  );
-}
-
 function CarteProduit({
   produit,
   croissancePct,
   isHalloweenNiche,
-  onVoirTendance,
   onAjouterBoutique,
   onVoirAlternatives,
 }: {
   produit: Produit;
   croissancePct?: number;
   isHalloweenNiche?: boolean;
-  onVoirTendance: () => void;
   onAjouterBoutique: () => void;
   onVoirAlternatives: () => void;
 }) {
@@ -657,12 +581,6 @@ function CarteProduit({
             className="block w-full bg-emerald-500/10 border border-emerald-500/25 text-[var(--success)] text-center py-2 rounded-lg text-xs font-semibold cursor-pointer transition-colors hover:bg-emerald-500/20"
           >
             🛍️ Ajouter à une boutique
-          </button>
-          <button
-            onClick={onVoirTendance}
-            className="block w-full bg-transparent border border-[var(--border-strong)] text-[var(--text-muted)] text-center py-2 rounded-lg text-xs font-semibold cursor-pointer transition-colors hover:bg-[var(--surface-2)]"
-          >
-            📈 Tendance Google
           </button>
           <button
             onClick={onVoirAlternatives}
