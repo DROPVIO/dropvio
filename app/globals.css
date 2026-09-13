@@ -29,7 +29,10 @@
   --border-strong: rgba(255, 255, 255, 0.12);
   --text-primary: #ffffff;
   --text-muted: #a1a1aa;
-  --text-faint: #71717a;
+  /* #90909a (pas #71717a) : le gris d'origine tombait sous 4.5:1 (WCAG AA) sur tous les
+     fonds sombres, jusqu'à 3.14:1 sur --surface-3 — voir l'audit de contraste qui a précédé
+     ce changement. */
+  --text-faint: #90909a;
   --accent: #7c3aed;
   --accent-secondary: #60a5fa;
   --success: #10b981;
@@ -71,7 +74,8 @@
   --border-strong: rgba(255, 255, 255, 0.12);
   --text-primary: #ffffff;
   --text-muted: #a1a1aa;
-  --text-faint: #71717a;
+  /* Même correctif de contraste que le bloc :root ci-dessus. */
+  --text-faint: #90909a;
   --accent: #7c3aed;
   --accent-secondary: #60a5fa;
   --success: #10b981;
@@ -348,7 +352,9 @@ body {
   --border-strong: rgba(255,255,255,0.14);
   --text: #F5F3F7;
   --text-2: #A8A3B8;
-  --text-3: #6B6578;
+  /* #908c9a (pas #6B6578) : sous 4.5:1 (WCAG AA) sur tous les fonds de cette palette,
+     jusqu'à 3.09:1 sur --surface-2 — même audit de contraste que --text-faint plus haut. */
+  --text-3: #908c9a;
   --purple: #8B5CF6;
   --purple-dark: #6D28D9;
   --grad: linear-gradient(135deg,#8B5CF6,#6D28D9);
