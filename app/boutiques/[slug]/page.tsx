@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import ProductGrid, { formatPrice } from "@/app/components/boutique/ProductGrid";
@@ -165,9 +166,15 @@ export default async function BoutiquePage({ params }: { params: Promise<{ slug:
         <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6 lg:px-8">
           <p className="text-sm uppercase tracking-[0.3em] text-violet-300">✨ Notre produit phare</p>
           <div className="mt-6 grid gap-8 md:grid-cols-2 md:items-center">
-            <div className="aspect-square overflow-hidden rounded-2xl bg-[var(--surface-2)]">
+            <div className="relative aspect-square overflow-hidden rounded-2xl bg-[var(--surface-2)]">
               {spotlight.image_urls?.[0] ? (
-                <img src={spotlight.image_urls[0]} alt={spotlight.nom} className="h-full w-full object-cover" />
+                <Image
+                  src={spotlight.image_urls[0]}
+                  alt={spotlight.nom}
+                  fill
+                  sizes="(max-width: 768px) 100vw, 50vw"
+                  className="object-cover"
+                />
               ) : (
                 <div className="flex h-full w-full items-center justify-center text-5xl text-[var(--text-faint)]">🖼️</div>
               )}

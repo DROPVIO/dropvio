@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { BoutiqueCartItem, getCartItems, updateCartItems } from "@/app/components/boutique/cart-utils";
@@ -116,7 +117,7 @@ export default function BoutiqueHeaderCart({ fullCartHref }: BoutiqueHeaderCartP
                   <div key={`${item.boutiqueSlug}-${item.produitId}`} className="flex items-start gap-3">
                     <div className="h-12 w-12 shrink-0 overflow-hidden rounded-xl bg-[var(--surface-3)]">
                       {item.imageUrl ? (
-                        <img src={item.imageUrl} alt={item.nom} className="h-full w-full object-cover" />
+                        <Image src={item.imageUrl} alt={item.nom} width={48} height={48} className="h-full w-full object-cover" />
                       ) : (
                         <div className="flex h-full w-full items-center justify-center text-sm text-[var(--text-faint)]">🖼️</div>
                       )}

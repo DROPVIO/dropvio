@@ -615,6 +615,12 @@ function SiteBuilderContent() {
               />
               {imageUrl.trim() && (
                 <div className="mt-1 rounded-xl overflow-hidden border border-[var(--border-strong)] bg-[var(--bg)] h-32 flex items-center justify-center">
+                  {/* <img> volontairement conservé (pas next/image) : aperçu en direct d'une URL
+                      externe arbitraire tapée par l'utilisateur, jamais un domaine connu à l'avance
+                      — un remotePattern en wildcard ferait proxier n'importe quelle URL par le
+                      serveur (risque SSRF/bande passante non bornée) pour un gain d'optimisation nul
+                      sur un aperçu de validation ponctuel. */}
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={imageUrl}
                     alt="Aperçu"

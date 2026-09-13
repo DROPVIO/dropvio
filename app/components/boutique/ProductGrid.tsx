@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 
 export type BoutiqueProduitCarte = {
@@ -44,10 +45,12 @@ export default function ProductGrid({
         >
           <div className="relative aspect-square overflow-hidden bg-[var(--surface-2)]">
             {produit.image_urls?.[0] ? (
-              <img
+              <Image
                 src={produit.image_urls[0]}
                 alt={produit.nom}
-                className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
+                fill
+                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, (max-width: 1280px) 33vw, 25vw"
+                className="object-cover transition duration-300 group-hover:scale-105"
               />
             ) : (
               <div className="flex h-full w-full items-center justify-center text-3xl text-[var(--text-faint)]">🖼️</div>

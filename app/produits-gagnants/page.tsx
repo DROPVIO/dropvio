@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
 import { slugify } from "@/lib/slugify";
@@ -484,10 +485,12 @@ function CarteProduit({
       {/* Image */}
       <div className="h-[150px] overflow-hidden bg-[var(--bg-sunken)] relative">
         {produit.image ? (
-          <img
+          <Image
             src={produit.image}
             alt={produit.nom}
-            className="w-full h-full object-cover"
+            fill
+            sizes="(max-width: 640px) 45vw, 220px"
+            className="object-cover"
             onError={(e) => {
               (e.currentTarget as HTMLImageElement).style.display = "none";
             }}
@@ -696,9 +699,11 @@ function AlternativesModal({ produit, onClose }: { produit: Produit; onClose: ()
                 className="flex gap-3 bg-[var(--bg-sunken)] border border-[var(--border-strong)] rounded-[10px] p-3 no-underline text-inherit"
               >
                 {alt.image ? (
-                  <img
+                  <Image
                     src={alt.image}
                     alt={alt.title}
+                    width={56}
+                    height={56}
                     className="w-14 h-14 rounded-lg object-cover shrink-0 bg-[var(--surface)]"
                   />
                 ) : (
