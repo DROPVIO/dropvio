@@ -13,11 +13,14 @@ export const SHOPIFY_API_VERSION = "2024-10";
 // content = Pages API, themes = Assets API (réplication du design en section) ;
 // read_orders/read_returns = remboursements/retours ; read_shopify_payments_disputes =
 // chargebacks (voir 018_shopify_incidents_scopes.sql) — n'a d'effet que si le marchand
-// utilise Shopify Payments, sinon simplement pas de données à lire sur ce scope.
+// utilise Shopify Payments, sinon simplement pas de données à lire sur ce scope ;
+// write_fulfillments = pousser le numéro de suivi une fois la commande passée sur AliExpress
+// (voir 033_commandes_aliexpress_suivi.sql), n'a d'effet que si le marchand a re-autorisé l'app
+// après son ajout (voir fulfillment_scope_granted).
 // Un changement de cette liste force la ré-authentification des marchands déjà connectés :
 // Shopify n'octroie jamais un nouveau scope sur un token existant.
 const SHOPIFY_SCOPES =
-  "read_products,write_products,write_inventory,read_content,write_content,read_themes,write_themes,read_orders,read_returns,read_shopify_payments_disputes";
+  "read_products,write_products,write_inventory,read_content,write_content,read_themes,write_themes,read_orders,read_returns,read_shopify_payments_disputes,write_fulfillments";
 
 export function isShopifyConfigured(): boolean {
   return Boolean(process.env.SHOPIFY_CLIENT_ID && process.env.SHOPIFY_CLIENT_SECRET);
@@ -193,6 +196,7 @@ export type ShopifyConnection = {
   access_token: string;
   scope: string | null;
   disputes_scope_granted: boolean;
+  fulfillment_scope_granted: boolean;
   connected_at: string;
 };
 
@@ -205,7 +209,9 @@ export async function getShopifyConnection(userId: string): Promise<ShopifyConne
   const admin = createSupabaseAdminClient();
   const { data } = await admin
     .from("shopify_connections")
-    .select("shop_domain, shop_name, access_token_encrypted, scope, disputes_scope_granted, connected_at")
+    .select(
+      "shop_domain, shop_name, access_token_encrypted, scope, disputes_scope_granted, fulfillment_scope_granted, connected_at"
+    )
     .eq("user_id", userId)
     .maybeSingle();
 
@@ -217,6 +223,7 @@ export async function getShopifyConnection(userId: string): Promise<ShopifyConne
     access_token: decryptSecret(data.access_token_encrypted),
     scope: data.scope,
     disputes_scope_granted: data.disputes_scope_granted,
+    fulfillment_scope_granted: data.fulfillment_scope_granted,
     connected_at: data.connected_at,
   };
 }
@@ -229,11 +236,12 @@ export async function saveShopifyConnection(params: {
   shopName: string | null;
   accessToken: string;
   scope: string;
-}): Promise<{ ok: true; disputesGranted: boolean } | { ok: false; error: string }> {
-  const disputesGranted = params.scope
-    .split(",")
-    .map((s) => s.trim())
-    .includes("read_shopify_payments_disputes");
+}): Promise<
+  { ok: true; disputesGranted: boolean; fulfillmentGranted: boolean } | { ok: false; error: string }
+> {
+  const grantedScopes = params.scope.split(",").map((s) => s.trim());
+  const disputesGranted = grantedScopes.includes("read_shopify_payments_disputes");
+  const fulfillmentGranted = grantedScopes.includes("write_fulfillments");
 
   const admin = createSupabaseAdminClient();
   const { error } = await admin.from("shopify_connections").upsert(
@@ -244,6 +252,7 @@ export async function saveShopifyConnection(params: {
       access_token_encrypted: encryptSecret(params.accessToken),
       scope: params.scope,
       disputes_scope_granted: disputesGranted,
+      fulfillment_scope_granted: fulfillmentGranted,
       connected_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     },
@@ -251,7 +260,7 @@ export async function saveShopifyConnection(params: {
   );
 
   if (error) return { ok: false, error: error.message };
-  return { ok: true, disputesGranted };
+  return { ok: true, disputesGranted, fulfillmentGranted };
 }
 
 // Wrapper fetch Admin API : ajoute le token, gère le rate limit (429 + Retry-After, avec
@@ -313,6 +322,54 @@ export async function shopifyFetch<T = unknown>(
 
   if (res.status === 204) return null as T;
   return res.json();
+}
+
+type ShopifyFulfillmentOrder = { id: number; status: string };
+
+// Pousse le numéro de suivi saisi par le marchand vers Shopify une fois qu'il a commandé sur
+// AliExpress. Passe par le modèle FulfillmentOrder (obligatoire depuis la dépréciation de la
+// création directe de fulfillment sur /orders/{id}/fulfillments.json) : il faut d'abord
+// retrouver le ou les fulfillment orders "open" de la commande avant de pouvoir créer le
+// fulfillment. Laisse ShopifyApiError remonter tel quel — c'est l'appelant (route API) qui
+// décide de stocker l'erreur sans faire échouer la sauvegarde du numéro de suivi.
+export async function createShopifyFulfillment(
+  shop: string,
+  accessToken: string,
+  shopifyOrderId: number,
+  tracking: { number: string; company?: string | null }
+): Promise<number> {
+  const { fulfillment_orders } = await shopifyFetch<{ fulfillment_orders: ShopifyFulfillmentOrder[] }>(
+    shop,
+    accessToken,
+    `/orders/${shopifyOrderId}/fulfillment_orders.json`
+  );
+
+  const openOrders = (fulfillment_orders ?? []).filter((fo) => fo.status === "open");
+  if (openOrders.length === 0) {
+    throw new ShopifyApiError(
+      "Aucun fulfillment order ouvert pour cette commande côté Shopify (déjà expédiée, annulée, ou non éligible).",
+      409,
+      "unknown"
+    );
+  }
+
+  const { fulfillment } = await shopifyFetch<{ fulfillment: { id: number } }>(
+    shop,
+    accessToken,
+    "/fulfillments.json",
+    {
+      method: "POST",
+      body: JSON.stringify({
+        fulfillment: {
+          notify_customer: true,
+          tracking_info: { number: tracking.number, company: tracking.company ?? null },
+          line_items_by_fulfillment_order: openOrders.map((fo) => ({ fulfillment_order_id: fo.id })),
+        },
+      }),
+    }
+  );
+
+  return fulfillment.id;
 }
 
 // ---- Mapping produits/collections dropvio -> payloads Admin API ----

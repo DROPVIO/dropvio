@@ -15,7 +15,7 @@ export async function GET() {
   const admin = createSupabaseAdminClient();
   const { data } = await admin
     .from("shopify_connections")
-    .select("shop_domain, shop_name, access_token_encrypted, disputes_scope_granted, connected_at")
+    .select("shop_domain, shop_name, access_token_encrypted, disputes_scope_granted, fulfillment_scope_granted, connected_at")
     .eq("user_id", user.id)
     .maybeSingle();
 
@@ -53,6 +53,7 @@ export async function GET() {
     shop_name: data?.shop_name ?? null,
     connected_at: data?.connected_at ?? null,
     disputesScopeGranted: data?.disputes_scope_granted ?? false,
+    fulfillmentScopeGranted: data?.fulfillment_scope_granted ?? false,
     incidentsSummary,
   });
 }

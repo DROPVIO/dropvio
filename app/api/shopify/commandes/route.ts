@@ -1,8 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerUserAndPlan } from "@/lib/supabase-server";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
+import { getShopifyConnection, createShopifyFulfillment, ShopifyApiError } from "@/lib/shopify";
 
 const LOOKBACK_DAYS = 30;
+
+type LigneCommande = {
+  shopify_product_id: number | null;
+  source_produit_id: string | null;
+  nom: string;
+  quantite: number;
+  variant_title: string | null;
+  lien_aliexpress: string | null;
+};
 
 // Liste les commandes à préparer côté AliExpress (v1 "assist manuel", voir
 // commandes_a_preparer). Même garde-fou que /api/shopify/incidents : la table n'a aucune
@@ -20,7 +30,7 @@ export async function GET() {
   const { data, error } = await admin
     .from("commandes_a_preparer")
     .select(
-      "id, shopify_order_id, shopify_order_name, statut, adresse_livraison, client_nom, client_telephone, lignes, created_at"
+      "id, shopify_order_id, shopify_order_name, statut, adresse_livraison, client_nom, client_telephone, lignes, numero_suivi, transporteur, fulfillment_shopify_id, fulfillment_erreur, created_at"
     )
     .eq("user_id", user.id)
     .gte("created_at", since)
@@ -33,8 +43,14 @@ export async function GET() {
   return NextResponse.json({ commandes: data ?? [], lookbackDays: LOOKBACK_DAYS });
 }
 
-// Le marchand confirme avoir traité la commande côté AliExpress (ou l'écarte). Aucun achat
-// n'est déclenché depuis dropvio — ce PATCH ne fait que déplacer le statut de suivi.
+// Trois usages distincts, discriminés par la forme du body — jamais d'achat déclenché depuis
+// dropvio dans aucun des trois :
+// 1. { id, statut } : le marchand confirme avoir traité la commande côté AliExpress (ou l'écarte).
+// 2. { id, ligneIndex, lienAliExpress } : rattache manuellement un lien AliExpress à une ligne
+//    dont la résolution automatique (boutique_produits -> produits.lienAliExpress) a échoué.
+// 3. { id, numeroSuivi, transporteur? } : le marchand a commandé et saisit le numéro de suivi —
+//    tentative de push vers Shopify (fulfillment), best-effort : le numéro reste enregistré côté
+//    dropvio même si le push échoue (scope manquant, commande déjà expédiée, etc.).
 export async function PATCH(request: NextRequest) {
   const { user } = await getServerUserAndPlan();
   if (!user) {
@@ -43,12 +59,25 @@ export async function PATCH(request: NextRequest) {
 
   const body = await request.json().catch(() => null);
   const id = body?.id;
-  const statut = body?.statut;
-  if (typeof id !== "string" || (statut !== "commandee" && statut !== "ignoree")) {
+  if (typeof id !== "string") {
     return NextResponse.json({ error: "Requête invalide." }, { status: 400 });
   }
 
   const admin = createSupabaseAdminClient();
+
+  if (typeof body?.ligneIndex === "number" && typeof body?.lienAliExpress === "string") {
+    return attachLien(admin, user.id, id, body.ligneIndex, body.lienAliExpress);
+  }
+
+  if (typeof body?.numeroSuivi === "string" && body.numeroSuivi.trim().length > 0) {
+    return pushSuivi(admin, user.id, id, body.numeroSuivi.trim(), body?.transporteur ?? null);
+  }
+
+  const statut = body?.statut;
+  if (statut !== "commandee" && statut !== "ignoree") {
+    return NextResponse.json({ error: "Requête invalide." }, { status: 400 });
+  }
+
   const { error } = await admin
     .from("commandes_a_preparer")
     .update({ statut, updated_at: new Date().toISOString() })
@@ -60,4 +89,92 @@ export async function PATCH(request: NextRequest) {
   }
 
   return NextResponse.json({ ok: true });
+}
+
+type AdminClient = ReturnType<typeof createSupabaseAdminClient>;
+
+async function attachLien(admin: AdminClient, userId: string, id: string, ligneIndex: number, lienAliExpress: string) {
+  const { data: commande, error: fetchError } = await admin
+    .from("commandes_a_preparer")
+    .select("lignes")
+    .eq("id", id)
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  if (fetchError || !commande) {
+    return NextResponse.json({ error: fetchError?.message ?? "Commande introuvable." }, { status: 404 });
+  }
+
+  const lignes: LigneCommande[] = commande.lignes ?? [];
+  if (ligneIndex < 0 || ligneIndex >= lignes.length) {
+    return NextResponse.json({ error: "Ligne introuvable." }, { status: 400 });
+  }
+
+  lignes[ligneIndex] = { ...lignes[ligneIndex], lien_aliexpress: lienAliExpress };
+
+  const { error: updateError } = await admin
+    .from("commandes_a_preparer")
+    .update({ lignes, updated_at: new Date().toISOString() })
+    .eq("id", id)
+    .eq("user_id", userId);
+
+  if (updateError) {
+    return NextResponse.json({ error: updateError.message }, { status: 500 });
+  }
+
+  // Best-effort : propage vers le catalogue pour ne pas retomber sur le même trou aux
+  // prochaines commandes de ce produit. N'affecte jamais la réponse à cette requête.
+  const sourceProduitId = lignes[ligneIndex].source_produit_id;
+  if (sourceProduitId) {
+    await admin.from("produits").update({ lienAliExpress: lienAliExpress }).eq("id", sourceProduitId);
+  }
+
+  return NextResponse.json({ ok: true });
+}
+
+async function pushSuivi(admin: AdminClient, userId: string, id: string, numeroSuivi: string, transporteur: string | null) {
+  const { error: saveError } = await admin
+    .from("commandes_a_preparer")
+    .update({ numero_suivi: numeroSuivi, transporteur, updated_at: new Date().toISOString() })
+    .eq("id", id)
+    .eq("user_id", userId);
+
+  if (saveError) {
+    return NextResponse.json({ error: saveError.message }, { status: 500 });
+  }
+
+  const { data: commande } = await admin
+    .from("commandes_a_preparer")
+    .select("shopify_order_id")
+    .eq("id", id)
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  const connection = await getShopifyConnection(userId);
+  if (!connection || !connection.fulfillment_scope_granted || !commande) {
+    const erreur = !connection
+      ? "Boutique Shopify non connectée."
+      : !connection.fulfillment_scope_granted
+        ? "Reconnecte ta boutique Shopify pour activer l'envoi automatique du suivi."
+        : "Commande introuvable.";
+    await admin.from("commandes_a_preparer").update({ fulfillment_erreur: erreur }).eq("id", id).eq("user_id", userId);
+    return NextResponse.json({ ok: true, fulfillmentPushed: false, error: erreur });
+  }
+
+  try {
+    const fulfillmentId = await createShopifyFulfillment(connection.shop_domain, connection.access_token, commande.shopify_order_id, {
+      number: numeroSuivi,
+      company: transporteur,
+    });
+    await admin
+      .from("commandes_a_preparer")
+      .update({ fulfillment_shopify_id: fulfillmentId, fulfillment_erreur: null })
+      .eq("id", id)
+      .eq("user_id", userId);
+    return NextResponse.json({ ok: true, fulfillmentPushed: true });
+  } catch (err) {
+    const message = err instanceof ShopifyApiError ? err.message : "Erreur inconnue lors de l'envoi à Shopify.";
+    await admin.from("commandes_a_preparer").update({ fulfillment_erreur: message }).eq("id", id).eq("user_id", userId);
+    return NextResponse.json({ ok: true, fulfillmentPushed: false, error: message });
+  }
 }

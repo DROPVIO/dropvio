@@ -39,6 +39,7 @@ export default function ShopifyDetailPage() {
   const [status, setStatus] = useState<ShopifyStatus | null>(null);
   const [incidents, setIncidents] = useState<Incident[] | null>(null);
   const [lookbackDays, setLookbackDays] = useState(90);
+  const [aTraiterCount, setATraiterCount] = useState<number | null>(null);
 
   useEffect(() => {
     fetch("/api/shopify/status").then((r) => r.json()).then(setStatus).catch(() => setStatus(null));
@@ -49,6 +50,10 @@ export default function ShopifyDetailPage() {
         if (json.lookbackDays) setLookbackDays(json.lookbackDays);
       })
       .catch(() => setIncidents([]));
+    fetch("/api/shopify/commandes/count")
+      .then((r) => r.json())
+      .then((json) => setATraiterCount(json.count ?? 0))
+      .catch(() => setATraiterCount(null));
   }, []);
 
   const refunds = incidents?.filter((i) => i.type === "refund" || i.type === "return") ?? [];
@@ -65,9 +70,14 @@ export default function ShopifyDetailPage() {
           <p className="text-[var(--text-faint)] text-sm mt-1.5">Synchronisé automatiquement depuis ta boutique Shopify.</p>
           <Link
             href="/dashboard/shopify/commandes"
-            className="inline-block mt-3 text-xs font-semibold text-[var(--accent)] hover:underline"
+            className="inline-flex items-center gap-2 mt-3 text-xs font-semibold text-[var(--accent)] hover:underline"
           >
             Commandes à préparer sur AliExpress →
+            {aTraiterCount ? (
+              <span className="rounded-full bg-[var(--danger)] text-white text-[10px] font-bold px-1.5 py-0.5 leading-none">
+                {aTraiterCount}
+              </span>
+            ) : null}
           </Link>
         </div>
 
