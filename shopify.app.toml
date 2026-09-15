@@ -1,0 +1,18 @@
+# Learn more about configuring your app at https://shopify.dev/docs/apps/tools/cli/configuration
+
+client_id = "7f983724b8ed77a2eb1a9bd935dbd7aa"
+name = "Dropvio"
+application_url = "https://dropvio.vercel.app"
+embedded = true
+
+[webhooks]
+api_version = "2026-04"
+
+[access_scopes]
+# Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
+scopes = "read_products,write_products,write_inventory,read_content,write_content,read_themes,write_themes,read_orders,read_returns,read_shopify_payments_disputes,write_fulfillments"
+optional_scopes = [ ]
+use_legacy_install_flow = false
+
+[auth]
+redirect_urls = [ "https://dropvio.vercel.app/api/shopify/callback" ]
