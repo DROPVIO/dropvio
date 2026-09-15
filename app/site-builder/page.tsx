@@ -9,6 +9,7 @@ import ColorTokenPanel from "@/components/site-builder/ColorTokenPanel";
 import { applyTokenValue } from "@/lib/color-tokens";
 import { htmlToLiquidSection } from "@/lib/html-to-liquid";
 import { readAndClearBoutiqueDraft, type BoutiqueDraft } from "@/lib/site-builder-handoff";
+import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
 
 type Step = 1 | 2 | 3;
 
@@ -84,6 +85,85 @@ function SiteBuilderContent() {
   const [aliexpressLoading, setAliexpressLoading] = useState(false);
   const [aliexpressError, setAliexpressError] = useState<string | null>(null);
 
+  // Corrections d'un audit précédent, prises en compte dans le prompt de génération (voir
+  // handleGenerate ci-dessous et app/api/generate-site/route.ts) — un texte libre, une
+  // correction par ligne, éditable à la main même sans régénération en cours.
+  const [corrections, setCorrections] = useState("");
+
+  // Régénération pré-remplie (?regenerate=<id>, bouton "Regénérer" de app/mes-sites/page.tsx)
+  // — recharge au montage tout ce qui a été perdu après la génération initiale (seuls
+  // nom_produit/html_content étaient conservés jusqu'à 032_sites_generes_regeneration_fields.sql).
+  const regenerateId = searchParams.get("regenerate") ?? undefined;
+  // Initialisé directement à partir de regenerateId (lazy initializer) plutôt que mis à
+  // true dans l'effet ci-dessous : évite un setState synchrone dans le corps de l'effet
+  // (react-hooks/set-state-in-effect) pour un état qu'on connaît déjà au premier rendu.
+  const [regenerating, setRegenerating] = useState(() => Boolean(regenerateId));
+  const [regenerateError, setRegenerateError] = useState<string | null>(null);
+  // Même garde anti-double-appel StrictMode que handoffLu ci-dessus.
+  const regenerateLu = useRef(false);
+  useEffect(() => {
+    if (regenerateLu.current) return;
+    regenerateLu.current = true;
+    if (!regenerateId) return;
+
+    fetch(`/api/sites-generes/${regenerateId}`)
+      .then(async (res) => {
+        const json = await res.json();
+        if (!res.ok) {
+          setRegenerateError(json.error ?? "Impossible de charger ce site.");
+          return;
+        }
+        if (typeof json.nom_produit === "string") setProductName(json.nom_produit);
+        if (typeof json.description === "string") setDescription(json.description);
+        if (typeof json.image_url === "string") setImageUrl(json.image_url);
+        if (typeof json.lien_aliexpress === "string") setAliexpressUrl(json.lien_aliexpress);
+        if (typeof json.prix_vente === "number") setSalePrice(String(json.prix_vente));
+        if (typeof json.prix_original === "number") setOriginalPrice(String(json.prix_original));
+        if (json.style_id === "auto") {
+          setAutoMode(true);
+        } else if (typeof json.style_id === "string" && STYLES.some((s) => s.id === json.style_id)) {
+          setSelectedStyleId(json.style_id);
+        }
+        if (json.couleur_primary && json.couleur_secondary && json.couleur_accent) {
+          const restored: Palette = {
+            primary: json.couleur_primary,
+            secondary: json.couleur_secondary,
+            accent: json.couleur_accent,
+          };
+          setPalette(restored);
+          setDraftPalette(restored);
+        }
+      })
+      .catch(() => setRegenerateError("Impossible de contacter le serveur."))
+      .finally(() => setRegenerating(false));
+
+    // Corrections du dernier audit lié à ce site (audits_realises.site_id, voir
+    // 031_audits_realises_site_id.sql) — best-effort et silencieux : sans audit lié, ou en
+    // cas d'échec, le textarea reste simplement vide et éditable à la main.
+    const supabase = createSupabaseBrowserClient();
+    Promise.resolve(
+      supabase
+        .from("audits_realises")
+        .select("categories")
+        .eq("site_id", regenerateId)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle()
+    )
+      .then(({ data }) => {
+        const categories = data?.categories as
+          | { nom: string; corrections_specifiques: string[] }[]
+          | undefined;
+        if (!categories) return;
+        const lines = categories
+          .filter((c) => c.corrections_specifiques?.length > 0)
+          .flatMap((c) => c.corrections_specifiques.map((s) => `[${c.nom}] ${s}`));
+        if (lines.length > 0) setCorrections(lines.join("\n"));
+      })
+      .catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // Result
   const [generatedHtml, setGeneratedHtml] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -126,6 +206,19 @@ function SiteBuilderContent() {
       .catch(() => setShopifyConnected(false));
   }, []);
 
+  // Restriction plan free — voir diagnostic "restriction export Site Builder" : l'aperçu reste
+  // fonctionnel pour tous, mais téléchargement/export Liquid/publication Shopify sont réservés
+  // à Pro/Agency. canExport démarre à false (état le plus restrictif) tant que /api/plan n'a
+  // pas répondu, pour ne jamais afficher un bouton actif qui deviendrait grisé juste après.
+  const [plan, setPlan] = useState<"free" | "pro" | "agency" | null>(null);
+  useEffect(() => {
+    fetch("/api/plan")
+      .then((res) => res.json())
+      .then((json) => setPlan(json.plan ?? "free"))
+      .catch(() => setPlan("free"));
+  }, []);
+  const canExport = plan === "pro" || plan === "agency";
+
   function handleConnectShopify() {
     const shop = shopifyDomainInput.trim().toLowerCase();
     if (!/^[a-z0-9][a-z0-9-]*\.myshopify\.com$/.test(shop)) {
@@ -165,6 +258,17 @@ function SiteBuilderContent() {
 
   const selectedStyle = STYLES.find((s) => s.id === selectedStyleId) ?? STYLES[0];
 
+  // Une correction par ligne dans le textarea → tableau de strings pour le payload
+  // generate-site (voir app/api/generate-site/route.ts). undefined (pas []) quand vide, pour
+  // ne pas ajouter de section vide au prompt.
+  function correctionsList(): string[] | undefined {
+    const lines = corrections
+      .split("\n")
+      .map((l) => l.trim())
+      .filter(Boolean);
+    return lines.length > 0 ? lines : undefined;
+  }
+
   async function handleImportAliexpress() {
     if (!aliexpressUrl.trim()) return;
     setAliexpressLoading(true);
@@ -182,7 +286,9 @@ function SiteBuilderContent() {
         if (json.nom) setProductName(json.nom);
         if (json.description) setDescription(json.description);
         if (json.image) setImageUrl(json.image);
-        setAliexpressUrl("");
+        // aliexpressUrl n'est plus effacé ici (contrairement à avant) : il est conservé et
+        // envoyé à la sauvegarde du site (lien_aliexpress) pour être restitué lors d'une
+        // future régénération — voir le useEffect de pré-remplissage plus haut.
       }
     } catch {
       setAliexpressError("Impossible de contacter l'API");
@@ -273,6 +379,7 @@ function SiteBuilderContent() {
             orders,
             salePrice: salePrice.trim() || undefined,
             originalPrice: originalPrice.trim() || undefined,
+            corrections: correctionsList(),
           };
       const res = await fetch("/api/generate-site", {
         method: "POST",
@@ -300,6 +407,20 @@ function SiteBuilderContent() {
           nom_produit: boutiqueDraft ? boutiqueDraft.nomBoutique : productName,
           html_content: finalHtml,
           boutique_id: boutiqueId,
+          // Champs de pré-remplissage pour une future régénération (voir useEffect de
+          // pré-remplissage ci-dessus) — uniquement pertinents en mode mono-page, jamais
+          // envoyés pour un site boutique (plusieurs produits, pas de description unique).
+          ...(!boutiqueDraft && {
+            description,
+            lien_aliexpress: aliexpressUrl.trim() || undefined,
+            image_url: imageUrl.trim() || undefined,
+            prix_vente: salePrice.trim() || undefined,
+            prix_original: originalPrice.trim() || undefined,
+            style_id: isAuto ? "auto" : selectedStyleId,
+            couleur_primary: isAuto ? undefined : palette.primary,
+            couleur_secondary: isAuto ? undefined : palette.secondary,
+            couleur_accent: isAuto ? undefined : palette.accent,
+          }),
         }),
       })
         .then(async (res) => {
@@ -457,7 +578,7 @@ function SiteBuilderContent() {
           </div>
         </div>
 
-        {mode === "template" && <TemplateEditor boutiqueDraft={boutiqueDraft} />}
+        {mode === "template" && <TemplateEditor boutiqueDraft={boutiqueDraft} canExport={canExport} />}
 
         {mode === "ia" && (
         <>
@@ -513,6 +634,17 @@ function SiteBuilderContent() {
             {error && (
               <div className="rounded-xl bg-[var(--danger)]/10 border border-[var(--danger)]/20 px-4 py-3 text-[var(--danger)] text-sm">
                 {error}
+              </div>
+            )}
+
+            {regenerating && (
+              <div className="rounded-xl bg-violet-500/10 border border-violet-500/20 px-4 py-3 text-[var(--accent)] text-sm">
+                Chargement des données du site à régénérer…
+              </div>
+            )}
+            {regenerateError && (
+              <div className="rounded-xl bg-[var(--danger)]/10 border border-[var(--danger)]/20 px-4 py-3 text-[var(--danger)] text-sm">
+                {regenerateError}
               </div>
             )}
 
@@ -813,6 +945,23 @@ function SiteBuilderContent() {
               </div>
             )}
 
+            {/* Corrections d'un audit précédent — pré-rempli automatiquement lors d'une
+                régénération si un audit est lié à ce site (voir useEffect plus haut), sinon
+                vide et éditable librement. Pris en compte dans le prompt si non vide. */}
+            <div className="flex flex-col gap-2">
+              <label className="text-sm font-medium text-[var(--text-muted)]">
+                Corrections à prendre en compte{" "}
+                <span className="text-[var(--text-faint)] font-normal">(optionnel)</span>
+              </label>
+              <textarea
+                value={corrections}
+                onChange={(e) => setCorrections(e.target.value)}
+                placeholder="Colle ici les points faibles d'un audit précédent (une correction par ligne) — l'IA en tiendra compte pour cette génération."
+                rows={4}
+                className="w-full bg-[var(--bg)] border border-[var(--border-strong)] rounded-xl px-4 py-3 text-sm text-[var(--text-primary)] placeholder-[var(--text-faint)] focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition resize-y"
+              />
+            </div>
+
             {/* CTA buttons */}
             <div className="mt-2 flex flex-col gap-3">
               <button
@@ -876,18 +1025,29 @@ function SiteBuilderContent() {
                 >
                   Recommencer
                 </button>
-                <button
-                  onClick={handleDownloadLiquid}
-                  className="px-4 py-2 rounded-xl border border-emerald-500/30 bg-emerald-500/10 text-[var(--success)] text-xs font-semibold hover:bg-emerald-500/20 transition"
-                >
-                  ⬇ Fichier .liquid
-                </button>
-                <button
-                  onClick={handleDownload}
-                  className="px-4 py-2 rounded-xl bg-gradient-to-r from-violet-600 to-blue-600 text-white text-xs font-semibold hover:from-violet-500 hover:to-blue-500 transition-all shadow-lg shadow-violet-900/40"
-                >
-                  ⬇ Télécharger le HTML
-                </button>
+                {canExport ? (
+                  <>
+                    <button
+                      onClick={handleDownloadLiquid}
+                      className="px-4 py-2 rounded-xl border border-emerald-500/30 bg-emerald-500/10 text-[var(--success)] text-xs font-semibold hover:bg-emerald-500/20 transition"
+                    >
+                      ⬇ Fichier .liquid
+                    </button>
+                    <button
+                      onClick={handleDownload}
+                      className="px-4 py-2 rounded-xl bg-gradient-to-r from-violet-600 to-blue-600 text-white text-xs font-semibold hover:from-violet-500 hover:to-blue-500 transition-all shadow-lg shadow-violet-900/40"
+                    >
+                      ⬇ Télécharger le HTML
+                    </button>
+                  </>
+                ) : (
+                  <Link
+                    href="/#pricing"
+                    className="px-4 py-2 rounded-xl bg-gradient-to-r from-violet-600 to-blue-600 text-white text-xs font-semibold hover:from-violet-500 hover:to-blue-500 transition-all shadow-lg shadow-violet-900/40"
+                  >
+                    🔒 Passe au plan Pro pour télécharger ton site
+                  </Link>
+                )}
               </div>
             </div>
 
@@ -944,7 +1104,14 @@ function SiteBuilderContent() {
                 </div>
               ) : null}
 
-              {shopifyConnected === null ? (
+              {!canExport ? (
+                <div className="rounded-xl bg-violet-500/10 border border-violet-500/20 px-4 py-3 text-xs text-[var(--text-muted)]">
+                  🔒 La publication sur Shopify est réservée aux plans Pro et Agency.{" "}
+                  <Link href="/#pricing" className="text-[var(--accent)] font-semibold hover:underline">
+                    Passe au plan Pro →
+                  </Link>
+                </div>
+              ) : shopifyConnected === null ? (
                 <p className="text-xs text-[var(--text-faint)]">Vérification de la connexion…</p>
               ) : !shopifyConnected ? (
                 <div className="flex flex-col gap-3">

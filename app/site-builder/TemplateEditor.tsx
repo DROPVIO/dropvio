@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import Link from "next/link";
 import {
   CATEGORIES,
   TEXTES_DEFAUT,
@@ -23,7 +24,13 @@ type AuditLive = {
   resume_executif: string;
 };
 
-export default function TemplateEditor({ boutiqueDraft }: { boutiqueDraft?: BoutiqueDraft | null }) {
+export default function TemplateEditor({
+  boutiqueDraft,
+  canExport,
+}: {
+  boutiqueDraft?: BoutiqueDraft | null;
+  canExport: boolean;
+}) {
   // Préremplissage depuis "Créer un site pour cette boutique" (page de gestion boutique) —
   // mêmes query params que le mode IA (app/site-builder/page.tsx), lus ici directement
   // puisque ce composant n'a pas accès aux props du parent pour ce préremplissage.
@@ -168,13 +175,19 @@ export default function TemplateEditor({ boutiqueDraft }: { boutiqueDraft?: Bout
 
   async function handleDownload() {
     const nom = isBoutiqueMode ? boutiqueDraft?.nomBoutique || "Boutique" : contenu.titre || "Landing page";
-    const blob = new Blob([finalHtml], { type: "text/html;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `${nom.replace(/\s+/g, "-").toLowerCase()}.html`;
-    a.click();
-    URL.revokeObjectURL(url);
+
+    // Plan free : la sauvegarde dans "Mes sites" reste inconditionnelle (le travail n'est
+    // jamais perdu, juste pas téléchargeable) — voir diagnostic "restriction export Site
+    // Builder". Le fichier n'est produit que pour Pro/Agency.
+    if (canExport) {
+      const blob = new Blob([finalHtml], { type: "text/html;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${nom.replace(/\s+/g, "-").toLowerCase()}.html`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
 
     setSaveError(null);
     try {
@@ -481,15 +494,35 @@ export default function TemplateEditor({ boutiqueDraft }: { boutiqueDraft?: Bout
       <div className="flex flex-col gap-4">
         <div className="flex items-center justify-between">
           <p className="text-sm text-[var(--text-muted)]">Aperçu en direct</p>
-          <button
-            onClick={handleDownload}
-            className="px-4 py-2 rounded-xl bg-gradient-to-r from-violet-600 to-blue-600 text-white text-xs font-semibold hover:from-violet-500 hover:to-blue-500 transition-all shadow-lg shadow-violet-900/40"
-          >
-            ⬇ Télécharger le HTML
-          </button>
+          {canExport ? (
+            <button
+              onClick={handleDownload}
+              className="px-4 py-2 rounded-xl bg-gradient-to-r from-violet-600 to-blue-600 text-white text-xs font-semibold hover:from-violet-500 hover:to-blue-500 transition-all shadow-lg shadow-violet-900/40"
+            >
+              ⬇ Télécharger le HTML
+            </button>
+          ) : (
+            <button
+              onClick={handleDownload}
+              className="px-4 py-2 rounded-xl bg-gradient-to-r from-violet-600 to-blue-600 text-white text-xs font-semibold hover:from-violet-500 hover:to-blue-500 transition-all shadow-lg shadow-violet-900/40"
+            >
+              🔒 Sauvegarder (Pro pour télécharger)
+            </button>
+          )}
         </div>
         {saved && (
-          <p className="text-[11px] text-[var(--success)]">Sauvegardé dans « Mes sites ».</p>
+          <p className="text-[11px] text-[var(--success)]">
+            {canExport ? (
+              "Sauvegardé dans « Mes sites »."
+            ) : (
+              <>
+                Sauvegardé dans « Mes sites ». Le téléchargement est réservé au plan Pro —{" "}
+                <Link href="/#pricing" className="text-[var(--accent)] font-semibold hover:underline">
+                  passe au plan Pro →
+                </Link>
+              </>
+            )}
+          </p>
         )}
         {saveError && (
           <p className="text-[11px] text-[var(--danger)]">{saveError}</p>

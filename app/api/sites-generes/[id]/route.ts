@@ -1,23 +1,44 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createSupabaseServerClient } from "@/lib/supabase-server";
+import { createSupabaseServerClient, getServerUserPlanOnly } from "@/lib/supabase-server";
 
+// Le select inclut les champs de pré-remplissage (description, lien_aliexpress, image_url,
+// prix_vente, prix_original, style_id, couleur_*, voir 032_sites_generes_regeneration_fields.sql)
+// utilisés par le Site Builder pour reconstituer son formulaire lors d'une régénération
+// (?regenerate=<id>, voir app/site-builder/page.tsx). Tous nullable : un site issu du mode
+// Éditeur de templates ou du mode boutique renvoie simplement null sur ces champs, jamais
+// d'erreur — c'est justement le signal utilisé pour savoir si le pré-remplissage est possible.
 export async function GET(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
-  const supabase = await createSupabaseServerClient();
+  const { supabase, plan } = await getServerUserPlanOnly();
 
   const { data, error } = await supabase
     .from("sites_generes")
-    .select("html_content")
+    .select(
+      "html_content, nom_produit, description, lien_aliexpress, image_url, prix_vente, prix_original, style_id, couleur_primary, couleur_secondary, couleur_accent"
+    )
     .eq("id", id)
     .single();
 
   if (error || !data) {
     return NextResponse.json({ error: "Site introuvable" }, { status: 404 });
   }
-  return NextResponse.json({ html_content: data.html_content });
+
+  // Restriction plan free : l'aperçu/la régénération restent disponibles (le pré-remplissage
+  // ?regenerate=<id> côté site-builder n'exploite jamais html_content, seulement les autres
+  // champs ci-dessus), mais le code source brut ne doit pas transiter par cette route — c'est
+  // justement ce que /api/sites-generes/[id]/shopify-push et le bouton "Télécharger" de
+  // app/mes-sites/page.tsx consomment. Voir aussi le blocage symétrique sur shopify-push.
+  if (plan === "free") {
+    const { nom_produit, description, lien_aliexpress, image_url, prix_vente, prix_original, style_id, couleur_primary, couleur_secondary, couleur_accent } = data;
+    return NextResponse.json({
+      nom_produit, description, lien_aliexpress, image_url, prix_vente, prix_original, style_id, couleur_primary, couleur_secondary, couleur_accent,
+    });
+  }
+
+  return NextResponse.json(data);
 }
 
 // Sauvegarde la version personnalisée (couleurs) produite par le panneau de personnalisation

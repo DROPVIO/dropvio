@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
 
 type Site = {
   id: string;
@@ -31,6 +32,11 @@ export default function MesSitesPage() {
   const [pushingId, setPushingId] = useState<string | null>(null);
   const [pushErrors, setPushErrors] = useState<Record<string, string>>({});
   const [pushResults, setPushResults] = useState<Record<string, { url: string; admin_url: string }>>({});
+  // Plan free : téléchargement et publication Shopify réservés à Pro/Agency (voir diagnostic
+  // "restriction export Site Builder") — démarre à false (état le plus restrictif) tant que
+  // /api/plan n'a pas répondu.
+  const [plan, setPlan] = useState<"free" | "pro" | "agency" | null>(null);
+  const canExport = plan === "pro" || plan === "agency";
 
   useEffect(() => {
     fetch("/api/sites-generes")
@@ -46,6 +52,11 @@ export default function MesSitesPage() {
       .then((r) => r.json())
       .then((json) => setShopifyConnected(Boolean(json.connected)))
       .catch(() => setShopifyConnected(false));
+
+    fetch("/api/plan")
+      .then((r) => r.json())
+      .then((json) => setPlan(json.plan ?? "free"))
+      .catch(() => setPlan("free"));
   }, []);
 
   function handleConnectShopify() {
@@ -241,20 +252,37 @@ export default function MesSitesPage() {
 
                   <div className="flex gap-2">
                     <a
-                      href="/site-builder"
+                      href={`/site-builder?regenerate=${site.id}`}
                       className="flex-1 py-2 rounded-xl border border-[var(--border-strong)] text-[var(--text-muted)] text-xs font-medium text-center hover:border-[var(--accent)]/40 hover:text-[var(--text-primary)] transition"
                     >
                       Regénérer
                     </a>
-                    <button
-                      onClick={() => handleDownload(site)}
-                      disabled={downloading === site.id}
-                      className="flex-1 py-2 rounded-xl bg-gradient-to-r from-violet-600 to-blue-600 text-white text-xs font-semibold hover:from-violet-500 hover:to-blue-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      {downloading === site.id ? "…" : "Télécharger le HTML"}
-                    </button>
+                    {canExport ? (
+                      <button
+                        onClick={() => handleDownload(site)}
+                        disabled={downloading === site.id}
+                        className="flex-1 py-2 rounded-xl bg-gradient-to-r from-violet-600 to-blue-600 text-white text-xs font-semibold hover:from-violet-500 hover:to-blue-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {downloading === site.id ? "…" : "Télécharger le HTML"}
+                      </button>
+                    ) : (
+                      <Link
+                        href="/#pricing"
+                        className="flex-1 py-2 rounded-xl bg-gradient-to-r from-violet-600 to-blue-600 text-white text-xs font-semibold hover:from-violet-500 hover:to-blue-500 transition-all text-center"
+                      >
+                        🔒 Passe au plan Pro
+                      </Link>
+                    )}
                   </div>
-                  {shopifyConnected && (
+                  {shopifyConnected && !canExport && (
+                    <Link
+                      href="/#pricing"
+                      className="py-2 rounded-xl border border-[var(--border-strong)] text-[var(--text-muted)] text-xs font-medium text-center hover:border-[var(--accent)]/40 hover:text-[var(--text-primary)] transition"
+                    >
+                      🔒 Passe au plan Pro pour publier sur Shopify
+                    </Link>
+                  )}
+                  {shopifyConnected && canExport && (
                     <button
                       onClick={() => handlePushShopify(site)}
                       disabled={pushingId === site.id}

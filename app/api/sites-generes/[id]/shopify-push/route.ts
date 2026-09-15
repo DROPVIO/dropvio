@@ -23,9 +23,20 @@ type ShopifyTheme = { id: number; role: string };
 //    dit clairement plutôt que de prétendre que tout est fait.
 export async function POST(request: NextRequest, context: { params: Promise<{ id: string }> }) {
   const { id } = await context.params;
-  const { supabase, user } = await getServerUserAndPlan();
+  const { supabase, user, plan } = await getServerUserAndPlan();
   if (!user) {
     return NextResponse.json({ error: "Connecte-toi pour publier ce site sur Shopify." }, { status: 401 });
+  }
+
+  // Restriction plan free — voir diagnostic "restriction export Site Builder" : la publication
+  // Shopify est un export réel (page/section vivante sur la boutique du marchand), réservée aux
+  // plans Pro/Agency. Vérifié ici même si l'UI masque déjà l'action, pour ne jamais dépendre
+  // uniquement du frontend (appel direct à l'API sinon possible).
+  if (plan === "free") {
+    return NextResponse.json(
+      { error: "La publication sur Shopify est réservée aux plans Pro et Agency. Passe au plan Pro pour publier ce site." },
+      { status: 403 }
+    );
   }
 
   if (!isShopifyConfigured()) {
