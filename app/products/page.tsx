@@ -168,7 +168,11 @@ function ProductCard({ product }: { product: Product }) {
           <span>{formatOrders(product.orders)} commandes AliExpress</span>
         </div>
 
-        <button className="mt-auto w-full py-2 rounded-xl bg-gradient-to-r from-violet-600 to-blue-600 text-white text-xs font-semibold hover:from-violet-500 hover:to-blue-500 transition-all duration-200 shadow-sm shadow-violet-900/30">
+        <button
+          className="mt-auto w-full py-2 rounded-xl bg-gradient-to-r from-violet-600 to-blue-600 text-white text-xs font-semibold shadow-sm shadow-violet-900/30 opacity-40 cursor-not-allowed"
+          disabled
+          title="Bientôt disponible — catalogue de démonstration."
+        >
           Voir le produit
         </button>
       </div>

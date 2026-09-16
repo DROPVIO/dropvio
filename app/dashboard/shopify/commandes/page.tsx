@@ -54,6 +54,11 @@ export default function CommandesAPreparerPage() {
   const [lienDrafts, setLienDrafts] = useState<Record<string, string>>({});
   const [suiviDrafts, setSuiviDrafts] = useState<Record<string, { numero: string; transporteur: string }>>({});
   const [suiviBusyId, setSuiviBusyId] = useState<string | null>(null);
+  // Erreurs par commande pour statut/lien — un fetch() résolu (res.ok === false) n'est pas
+  // une erreur réseau, donc jamais catché par un simple .catch() : il faut vérifier res.ok
+  // explicitement et revenir sur la mise à jour optimiste si le serveur a refusé.
+  const [actionErrors, setActionErrors] = useState<Record<string, string>>({});
+  const [statutBusyId, setStatutBusyId] = useState<string | null>(null);
 
   function reload() {
     fetch("/api/shopify/commandes")
@@ -72,17 +77,38 @@ export default function CommandesAPreparerPage() {
   useEffect(reload, []);
 
   async function updateStatut(id: string, statut: "commandee" | "ignoree") {
+    if (statutBusyId === id) return;
+    const previousStatut = commandes?.find((c) => c.id === id)?.statut;
+    setStatutBusyId(id);
     setCommandes((prev) => prev?.map((c) => (c.id === id ? { ...c, statut } : c)) ?? prev);
-    await fetch("/api/shopify/commandes", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id, statut }),
-    }).catch(() => reload());
+    setActionErrors((prev) => ({ ...prev, [id]: "" }));
+    try {
+      const res = await fetch("/api/shopify/commandes", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, statut }),
+      });
+      if (!res.ok) {
+        const json = await res.json().catch(() => null);
+        throw new Error(json?.error ?? "Échec de la mise à jour du statut.");
+      }
+    } catch (err) {
+      if (previousStatut) {
+        setCommandes((prev) => prev?.map((c) => (c.id === id ? { ...c, statut: previousStatut } : c)) ?? prev);
+      }
+      setActionErrors((prev) => ({
+        ...prev,
+        [id]: err instanceof Error ? err.message : "Impossible de contacter le serveur.",
+      }));
+    } finally {
+      setStatutBusyId(null);
+    }
   }
 
   async function attacherLien(commandeId: string, ligneIndex: number) {
     const lienAliExpress = (lienDrafts[`${commandeId}:${ligneIndex}`] ?? "").trim();
     if (!lienAliExpress) return;
+    const previousLien = commandes?.find((c) => c.id === commandeId)?.lignes[ligneIndex]?.lien_aliexpress ?? null;
     setCommandes(
       (prev) =>
         prev?.map((c) =>
@@ -96,11 +122,31 @@ export default function CommandesAPreparerPage() {
       delete next[`${commandeId}:${ligneIndex}`];
       return next;
     });
-    await fetch("/api/shopify/commandes", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id: commandeId, ligneIndex, lienAliExpress }),
-    }).catch(() => reload());
+    setActionErrors((prev) => ({ ...prev, [commandeId]: "" }));
+    try {
+      const res = await fetch("/api/shopify/commandes", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: commandeId, ligneIndex, lienAliExpress }),
+      });
+      if (!res.ok) {
+        const json = await res.json().catch(() => null);
+        throw new Error(json?.error ?? "Échec du rattachement du lien.");
+      }
+    } catch (err) {
+      setCommandes(
+        (prev) =>
+          prev?.map((c) =>
+            c.id === commandeId
+              ? { ...c, lignes: c.lignes.map((l, i) => (i === ligneIndex ? { ...l, lien_aliexpress: previousLien } : l)) }
+              : c
+          ) ?? prev
+      );
+      setActionErrors((prev) => ({
+        ...prev,
+        [commandeId]: err instanceof Error ? err.message : "Impossible de contacter le serveur.",
+      }));
+    }
   }
 
   async function envoyerSuivi(commandeId: string) {
@@ -115,6 +161,20 @@ export default function CommandesAPreparerPage() {
         body: JSON.stringify({ id: commandeId, numeroSuivi, transporteur: draft?.transporteur || null }),
       });
       const json = await res.json().catch(() => null);
+
+      if (!res.ok) {
+        // Échec avant même la tentative de push (ex. l'UPDATE Supabase du numéro de suivi a
+        // échoué, voir pushSuivi dans route.ts) — rien n'a été persisté, ne jamais afficher le
+        // numéro comme enregistré dans ce cas.
+        setCommandes(
+          (prev) =>
+            prev?.map((c) =>
+              c.id === commandeId ? { ...c, fulfillment_erreur: json?.error ?? "Échec de l'enregistrement du suivi." } : c
+            ) ?? prev
+        );
+        return;
+      }
+
       if (json?.fulfillmentPushed) {
         reload();
       } else {
@@ -127,6 +187,11 @@ export default function CommandesAPreparerPage() {
             ) ?? prev
         );
       }
+    } catch {
+      setCommandes(
+        (prev) =>
+          prev?.map((c) => (c.id === commandeId ? { ...c, fulfillment_erreur: "Impossible de contacter le serveur." } : c)) ?? prev
+      );
     } finally {
       setSuiviBusyId(null);
     }
@@ -246,17 +311,22 @@ export default function CommandesAPreparerPage() {
                   <div className="flex items-center gap-3">
                     <button
                       onClick={() => updateStatut(c.id, "commandee")}
-                      className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-[var(--accent)] text-white hover:opacity-90 transition-opacity"
+                      disabled={statutBusyId === c.id}
+                      className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-[var(--accent)] text-white hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       Marquer comme commandée
                     </button>
                     <button
                       onClick={() => updateStatut(c.id, "ignoree")}
-                      className="text-xs text-[var(--text-faint)] hover:text-[var(--text-muted)] transition-colors"
+                      disabled={statutBusyId === c.id}
+                      className="text-xs text-[var(--text-faint)] hover:text-[var(--text-muted)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       Ignorer
                     </button>
                   </div>
+                  {actionErrors[c.id] ? (
+                    <p className="text-[11px] text-[var(--danger)]">{actionErrors[c.id]}</p>
+                  ) : null}
                 </div>
               ))}
             </div>

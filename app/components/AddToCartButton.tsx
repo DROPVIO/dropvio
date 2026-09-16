@@ -13,11 +13,15 @@ type AddToCartButtonProps = {
 };
 
 export default function AddToCartButton({ boutiqueSlug, produitId, slug, nom, prix, imageUrl }: AddToCartButtonProps) {
-  const [message, setMessage] = useState<string | null>(null);
+  const [message, setMessage] = useState<{ text: string; ok: boolean } | null>(null);
 
   function handleAddToCart() {
-    addCartItem({ boutiqueSlug, produitId, nom, slug, imageUrl, prix });
-    setMessage("Produit ajouté au panier.");
+    const result = addCartItem({ boutiqueSlug, produitId, nom, slug, imageUrl, prix });
+    setMessage(
+      result.ok
+        ? { text: "Produit ajouté au panier.", ok: true }
+        : { text: "Impossible d'ajouter au panier sur cet appareil (stockage indisponible ou navigation privée).", ok: false }
+    );
     window.setTimeout(() => setMessage(null), 2500);
   }
 
@@ -30,7 +34,9 @@ export default function AddToCartButton({ boutiqueSlug, produitId, slug, nom, pr
       >
         Ajouter au panier
       </button>
-      {message ? <p className="text-sm text-[var(--success)]">{message}</p> : null}
+      {message ? (
+        <p className={`text-sm ${message.ok ? "text-[var(--success)]" : "text-[var(--danger)]"}`}>{message.text}</p>
+      ) : null}
     </div>
   );
 }

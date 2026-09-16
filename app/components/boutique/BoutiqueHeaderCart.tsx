@@ -61,7 +61,21 @@ export default function BoutiqueHeaderCart({ fullCartHref }: BoutiqueHeaderCartP
   const itemCount = useMemo(() => cart.reduce((sum, item) => sum + item.quantity, 0), [cart]);
   const totalPrice = useMemo(() => cart.reduce((sum, item) => sum + item.prix * item.quantity, 0), [cart]);
 
+  function removeItem(item: BoutiqueCartItem) {
+    const nextItems = cart.filter(
+      (entry) => !(entry.produitId === item.produitId && entry.boutiqueSlug === item.boutiqueSlug)
+    );
+    updateCartItems(nextItems);
+    setCart(nextItems);
+  }
+
   function changeQuantity(item: BoutiqueCartItem, delta: number) {
+    // Décrémenter depuis 1 retire l'article plutôt que de rester bloqué sans effet ni
+    // feedback — cohérent avec le bouton "×" et le comportement attendu d'un panier.
+    if (delta < 0 && item.quantity <= 1) {
+      removeItem(item);
+      return;
+    }
     const nextQuantity = item.quantity + delta;
     const nextItems = cart
       .map((entry) =>
@@ -70,14 +84,6 @@ export default function BoutiqueHeaderCart({ fullCartHref }: BoutiqueHeaderCartP
           : entry
       )
       .filter((entry) => entry.quantity > 0);
-    updateCartItems(nextItems);
-    setCart(nextItems);
-  }
-
-  function removeItem(item: BoutiqueCartItem) {
-    const nextItems = cart.filter(
-      (entry) => !(entry.produitId === item.produitId && entry.boutiqueSlug === item.boutiqueSlug)
-    );
     updateCartItems(nextItems);
     setCart(nextItems);
   }

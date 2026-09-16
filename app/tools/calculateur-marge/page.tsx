@@ -160,6 +160,8 @@ function CalculateurMargeInner() {
   const [nomSimulation, setNomSimulation] = useState("");
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [deletingSimId, setDeletingSimId] = useState<string | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   useEffect(() => {
     const supabase = createSupabaseBrowserClient();
@@ -238,9 +240,21 @@ function CalculateurMargeInner() {
   }
 
   async function handleSupprimer(id: string) {
-    const supabase = createSupabaseBrowserClient();
-    await supabase.from("simulations_marge").delete().eq("id", id);
-    setSimulations((prev) => prev.filter((s) => s.id !== id));
+    if (deletingSimId) return;
+    if (!confirm("Supprimer cette simulation ? Cette action est irréversible.")) return;
+    setDeletingSimId(id);
+    setDeleteError(null);
+    try {
+      const supabase = createSupabaseBrowserClient();
+      const { error } = await supabase.from("simulations_marge").delete().eq("id", id);
+      if (error) {
+        setDeleteError("Impossible de supprimer cette simulation.");
+        return;
+      }
+      setSimulations((prev) => prev.filter((s) => s.id !== id));
+    } finally {
+      setDeletingSimId(null);
+    }
   }
 
   const caCumule = parseFloat(caAnnuelCumule) || 0;
@@ -532,6 +546,10 @@ function CalculateurMargeInner() {
               Mes simulations
             </h2>
 
+            {deleteError && (
+              <div className="mb-3 text-[13px] text-[var(--danger)]">{deleteError}</div>
+            )}
+
             {loadingSims ? (
               <div className="text-[13px] text-[var(--text-faint)]">Chargement…</div>
             ) : simulations.length === 0 ? (
@@ -567,9 +585,10 @@ function CalculateurMargeInner() {
                         </button>
                         <button
                           onClick={() => handleSupprimer(sim.id)}
-                          className="bg-transparent border border-[var(--danger)]/20 text-[var(--danger)] px-3 py-[7px] rounded-[7px] text-xs font-semibold cursor-pointer"
+                          disabled={deletingSimId === sim.id}
+                          className="bg-transparent border border-[var(--danger)]/20 text-[var(--danger)] px-3 py-[7px] rounded-[7px] text-xs font-semibold cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                          Supprimer
+                          {deletingSimId === sim.id ? "…" : "Supprimer"}
                         </button>
                       </div>
                     </div>

@@ -9,7 +9,13 @@ import { applyTheme, getStoredTheme, type Theme } from "@/lib/theme";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
-type Profile = { nom_complet: string | null; plan: string };
+type Profile = {
+  nom_complet: string | null;
+  plan: string;
+  langue?: string | null;
+  notif_email?: boolean | null;
+  notif_push?: boolean | null;
+};
 type SectionId =
   | "plan" | "profil" | "securite" | "preferences" | "usage"
   | "integrations" | "facturation" | "legal" | "danger";
@@ -193,6 +199,7 @@ export default function ParametresModal({
   const [notifEmail, setNotifEmail] = useState(true);
   const [notifPush, setNotifPush] = useState(false);
   const [prefMsg, setPrefMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  const [savingPrefs, setSavingPrefs] = useState(false);
 
   // Usage
   type UsageMetric = { key: string; label: string; used: number; max: number | null };
@@ -252,14 +259,27 @@ export default function ParametresModal({
       .finally(() => setShopifyStatusLoading(false));
   }, []);
 
-  function handleConnectShopify() {
+  async function handleConnectShopify() {
     const shop = shopifyDomainInput.trim().toLowerCase();
     if (!/^[a-z0-9][a-z0-9-]*\.myshopify\.com$/.test(shop)) {
       setIntMsg({ ok: false, text: "Format attendu : ma-boutique.myshopify.com" });
       return;
     }
+    if (shopifyStatus && !shopifyStatus.configured) {
+      setIntMsg({ ok: false, text: "L'intégration Shopify n'est pas encore configurée côté serveur." });
+      return;
+    }
     setShopifyConnecting(true);
     setIntMsg(null);
+    // /api/shopify/connect répond par une redirection 302 en cas de succès (donc rien à lire
+    // ici), mais un JSON d'erreur sinon (ex. session expirée) — vérifiée avant de naviguer en
+    // plein-page pour ne plus jamais éjecter l'utilisateur sur une page de JSON brut hors app.
+    const { data } = await supabase.auth.getUser();
+    if (!data.user) {
+      setShopifyConnecting(false);
+      setIntMsg({ ok: false, text: "Ta session a expiré. Reconnecte-toi puis réessaie." });
+      return;
+    }
     const returnTo = window.location.pathname + window.location.search;
     window.location.href = `/api/shopify/connect?shop=${encodeURIComponent(shop)}&returnTo=${encodeURIComponent(returnTo)}`;
   }
@@ -284,19 +304,19 @@ export default function ParametresModal({
   }
 
   // Danger zone
-  const [deletePhase, setDeletePhase] = useState<"idle" | "confirm">("idle");
-  const [deleting, setDeleting] = useState(false);
-
   useEffect(() => {
     supabase
       .from("profils")
-      .select("nom_complet, plan")
+      .select("nom_complet, plan, langue, notif_email, notif_push")
       .eq("id", user.id)
       .maybeSingle()
       .then(({ data }) => {
         if (data) {
           setProfile(data as Profile);
           setNomComplet(data.nom_complet ?? "");
+          setLangue(data.langue ?? "fr");
+          setNotifEmail(data.notif_email ?? true);
+          setNotifPush(data.notif_push ?? false);
         } else {
           supabase
             .from("profils")
@@ -320,6 +340,22 @@ export default function ParametresModal({
       setProfile((p) => p ? { ...p, nom_complet: nomComplet.trim() || null } : p);
       setProfileMsg({ ok: true, text: "Profil mis à jour." });
       setTimeout(() => setProfileMsg(null), 3000);
+    }
+  }
+
+  async function handleSavePreferences() {
+    setSavingPrefs(true);
+    setPrefMsg(null);
+    const { error } = await supabase
+      .from("profils")
+      .upsert({ id: user.id, langue, notif_email: notifEmail, notif_push: notifPush });
+    setSavingPrefs(false);
+    if (error) {
+      setPrefMsg({ ok: false, text: "Erreur lors de la sauvegarde des préférences." });
+    } else {
+      setProfile((p) => (p ? { ...p, langue, notif_email: notifEmail, notif_push: notifPush } : p));
+      setPrefMsg({ ok: true, text: "Préférences enregistrées." });
+      setTimeout(() => setPrefMsg(null), 3000);
     }
   }
 
@@ -355,15 +391,6 @@ export default function ParametresModal({
     }
   }
 
-  async function handleDeleteAccount() {
-    setDeleting(true);
-    await new Promise((r) => setTimeout(r, 800));
-    setDeleting(false);
-    setDeletePhase("idle");
-    // TODO: implement via API route with service role key
-    window.alert("Fonctionnalité disponible prochainement. Contacte support@dropvio.com.");
-  }
-
   const plan = profile?.plan ?? "free";
   const planMeta = PLAN_META[plan] ?? PLAN_META.free;
 
@@ -387,7 +414,13 @@ export default function ParametresModal({
             </div>
             <p className="text-[11px] text-[var(--text-faint)] mt-1">{planMeta.desc}</p>
           </div>
-          <button className={BTN_G}>Changer de plan</button>
+          <button
+            className={`${BTN_G} opacity-40 cursor-not-allowed`}
+            disabled
+            title="Bientôt disponible — contacte support@dropvio.com pour changer de plan en attendant."
+          >
+            Changer de plan
+          </button>
         </div>
       </div>
 
@@ -416,7 +449,11 @@ export default function ParametresModal({
                 ))}
               </ul>
               {!isCurrent && (
-                <button className={`mt-auto w-full py-1.5 rounded-lg text-xs font-semibold transition ${p === "pro" ? "bg-violet-600 hover:bg-violet-500 text-white" : "bg-[var(--surface-2)] border border-[var(--border-strong)] hover:bg-[var(--surface-3)] text-[var(--text-primary)]"}`}>
+                <button
+                  className="mt-auto w-full py-1.5 rounded-lg text-xs font-semibold bg-[var(--surface-2)] border border-[var(--border-strong)] text-[var(--text-primary)] opacity-40 cursor-not-allowed"
+                  disabled
+                  title="Bientôt disponible — contacte support@dropvio.com pour changer de plan en attendant."
+                >
                   Choisir
                 </button>
               )}
@@ -609,14 +646,8 @@ export default function ParametresModal({
       </div>
 
       <div className="flex items-center gap-3">
-        <button
-          className={BTN_V}
-          onClick={() => {
-            setPrefMsg({ ok: true, text: "Préférences enregistrées." });
-            setTimeout(() => setPrefMsg(null), 3000);
-          }}
-        >
-          Sauvegarder
+        <button className={BTN_V} onClick={handleSavePreferences} disabled={savingPrefs}>
+          {savingPrefs ? "Enregistrement…" : "Sauvegarder"}
         </button>
         {prefMsg && <p className={prefMsg.ok ? MSG_OK : MSG_ERR}>{prefMsg.text}</p>}
       </div>
@@ -814,7 +845,13 @@ export default function ParametresModal({
       </div>
 
       {plan !== "free" && (
-        <button className={`${BTN_G} self-start`}>Gérer la facturation →</button>
+        <button
+          className={`${BTN_G} self-start opacity-40 cursor-not-allowed`}
+          disabled
+          title="Bientôt disponible — contacte support@dropvio.com pour toute question de facturation en attendant."
+        >
+          Gérer la facturation →
+        </button>
       )}
     </div>
   );
@@ -885,46 +922,22 @@ export default function ParametresModal({
         <div>
           <p className="text-sm font-medium text-[var(--danger)]">Supprimer mon compte</p>
           <p className="text-[11px] text-[var(--text-faint)] mt-1 leading-relaxed">
-            Cette action est définitive et irréversible. Toutes tes données seront supprimées :
-            produits, sites générés, abonnement annulé immédiatement.
+            Fonctionnalité bientôt disponible — écris-nous à support@dropvio.com pour une
+            suppression manuelle de compte en attendant.
           </p>
         </div>
-
-        {deletePhase === "idle" ? (
-          <button
-            onClick={() => setDeletePhase("confirm")}
-            className="self-start px-4 py-2 rounded-lg border border-[var(--danger)]/30 text-[var(--danger)] text-xs font-semibold hover:bg-[var(--danger)]/10 transition"
-          >
-            Supprimer mon compte
-          </button>
-        ) : (
-          <div className="flex flex-col gap-3">
-            <p className="text-xs text-[var(--danger)] font-medium">Tu es sûr ? Cette action ne peut pas être annulée.</p>
-            <div className="flex gap-2">
-              <button
-                onClick={() => setDeletePhase("idle")}
-                className={BTN_G}
-              >
-                Annuler
-              </button>
-              <button
-                onClick={handleDeleteAccount}
-                disabled={deleting}
-                className="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-500 text-white text-xs font-semibold transition disabled:opacity-50"
-              >
-                {deleting ? "Suppression…" : "Oui, supprimer définitivement"}
-              </button>
-            </div>
-          </div>
-        )}
+        <button
+          className="self-start px-4 py-2 rounded-lg border border-[var(--danger)]/30 text-[var(--danger)] text-xs font-semibold opacity-40 cursor-not-allowed"
+          disabled
+          title="Bientôt disponible — contacte support@dropvio.com pour supprimer ton compte en attendant."
+        >
+          Supprimer mon compte
+        </button>
       </div>
 
       <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3 text-[11px] text-[var(--text-faint)]">
-        Tu veux juste faire une pause ? Tu peux&nbsp;
-        <button className="text-[var(--text-muted)] underline underline-offset-2 hover:text-[var(--text-primary)] transition">
-          suspendre ton compte
-        </button>
-        &nbsp;sans le supprimer.
+        Tu veux juste faire une pause ? La suspension de compte n&apos;est pas encore
+        disponible — écris-nous à support@dropvio.com en attendant.
       </div>
     </div>
   );
@@ -984,10 +997,7 @@ export default function ParametresModal({
                 return (
                   <button
                     key={id}
-                    onClick={() => {
-                      setActiveSection(id);
-                      setDeletePhase("idle"); // id exclut toujours "danger" (cf. NAV_ITEMS)
-                    }}
+                    onClick={() => setActiveSection(id)}
                     className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium text-left transition w-full ${
                       isActive
                         ? "bg-[var(--surface-3)] text-[var(--text-primary)]"

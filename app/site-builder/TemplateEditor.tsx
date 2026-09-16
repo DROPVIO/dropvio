@@ -59,6 +59,7 @@ export default function TemplateEditor({
   const [prixBarre, setPrixBarre] = useState("");
   const [saved, setSaved] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
   const [avantApresActif, setAvantApresActif] = useState(false);
   const [uploadEnCours, setUploadEnCours] = useState<string | null>(null);
   const [uploadErreur, setUploadErreur] = useState<string | null>(null);
@@ -174,6 +175,7 @@ export default function TemplateEditor({
   }
 
   async function handleDownload() {
+    if (saving) return;
     const nom = isBoutiqueMode ? boutiqueDraft?.nomBoutique || "Boutique" : contenu.titre || "Landing page";
 
     // Plan free : la sauvegarde dans "Mes sites" reste inconditionnelle (le travail n'est
@@ -189,6 +191,7 @@ export default function TemplateEditor({
       URL.revokeObjectURL(url);
     }
 
+    setSaving(true);
     setSaveError(null);
     try {
       const res = await fetch("/api/sites-generes", {
@@ -203,7 +206,13 @@ export default function TemplateEditor({
       }
       setSaved(true);
     } catch {
-      setSaveError("Impossible de contacter le serveur — le HTML a bien été téléchargé, mais pas sauvegardé dans « Mes sites ».");
+      setSaveError(
+        canExport
+          ? "Impossible de contacter le serveur — le HTML a bien été téléchargé, mais pas sauvegardé dans « Mes sites »."
+          : "Impossible de contacter le serveur — rien n'a été sauvegardé dans « Mes sites »."
+      );
+    } finally {
+      setSaving(false);
     }
   }
 
@@ -497,16 +506,18 @@ export default function TemplateEditor({
           {canExport ? (
             <button
               onClick={handleDownload}
-              className="px-4 py-2 rounded-xl bg-gradient-to-r from-violet-600 to-blue-600 text-white text-xs font-semibold hover:from-violet-500 hover:to-blue-500 transition-all shadow-lg shadow-violet-900/40"
+              disabled={saving}
+              className="px-4 py-2 rounded-xl bg-gradient-to-r from-violet-600 to-blue-600 text-white text-xs font-semibold hover:from-violet-500 hover:to-blue-500 transition-all shadow-lg shadow-violet-900/40 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              ⬇ Télécharger le HTML
+              {saving ? "…" : "⬇ Télécharger le HTML"}
             </button>
           ) : (
             <button
               onClick={handleDownload}
-              className="px-4 py-2 rounded-xl bg-gradient-to-r from-violet-600 to-blue-600 text-white text-xs font-semibold hover:from-violet-500 hover:to-blue-500 transition-all shadow-lg shadow-violet-900/40"
+              disabled={saving}
+              className="px-4 py-2 rounded-xl bg-gradient-to-r from-violet-600 to-blue-600 text-white text-xs font-semibold hover:from-violet-500 hover:to-blue-500 transition-all shadow-lg shadow-violet-900/40 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              🔒 Sauvegarder (Pro pour télécharger)
+              {saving ? "…" : "🔒 Sauvegarder (Pro pour télécharger)"}
             </button>
           )}
         </div>

@@ -67,7 +67,7 @@ export default async function BoutiquePublicLayout({
 
           <form
             method="get"
-            action={home}
+            action={`${basePath}/produits`}
             className="order-3 w-full sm:order-2 sm:w-auto sm:flex-1 sm:max-w-md"
           >
             <input

@@ -55,6 +55,7 @@ export default function BoutiqueBuilderDetailPage() {
   const [products, setProducts] = useState<BoutiqueProduct[]>([]);
   const [productsLoading, setProductsLoading] = useState(false);
   const [productsError, setProductsError] = useState<string | null>(null);
+  const [deletingProductId, setDeletingProductId] = useState<string | null>(null);
   const [productPage, setProductPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   // Total réel de produits (indépendant de la pagination) — détermine ce que propose la
@@ -80,6 +81,8 @@ export default function BoutiqueBuilderDetailPage() {
   const [categorySlug, setCategorySlug] = useState("");
   const [editingCategoryId, setEditingCategoryId] = useState<string | null>(null);
   const [editingCategoryName, setEditingCategoryName] = useState("");
+  const [creatingCategory, setCreatingCategory] = useState(false);
+  const [categoryActionId, setCategoryActionId] = useState<string | null>(null);
 
   const [importUrl, setImportUrl] = useState("");
   const [importLoading, setImportLoading] = useState(false);
@@ -165,6 +168,18 @@ export default function BoutiqueBuilderDetailPage() {
       })
       .catch(() => setShopifyConnected(false));
   }, []);
+
+  // Restriction plan free — export HTML boutique et publication Shopify réservés à
+  // Pro/Agency (voir diagnostic "restriction export Site Builder", même règle que
+  // app/site-builder/page.tsx). Démarre à false tant que /api/plan n'a pas répondu.
+  const [plan, setPlan] = useState<"free" | "pro" | "agency" | null>(null);
+  useEffect(() => {
+    fetch("/api/plan")
+      .then((res) => res.json())
+      .then((json) => setPlan(json.plan ?? "free"))
+      .catch(() => setPlan("free"));
+  }, []);
+  const canExport = plan === "pro" || plan === "agency";
 
   async function handlePushShopify() {
     if (!params?.id) return;
@@ -422,28 +437,35 @@ export default function BoutiqueBuilderDetailPage() {
       // décompté normalement, puisque c'est cette fois un vrai fichier généré. Un échec
       // ici (export ou quota atteint) n'annule pas la sauvegarde de la boutique déjà
       // réussie — juste un avertissement, pas une erreur bloquante.
-      try {
-        const exportRes = await fetch(`/api/boutiques/${params.id}/export-html`, { method: "POST" });
-        const exportJson = await exportRes.json();
-        if (exportRes.ok) {
-          const saveRes = await fetch("/api/sites-generes", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              nom_produit: exportJson.nom ?? boutique.nom,
-              html_content: exportJson.html,
-              boutique_id: params.id,
-            }),
-          });
-          if (!saveRes.ok) {
-            const saveJson = await saveRes.json().catch(() => ({}));
-            setContenuError(saveJson.error ?? "Boutique mise à jour, mais l'export HTML n'a pas pu être sauvegardé dans « Mes sites ».");
+      // Plan free : l'export HTML (et donc son ajout à "Mes sites") est réservé à Pro/Agency
+      // côté serveur (/api/boutiques/[id]/export-html) — on évite l'appel inutile et on
+      // l'explique directement plutôt que de laisser passer un 403 générique.
+      if (!canExport) {
+        setContenuError("Boutique mise à jour. L'export HTML et l'ajout automatique à « Mes sites » sont réservés au plan Pro — passe au plan Pro pour les activer.");
+      } else {
+        try {
+          const exportRes = await fetch(`/api/boutiques/${params.id}/export-html`, { method: "POST" });
+          const exportJson = await exportRes.json();
+          if (exportRes.ok) {
+            const saveRes = await fetch("/api/sites-generes", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                nom_produit: exportJson.nom ?? boutique.nom,
+                html_content: exportJson.html,
+                boutique_id: params.id,
+              }),
+            });
+            if (!saveRes.ok) {
+              const saveJson = await saveRes.json().catch(() => ({}));
+              setContenuError(saveJson.error ?? "Boutique mise à jour, mais l'export HTML n'a pas pu être sauvegardé dans « Mes sites ».");
+            }
+          } else {
+            setContenuError(exportJson.error ?? "Boutique mise à jour, mais l'export HTML a échoué.");
           }
-        } else {
-          setContenuError(exportJson.error ?? "Boutique mise à jour, mais l'export HTML a échoué.");
+        } catch {
+          setContenuError("Boutique mise à jour, mais l'export HTML n'a pas pu être sauvegardé (serveur injoignable).");
         }
-      } catch {
-        setContenuError("Boutique mise à jour, mais l'export HTML n'a pas pu être sauvegardé (serveur injoignable).");
       }
 
       window.open(getBoutiquePublicUrl(boutique.slug), "_blank", "noopener,noreferrer");
@@ -620,7 +642,9 @@ export default function BoutiqueBuilderDetailPage() {
   }
 
   async function handleDeleteProduct(productId: string) {
+    if (deletingProductId) return;
     if (!confirm("Supprimer ce produit ? Cette action est irréversible.")) return;
+    setDeletingProductId(productId);
     try {
       const response = await fetch(`/api/boutiques/${params?.id}/produits/${productId}`, {
         method: "DELETE",
@@ -633,6 +657,8 @@ export default function BoutiqueBuilderDetailPage() {
       await fetchProducts(productPage);
     } catch {
       setProductsError("Impossible de contacter le serveur.");
+    } finally {
+      setDeletingProductId(null);
     }
   }
 
@@ -670,6 +696,7 @@ export default function BoutiqueBuilderDetailPage() {
 
   async function handleCreateCategory(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (creatingCategory) return;
     setCategoriesError(null);
     if (!categoryName.trim()) {
       setCategoriesError("Le nom de catégorie est requis.");
@@ -680,6 +707,7 @@ export default function BoutiqueBuilderDetailPage() {
       setCategoriesError("Le slug de catégorie est invalide.");
       return;
     }
+    setCreatingCategory(true);
     try {
       const response = await fetch(`/api/boutiques/${params?.id}/categories`, {
         method: "POST",
@@ -696,12 +724,15 @@ export default function BoutiqueBuilderDetailPage() {
       await fetchCategories();
     } catch {
       setCategoriesError("Impossible de contacter le serveur.");
+    } finally {
+      setCreatingCategory(false);
     }
   }
 
   async function handleRenameCategory(categoryId: string, newName: string) {
-    if (!newName.trim()) return;
+    if (!newName.trim() || categoryActionId) return;
     const slug = slugify(newName);
+    setCategoryActionId(categoryId);
     try {
       const response = await fetch(`/api/boutiques/${params?.id}/categories/${categoryId}`, {
         method: "PATCH",
@@ -718,11 +749,15 @@ export default function BoutiqueBuilderDetailPage() {
       await fetchCategories();
     } catch {
       setCategoriesError("Impossible de contacter le serveur.");
+    } finally {
+      setCategoryActionId(null);
     }
   }
 
   async function handleDeleteCategory(categoryId: string) {
+    if (categoryActionId) return;
     if (!confirm("Supprimer cette catégorie ? Les produits resteront sans catégorie.")) return;
+    setCategoryActionId(categoryId);
     try {
       const response = await fetch(`/api/boutiques/${params?.id}/categories/${categoryId}`, {
         method: "DELETE",
@@ -736,6 +771,8 @@ export default function BoutiqueBuilderDetailPage() {
       await fetchCategories();
     } catch {
       setCategoriesError("Impossible de contacter le serveur.");
+    } finally {
+      setCategoryActionId(null);
     }
   }
 
@@ -1063,21 +1100,32 @@ export default function BoutiqueBuilderDetailPage() {
               <p className="text-xs uppercase tracking-[0.3em] text-violet-400">Shopify</p>
               <h3 className="mt-2 text-lg font-semibold text-[var(--text-primary)]">Pousser vers Shopify</h3>
               <p className="mt-1 text-sm text-[var(--text-faint)]">
-                {shopifyConnected === null
+                {!canExport
+                  ? "Réservé aux plans Pro et Agency."
+                  : shopifyConnected === null
                   ? "Vérification de la connexion…"
                   : shopifyConnected
                   ? `Envoie les produits et catégories de cette boutique vers ${shopifyDomain}.`
                   : "Connecte ta boutique Shopify dans les paramètres pour activer cette action."}
               </p>
             </div>
-            <button
-              type="button"
-              onClick={handlePushShopify}
-              disabled={!shopifyConnected || shopifyPushing}
-              className="shrink-0 rounded-2xl bg-gradient-to-r from-violet-600 to-blue-600 px-5 py-3 text-sm font-semibold text-white transition hover:from-violet-500 hover:to-blue-500 disabled:opacity-40 disabled:cursor-not-allowed"
-            >
-              {shopifyPushing ? "Envoi en cours…" : "Pousser produits & collections"}
-            </button>
+            {canExport ? (
+              <button
+                type="button"
+                onClick={handlePushShopify}
+                disabled={!shopifyConnected || shopifyPushing}
+                className="shrink-0 rounded-2xl bg-gradient-to-r from-violet-600 to-blue-600 px-5 py-3 text-sm font-semibold text-white transition hover:from-violet-500 hover:to-blue-500 disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                {shopifyPushing ? "Envoi en cours…" : "Pousser produits & collections"}
+              </button>
+            ) : (
+              <Link
+                href="/#pricing"
+                className="shrink-0 rounded-2xl bg-gradient-to-r from-violet-600 to-blue-600 px-5 py-3 text-sm font-semibold text-white transition hover:from-violet-500 hover:to-blue-500"
+              >
+                🔒 Passe au plan Pro
+              </Link>
+            )}
           </div>
 
           {shopifyPushError && (
@@ -1180,9 +1228,10 @@ export default function BoutiqueBuilderDetailPage() {
                             <button
                               type="button"
                               onClick={() => void handleDeleteProduct(product.id)}
-                              className="rounded-xl bg-[var(--danger)]/10 px-3 py-2 text-xs font-semibold text-[var(--danger)] transition hover:bg-[var(--danger)]/20"
+                              disabled={deletingProductId === product.id}
+                              className="rounded-xl bg-[var(--danger)]/10 px-3 py-2 text-xs font-semibold text-[var(--danger)] transition hover:bg-[var(--danger)]/20 disabled:opacity-50 disabled:cursor-not-allowed"
                             >
-                              Supprimer
+                              {deletingProductId === product.id ? "…" : "Supprimer"}
                             </button>
                             <div className="flex gap-2">
                               <button
@@ -1424,9 +1473,10 @@ export default function BoutiqueBuilderDetailPage() {
               </label>
               <button
                 type="submit"
-                className="w-full rounded-2xl bg-violet-500 px-4 py-3 text-sm font-semibold text-white transition hover:bg-violet-400"
+                disabled={creatingCategory}
+                className="w-full rounded-2xl bg-violet-500 px-4 py-3 text-sm font-semibold text-white transition hover:bg-violet-400 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Créer la catégorie
+                {creatingCategory ? "Création…" : "Créer la catégorie"}
               </button>
             </form>
 
@@ -1452,16 +1502,18 @@ export default function BoutiqueBuilderDetailPage() {
                             setEditingCategoryId(category.id);
                             setEditingCategoryName(category.nom);
                           }}
-                          className="rounded-2xl bg-[var(--surface-3)] px-3 py-2 text-xs font-semibold text-[var(--text-primary)] transition hover:bg-[var(--surface-3)]"
+                          disabled={categoryActionId === category.id}
+                          className="rounded-2xl bg-[var(--surface-3)] px-3 py-2 text-xs font-semibold text-[var(--text-primary)] transition hover:bg-[var(--surface-3)] disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                           Renommer
                         </button>
                         <button
                           type="button"
                           onClick={() => void handleDeleteCategory(category.id)}
-                          className="rounded-2xl bg-[var(--danger)]/10 px-3 py-2 text-xs font-semibold text-[var(--danger)] transition hover:bg-[var(--danger)]/20"
+                          disabled={categoryActionId === category.id}
+                          className="rounded-2xl bg-[var(--danger)]/10 px-3 py-2 text-xs font-semibold text-[var(--danger)] transition hover:bg-[var(--danger)]/20 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                          Supprimer
+                          {categoryActionId === category.id ? "…" : "Supprimer"}
                         </button>
                       </div>
                     </div>
@@ -1477,14 +1529,16 @@ export default function BoutiqueBuilderDetailPage() {
                           <button
                             type="button"
                             onClick={() => void handleRenameCategory(category.id, editingCategoryName)}
-                            className="rounded-2xl bg-violet-500 px-3 py-2 text-xs font-semibold text-white transition hover:bg-violet-400"
+                            disabled={categoryActionId === category.id}
+                            className="rounded-2xl bg-violet-500 px-3 py-2 text-xs font-semibold text-white transition hover:bg-violet-400 disabled:opacity-50 disabled:cursor-not-allowed"
                           >
-                            Enregistrer
+                            {categoryActionId === category.id ? "Enregistrement…" : "Enregistrer"}
                           </button>
                           <button
                             type="button"
                             onClick={() => { setEditingCategoryId(null); setEditingCategoryName(""); }}
-                            className="rounded-2xl border border-[var(--border)] bg-[var(--surface-2)] px-3 py-2 text-xs font-semibold text-[var(--text-primary)] transition hover:border-violet-500/40"
+                            disabled={categoryActionId === category.id}
+                            className="rounded-2xl border border-[var(--border)] bg-[var(--surface-2)] px-3 py-2 text-xs font-semibold text-[var(--text-primary)] transition hover:border-violet-500/40 disabled:opacity-50 disabled:cursor-not-allowed"
                           >
                             Annuler
                           </button>

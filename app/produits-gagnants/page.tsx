@@ -59,7 +59,16 @@ export default function ProduitsGagnants() {
   const [totalPages, setTotalPages] = useState(1);
   const resultatsRef = useRef<HTMLDivElement>(null);
 
+  // Annule la requête précédente à chaque nouvel appel — sans ça, des clics rapides sur
+  // "Suivant"/"Précédent" (page 1→2→3) peuvent voir leurs réponses arriver hors-ordre et
+  // afficher une grille qui ne correspond pas au numéro de page affiché.
+  const chargementEnCoursRef = useRef<AbortController | null>(null);
+
   const chargerProduits = useCallback(async () => {
+    chargementEnCoursRef.current?.abort();
+    const controller = new AbortController();
+    chargementEnCoursRef.current = controller;
+
     setLoading(true);
     setErreur(null);
 
@@ -80,7 +89,7 @@ export default function ProduitsGagnants() {
       params.set("limit", String(PRODUITS_PAR_PAGE));
 
       const url = `/api/aliexpress/products?${params.toString()}`;
-      const res = await fetch(url);
+      const res = await fetch(url, { signal: controller.signal });
       const data = await res.json();
 
       if (data.error) {
@@ -93,10 +102,11 @@ export default function ProduitsGagnants() {
         setTotalProduits(data.total ?? 0);
         setTotalPages(data.totalPages ?? 1);
       }
-    } catch {
+    } catch (err) {
+      if (err instanceof DOMException && err.name === "AbortError") return;
       setErreur("Impossible de charger les produits. Vérifie ta connexion.");
     } finally {
-      setLoading(false);
+      if (chargementEnCoursRef.current === controller) setLoading(false);
     }
   }, [nicheActive, filtresPrix, filtreMarge, commandesMin, noteMin, sweetSpotActif, sweetMin, sweetMax, page]);
 
@@ -420,7 +430,7 @@ export default function ProduitsGagnants() {
                   <div className="flex justify-center items-center gap-2 mt-8">
                     <button
                       onClick={() => allerPage(page - 1)}
-                      disabled={page <= 1}
+                      disabled={page <= 1 || loading}
                       className={`bg-[var(--surface)] border border-[var(--border-strong)] px-4 py-2.5 rounded-lg text-[13px] font-semibold ${
                         page <= 1 ? "text-[var(--text-faint)] cursor-not-allowed opacity-50" : "text-[var(--text-primary)] cursor-pointer"
                       }`}
@@ -434,7 +444,7 @@ export default function ProduitsGagnants() {
 
                     <button
                       onClick={() => allerPage(page + 1)}
-                      disabled={page >= totalPages}
+                      disabled={page >= totalPages || loading}
                       className={`bg-[var(--surface)] border border-[var(--border-strong)] px-4 py-2.5 rounded-lg text-[13px] font-semibold ${
                         page >= totalPages ? "text-[var(--text-faint)] cursor-not-allowed opacity-50" : "text-[var(--text-primary)] cursor-pointer"
                       }`}

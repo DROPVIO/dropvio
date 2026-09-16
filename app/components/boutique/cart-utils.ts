@@ -22,25 +22,30 @@ export function getCartItems(): BoutiqueCartItem[] {
   }
 }
 
-export function setCartItems(items: BoutiqueCartItem[]): BoutiqueCartItem[] {
-  if (typeof window === "undefined") return items;
+// ok=false signale une écriture localStorage qui a réellement échoué (quota dépassé,
+// navigation privée stricte...) — les appelants qui affichent un message de succès doivent
+// le vérifier plutôt que de supposer que l'écriture a toujours lieu.
+export type CartWriteResult = { items: BoutiqueCartItem[]; ok: boolean };
+
+export function setCartItems(items: BoutiqueCartItem[]): CartWriteResult {
+  if (typeof window === "undefined") return { items, ok: false };
   try {
     window.localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(items));
+    return { items, ok: true };
   } catch {
-    // ignore storage errors
+    return { items, ok: false };
   }
-  return items;
 }
 
-export function updateCartItems(items: BoutiqueCartItem[]) {
-  const nextItems = setCartItems(items);
+export function updateCartItems(items: BoutiqueCartItem[]): CartWriteResult {
+  const result = setCartItems(items);
   if (typeof window !== "undefined") {
     window.dispatchEvent(new Event("cart:update"));
   }
-  return nextItems;
+  return result;
 }
 
-export function addCartItem(item: Omit<BoutiqueCartItem, "quantity">) {
+export function addCartItem(item: Omit<BoutiqueCartItem, "quantity">): CartWriteResult {
   const current = getCartItems();
   const existing = current.find(
     (entry) => entry.produitId === item.produitId && entry.boutiqueSlug === item.boutiqueSlug

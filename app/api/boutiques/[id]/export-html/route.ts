@@ -18,9 +18,18 @@ import { fetchBoutiqueApi } from "@/lib/boutique-internal-fetch";
 //   entièrement. Le résultat est un instantané visuel figé, pas un mini-site interactif.
 export async function POST(request: NextRequest, context: { params: Promise<{ id: string }> }) {
   const params = await context.params;
-  const { supabase, user } = await getServerUserPlanOnly();
+  const { supabase, user, plan } = await getServerUserPlanOnly();
   if (!user) {
     return NextResponse.json({ error: "Connecte-toi pour exporter cette boutique." }, { status: 401 });
+  }
+
+  // Restriction plan free — cet endpoint renvoie le HTML complet (CSS inliné) prêt à être
+  // exporté, exactement ce que la restriction Site Builder réserve à Pro/Agency ailleurs.
+  if (plan === "free") {
+    return NextResponse.json(
+      { error: "L'export HTML de la boutique est réservé aux plans Pro et Agency." },
+      { status: 403 }
+    );
   }
 
   const { data: boutique, error } = await supabase

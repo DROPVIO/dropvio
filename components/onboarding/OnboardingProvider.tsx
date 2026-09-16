@@ -59,7 +59,11 @@ export default function OnboardingProvider({ children }: { children: React.React
 
   const markDone = useCallback(async (id: string) => {
     const supabase = createSupabaseBrowserClient();
-    await supabase.from("profils").upsert({ id, onboarding_termine: true });
+    const { error } = await supabase.from("profils").upsert({ id, onboarding_termine: true });
+    // Best-effort assumé (le tour se referme quoi qu'il arrive) mais un échec ne doit plus
+    // être totalement invisible — sans ça, le tutoriel réapparaît à la prochaine visite sans
+    // aucune trace de la cause.
+    if (error) console.error("[onboarding] Échec de l'enregistrement onboarding_termine :", error.message);
   }, []);
 
   const finish = useCallback(() => {

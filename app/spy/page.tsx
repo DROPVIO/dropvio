@@ -41,7 +41,7 @@ export default function SpyPage() {
   const [error, setError] = useState<string | null>(null);
 
   async function handleAnalyze() {
-    if (!url.trim()) return;
+    if (!url.trim() || loading) return;
     setLoading(true);
     setError(null);
     setResult(null);

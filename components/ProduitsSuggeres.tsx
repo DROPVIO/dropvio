@@ -33,6 +33,9 @@ export default function ProduitsSuggeres({
   const [error, setError] = useState<string | null>(null);
   const [addingId, setAddingId] = useState<string | null>(null);
   const [addedIds, setAddedIds] = useState<Set<string>>(new Set());
+  // Erreur d'ajout par suggestion — distincte de `error` (échec du chargement initial) pour
+  // qu'un ajout raté sur UN item n'efface jamais la grille entière des autres suggestions.
+  const [addErrors, setAddErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
     let cancelled = false;
@@ -66,7 +69,7 @@ export default function ProduitsSuggeres({
 
   async function handleAdd(suggestion: Suggestion) {
     setAddingId(suggestion.id);
-    setError(null);
+    setAddErrors((prev) => ({ ...prev, [suggestion.id]: "" }));
     try {
       const response = await fetch(`/api/boutiques/${boutiqueId}/produits`, {
         method: "POST",
@@ -83,13 +86,13 @@ export default function ProduitsSuggeres({
       });
       const json = await response.json();
       if (!response.ok) {
-        setError(json.error ?? "Impossible d'ajouter ce produit.");
+        setAddErrors((prev) => ({ ...prev, [suggestion.id]: json.error ?? "Impossible d'ajouter ce produit." }));
         return;
       }
       setAddedIds((prev) => new Set(prev).add(suggestion.id));
       onAdded?.();
     } catch {
-      setError("Impossible de contacter le serveur.");
+      setAddErrors((prev) => ({ ...prev, [suggestion.id]: "Impossible de contacter le serveur." }));
     } finally {
       setAddingId(null);
     }
@@ -151,6 +154,9 @@ export default function ProduitsSuggeres({
                   >
                     {added ? "✓ Ajouté" : addingId === s.id ? "Ajout…" : "Ajouter à la boutique"}
                   </button>
+                  {addErrors[s.id] ? (
+                    <p className="text-[11px] text-[var(--danger)]">{addErrors[s.id]}</p>
+                  ) : null}
                 </div>
               </div>
             );

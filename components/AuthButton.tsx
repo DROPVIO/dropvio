@@ -14,6 +14,7 @@ export default function AuthButton() {
   const [user, setUser] = useState<User | null>(null);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
+  const [signingOut, setSigningOut] = useState(false);
 
   const isProtectedPage = PROTECTED_PATHS.some((p) => pathname.startsWith(p));
 
@@ -28,10 +29,18 @@ export default function AuthButton() {
   }, []);
 
   async function handleSignOut() {
-    const supabase = createSupabaseBrowserClient();
-    await supabase.auth.signOut();
-    router.push("/login");
-    router.refresh();
+    if (signingOut) return;
+    setSigningOut(true);
+    try {
+      const supabase = createSupabaseBrowserClient();
+      const { error } = await supabase.auth.signOut();
+      // Best-effort assumé (on redirige vers /login quoi qu'il arrive, rester sur une page
+      // protégée avec un bouton bloqué serait pire) mais l'échec ne doit plus être invisible.
+      if (error) console.error("[auth] Échec de la déconnexion :", error.message);
+    } finally {
+      router.push("/login");
+      router.refresh();
+    }
   }
 
   function openModal() {
@@ -100,12 +109,13 @@ export default function AuthButton() {
 
                 <button
                   onClick={handleSignOut}
-                  className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs text-[var(--danger)] hover:bg-[var(--danger)]/10 transition"
+                  disabled={signingOut}
+                  className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs text-[var(--danger)] hover:bg-[var(--danger)]/10 transition disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
                     <path d="M4.5 2H2.5C2.2 2 2 2.2 2 2.5v7c0 .3.2.5.5.5H4.5M8 8.5L10.5 6 8 3.5M10.5 6H4.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
                   </svg>
-                  Se déconnecter
+                  {signingOut ? "Déconnexion…" : "Se déconnecter"}
                 </button>
               </div>
             </div>

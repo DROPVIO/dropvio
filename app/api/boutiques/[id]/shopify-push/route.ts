@@ -29,9 +29,19 @@ function errMessage(err: unknown): string {
 // requêtes suivantes échoueraient de toute façon.
 export async function POST(request: NextRequest, context: { params: Promise<{ id: string }> }) {
   const { id } = await context.params;
-  const { supabase, user } = await getServerUserAndPlan();
+  const { supabase, user, plan } = await getServerUserAndPlan();
   if (!user) {
     return NextResponse.json({ error: "Connecte-toi pour publier cette boutique sur Shopify." }, { status: 401 });
+  }
+
+  // Restriction plan free — même règle que sites-generes/[id]/shopify-push : publier une
+  // boutique entière sur Shopify est un export réel, réservé aux plans Pro/Agency. Vérifié
+  // ici même si l'UI masque déjà l'action, pour ne jamais dépendre uniquement du frontend.
+  if (plan === "free") {
+    return NextResponse.json(
+      { error: "La publication sur Shopify est réservée aux plans Pro et Agency. Passe au plan Pro pour publier cette boutique." },
+      { status: 403 }
+    );
   }
 
   if (!isShopifyConfigured()) {
