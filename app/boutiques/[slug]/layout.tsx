@@ -95,8 +95,9 @@ export default async function BoutiquePublicLayout({
             </span>
             {/* La page d'accueil n'a plus de panneau panier statique (doublon avec ce
                 tiroir, retiré lors de la refonte de la page d'accueil) — "Voir mon panier"
-                ramène simplement à l'accueil de la boutique. */}
-            <BoutiqueHeaderCart fullCartHref={home} />
+                mène vers /panier (checkout transitoire, pas de paiement réel branché pour
+                l'instant — voir app/boutiques/[slug]/panier/page.tsx). */}
+            <BoutiqueHeaderCart fullCartHref={`${basePath}/panier`} />
           </div>
         </div>
 
