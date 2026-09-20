@@ -32,7 +32,7 @@ function useIsLightTheme(): boolean {
   return isLight;
 }
 
-export default function MargeBarChart({ chartData }: { chartData: MargeChartPoint[] }) {
+export default function MargeBarChart({ chartData, devise = "€" }: { chartData: MargeChartPoint[]; devise?: string }) {
   const isLight = useIsLightTheme();
 
   return (
@@ -44,7 +44,7 @@ export default function MargeBarChart({ chartData }: { chartData: MargeChartPoin
         <Tooltip
           contentStyle={{ background: "var(--surface)", border: "1px solid var(--border-strong)", borderRadius: 10, fontSize: 12 }}
           labelStyle={{ color: "var(--text-faint)" }}
-          formatter={(value) => `${Number(value).toFixed(2)} €`}
+          formatter={(value) => `${Number(value).toFixed(2)} ${devise}`}
         />
         <Legend wrapperStyle={{ fontSize: 11, color: isLight ? "#52525b" : "#a1a1aa" }} />
         <Bar dataKey="margeBrute" name="Marge brute" fill="#7c3aed" radius={[6, 6, 0, 0]} />

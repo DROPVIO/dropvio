@@ -9,6 +9,16 @@ import {
   SEUIL_TVA,
   SEUIL_TVA_MAJORE,
   TAXE_UE_FLAT,
+  VAT_RATE_UK,
+  STRIPE_FIXED_UK,
+  STRIPE_RATE_UK_DEFAULT,
+  DOUANE_SEUIL_UK,
+  tauxMarginalUK,
+  STRIPE_FIXED_US,
+  STRIPE_RATE_US_DEFAULT,
+  US_STATE_SALES_TAX,
+  getUsStateTax,
+  getDevise,
   getCharges,
   calcPrixVenteMin,
   getMargeColor,
@@ -24,6 +34,14 @@ type SimulationInputs = {
   budgetPub: string;
   extraUE: boolean;
   caAnnuelCumule: string;
+  stripeRateUK: string;
+  tauxRetourUK: string;
+  profitAnnuelUK: string;
+  usState: string;
+  stripeRateUS: string;
+  tauxRetourUS: string;
+  salesTaxNexusUS: boolean;
+  droitDouaneUS: string;
   tauxCharge: string;
   tauxTaxe: string;
   margeCible: string;
@@ -90,6 +108,23 @@ function CalculateurMargeInner() {
   const [extraUE, setExtraUE] = useState(false);
   const [caAnnuelCumule, setCaAnnuelCumule] = useState("");
 
+  // Mode UK auto
+  const [stripeRateUK, setStripeRateUK] = useState(STRIPE_RATE_UK_DEFAULT);
+  const [tauxRetourUK, setTauxRetourUK] = useState("");
+  // Curseur "profit annuel estimé" — indicatif, séparé du calcul de marge par vente
+  // (Income Tax + Class 4 NIC se calculent sur le profit annuel cumulé, jamais par transaction).
+  const [profitAnnuelUK, setProfitAnnuelUK] = useState("30000");
+
+  // Mode US auto
+  const [usState, setUsState] = useState("");
+  const [stripeRateUS, setStripeRateUS] = useState(STRIPE_RATE_US_DEFAULT);
+  const [tauxRetourUS, setTauxRetourUS] = useState("");
+  // Sans confirmation explicite du nexus, aucune sales tax n'est déduite (voir getCharges).
+  const [salesTaxNexusUS, setSalesTaxNexusUS] = useState(false);
+  // Champ purement informatif — jamais inclus dans le calcul de marge (voir avertissement
+  // fixe affiché sous le résultat), juste capturé pour mémo dans la simulation sauvegardée.
+  const [droitDouaneUS, setDroitDouaneUS] = useState("");
+
   // Mode International manuel
   const [tauxCharge, setTauxCharge] = useState("");
   const [tauxTaxe, setTauxTaxe] = useState("");
@@ -97,7 +132,12 @@ function CalculateurMargeInner() {
   // Calcul inversé
   const [margeCible, setMargeCible] = useState("");
 
-  const charges = getCharges(mode, { extraUE, tauxCharge, tauxTaxe });
+  const charges = getCharges(mode, {
+    extraUE, tauxCharge, tauxTaxe, stripeRateUK, tauxRetourUK,
+    stripeRateUS, tauxRetourUS, usState, salesTaxNexusUS,
+  });
+  const devise = getDevise(mode);
+  const tauxMarginal = tauxMarginalUK(parseFloat(profitAnnuelUK) || 0);
 
   // Dérivation pure des inputs — pas d'effet de bord externe, donc useMemo plutôt
   // qu'un useEffect + setState (qui déclenchait un rendu en cascade évitable).
@@ -121,7 +161,7 @@ function CalculateurMargeInner() {
 
     return { margeBrute, margeNette, margePct, roi, breakEven, coutTotal, chargesTotal };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [prixFournisseur, fraisLivraison, prixVente, budgetPub, mode, extraUE, tauxCharge, tauxTaxe]);
+  }, [prixFournisseur, fraisLivraison, prixVente, budgetPub, mode, extraUE, tauxCharge, tauxTaxe, stripeRateUK, tauxRetourUK, stripeRateUS, tauxRetourUS, usState, salesTaxNexusUS]);
 
   // Calcul inversé : prix de vente minimum pour la marge cible
   const prixVenteMin = margeCible
@@ -191,7 +231,9 @@ function CalculateurMargeInner() {
 
     const inputs: SimulationInputs = {
       mode, prixFournisseur, fraisLivraison, prixVente, budgetPub,
-      extraUE, caAnnuelCumule, tauxCharge, tauxTaxe, margeCible,
+      extraUE, caAnnuelCumule, stripeRateUK, tauxRetourUK, profitAnnuelUK,
+      usState, stripeRateUS, tauxRetourUS, salesTaxNexusUS, droitDouaneUS,
+      tauxCharge, tauxTaxe, margeCible,
     };
     const resultatsSnapshot = {
       margeNette: resultats.margeNette,
@@ -234,6 +276,14 @@ function CalculateurMargeInner() {
     if (i.budgetPub !== undefined) setBudgetPub(i.budgetPub);
     if (i.extraUE !== undefined) setExtraUE(i.extraUE);
     if (i.caAnnuelCumule !== undefined) setCaAnnuelCumule(i.caAnnuelCumule);
+    if (i.stripeRateUK !== undefined) setStripeRateUK(i.stripeRateUK);
+    if (i.tauxRetourUK !== undefined) setTauxRetourUK(i.tauxRetourUK);
+    if (i.profitAnnuelUK !== undefined) setProfitAnnuelUK(i.profitAnnuelUK);
+    if (i.usState !== undefined) setUsState(i.usState);
+    if (i.stripeRateUS !== undefined) setStripeRateUS(i.stripeRateUS);
+    if (i.tauxRetourUS !== undefined) setTauxRetourUS(i.tauxRetourUS);
+    if (i.salesTaxNexusUS !== undefined) setSalesTaxNexusUS(i.salesTaxNexusUS);
+    if (i.droitDouaneUS !== undefined) setDroitDouaneUS(i.droitDouaneUS);
     if (i.tauxCharge !== undefined) setTauxCharge(i.tauxCharge);
     if (i.tauxTaxe !== undefined) setTauxTaxe(i.tauxTaxe);
     if (i.margeCible !== undefined) setMargeCible(i.margeCible);
@@ -277,7 +327,7 @@ function CalculateurMargeInner() {
 
         {/* Toggle mode */}
         <div className="flex gap-1.5 bg-[var(--surface)] border border-[var(--border-strong)] rounded-xl p-1.5 mb-5">
-          {(["france", "manuel"] as Mode[]).map((m) => (
+          {(["france", "uk", "us", "manuel"] as Mode[]).map((m) => (
             <button
               key={m}
               onClick={() => setMode(m)}
@@ -285,7 +335,7 @@ function CalculateurMargeInner() {
                 mode === m ? "bg-violet-600 text-white" : "bg-transparent text-[var(--text-faint)]"
               }`}
             >
-              {m === "france" ? "🇫🇷 France auto" : "🌍 International manuel"}
+              {m === "france" ? "🇫🇷 France auto" : m === "uk" ? "🇬🇧 UK auto" : m === "us" ? "🇺🇸 US auto" : "🌍 International manuel"}
             </button>
           ))}
         </div>
@@ -295,27 +345,27 @@ function CalculateurMargeInner() {
           <div className="grid gap-5">
 
             <InputField
-              label="Prix fournisseur (€)"
+              label={`Prix fournisseur (${devise})`}
               placeholder="ex: 8.50"
               value={prixFournisseur}
               onChange={setPrixFournisseur}
               required
             />
             <InputField
-              label="Frais de livraison (€)"
+              label={`Frais de livraison (${devise})`}
               placeholder="ex: 2.00"
               value={fraisLivraison}
               onChange={setFraisLivraison}
             />
             <InputField
-              label="Prix de vente (€)"
+              label={`Prix de vente (${devise})`}
               placeholder="ex: 29.99"
               value={prixVente}
               onChange={setPrixVente}
               required
             />
             <InputField
-              label="Budget pub par vente (€)"
+              label={`Budget pub par vente / CAC (${devise})`}
               placeholder="ex: 5.00"
               value={budgetPub}
               onChange={setBudgetPub}
@@ -367,6 +417,114 @@ function CalculateurMargeInner() {
                   </div>
                 </div>
               </div>
+            ) : mode === "uk" ? (
+              <div className="bg-[var(--bg-sunken)] rounded-xl p-5 border border-[var(--border)] grid gap-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <InputField
+                    label="Frais Stripe UK (%)"
+                    placeholder="1.5"
+                    value={stripeRateUK}
+                    onChange={setStripeRateUK}
+                  />
+                  <InputField
+                    label="Taux de retour hypothétique (%)"
+                    placeholder="ex: 8"
+                    value={tauxRetourUK}
+                    onChange={setTauxRetourUK}
+                  />
+                </div>
+
+                <div className="text-xs text-[var(--text-faint)] leading-relaxed">
+                  Charges appliquées automatiquement : VAT {(VAT_RATE_UK * 100).toFixed(0)}% du prix de vente (taux standard) · Frais Stripe {stripeRateUK || "0"}% + £{STRIPE_FIXED_UK.toFixed(2)} (carte domestique).
+                </div>
+
+                {(parseFloat(prixVente) || 0) >= DOUANE_SEUIL_UK && (
+                  <div className="text-xs text-[var(--warning)] bg-[var(--warning)]/10 border border-[var(--warning)]/20 rounded-lg px-3.5 py-2.5 leading-relaxed">
+                    ⚠️ Droit de douane applicable au-delà de {DOUANE_SEUIL_UK}£ — variable par catégorie, non calculé automatiquement. Vérifie sur gov.uk.
+                  </div>
+                )}
+
+                {/* Curseur profit annuel — indicatif, séparé du calcul de marge par vente */}
+                <div className="pt-3 border-t border-[var(--border)]">
+                  <div className="flex justify-between text-[13px] text-[var(--text-muted)] mb-2">
+                    <span>Profit annuel estimé (indicatif)</span>
+                    <span className="font-semibold text-[var(--text-primary)]">£{(parseFloat(profitAnnuelUK) || 0).toLocaleString("fr-FR")}</span>
+                  </div>
+                  <input
+                    type="range"
+                    min={0}
+                    max={150000}
+                    step={1000}
+                    value={parseFloat(profitAnnuelUK) || 0}
+                    onChange={(e) => setProfitAnnuelUK(e.target.value)}
+                    className="w-full accent-violet-600"
+                  />
+                  <div className="mt-2.5 text-[12px] text-[var(--text-faint)] leading-relaxed">
+                    Taux marginal approximatif : <span className="font-semibold text-[var(--text-muted)]">{tauxMarginal.label}</span>.
+                    Income Tax + Class 4 National Insurance sur le profit annuel — n&apos;entre pas dans le calcul de marge par vente ci-dessus, à titre indicatif. Seuils à vérifier sur gov.uk.
+                  </div>
+                </div>
+              </div>
+            ) : mode === "us" ? (
+              <div className="bg-[var(--bg-sunken)] rounded-xl p-5 border border-[var(--border)] grid gap-4">
+                <div>
+                  <label className="block text-[13px] font-medium text-[var(--text-muted)] mb-2">
+                    État du client <span className="text-[var(--accent)]">*</span>
+                  </label>
+                  <select
+                    value={usState}
+                    onChange={(e) => setUsState(e.target.value)}
+                    className="w-full box-border bg-[var(--bg)] border border-[var(--border-strong)] rounded-lg px-3.5 py-3 text-[15px] text-[var(--text-primary)] outline-none transition-colors focus:border-violet-500"
+                  >
+                    <option value="">Sélectionne l&apos;état du client…</option>
+                    {US_STATE_SALES_TAX.map((s) => (
+                      <option key={s.code} value={s.code}>{s.nom} ({s.code})</option>
+                    ))}
+                  </select>
+                  <div className="text-[11px] text-[var(--text-faint)] mt-1.5 leading-relaxed">
+                    {usState
+                      ? `Sales tax de base indicative : ${(getUsStateTax(usState) * 100).toFixed(3)}% — taux d'État uniquement, hors surtaxes locales comté/ville qui peuvent s'ajouter selon la localité exacte du client.`
+                      : "Sales tax de base indicative : sélectionne un état — taux d'État uniquement, hors surtaxes locales comté/ville."}
+                  </div>
+                </div>
+
+                <label className="flex items-center gap-2.5 text-[13.5px] text-[var(--text-muted)] cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={salesTaxNexusUS}
+                    onChange={(e) => setSalesTaxNexusUS(e.target.checked)}
+                    className="w-4 h-4 accent-violet-600"
+                  />
+                  J&apos;ai un nexus économique dans cet État
+                </label>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <InputField
+                    label="Frais Stripe US (%)"
+                    placeholder="2.9"
+                    value={stripeRateUS}
+                    onChange={setStripeRateUS}
+                  />
+                  <InputField
+                    label="Taux de retour hypothétique (%)"
+                    placeholder="ex: 8"
+                    value={tauxRetourUS}
+                    onChange={setTauxRetourUS}
+                  />
+                </div>
+
+                <InputField
+                  label="Droit de douane estimé (%) — informatif, non inclus dans le calcul"
+                  placeholder="ex: 0"
+                  value={droitDouaneUS}
+                  onChange={setDroitDouaneUS}
+                />
+
+                <div className="text-xs text-[var(--text-faint)] leading-relaxed">
+                  Charges appliquées automatiquement : Frais Stripe {stripeRateUS || "0"}% + ${STRIPE_FIXED_US.toFixed(2)} (carte domestique)
+                  {salesTaxNexusUS && usState ? ` · Sales tax ${(getUsStateTax(usState) * 100).toFixed(3)}% (${usState})` : " · Sales tax 0% (nexus non confirmé)"}.
+                </div>
+              </div>
             ) : (
               <div className="bg-[var(--bg-sunken)] rounded-xl p-5 border border-[var(--border)] grid grid-cols-2 gap-4">
                 <InputField
@@ -403,7 +561,7 @@ function CalculateurMargeInner() {
               <span className={`text-base font-bold ${prixVenteMin !== null ? "text-[var(--accent)]" : "text-[var(--text-faint)]"}`}>
                 {margeCible
                   ? prixVenteMin !== null
-                    ? `${prixVenteMin.toFixed(2)} €`
+                    ? `${prixVenteMin.toFixed(2)} ${devise}`
                     : "impossible"
                   : "—"}
               </span>
@@ -428,7 +586,7 @@ function CalculateurMargeInner() {
               <div>
                 <div className="text-[13px] text-[var(--text-faint)] mb-1">Marge nette par vente</div>
                 <div className="text-4xl font-bold" style={{ color: getMargeColor(resultats.margePct) }}>
-                  {resultats.margeNette >= 0 ? "+" : ""}{resultats.margeNette.toFixed(2)} €
+                  {resultats.margeNette >= 0 ? "+" : ""}{resultats.margeNette.toFixed(2)} {devise}
                 </div>
               </div>
               <div className="text-right">
@@ -441,12 +599,25 @@ function CalculateurMargeInner() {
               </div>
             </div>
 
+            {/* Avertissements fixes mode US — affichés en permanence sous le résultat, pas
+                en tooltip, pour rester visibles même si l'utilisateur ne survole rien. */}
+            {mode === "us" && (
+              <div className="mb-5 grid gap-2.5">
+                <div className="text-[12.5px] text-[var(--warning)] bg-[var(--warning)]/10 border border-[var(--warning)]/20 rounded-lg px-4 py-3 leading-relaxed">
+                  Ce calcul n&apos;inclut pas les droits de douane spécifiques à la catégorie de ton produit — l&apos;exemption de minimis a été supprimée en 2025 et les taux varient par classification douanière (HTS) et par pays d&apos;origine. Vérifie le taux réel sur cbp.gov avant de fixer ton prix. Le taux de sales tax affiché est indicatif : ton obligation réelle de le collecter dépend du seuil de nexus économique de l&apos;État concerné, pas uniquement de la vente elle-même.
+                </div>
+                <div className="text-[12.5px] text-[var(--text-faint)] bg-[var(--bg-sunken)] border border-[var(--border)] rounded-lg px-4 py-3 leading-relaxed">
+                  Prévois de mettre de côté une réserve pour l&apos;impôt fédéral et l&apos;impôt d&apos;État sur ton profit annuel — calculé une fois par an, pas par vente. Consulte un comptable US pour ton taux réel selon ta structure (LLC, sole proprietor, etc.).
+                </div>
+              </div>
+            )}
+
             {/* Stats secondaires */}
             <div className="grid grid-cols-4 gap-3">
-              <StatCard label="Coût total" value={`${resultats.coutTotal.toFixed(2)} €`} />
-              <StatCard label="Charges" value={`${resultats.chargesTotal.toFixed(2)} €`} />
+              <StatCard label="Coût total" value={`${resultats.coutTotal.toFixed(2)} ${devise}`} />
+              <StatCard label="Charges" value={`${resultats.chargesTotal.toFixed(2)} ${devise}`} />
               <StatCard label="ROI" value={`${resultats.roi.toFixed(0)}%`} />
-              <StatCard label="Break-even" value={`${resultats.breakEven.toFixed(2)} €`} />
+              <StatCard label="Break-even" value={`${resultats.breakEven.toFixed(2)} ${devise}`} />
             </div>
 
             {/* Détail des charges */}
@@ -513,10 +684,10 @@ function CalculateurMargeInner() {
                       {s.n} commandes/mois
                     </div>
                     <div className="grid gap-2">
-                      <MiniStat label="CA" value={`${s.ca.toFixed(0)} €`} />
-                      <MiniStat label="Marge brute" value={`${s.margeBrute.toFixed(0)} €`} />
-                      <MiniStat label="Marge nette" value={`${s.margeNette.toFixed(0)} €`} color={getMargeColor(resultats.margePct)} />
-                      <MiniStat label="Charges totales" value={`${s.charges.toFixed(0)} €`} />
+                      <MiniStat label="CA" value={`${s.ca.toFixed(0)} ${devise}`} />
+                      <MiniStat label="Marge brute" value={`${s.margeBrute.toFixed(0)} ${devise}`} />
+                      <MiniStat label="Marge nette" value={`${s.margeNette.toFixed(0)} ${devise}`} color={getMargeColor(resultats.margePct)} />
+                      <MiniStat label="Charges totales" value={`${s.charges.toFixed(0)} ${devise}`} />
                     </div>
                   </div>
                 ))}
@@ -529,7 +700,7 @@ function CalculateurMargeInner() {
                 Marge brute vs marge nette
               </h2>
               <div className="bg-[var(--bg-sunken)] rounded-xl border border-[var(--border)] pt-4 px-2 pb-2">
-                <MargeBarChart chartData={chartData} />
+                <MargeBarChart chartData={chartData} devise={devise} />
               </div>
             </div>
           </div>
