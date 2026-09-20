@@ -156,14 +156,35 @@ export const SEUIL_FRANCHISE_LU = 50_000;
 // fixe affiché dans l'UI à la place d'un pourcentage automatique. Contrairement à
 // Belgique/Suisse/Canada, le mode Luxembourg n'a donc pas de postCotisationsRate du tout.
 
-export type Mode = "france" | "uk" | "us" | "be" | "ch" | "ca" | "lu" | "manuel";
+// ─── Constantes fiscales Italie (régime forfettario, commerce de détail) ──────
+
+export const STRIPE_FIXED_IT = 0.25;
+export const STRIPE_RATE_IT_DEFAULT = "1.5";
+export const SEUIL_FORFETTARIO_IT = 85_000;
+// Coefficiente di redditività pour le commerce de détail non alimentaire — le code ATECO le
+// plus proche du dropshipping. Vérifie ton code ATECO réel : ce coefficient varie fortement
+// selon l'activité déclarée (d'autres activités ont des coefficients différents).
+export const COEFFICIENTE_REDDITIVITA_IT = 0.54;
+export const IMPOSTA_RATE_NUOVA_IT = 0.05;     // 5% — nouvelle activité, 5 premières années
+export const IMPOSTA_RATE_ORDINARIA_IT = 0.15; // 15% — activité établie
+export type RegimeImpostaIT = "nuova" | "ordinaria";
+
+// ─── Constantes fiscales Espagne (autónomo, vente de marchandises) ────────────
+
+export const STRIPE_FIXED_ES = 0.25;
+export const STRIPE_RATE_ES_DEFAULT = "1.5";
+// Pas de seuil de franchise TVA général pour un résident espagnol — l'IVA est due dès le
+// premier euro de CA, contrairement à France/Belgique/Suisse/Canada/Luxembourg/Italie.
+export const TVA_RATE_ES = 0.21;
+
+export type Mode = "france" | "uk" | "us" | "be" | "ch" | "ca" | "lu" | "it" | "es" | "manuel";
 
 export function getDevise(mode: Mode): string {
   if (mode === "uk") return "£";
   if (mode === "us") return "$";
   if (mode === "ch") return "CHF";
   if (mode === "ca") return "C$";
-  return "€"; // france, be, lu
+  return "€"; // france, be, lu, it, es
 }
 
 export type ChargeInfo = {
@@ -188,6 +209,8 @@ export function getCharges(
     stripeRateCH, tauxRetourCH,
     stripeRateCA, tauxRetourCA,
     stripeRateLU, tauxRetourLU,
+    stripeRateIT, tauxRetourIT, regimeImpostaIT,
+    stripeRateES, tauxRetourES,
   }: {
     extraUE: boolean;
     tauxCharge: string;
@@ -206,6 +229,11 @@ export function getCharges(
     tauxRetourCA?: string;
     stripeRateLU?: string;
     tauxRetourLU?: string;
+    stripeRateIT?: string;
+    tauxRetourIT?: string;
+    regimeImpostaIT?: RegimeImpostaIT;
+    stripeRateES?: string;
+    tauxRetourES?: string;
   }
 ): ChargeInfo {
   if (mode === "be") {
@@ -266,6 +294,44 @@ export function getCharges(
       breakdown: [
         { label: "Frais Stripe", detail: `${(stripeRate * 100).toFixed(2)}% + ${STRIPE_FIXED_LU.toFixed(2)}€` },
         { label: "TVA", detail: `${(TVA_RATE_LU * 100).toFixed(0)}%` },
+        { label: "Taux de retour hypothétique", detail: `${(tauxRetour * 100).toFixed(1)}%` },
+      ],
+    };
+  }
+
+  if (mode === "it") {
+    const stripeRate = (parseFloat(stripeRateIT ?? "") || 0) / 100;
+    const tauxRetour = (parseFloat(tauxRetourIT ?? "") || 0) / 100;
+    // Le calcul suppose que le marchand reste sous le seuil de 85 000€ (régime forfettario
+    // actif, TVA exonérée) — voir le tracker de seuil dans l'UI, qui prévient de l'effet de
+    // seuil brutal (perte du forfettario + TVA 22% dès le premier euro au-dessus) sans faire
+    // basculer ce calcul en régime ordinaire (dont le barème IRPEF/INPS n'est pas modélisé ici).
+    const impostaTaux = regimeImpostaIT === "ordinaria" ? IMPOSTA_RATE_ORDINARIA_IT : IMPOSTA_RATE_NUOVA_IT;
+    const impostaEffectiveRate = COEFFICIENTE_REDDITIVITA_IT * impostaTaux;
+    return {
+      rate: stripeRate + tauxRetour + impostaEffectiveRate,
+      fixed: STRIPE_FIXED_IT,
+      breakdown: [
+        { label: "Frais Stripe", detail: `${(stripeRate * 100).toFixed(2)}% + ${STRIPE_FIXED_IT.toFixed(2)}€` },
+        { label: "TVA", detail: "0% — régime forfettario (sous le seuil de 85 000€)" },
+        { label: "Taux de retour hypothétique", detail: `${(tauxRetour * 100).toFixed(1)}%` },
+        {
+          label: "Imposta sostitutiva",
+          detail: `${(impostaEffectiveRate * 100).toFixed(2)}% du prix de vente (coefficiente ${(COEFFICIENTE_REDDITIVITA_IT * 100).toFixed(0)}% × ${(impostaTaux * 100).toFixed(0)}%)`,
+        },
+      ],
+    };
+  }
+
+  if (mode === "es") {
+    const stripeRate = (parseFloat(stripeRateES ?? "") || 0) / 100;
+    const tauxRetour = (parseFloat(tauxRetourES ?? "") || 0) / 100;
+    return {
+      rate: stripeRate + TVA_RATE_ES + tauxRetour,
+      fixed: STRIPE_FIXED_ES,
+      breakdown: [
+        { label: "Frais Stripe", detail: `${(stripeRate * 100).toFixed(2)}% + ${STRIPE_FIXED_ES.toFixed(2)}€` },
+        { label: "IVA", detail: `${(TVA_RATE_ES * 100).toFixed(0)}%` },
         { label: "Taux de retour hypothétique", detail: `${(tauxRetour * 100).toFixed(1)}%` },
       ],
     };

@@ -36,12 +36,22 @@ import {
   STRIPE_RATE_LU_DEFAULT,
   TVA_RATE_LU,
   SEUIL_FRANCHISE_LU,
+  STRIPE_FIXED_IT,
+  STRIPE_RATE_IT_DEFAULT,
+  SEUIL_FORFETTARIO_IT,
+  COEFFICIENTE_REDDITIVITA_IT,
+  IMPOSTA_RATE_NUOVA_IT,
+  IMPOSTA_RATE_ORDINARIA_IT,
+  STRIPE_FIXED_ES,
+  STRIPE_RATE_ES_DEFAULT,
+  TVA_RATE_ES,
   getDevise,
   getCharges,
   calcPrixVenteMin,
   getMargeColor,
   getMargeLabel,
   type Mode,
+  type RegimeImpostaIT,
 } from "@/lib/calcul-marge";
 
 type SimulationInputs = {
@@ -73,6 +83,12 @@ type SimulationInputs = {
   stripeRateLU: string;
   tauxRetourLU: string;
   caAnnuelCumuleLU: string;
+  stripeRateIT: string;
+  tauxRetourIT: string;
+  caAnnuelCumuleIT: string;
+  regimeImpostaIT: RegimeImpostaIT;
+  stripeRateES: string;
+  tauxRetourES: string;
   tauxCharge: string;
   tauxTaxe: string;
   margeCible: string;
@@ -99,6 +115,8 @@ const MODE_OPTIONS: { value: Mode; label: string }[] = [
   { value: "ch", label: "🇨🇭 Suisse auto" },
   { value: "ca", label: "🇨🇦 Canada (Québec) auto" },
   { value: "lu", label: "🇱🇺 Luxembourg auto" },
+  { value: "it", label: "🇮🇹 Italie auto" },
+  { value: "es", label: "🇪🇸 Espagne auto" },
   { value: "manuel", label: "🌍 International manuel" },
 ];
 
@@ -192,6 +210,18 @@ function CalculateurMargeInner() {
   const [tauxRetourLU, setTauxRetourLU] = useState("");
   const [caAnnuelCumuleLU, setCaAnnuelCumuleLU] = useState("");
 
+  // Mode Italie auto
+  const [stripeRateIT, setStripeRateIT] = useState(STRIPE_RATE_IT_DEFAULT);
+  const [tauxRetourIT, setTauxRetourIT] = useState("");
+  const [caAnnuelCumuleIT, setCaAnnuelCumuleIT] = useState("");
+  // Ordinaria (15%) par défaut plutôt que nuova (5%) — estimation plus conservatrice (marge
+  // plus basse) tant que le marchand n'a pas confirmé son éligibilité au taux réduit.
+  const [regimeImpostaIT, setRegimeImpostaIT] = useState<RegimeImpostaIT>("ordinaria");
+
+  // Mode Espagne auto
+  const [stripeRateES, setStripeRateES] = useState(STRIPE_RATE_ES_DEFAULT);
+  const [tauxRetourES, setTauxRetourES] = useState("");
+
   // Mode International manuel
   const [tauxCharge, setTauxCharge] = useState("");
   const [tauxTaxe, setTauxTaxe] = useState("");
@@ -204,6 +234,8 @@ function CalculateurMargeInner() {
     stripeRateUS, tauxRetourUS, usState, salesTaxNexusUS,
     stripeRateBE, tauxRetourBE, stripeRateCH, tauxRetourCH,
     stripeRateCA, tauxRetourCA, stripeRateLU, tauxRetourLU,
+    stripeRateIT, tauxRetourIT, regimeImpostaIT,
+    stripeRateES, tauxRetourES,
   });
   const devise = getDevise(mode);
   const tauxMarginal = tauxMarginalUK(parseFloat(profitAnnuelUK) || 0);
@@ -246,6 +278,7 @@ function CalculateurMargeInner() {
     prixFournisseur, fraisLivraison, prixVente, budgetPub, mode, extraUE, tauxCharge, tauxTaxe,
     stripeRateUK, tauxRetourUK, stripeRateUS, tauxRetourUS, usState, salesTaxNexusUS,
     stripeRateBE, tauxRetourBE, stripeRateCH, tauxRetourCH, stripeRateCA, tauxRetourCA, stripeRateLU, tauxRetourLU,
+    stripeRateIT, tauxRetourIT, regimeImpostaIT, stripeRateES, tauxRetourES,
   ]);
 
   // Calcul inversé : prix de vente minimum pour la marge cible
@@ -322,6 +355,8 @@ function CalculateurMargeInner() {
       stripeRateCH, tauxRetourCH, caAnnuelCumuleCH,
       stripeRateCA, tauxRetourCA, caAnnuelCumuleCA, droitDouaneCA,
       stripeRateLU, tauxRetourLU, caAnnuelCumuleLU,
+      stripeRateIT, tauxRetourIT, caAnnuelCumuleIT, regimeImpostaIT,
+      stripeRateES, tauxRetourES,
       tauxCharge, tauxTaxe, margeCible,
     };
     const resultatsSnapshot = {
@@ -386,6 +421,12 @@ function CalculateurMargeInner() {
     if (i.stripeRateLU !== undefined) setStripeRateLU(i.stripeRateLU);
     if (i.tauxRetourLU !== undefined) setTauxRetourLU(i.tauxRetourLU);
     if (i.caAnnuelCumuleLU !== undefined) setCaAnnuelCumuleLU(i.caAnnuelCumuleLU);
+    if (i.stripeRateIT !== undefined) setStripeRateIT(i.stripeRateIT);
+    if (i.tauxRetourIT !== undefined) setTauxRetourIT(i.tauxRetourIT);
+    if (i.caAnnuelCumuleIT !== undefined) setCaAnnuelCumuleIT(i.caAnnuelCumuleIT);
+    if (i.regimeImpostaIT !== undefined) setRegimeImpostaIT(i.regimeImpostaIT);
+    if (i.stripeRateES !== undefined) setStripeRateES(i.stripeRateES);
+    if (i.tauxRetourES !== undefined) setTauxRetourES(i.tauxRetourES);
     if (i.tauxCharge !== undefined) setTauxCharge(i.tauxCharge);
     if (i.tauxTaxe !== undefined) setTauxTaxe(i.tauxTaxe);
     if (i.margeCible !== undefined) setMargeCible(i.margeCible);
@@ -703,6 +744,50 @@ function CalculateurMargeInner() {
                   caption={`Franchise de TVA jusqu'à ${SEUIL_FRANCHISE_LU.toLocaleString("fr-FR")}€`}
                 />
               </div>
+            ) : mode === "it" ? (
+              <div className="bg-[var(--bg-sunken)] rounded-xl p-5 border border-[var(--border)] grid gap-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <InputField label="Frais Stripe (%)" placeholder="1.5" value={stripeRateIT} onChange={setStripeRateIT} />
+                  <InputField label="Taux de retour hypothétique (%)" placeholder="ex: 8" value={tauxRetourIT} onChange={setTauxRetourIT} />
+                </div>
+                <div>
+                  <label className="block text-[13px] font-medium text-[var(--text-muted)] mb-2">
+                    Régime imposta sostitutiva
+                  </label>
+                  <select
+                    value={regimeImpostaIT}
+                    onChange={(e) => setRegimeImpostaIT(e.target.value as RegimeImpostaIT)}
+                    className="w-full box-border bg-[var(--bg)] border border-[var(--border-strong)] rounded-lg px-3.5 py-3 text-[15px] text-[var(--text-primary)] outline-none transition-colors focus:border-violet-500"
+                  >
+                    <option value="nuova">Nouvelle activité (5% — premières 5 années)</option>
+                    <option value="ordinaria">Activité établie (15%)</option>
+                  </select>
+                  <div className="text-[11px] text-[var(--text-faint)] mt-1.5 leading-relaxed">
+                    Coefficiente di redditività fixé à {(COEFFICIENTE_REDDITIVITA_IT * 100).toFixed(0)}% (commerce de détail non alimentaire, le plus proche du dropshipping) — vérifie ton code ATECO réel, ce coefficient varie selon l&apos;activité déclarée.
+                  </div>
+                </div>
+                <div className="text-xs text-[var(--text-faint)] leading-relaxed">
+                  Charges appliquées automatiquement : Frais Stripe {stripeRateIT || "0"}% + {STRIPE_FIXED_IT.toFixed(2)}€ · TVA 0% (régime forfettario) · Imposta sostitutiva {(COEFFICIENTE_REDDITIVITA_IT * (regimeImpostaIT === "ordinaria" ? IMPOSTA_RATE_ORDINARIA_IT : IMPOSTA_RATE_NUOVA_IT) * 100).toFixed(2)}% du prix de vente.
+                </div>
+                <SeuilTracker
+                  label="CA cumulé cette année"
+                  devise="€"
+                  value={caAnnuelCumuleIT}
+                  onChange={setCaAnnuelCumuleIT}
+                  seuil={SEUIL_FORFETTARIO_IT}
+                  caption={`Effet de seuil brutal à ${SEUIL_FORFETTARIO_IT.toLocaleString("fr-FR")}€ — pas une transition progressive : au premier euro au-dessus, TVA 22% standard obligatoire ET perte définitive du régime forfettario (ce calcul suppose que tu restes sous le seuil).`}
+                />
+              </div>
+            ) : mode === "es" ? (
+              <div className="bg-[var(--bg-sunken)] rounded-xl p-5 border border-[var(--border)] grid gap-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <InputField label="Frais Stripe (%)" placeholder="1.5" value={stripeRateES} onChange={setStripeRateES} />
+                  <InputField label="Taux de retour hypothétique (%)" placeholder="ex: 8" value={tauxRetourES} onChange={setTauxRetourES} />
+                </div>
+                <div className="text-xs text-[var(--text-faint)] leading-relaxed">
+                  Charges appliquées automatiquement : IVA {(TVA_RATE_ES * 100).toFixed(0)}% du prix de vente, dû dès le premier euro (pas de seuil de franchise en Espagne) · Frais Stripe {stripeRateES || "0"}% + {STRIPE_FIXED_ES.toFixed(2)}€.
+                </div>
+              </div>
             ) : (
               <div className="bg-[var(--bg-sunken)] rounded-xl p-5 border border-[var(--border)] grid grid-cols-2 gap-4">
                 <InputField
@@ -828,6 +913,20 @@ function CalculateurMargeInner() {
             {mode === "lu" && (
               <div className="mb-5 text-[12.5px] text-[var(--text-faint)] bg-[var(--bg-sunken)] border border-[var(--border)] rounded-lg px-4 py-3 leading-relaxed">
                 Cotisations sociales indépendant (CCSS) calculées sur ton revenu net annuel, taux variable selon statut — vérifie sur mss.public.lu ou avec un fiduciaire avant de fixer ta réserve.
+              </div>
+            )}
+
+            {/* Note fixe mode Italie */}
+            {mode === "it" && (
+              <div className="mb-5 text-[12.5px] text-[var(--text-faint)] bg-[var(--bg-sunken)] border border-[var(--border)] rounded-lg px-4 py-3 leading-relaxed">
+                Cotisations INPS non incluses — caisse Commercianti (activité de commerce) : environ 4 200€/an fixe minimum + 24,48% au-delà de 17 504€ de revenu imposable annuel. Vérifie avec un commercialista.
+              </div>
+            )}
+
+            {/* Note fixe mode Espagne */}
+            {mode === "es" && (
+              <div className="mb-5 text-[12.5px] text-[var(--text-faint)] bg-[var(--bg-sunken)] border border-[var(--border)] rounded-lg px-4 py-3 leading-relaxed">
+                Cuota d&apos;autónomo (RETA) et IRPF non inclus — le système espagnol fonctionne par tranches de revenu net mensuel avec une base de cotisation ajustable, pas par pourcentage fixe. Utilise le simulateur officiel sur seg-social.es pour estimer ta cuota réelle, et consulte un gestor pour l&apos;IRPF (barème progressif 19%-47%).
               </div>
             )}
 
