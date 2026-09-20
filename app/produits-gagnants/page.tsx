@@ -700,41 +700,63 @@ function AlternativesModal({ produit, onClose }: { produit: Produit; onClose: ()
           </div>
         ) : (
           <div className="flex flex-col gap-2.5">
-            {alternatives.map((alt) => (
-              <a
-                key={alt.productId}
-                href={alt.link ?? "#"}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex gap-3 bg-[var(--bg-sunken)] border border-[var(--border-strong)] rounded-[10px] p-3 no-underline text-inherit"
-              >
-                {alt.image ? (
-                  <Image
-                    src={alt.image}
-                    alt={alt.title}
-                    width={56}
-                    height={56}
-                    className="w-14 h-14 rounded-lg object-cover shrink-0 bg-[var(--surface)]"
-                  />
-                ) : (
-                  <div className="w-14 h-14 rounded-lg bg-[var(--surface)] shrink-0" />
-                )}
-                <div className="flex-1 min-w-0">
-                  <div className="text-[12.5px] text-[var(--text-primary)] font-semibold mb-1 overflow-hidden text-ellipsis whitespace-nowrap">
-                    {alt.title}
+            {alternatives.map((alt) => {
+              const hasLink = Boolean(alt.link);
+              const cardContent = (
+                <>
+                  {alt.image ? (
+                    <Image
+                      src={alt.image}
+                      alt={alt.title}
+                      width={56}
+                      height={56}
+                      className="w-14 h-14 rounded-lg object-cover shrink-0 bg-[var(--surface)]"
+                    />
+                  ) : (
+                    <div className="w-14 h-14 rounded-lg bg-[var(--surface)] shrink-0" />
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <div className="text-[12.5px] text-[var(--text-primary)] font-semibold mb-1 overflow-hidden text-ellipsis whitespace-nowrap">
+                      {alt.title}
+                    </div>
+                    <div className="text-[11.5px] text-[var(--text-faint)] mb-1.5">
+                      {alt.shopName ?? "Boutique AliExpress"}
+                    </div>
+                    <div className="flex gap-3 flex-wrap text-[11.5px] text-[var(--text-muted)]">
+                      <span>💶 {alt.priceEUR.toFixed(2)}€</span>
+                      <span>⭐ {alt.evaluateRate ?? "—"}</span>
+                      <span>📦 {alt.orders > 1000 ? `${(alt.orders / 1000).toFixed(0)}k` : alt.orders} cmd</span>
+                      <span className="text-[var(--accent)]">🎯 {Math.round(alt.similarityScore * 100)}% similaire</span>
+                      {!hasLink && <span className="text-[var(--danger)]">🔒 Lien indisponible</span>}
+                    </div>
                   </div>
-                  <div className="text-[11.5px] text-[var(--text-faint)] mb-1.5">
-                    {alt.shopName ?? "Boutique AliExpress"}
-                  </div>
-                  <div className="flex gap-3 flex-wrap text-[11.5px] text-[var(--text-muted)]">
-                    <span>💶 {alt.priceEUR.toFixed(2)}€</span>
-                    <span>⭐ {alt.evaluateRate ?? "—"}</span>
-                    <span>📦 {alt.orders > 1000 ? `${(alt.orders / 1000).toFixed(0)}k` : alt.orders} cmd</span>
-                    <span className="text-[var(--accent)]">🎯 {Math.round(alt.similarityScore * 100)}% similaire</span>
-                  </div>
+                </>
+              );
+
+              // Sans lien AliExpress résolu, on ne rend pas un <a href="#"> cliquable sans
+              // effet : un <div> visuellement grisé, non cliquable, avec le motif explicite
+              // ci-dessus plutôt qu'une action qui ne fait rien.
+              return hasLink ? (
+                <a
+                  key={alt.productId}
+                  href={alt.link ?? undefined}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex gap-3 bg-[var(--bg-sunken)] border border-[var(--border-strong)] rounded-[10px] p-3 no-underline text-inherit"
+                >
+                  {cardContent}
+                </a>
+              ) : (
+                <div
+                  key={alt.productId}
+                  aria-disabled="true"
+                  title="Lien indisponible pour ce produit"
+                  className="flex gap-3 bg-[var(--bg-sunken)] border border-[var(--border-strong)] rounded-[10px] p-3 text-inherit opacity-60 cursor-not-allowed"
+                >
+                  {cardContent}
                 </div>
-              </a>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>

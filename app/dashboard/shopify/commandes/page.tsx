@@ -59,6 +59,9 @@ export default function CommandesAPreparerPage() {
   // explicitement et revenir sur la mise à jour optimiste si le serveur a refusé.
   const [actionErrors, setActionErrors] = useState<Record<string, string>>({});
   const [statutBusyId, setStatutBusyId] = useState<string | null>(null);
+  // Clé composite "commandeId:ligneIndex" (même pattern que lienDrafts) — plusieurs lignes
+  // par commande peuvent chacune avoir leur propre bouton "Rattacher" en vol.
+  const [lienBusyKey, setLienBusyKey] = useState<string | null>(null);
 
   function reload() {
     fetch("/api/shopify/commandes")
@@ -106,8 +109,11 @@ export default function CommandesAPreparerPage() {
   }
 
   async function attacherLien(commandeId: string, ligneIndex: number) {
-    const lienAliExpress = (lienDrafts[`${commandeId}:${ligneIndex}`] ?? "").trim();
+    const key = `${commandeId}:${ligneIndex}`;
+    if (lienBusyKey === key) return;
+    const lienAliExpress = (lienDrafts[key] ?? "").trim();
     if (!lienAliExpress) return;
+    setLienBusyKey(key);
     const previousLien = commandes?.find((c) => c.id === commandeId)?.lignes[ligneIndex]?.lien_aliexpress ?? null;
     setCommandes(
       (prev) =>
@@ -146,6 +152,8 @@ export default function CommandesAPreparerPage() {
         ...prev,
         [commandeId]: err instanceof Error ? err.message : "Impossible de contacter le serveur.",
       }));
+    } finally {
+      setLienBusyKey(null);
     }
   }
 
@@ -277,9 +285,10 @@ export default function CommandesAPreparerPage() {
                             />
                             <button
                               onClick={() => attacherLien(c.id, i)}
-                              className="text-[11px] font-semibold text-[var(--accent)] hover:underline"
+                              disabled={lienBusyKey === `${c.id}:${i}`}
+                              className="text-[11px] font-semibold text-[var(--accent)] hover:underline disabled:opacity-50 disabled:cursor-not-allowed disabled:no-underline"
                             >
-                              Rattacher
+                              {lienBusyKey === `${c.id}:${i}` ? "Rattachement…" : "Rattacher"}
                             </button>
                           </div>
                         )}

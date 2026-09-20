@@ -139,6 +139,9 @@ export default function AuditPage() {
   const handleFile = useCallback((file: File) => {
     const reader = new FileReader();
     reader.onload = (e) => setHtml((e.target?.result as string) ?? "");
+    // Sans ce handler, un échec de lecture (fichier corrompu, permission refusée...) restait
+    // totalement silencieux : html ne changeait jamais et rien n'indiquait pourquoi.
+    reader.onerror = () => setError("Impossible de lire ce fichier. Vérifie qu'il s'agit bien d'un fichier HTML valide et réessaie.");
     reader.readAsText(file);
   }, []);
 

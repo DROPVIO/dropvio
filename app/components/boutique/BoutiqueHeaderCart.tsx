@@ -25,10 +25,14 @@ function boutiqueProductHref(boutiqueSlug: string, produitId: string): string {
 export default function BoutiqueHeaderCart({ fullCartHref }: BoutiqueHeaderCartProps) {
   const [cart, setCart] = useState<BoutiqueCartItem[]>([]);
   const [open, setOpen] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    setCart(getCartItems());
+    // setState différé (microtask) plutôt qu'appelé en synchrone dans le corps de l'effet,
+    // pour éviter le re-render en cascade immédiat (react-hooks/set-state-in-effect) — même
+    // pattern que app/boutiques/[slug]/panier/page.tsx et ParametresModal.tsx.
+    queueMicrotask(() => setCart(getCartItems()));
 
     const handleUpdate = () => setCart(getCartItems());
     window.addEventListener("cart:update", handleUpdate);
@@ -61,12 +65,24 @@ export default function BoutiqueHeaderCart({ fullCartHref }: BoutiqueHeaderCartP
   const itemCount = useMemo(() => cart.reduce((sum, item) => sum + item.quantity, 0), [cart]);
   const totalPrice = useMemo(() => cart.reduce((sum, item) => sum + item.prix * item.quantity, 0), [cart]);
 
+  // { ok: false } (stockage indisponible, navigation privée stricte...) ne doit jamais se
+  // traduire par un faux succès silencieux — même traitement que AddToCartButton.tsx.
+  function applyCartWrite(nextItems: BoutiqueCartItem[]) {
+    const result = updateCartItems(nextItems);
+    if (result.ok) {
+      setCart(nextItems);
+      setError(null);
+    } else {
+      setError("Impossible de mettre à jour le panier sur cet appareil (stockage indisponible ou navigation privée).");
+      window.setTimeout(() => setError(null), 3000);
+    }
+  }
+
   function removeItem(item: BoutiqueCartItem) {
     const nextItems = cart.filter(
       (entry) => !(entry.produitId === item.produitId && entry.boutiqueSlug === item.boutiqueSlug)
     );
-    updateCartItems(nextItems);
-    setCart(nextItems);
+    applyCartWrite(nextItems);
   }
 
   function changeQuantity(item: BoutiqueCartItem, delta: number) {
@@ -84,8 +100,7 @@ export default function BoutiqueHeaderCart({ fullCartHref }: BoutiqueHeaderCartP
           : entry
       )
       .filter((entry) => entry.quantity > 0);
-    updateCartItems(nextItems);
-    setCart(nextItems);
+    applyCartWrite(nextItems);
   }
 
   return (
@@ -111,6 +126,10 @@ export default function BoutiqueHeaderCart({ fullCartHref }: BoutiqueHeaderCartP
             <h2 className="text-sm font-semibold text-[var(--text-primary)]">Mon panier</h2>
             {itemCount > 0 ? <span className="text-xs text-[var(--text-muted)]">{itemCount} article(s)</span> : null}
           </div>
+
+          {error ? (
+            <p className="mt-2 text-xs text-[var(--danger)]">{error}</p>
+          ) : null}
 
           {cart.length === 0 ? (
             <div className="mt-4 rounded-2xl border border-dashed border-[var(--border)] bg-[var(--surface-2)] p-4 text-xs text-[var(--text-muted)]">
