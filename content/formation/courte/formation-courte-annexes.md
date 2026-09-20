@@ -4,7 +4,7 @@
 
 Avant de lancer une campagne sur un nouveau produit, vérifie dans l'ordre : le coût produit exact chez le fournisseur retenu, frais de port inclus ; les frais de transaction réels de ton processeur de paiement ; un coût d'acquisition estimé prudemment, à partir de données historiques si tu en as ; un taux de retour hypothétique cohérent avec la catégorie du produit, jamais supposé nul ; les cotisations ou taxes applicables à ton statut, calculées sur le chiffre d'affaires et non sur la marge. Ne lance la campagne que si la marge nette qui ressort de ce calcul complet reste positive avec une marge de sécurité raisonnable, pas seulement à l'équilibre exact.
 
-Vérifie également, côté fournisseur, que tu as comparé au moins deux ou trois candidats sur leur note moyenne et leur volume de commandes déjà passées — c'est exactement ce que compare la fonctionnalité "Alternatives fiables" de Dropvio — et qu'une commande test a confirmé la qualité réelle avant tout engagement à volume.
+Vérifie également, côté fournisseur, que tu as comparé au moins deux ou trois candidats sur leur note moyenne et leur volume de commandes déjà passées — c'est exactement ce qu'il faut comparer — et qu'une commande test a confirmé la qualité réelle avant tout engagement à volume.
 
 ## Annexe B — Grille condensée d'audit d'une fiche produit
 

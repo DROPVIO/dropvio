@@ -4,7 +4,7 @@ Cette dernière partie rassemble, étape par étape, l'ensemble des vérificatio
 
 ## Avant de choisir un produit
 
-Resserrer une idée large en variantes concrètes plutôt que de la garder vague. Vérifier que le volume de recherche se situe dans une zone intermédiaire, ni dérisoire ni déjà saturée. Observer la tendance sur plusieurs mois pour distinguer une croissance de fond, une saisonnalité prévisible, ou un simple pic de mode. Comparer au moins deux ou trois fournisseurs sur leur note moyenne et leur volume de commandes via "Alternatives fiables". Vérifier la cohérence du produit avec la gamme existante ou envisagée.
+Resserrer une idée large en variantes concrètes plutôt que de la garder vague. Vérifier que le volume de recherche se situe dans une zone intermédiaire, ni dérisoire ni déjà saturée. Observer la tendance sur plusieurs mois pour distinguer une croissance de fond, une saisonnalité prévisible, ou un simple pic de mode. Comparer au moins deux ou trois fournisseurs sur leur note moyenne et leur volume de commandes. Vérifier la cohérence du produit avec la gamme existante ou envisagée.
 
 ## Avant de valider un fournisseur
 

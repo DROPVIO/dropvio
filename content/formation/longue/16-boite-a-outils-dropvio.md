@@ -4,7 +4,7 @@ Cette formation a évoqué, partie après partie, plusieurs fonctionnalités de 
 
 ## Au moment de chercher et valider un produit
 
-C'est à cette étape qu'intervient le Finder de Dropvio pour explorer le catalogue de produits, et la fonctionnalité "Alternatives fiables" pour comparer plusieurs fournisseurs potentiels d'un même produit sur des critères de fiabilité — note moyenne du produit et volume de commandes déjà passées — plutôt que de s'engager avec le premier résultat rencontré, comme détaillé dans la partie 2 et son complément. Cette comparaison doit toujours précéder, jamais suivre, l'engagement financier sur un fournisseur donné.
+C'est à cette étape qu'intervient le Finder de Dropvio pour explorer le catalogue de produits — en comparant plusieurs fournisseurs potentiels d'un même produit sur des critères de fiabilité, note moyenne du produit et volume de commandes déjà passées, plutôt que de s'engager avec le premier résultat rencontré, comme détaillé dans la partie 2 et son complément. Cette comparaison doit toujours précéder, jamais suivre, l'engagement financier sur un fournisseur donné.
 
 ## Au moment de calculer une marge avant de lancer une campagne
 
@@ -16,7 +16,7 @@ L'auditeur de page de destination applique automatiquement une grille proche de 
 
 ## Une fois l'activité en cours, pour suivre les incidents après-vente
 
-Pour les boutiques connectées via Shopify, le tableau de bord de suivi automatique des remboursements et litiges, détaillé dans la partie 7, centralise ces données directement depuis la boutique réelle plutôt que de nécessiter une reconstitution manuelle à partir d'emails épars — avec la distinction honnête entre une absence réelle de litige et une donnée simplement non disponible selon le mode d'encaissement utilisé, un point de rigueur qui évite de tirer de fausses conclusions rassurantes d'un chiffre à zéro qui ne signifierait en réalité rien.
+Pour les boutiques connectées via Shopify, centralise toi-même le suivi des remboursements et litiges plutôt que de reconstituer manuellement cette vue à partir d'emails épars — avec la distinction honnête entre une absence réelle de litige et une donnée simplement non disponible selon le mode d'encaissement utilisé, un point de rigueur qui évite de tirer de fausses conclusions rassurantes d'un chiffre à zéro qui ne signifierait en réalité rien.
 
 ## Pour prendre du recul sur l'ensemble de l'activité
 

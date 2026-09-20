@@ -4,7 +4,7 @@ L'étude de cas de la partie 11 suivait une boutique sur toute une année, avec 
 
 ## Le contexte : un produit à fenêtre de vente courte
 
-Une boutique décide d'ajouter à sa gamme un produit fortement saisonnier, dont la demande se concentre sur environ six semaines dans l'année, comme détaillé dans la partie 25. Le produit a été validé selon la méthode de la partie 2 — volume de recherche dans la zone intermédiaire, tendance de fond confirmée sur les données des années précédentes plutôt qu'un simple pic isolé — et un fournisseur a été comparé et retenu via la fonctionnalité "Alternatives fiables" plusieurs semaines avant l'ouverture de la fenêtre de vente, en anticipant précisément le risque d'allongement des délais fournisseurs en période de forte demande évoqué dans la partie 25.
+Une boutique décide d'ajouter à sa gamme un produit fortement saisonnier, dont la demande se concentre sur environ six semaines dans l'année, comme détaillé dans la partie 25. Le produit a été validé selon la méthode de la partie 2 — volume de recherche dans la zone intermédiaire, tendance de fond confirmée sur les données des années précédentes plutôt qu'un simple pic isolé — et un fournisseur a été comparé et retenu sur sa fiabilité plusieurs semaines avant l'ouverture de la fenêtre de vente, en anticipant précisément le risque d'allongement des délais fournisseurs en période de forte demande évoqué dans la partie 25.
 
 ## Le premier signal, discret, repéré lors de la revue hebdomadaire
 

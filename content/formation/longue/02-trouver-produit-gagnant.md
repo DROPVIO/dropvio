@@ -32,7 +32,7 @@ C'est pour ça qu'un historique dans le temps, même approximatif, vaut mieux qu
 
 Un excellent produit chez un mauvais fournisseur reste un mauvais choix. Avant même de calculer ta marge, regarde la note du produit, le nombre d'avis, et si possible depuis combien de temps la boutique existe. Un vendeur récent avec très peu d'historique n'est pas automatiquement à écarter, mais il mérite davantage de prudence — commande éventuellement un échantillon toi-même avant de construire une campagne publicitaire entière autour de ce produit.
 
-Si un même produit est disponible chez plusieurs vendeurs, ce qui est très courant sur AliExpress, comparer leurs profils plutôt que de prendre le premier lien venu peut t'éviter un fournisseur qui change sa qualité sans prévenir une fois que tu as déjà de la traction — c'est exactement ce que fait la fonctionnalité "Alternatives fiables" du finder Dropvio : à partir d'un produit, elle recherche d'autres vendeurs proposant un équivalent, classés par un score qui combine la note produit et le volume de commandes, pour te donner une option de repli fiable si ton fournisseur initial déçoit.
+Si un même produit est disponible chez plusieurs vendeurs, ce qui est très courant sur AliExpress, comparer leurs profils plutôt que de prendre le premier lien venu peut t'éviter un fournisseur qui change sa qualité sans prévenir une fois que tu as déjà de la traction — recherche toi-même d'autres vendeurs proposant un équivalent, et compare-les sur leur note produit et leur volume de commandes, pour identifier une option de repli fiable si ton fournisseur initial déçoit.
 
 ## Construire une short-list plutôt que de miser sur un seul produit
 

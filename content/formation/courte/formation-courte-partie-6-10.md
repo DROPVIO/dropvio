@@ -11,7 +11,7 @@ La réputation durable d'une boutique se joue après la vente, pas avant. Un cli
 
 Trois situations doivent être distinguées clairement : un retour est le renvoi physique d'un produit ; un remboursement est la restitution de l'argent, qu'il suive ou non un retour ; un litige est une contestation directement auprès de la banque du client, la situation la plus grave puisqu'elle est jugée par un tiers. Un taux de litiges qui dépasse un certain seuil — de l'ordre de 1 % des transactions selon les prestataires, à considérer comme un repère approximatif plutôt qu'une règle universelle — peut déclencher jusqu'à la suspension du compte de paiement, un risque existentiel pour une boutique en ligne. La meilleure prévention reste la transparence et la réactivité en amont, qui rendent le passage par un litige rarement nécessaire pour un client dont la demande légitime obtient une réponse rapide.
 
-C'est le rôle du suivi automatique des remboursements et litiges intégré à Dropvio pour les boutiques connectées via Shopify : une vue d'ensemble centralisée, avec une distinction honnête entre "aucun litige enregistré" et "donnée non disponible pour cette boutique" selon le mode d'encaissement utilisé — une nuance qui évite de confondre un chiffre à zéro avec une absence réelle de suivi possible.
+Garde une vue d'ensemble centralisée de tes remboursements et litiges, avec une distinction honnête entre "aucun litige enregistré" et "donnée non disponible pour cette boutique" selon le mode d'encaissement utilisé — une nuance qui évite de confondre un chiffre à zéro avec une absence réelle de suivi possible.
 
 ## Partie 8 — Finances et trésorerie : rester stable
 

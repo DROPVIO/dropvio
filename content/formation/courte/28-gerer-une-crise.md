@@ -8,7 +8,7 @@ Face à un signal de crise — un fournisseur qui annonce une rupture de stock p
 
 ## Activer les précautions déjà prises, plutôt que de tout réinventer dans l'urgence
 
-C'est précisément dans ces moments que les précautions détaillées ailleurs dans cette formation prennent tout leur sens : le fournisseur de secours déjà qualifié pour ce produit, la réserve de trésorerie déjà constituée, le suivi automatique des incidents qui permet de mesurer l'ampleur réelle d'une hausse de litiges plutôt que de la deviner. Une boutique qui a suivi ces recommandations en amont traite une crise en quelques jours avec des options déjà prêtes ; une boutique qui découvre à ce moment précis qu'elle n'a ni fournisseur de secours ni réserve doit improviser dans l'urgence, avec un risque d'erreur nettement supérieur.
+C'est précisément dans ces moments que les précautions détaillées ailleurs dans cette formation prennent tout leur sens : le fournisseur de secours déjà qualifié pour ce produit, la réserve de trésorerie déjà constituée, un suivi régulier qui permet de mesurer l'ampleur réelle d'une hausse de litiges plutôt que de la deviner. Une boutique qui a suivi ces recommandations en amont traite une crise en quelques jours avec des options déjà prêtes ; une boutique qui découvre à ce moment précis qu'elle n'a ni fournisseur de secours ni réserve doit improviser dans l'urgence, avec un risque d'erreur nettement supérieur.
 
 ## Communiquer avant que le silence n'aggrave la situation
 

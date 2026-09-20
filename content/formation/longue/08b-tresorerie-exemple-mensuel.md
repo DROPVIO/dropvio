@@ -16,7 +16,7 @@ Sur ces 1 950 euros, les cotisations URSSAF à provisionner sur ce chiffre d'aff
 
 ## Pourquoi le mois suivant peut se comporter très différemment
 
-Le mois suivant, un fournisseur augmente son délai de livraison sur un produit précis, ce qui fait remonter mécaniquement le taux de remboursement sur ce produit de 8 % à 15 % en l'espace de quelques semaines — un exemple du type de signal évoqué dans la partie 8, qui grignote la marge apparente sans que le chiffre d'affaires brut ne le montre immédiatement. Une réserve de précaution constituée les mois précédents permet d'absorber ce choc sans remettre en cause la trésorerie globale de l'activité, le temps d'identifier le problème — via le suivi automatique des incidents dans le tableau de bord Dropvio évoqué dans la partie 7 — et d'y répondre, par exemple en réévaluant ce fournisseur avec la grille de la partie 5.
+Le mois suivant, un fournisseur augmente son délai de livraison sur un produit précis, ce qui fait remonter mécaniquement le taux de remboursement sur ce produit de 8 % à 15 % en l'espace de quelques semaines — un exemple du type de signal évoqué dans la partie 8, qui grignote la marge apparente sans que le chiffre d'affaires brut ne le montre immédiatement. Une réserve de précaution constituée les mois précédents permet d'absorber ce choc sans remettre en cause la trésorerie globale de l'activité, le temps d'identifier le problème et d'y répondre, par exemple en réévaluant ce fournisseur avec la grille de la partie 5.
 
 ## Ce que cet exemple illustre au-delà des chiffres précis
 

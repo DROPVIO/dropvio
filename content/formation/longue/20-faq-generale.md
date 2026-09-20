@@ -16,7 +16,7 @@ Non, une activité commerciale régulière doit être déclarée dès le premier
 
 ## Comment savoir si un fournisseur est fiable avant de s'engager ?
 
-Aucune donnée publique ne garantit une fiabilité à 100 %, mais comparer plusieurs fournisseurs sur leur note moyenne et leur volume de commandes déjà passées, via une fonctionnalité comme "Alternatives fiables" de Dropvio, donne une première indication solide. Cette comparaison doit toujours être suivie d'une commande test avant tout engagement à volume, comme détaillé dans la partie 5 et sa grille d'évaluation.
+Aucune donnée publique ne garantit une fiabilité à 100 %, mais comparer toi-même plusieurs fournisseurs sur leur note moyenne et leur volume de commandes déjà passées donne une première indication solide. Cette comparaison doit toujours être suivie d'une commande test avant tout engagement à volume, comme détaillé dans la partie 5 et sa grille d'évaluation.
 
 ## Que faire si un produit qui marchait bien commence à moins bien se vendre ?
 

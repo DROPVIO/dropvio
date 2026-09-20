@@ -28,7 +28,7 @@ Le budget publicitaire augmente progressivement, jamais brutalement, avec un sui
 
 ## Mois 10 — Un litige, traité comme un signal plutôt qu'un accident isolé
 
-Un premier litige bancaire survient sur une commande. Plutôt que de le traiter comme un incident isolé sans suite, la boutique consulte le tableau de bord de suivi automatique des incidents Shopify évoqué dans la partie 7, qui montre que ce litige s'inscrit dans une légère hausse du taux de remboursement sur un produit précis depuis plusieurs semaines — exactement le type de signal cumulé décrit dans la partie 10. La cause est identifiée : une description imprécise sur un point de compatibilité, corrigée immédiatement sur la fiche.
+Un premier litige bancaire survient sur une commande. Plutôt que de le traiter comme un incident isolé sans suite, la boutique remarque, via son suivi régulier des indicateurs évoqué dans la partie 7, que ce litige s'inscrit dans une légère hausse du taux de remboursement sur un produit précis depuis plusieurs semaines — exactement le type de signal cumulé décrit dans la partie 10. La cause est identifiée : une description imprécise sur un point de compatibilité, corrigée immédiatement sur la fiche.
 
 ## Mois 11 à 12 — Consolider avant d'accélérer davantage
 

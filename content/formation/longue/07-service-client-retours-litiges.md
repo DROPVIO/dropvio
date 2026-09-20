@@ -28,7 +28,7 @@ La meilleure prévention contre les litiges reste, une fois de plus, la transpar
 
 Un vendeur qui gère chaque remboursement et chaque litige au fil de l'eau, sans vue d'ensemble, ne voit jamais les tendances qui se dessinent — un produit particulier qui génère un taux de retour anormalement élevé, une période où les litiges augmentent sans raison apparente, un fournisseur dont la qualité s'est visiblement dégradée. C'est cette vue d'ensemble qui permet d'agir avant que la situation ne s'aggrave, plutôt que de réagir incident par incident sans jamais voir le problème de fond.
 
-C'est le rôle du suivi automatique des remboursements et litiges intégré à Dropvio pour les boutiques connectées via Shopify : plutôt que de reconstituer manuellement cette vue à partir de dizaines d'emails et de notifications éparpillées, le tableau de bord centralise ces incidents directement depuis les données réelles de la boutique, avec une distinction honnête entre "aucun litige enregistré" et "donnée non disponible pour cette boutique" — une nuance importante, puisque la visibilité complète sur les litiges dépend du mode d'encaissement utilisé par le marchand, et qu'un chiffre à zéro ne doit jamais être confondu avec une absence réelle de suivi possible.
+Plutôt que de reconstituer manuellement cette vue à partir de dizaines d'emails et de notifications éparpillées, centralise toi-même ce suivi — remboursements et litiges, avec une distinction honnête entre "aucun litige enregistré" et "donnée non disponible" — une nuance importante, puisque la visibilité complète sur les litiges dépend du mode d'encaissement utilisé, et qu'un chiffre à zéro ne doit jamais être confondu avec une absence réelle de suivi possible.
 
 ## La règle générale qui résume toute cette partie
 

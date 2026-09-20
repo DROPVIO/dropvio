@@ -4,7 +4,7 @@ Cette dernière partie synthétise l'ensemble de la formation sous la forme d'un
 
 ## Semaines 1 à 2 — Recherche et validation du produit
 
-Resserrer une idée large en plusieurs variantes concrètes, comme détaillé dans la partie 2 et son étude de cas. Vérifier le volume de recherche et la tendance dans le temps de chaque variante. Comparer au moins deux ou trois fournisseurs potentiels sur leur fiabilité via la fonctionnalité "Alternatives fiables" de Dropvio. Passer une commande test chez le fournisseur retenu avant tout engagement à volume.
+Resserrer une idée large en plusieurs variantes concrètes, comme détaillé dans la partie 2 et son étude de cas. Vérifier le volume de recherche et la tendance dans le temps de chaque variante. Comparer au moins deux ou trois fournisseurs potentiels sur leur note moyenne et leur volume de commandes. Passer une commande test chez le fournisseur retenu avant tout engagement à volume.
 
 ## Semaines 3 à 4 — Construction de la boutique et calcul financier
 
@@ -16,7 +16,7 @@ Lancer un premier palier de budget publicitaire limité, selon la logique de la 
 
 ## Semaines 9 à 12 — Consolidation et premiers ajouts à la gamme
 
-Identifier un ou deux produits complémentaires cohérents avec le produit initial, en suivant les critères de complémentarité de la partie 2. Tester une première offre groupée en s'appuyant sur le raisonnement chiffré de la partie 3 sur la vente croisée. Mettre en place un suivi hebdomadaire régulier des indicateurs clés, comme détaillé dans la partie 18. Si la boutique est connectée via Shopify, vérifier que le suivi automatique des remboursements et litiges est actif et consulter ce tableau de bord chaque semaine plutôt que seulement en cas de doute.
+Identifier un ou deux produits complémentaires cohérents avec le produit initial, en suivant les critères de complémentarité de la partie 2. Tester une première offre groupée en s'appuyant sur le raisonnement chiffré de la partie 3 sur la vente croisée. Mettre en place un suivi hebdomadaire régulier des indicateurs clés, comme détaillé dans la partie 18. Si la boutique est connectée via Shopify, mettre en place un suivi hebdomadaire des remboursements et litiges plutôt que de ne les consulter qu'en cas de doute.
 
 ## Au-delà du premier trimestre
 

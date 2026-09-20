@@ -1,9 +1,5 @@
 # Partie 34 — Questions fréquentes, suite
 
-## Faut-il absolument avoir une boutique Shopify pour profiter du suivi automatique des incidents ?
-
-Oui, le suivi automatique des remboursements et litiges détaillé dans cette formation dépend d'une connexion via Shopify, parce que c'est cette connexion qui permet d'accéder directement aux données réelles de commandes et de paiements de la boutique. Sans cette connexion, un suivi manuel reste possible mais demande davantage de rigueur personnelle pour ne rien laisser passer.
-
 ## Que faire si deux produits complémentaires que je pensais évidents ne se vendent pas bien ensemble ?
 
 Revenir sur le test simple évoqué dans la partie sur les produits complémentaires : est-ce qu'un client qui a acheté le premier comprendrait immédiatement, sans explication, pourquoi le second lui est proposé. Si la réponse demande une justification complexe malgré une intuition initiale favorable, la complémentarité perçue par le vendeur n'est peut-être pas celle perçue par le client — les questions posées au service client donnent souvent un indice plus fiable que l'intuition de départ.
