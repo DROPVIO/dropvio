@@ -8,7 +8,7 @@ import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
 import { useOnboarding } from "./onboarding/OnboardingProvider";
 import { UsageMeter } from "./UsageMeter";
 import { applyTheme, getStoredTheme, type Theme } from "@/lib/theme";
-import { setLocaleCookie, type AppLocale } from "@/lib/locale";
+import { setLocaleCookie, isAppLocale, toIntlTag, type AppLocale } from "@/lib/locale";
 
 const SUPPORT_EMAIL = "support@dropvio.com";
 const LEGAL_EMAIL = "legal@dropvio.com";
@@ -318,7 +318,7 @@ export default function ParametresModal({
         if (data) {
           setProfile(data as Profile);
           setNomComplet(data.nom_complet ?? "");
-          setLangue(data.langue === "en" ? "en" : "fr");
+          setLangue(isAppLocale(data.langue) ? data.langue : "fr");
           setNotifEmail(data.notif_email ?? true);
           setNotifPush(data.notif_push ?? false);
         } else {
@@ -567,7 +567,7 @@ export default function ParametresModal({
           <div>
             <p className="text-sm text-[var(--text-primary)]">{t("securite.currentSession")}</p>
             <p className="text-[11px] text-[var(--text-faint)] mt-0.5">
-              {t("securite.currentSessionCaption", { date: new Date().toLocaleDateString(langue === "en" ? "en-US" : "fr-FR") })}
+              {t("securite.currentSessionCaption", { date: new Date().toLocaleDateString(toIntlTag(langue)) })}
             </p>
           </div>
           <span className="w-2 h-2 rounded-full bg-[var(--success)] shadow-[0_0_6px_var(--success)]" />
@@ -591,11 +591,13 @@ export default function ParametresModal({
           </div>
           <select
             value={langue}
-            onChange={(e) => setLangue(e.target.value === "en" ? "en" : "fr")}
+            onChange={(e) => setLangue(isAppLocale(e.target.value) ? e.target.value : "fr")}
             className="bg-[var(--bg-sunken)] border border-[var(--border)] rounded-lg px-3 py-2 text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)] transition shrink-0"
           >
             <option value="fr">{t("preferences.langueFr")}</option>
             <option value="en">{t("preferences.langueEn")}</option>
+            <option value="es">{t("preferences.langueEs")}</option>
+            <option value="it">{t("preferences.langueIt")}</option>
           </select>
         </div>
 

@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import type { SupabaseClient, User } from "@supabase/supabase-js";
 import { resolveBoutiqueSlugFromHost } from "@/lib/boutique-subdomains";
-import { DEFAULT_LOCALE, LOCALE_COOKIE, LOCALE_HEADER, type AppLocale } from "@/lib/locale";
+import { DEFAULT_LOCALE, LOCALE_COOKIE, LOCALE_HEADER, isAppLocale, type AppLocale } from "@/lib/locale";
 
 // /formation est une page de vente publique (achat unique par formation) — le contrôle
 // d'accès réel se joue sur /api/formation/checkout, pas ici.
@@ -16,13 +16,15 @@ function parseAcceptLanguage(header: string | null): AppLocale {
     .map((part) => part.split(";")[0]?.trim().toLowerCase())
     .filter((v): v is string => Boolean(v));
   for (const lang of langs) {
+    // Découpe sur "-" pour matcher la variante régionale sur son code de base
+    // (es-MX, es-ES -> es ; it-CH, it-IT -> it ; etc.).
     const base = lang.split("-")[0];
-    if (base === "en" || base === "fr") return base;
+    if (isAppLocale(base)) return base;
   }
   return DEFAULT_LOCALE;
 }
 
-// Cookie NEXT_LOCALE > Accept-Language (fr/en uniquement, fallback fr) > profils.langue si
+// Cookie NEXT_LOCALE > Accept-Language (fr/en/es/it, fallback fr) > profils.langue si
 // l'utilisateur est connecté (préférence explicite enregistrée depuis Paramètres >
 // Préférences, migration 034) — cette dernière prime sur les deux premières.
 async function resolveLocale(
@@ -31,14 +33,13 @@ async function resolveLocale(
   user: User | null
 ): Promise<AppLocale> {
   const cookieLocale = request.cookies.get(LOCALE_COOKIE)?.value;
-  let locale: AppLocale =
-    cookieLocale === "en" || cookieLocale === "fr"
-      ? cookieLocale
-      : parseAcceptLanguage(request.headers.get("accept-language"));
+  let locale: AppLocale = isAppLocale(cookieLocale)
+    ? cookieLocale
+    : parseAcceptLanguage(request.headers.get("accept-language"));
 
   if (user) {
     const { data: profil } = await supabase.from("profils").select("langue").eq("id", user.id).maybeSingle();
-    if (profil?.langue === "en" || profil?.langue === "fr") {
+    if (isAppLocale(profil?.langue)) {
       locale = profil.langue;
     }
   }

@@ -3,7 +3,7 @@
 // une seule source de vérité plutôt que des littéraux dupliqués comme THEME_STORAGE_KEY
 // (voir lib/theme.ts, dupliqué là uniquement parce qu'un script inline ne peut pas importer).
 
-export const SUPPORTED_LOCALES = ["fr", "en"] as const;
+export const SUPPORTED_LOCALES = ["fr", "en", "es", "it"] as const;
 export type AppLocale = (typeof SUPPORTED_LOCALES)[number];
 export const DEFAULT_LOCALE: AppLocale = "fr";
 
@@ -17,7 +17,14 @@ export const LOCALE_COOKIE = "NEXT_LOCALE";
 export const LOCALE_HEADER = "x-dropvio-locale";
 
 export function isAppLocale(value: string | null | undefined): value is AppLocale {
-  return value === "fr" || value === "en";
+  return SUPPORTED_LOCALES.includes(value as AppLocale);
+}
+
+// Tag Intl (toLocaleDateString, etc.) associé à chaque langue de l'app — utilisé partout où
+// une date/nombre doit suivre la langue active plutôt que rester câblé sur "fr-FR".
+const INTL_TAG: Record<AppLocale, string> = { fr: "fr-FR", en: "en-US", es: "es-ES", it: "it-IT" };
+export function toIntlTag(locale: AppLocale): string {
+  return INTL_TAG[locale];
 }
 
 // Écrit le cookie de préférence de langue côté client — utilisé par ParametresModal après un

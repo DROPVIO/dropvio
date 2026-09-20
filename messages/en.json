@@ -135,6 +135,8 @@
       "langueCaption": "Interface display language",
       "langueFr": "Français",
       "langueEn": "English",
+      "langueEs": "Español",
+      "langueIt": "Italiano",
       "themeLabel": "Theme",
       "themeCaption": "Dark or light — your choice is remembered on this device",
       "themeDark": "Dark",
