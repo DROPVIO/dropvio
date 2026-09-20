@@ -1,11 +1,17 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import type { User } from "@supabase/supabase-js";
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
 import { useOnboarding } from "./onboarding/OnboardingProvider";
 import { UsageMeter } from "./UsageMeter";
 import { applyTheme, getStoredTheme, type Theme } from "@/lib/theme";
+import { setLocaleCookie, type AppLocale } from "@/lib/locale";
+
+const SUPPORT_EMAIL = "support@dropvio.com";
+const LEGAL_EMAIL = "legal@dropvio.com";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -21,25 +27,13 @@ type SectionId =
   | "integrations" | "facturation" | "legal" | "danger";
 
 // ─── Plan config ─────────────────────────────────────────────────────────────
+// Label/description/prix/features viennent des traductions (parametres.plan.*) — seules les
+// classes de style, non localisées, restent ici.
 
-const PLAN_META: Record<string, {
-  label: string; badge: string; border: string; bg: string; glow: string; desc: string;
-}> = {
-  free:   { label: "Free",   badge: "bg-zinc-700 text-zinc-200",  border: "border-[var(--border-strong)]", bg: "bg-[var(--surface)]",  glow: "",                                          desc: "Accès limité aux fonctionnalités de base." },
-  pro:    { label: "Pro",    badge: "bg-violet-600 text-white",   border: "border-violet-500/40",   bg: "bg-violet-500/[0.06]",  glow: "shadow-[0_0_28px_rgba(124,58,237,0.14)]",  desc: "Accès complet à tous les outils Dropvio." },
-  agency: { label: "Agency", badge: "bg-amber-400 text-black",   border: "border-amber-400/40",    bg: "bg-amber-400/[0.05]",   glow: "shadow-[0_0_28px_rgba(251,191,36,0.11)]",  desc: "Multi-comptes, API et support prioritaire." },
-};
-
-const PLAN_PRICE: Record<string, string> = {
-  free:   "0€/mois",
-  pro:    "29€/mois",
-  agency: "59€/mois",
-};
-
-const PLAN_FEATURES: Record<string, string[]> = {
-  free:   ["Accès à 20 produits gagnants par mois", "Calculateur de marge illimité", "1 site généré par mois"],
-  pro:    ["Produits gagnants illimités", "Calculateur de marge illimité", "5 sites générés par mois", "Sauvegarde illimitée de vos sites"],
-  agency: ["Tout le plan Pro", "20 sites générés par mois", "Support prioritaire sous 24h"],
+const PLAN_STYLE: Record<string, { badge: string; border: string; bg: string; glow: string }> = {
+  free:   { badge: "bg-zinc-700 text-zinc-200",  border: "border-[var(--border-strong)]", bg: "bg-[var(--surface)]",  glow: "" },
+  pro:    { badge: "bg-violet-600 text-white",   border: "border-violet-500/40",   bg: "bg-violet-500/[0.06]",  glow: "shadow-[0_0_28px_rgba(124,58,237,0.14)]" },
+  agency: { badge: "bg-amber-400 text-black",   border: "border-amber-400/40",    bg: "bg-amber-400/[0.05]",   glow: "shadow-[0_0_28px_rgba(251,191,36,0.11)]" },
 };
 
 // ─── Shared styles ───────────────────────────────────────────────────────────
@@ -140,17 +134,22 @@ function Toggle({ on, onChange }: { on: boolean; onChange: (v: boolean) => void 
 }
 
 // ─── Nav config ──────────────────────────────────────────────────────────────
+// Ordre des sections + icônes — les labels viennent des traductions (parametres.nav.*),
+// construits dans le composant plutôt qu'ici au niveau module (useTranslations est un hook).
 
-const NAV_ITEMS: { id: Exclude<SectionId, "danger">; label: string; icon: React.ReactNode }[] = [
-  { id: "plan",          label: "Plan",          icon: Ico.plan },
-  { id: "profil",        label: "Profil",        icon: Ico.profil },
-  { id: "securite",      label: "Sécurité",      icon: Ico.securite },
-  { id: "preferences",   label: "Préférences",   icon: Ico.preferences },
-  { id: "usage",         label: "Utilisation",   icon: Ico.usage },
-  { id: "integrations",  label: "Intégrations",  icon: Ico.integrations },
-  { id: "facturation",   label: "Facturation",   icon: Ico.facturation },
-  { id: "legal",         label: "Légal",         icon: Ico.legal },
+const NAV_SECTIONS: Exclude<SectionId, "danger">[] = [
+  "plan", "profil", "securite", "preferences", "usage", "integrations", "facturation", "legal",
 ];
+const NAV_ICONS: Record<Exclude<SectionId, "danger">, React.ReactNode> = {
+  plan: Ico.plan,
+  profil: Ico.profil,
+  securite: Ico.securite,
+  preferences: Ico.preferences,
+  usage: Ico.usage,
+  integrations: Ico.integrations,
+  facturation: Ico.facturation,
+  legal: Ico.legal,
+};
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
@@ -165,7 +164,9 @@ export default function ParametresModal({
   initialSection?: SectionId;
   initialShopifyMessage?: { ok: boolean; text: string } | null;
 }) {
+  const t = useTranslations("parametres");
   const supabase = createSupabaseBrowserClient();
+  const router = useRouter();
   const overlayRef = useRef<HTMLDivElement>(null);
   const { restart: restartOnboarding } = useOnboarding();
 
@@ -185,12 +186,15 @@ export default function ParametresModal({
   const [pwdMsg, setPwdMsg] = useState<{ ok: boolean; text: string } | null>(null);
 
   // Preferences
-  const [langue, setLangue] = useState("fr");
+  const [langue, setLangue] = useState<AppLocale>("fr");
   // Initialisé à "dark" (valeur par défaut de app/globals.css) puis synchronisé depuis
   // localStorage au montage — le data-theme réel est déjà posé avant hydratation par le
   // script inline de app/layout.tsx, cet état ne fait que refléter ce choix dans l'UI.
   const [theme, setThemeState] = useState<Theme>("dark");
-  useEffect(() => { setThemeState(getStoredTheme()); }, []);
+  // setState différé (microtask) plutôt qu'appelé en synchrone dans le corps de l'effet, pour
+  // éviter le re-render en cascade immédiat (react-hooks/set-state-in-effect) — même pattern
+  // que app/boutiques/[slug]/panier/page.tsx.
+  useEffect(() => { queueMicrotask(() => setThemeState(getStoredTheme())); }, []);
 
   function handleThemeChange(next: Theme) {
     setThemeState(next);
@@ -262,11 +266,11 @@ export default function ParametresModal({
   async function handleConnectShopify() {
     const shop = shopifyDomainInput.trim().toLowerCase();
     if (!/^[a-z0-9][a-z0-9-]*\.myshopify\.com$/.test(shop)) {
-      setIntMsg({ ok: false, text: "Format attendu : ma-boutique.myshopify.com" });
+      setIntMsg({ ok: false, text: t("integrations.shopifyFormatError") });
       return;
     }
     if (shopifyStatus && !shopifyStatus.configured) {
-      setIntMsg({ ok: false, text: "L'intégration Shopify n'est pas encore configurée côté serveur." });
+      setIntMsg({ ok: false, text: t("integrations.shopifyNotConfiguredError") });
       return;
     }
     setShopifyConnecting(true);
@@ -277,7 +281,7 @@ export default function ParametresModal({
     const { data } = await supabase.auth.getUser();
     if (!data.user) {
       setShopifyConnecting(false);
-      setIntMsg({ ok: false, text: "Ta session a expiré. Reconnecte-toi puis réessaie." });
+      setIntMsg({ ok: false, text: t("integrations.shopifySessionExpired") });
       return;
     }
     const returnTo = window.location.pathname + window.location.search;
@@ -291,13 +295,13 @@ export default function ParametresModal({
       const res = await fetch("/api/shopify/disconnect", { method: "POST" });
       const json = await res.json();
       if (!res.ok) {
-        setIntMsg({ ok: false, text: json.error ?? "Impossible de déconnecter Shopify." });
+        setIntMsg({ ok: false, text: json.error ?? t("integrations.shopifyDisconnectError") });
         return;
       }
       setShopifyStatus((s) => (s ? { ...s, connected: false, reconnectRequired: false, shop_domain: null, shop_name: null } : s));
-      setIntMsg({ ok: true, text: "Boutique Shopify déconnectée." });
+      setIntMsg({ ok: true, text: t("integrations.shopifyDisconnectSuccess") });
     } catch {
-      setIntMsg({ ok: false, text: "Impossible de contacter le serveur." });
+      setIntMsg({ ok: false, text: t("integrations.serverUnreachable") });
     } finally {
       setShopifyDisconnecting(false);
     }
@@ -314,7 +318,7 @@ export default function ParametresModal({
         if (data) {
           setProfile(data as Profile);
           setNomComplet(data.nom_complet ?? "");
-          setLangue(data.langue ?? "fr");
+          setLangue(data.langue === "en" ? "en" : "fr");
           setNotifEmail(data.notif_email ?? true);
           setNotifPush(data.notif_push ?? false);
         } else {
@@ -335,10 +339,10 @@ export default function ParametresModal({
       .upsert({ id: user.id, nom_complet: nomComplet.trim() || null });
     setSaving(false);
     if (error) {
-      setProfileMsg({ ok: false, text: "Erreur lors de la sauvegarde." });
+      setProfileMsg({ ok: false, text: t("profil.saveError") });
     } else {
       setProfile((p) => p ? { ...p, nom_complet: nomComplet.trim() || null } : p);
-      setProfileMsg({ ok: true, text: "Profil mis à jour." });
+      setProfileMsg({ ok: true, text: t("profil.saveSuccess") });
       setTimeout(() => setProfileMsg(null), 3000);
     }
   }
@@ -346,24 +350,33 @@ export default function ParametresModal({
   async function handleSavePreferences() {
     setSavingPrefs(true);
     setPrefMsg(null);
+    const langueChanged = langue !== (profile?.langue ?? "fr");
     const { error } = await supabase
       .from("profils")
       .upsert({ id: user.id, langue, notif_email: notifEmail, notif_push: notifPush });
     setSavingPrefs(false);
     if (error) {
-      setPrefMsg({ ok: false, text: "Erreur lors de la sauvegarde des préférences." });
+      setPrefMsg({ ok: false, text: t("preferences.saveError") });
     } else {
       setProfile((p) => (p ? { ...p, langue, notif_email: notifEmail, notif_push: notifPush } : p));
-      setPrefMsg({ ok: true, text: "Préférences enregistrées." });
+      setPrefMsg({ ok: true, text: t("preferences.saveSuccess") });
       setTimeout(() => setPrefMsg(null), 3000);
+      if (langueChanged) {
+        // Persiste aussi côté cookie pour que le choix survive à une déconnexion (une fois
+        // déconnecté, profils.langue ne compte plus, voir lib/locale.ts) — puis rafraîchit
+        // l'arbre serveur (middleware -> i18n/request.ts) sans reload complet du navigateur :
+        // router.refresh() ré-exécute le middleware, qui relit profils.langue à jour.
+        setLocaleCookie(langue);
+        router.refresh();
+      }
     }
   }
 
   async function handleChangePassword() {
-    if (!currentPwd) { setPwdMsg({ ok: false, text: "Saisis ton mot de passe actuel." }); return; }
-    if (!newPwd || newPwd.length < 6) { setPwdMsg({ ok: false, text: "Minimum 6 caractères." }); return; }
-    if (newPwd !== confirmPwd) { setPwdMsg({ ok: false, text: "Les mots de passe ne correspondent pas." }); return; }
-    if (!user.email) { setPwdMsg({ ok: false, text: "Impossible de vérifier ton mot de passe actuel." }); return; }
+    if (!currentPwd) { setPwdMsg({ ok: false, text: t("securite.errorMissingCurrent") }); return; }
+    if (!newPwd || newPwd.length < 6) { setPwdMsg({ ok: false, text: t("securite.errorTooShort") }); return; }
+    if (newPwd !== confirmPwd) { setPwdMsg({ ok: false, text: t("securite.errorMismatch") }); return; }
+    if (!user.email) { setPwdMsg({ ok: false, text: t("securite.errorNoEmail") }); return; }
     setChangingPwd(true);
     setPwdMsg(null);
 
@@ -376,7 +389,7 @@ export default function ParametresModal({
     });
     if (verifyError) {
       setChangingPwd(false);
-      setPwdMsg({ ok: false, text: "Mot de passe actuel incorrect." });
+      setPwdMsg({ ok: false, text: t("securite.errorWrongCurrent") });
       return;
     }
 
@@ -385,41 +398,46 @@ export default function ParametresModal({
     if (error) {
       setPwdMsg({ ok: false, text: error.message });
     } else {
-      setPwdMsg({ ok: true, text: "Mot de passe modifié avec succès." });
+      setPwdMsg({ ok: true, text: t("securite.success") });
       setCurrentPwd(""); setNewPwd(""); setConfirmPwd("");
       setTimeout(() => setPwdMsg(null), 3000);
     }
   }
 
   const plan = profile?.plan ?? "free";
-  const planMeta = PLAN_META[plan] ?? PLAN_META.free;
+  // Repli sur "free" pour la clé de traduction si plan contient une valeur inattendue (même
+  // garde que PLAN_STYLE ci-dessous) — évite un throw next-intl sur une clé manquante.
+  const planKey = plan in PLAN_STYLE ? plan : "free";
+  const planStyle = PLAN_STYLE[planKey];
+  const planLabel = t(`plan.meta.${planKey}.label`);
+  const planDesc = t(`plan.meta.${planKey}.desc`);
 
   // ── Section renderers ────────────────────────────────────────────────────
 
   const renderPlan = () => (
     <div className="flex flex-col gap-6">
       <div>
-        <p className={SECTION_TITLE}>Ton plan</p>
-        <p className={SECTION_SUB}>Gère ton abonnement Dropvio.</p>
+        <p className={SECTION_TITLE}>{t("plan.title")}</p>
+        <p className={SECTION_SUB}>{t("plan.subtitle")}</p>
       </div>
 
       {/* Current plan banner */}
-      <div className={`rounded-xl border px-5 py-4 ${planMeta.border} ${planMeta.bg} ${planMeta.glow}`}>
+      <div className={`rounded-xl border px-5 py-4 ${planStyle.border} ${planStyle.bg} ${planStyle.glow}`}>
         <div className={ROW}>
           <div>
-            <p className="text-[10px] font-semibold text-[var(--text-faint)] uppercase tracking-widest mb-1">Plan actuel</p>
+            <p className="text-[10px] font-semibold text-[var(--text-faint)] uppercase tracking-widest mb-1">{t("plan.currentPlanLabel")}</p>
             <div className="flex items-center gap-2">
-              <span className="text-xl font-bold text-[var(--text-primary)]">{planMeta.label}</span>
-              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${planMeta.badge}`}>{planMeta.label.toUpperCase()}</span>
+              <span className="text-xl font-bold text-[var(--text-primary)]">{planLabel}</span>
+              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${planStyle.badge}`}>{planLabel.toUpperCase()}</span>
             </div>
-            <p className="text-[11px] text-[var(--text-faint)] mt-1">{planMeta.desc}</p>
+            <p className="text-[11px] text-[var(--text-faint)] mt-1">{planDesc}</p>
           </div>
           <button
             className={`${BTN_G} opacity-40 cursor-not-allowed`}
             disabled
-            title="Bientôt disponible — contacte support@dropvio.com pour changer de plan en attendant."
+            title={t("plan.changePlanTooltip", { email: SUPPORT_EMAIL })}
           >
-            Changer de plan
+            {t("plan.changePlan")}
           </button>
         </div>
       </div>
@@ -427,21 +445,21 @@ export default function ParametresModal({
       {/* Plan comparison */}
       <div className="grid grid-cols-3 gap-3">
         {(["free", "pro", "agency"] as const).map((p) => {
-          const meta = PLAN_META[p];
+          const style = PLAN_STYLE[p];
           const isCurrent = plan === p;
           return (
-            <div key={p} className={`rounded-xl border p-4 flex flex-col gap-3 transition ${isCurrent ? `${meta.border} ${meta.bg}` : "border-[var(--border)] bg-[var(--surface-2)]"}`}>
+            <div key={p} className={`rounded-xl border p-4 flex flex-col gap-3 transition ${isCurrent ? `${style.border} ${style.bg}` : "border-[var(--border)] bg-[var(--surface-2)]"}`}>
               <div className="flex items-center justify-between">
                 <div>
-                  <span className="text-sm font-semibold text-[var(--text-primary)]">{meta.label}</span>
-                  <p className="text-[11px] text-[var(--text-faint)] mt-0.5">{PLAN_PRICE[p]}</p>
+                  <span className="text-sm font-semibold text-[var(--text-primary)]">{t(`plan.meta.${p}.label`)}</span>
+                  <p className="text-[11px] text-[var(--text-faint)] mt-0.5">{t(`plan.price.${p}`)}</p>
                 </div>
                 {isCurrent && (
-                  <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${meta.badge}`}>ACTUEL</span>
+                  <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${style.badge}`}>{t("plan.current")}</span>
                 )}
               </div>
               <ul className="flex flex-col gap-1.5">
-                {PLAN_FEATURES[p].map((f) => (
+                {t.raw(`plan.features.${p}`).map((f: string) => (
                   <li key={f} className="flex items-start gap-1.5 text-[11px] text-[var(--text-muted)]">
                     <span className="text-[var(--success)] mt-[1px] shrink-0">{Ico.check}</span>
                     {f}
@@ -452,9 +470,9 @@ export default function ParametresModal({
                 <button
                   className="mt-auto w-full py-1.5 rounded-lg text-xs font-semibold bg-[var(--surface-2)] border border-[var(--border-strong)] text-[var(--text-primary)] opacity-40 cursor-not-allowed"
                   disabled
-                  title="Bientôt disponible — contacte support@dropvio.com pour changer de plan en attendant."
+                  title={t("plan.chooseTooltip", { email: SUPPORT_EMAIL })}
                 >
-                  Choisir
+                  {t("plan.choose")}
                 </button>
               )}
             </div>
@@ -467,24 +485,24 @@ export default function ParametresModal({
   const renderProfil = () => (
     <div className="flex flex-col gap-6">
       <div>
-        <p className={SECTION_TITLE}>Profil</p>
-        <p className={SECTION_SUB}>Tes informations personnelles.</p>
+        <p className={SECTION_TITLE}>{t("profil.title")}</p>
+        <p className={SECTION_SUB}>{t("profil.subtitle")}</p>
       </div>
 
       <div className="flex flex-col gap-4">
         <div>
-          <label className={LABEL}>Email</label>
+          <label className={LABEL}>{t("profil.emailLabel")}</label>
           <p className="bg-[var(--surface-2)] border border-[var(--border)] rounded-lg px-3 py-2.5 text-sm text-[var(--text-muted)] truncate">{user.email}</p>
-          <p className="text-[11px] text-[var(--text-faint)] mt-1.5">L&apos;email ne peut pas être modifié pour le moment.</p>
+          <p className="text-[11px] text-[var(--text-faint)] mt-1.5">{t("profil.emailCaption")}</p>
         </div>
 
         <div>
-          <label className={LABEL}>Nom complet</label>
+          <label className={LABEL}>{t("profil.nomLabel")}</label>
           <input
             type="text"
             value={nomComplet}
             onChange={(e) => setNomComplet(e.target.value)}
-            placeholder="Ton nom et prénom"
+            placeholder={t("profil.nomPlaceholder")}
             className={FIELD}
           />
         </div>
@@ -492,7 +510,7 @@ export default function ParametresModal({
 
       <div className="flex items-center gap-3">
         <button onClick={handleSaveProfile} disabled={saving || profile === null} className={BTN_V}>
-          {saving ? "Sauvegarde…" : "Sauvegarder"}
+          {saving ? t("profil.saving") : t("profil.save")}
         </button>
         {profileMsg && <p className={profileMsg.ok ? MSG_OK : MSG_ERR}>{profileMsg.text}</p>}
       </div>
@@ -500,13 +518,13 @@ export default function ParametresModal({
       <div className={DIVIDER} />
 
       <div>
-        <p className="text-[12px] font-medium text-[var(--text-muted)] mb-0.5">Avatar</p>
-        <p className="text-[11px] text-[var(--text-faint)] mb-3">Les avatars personnalisés seront disponibles prochainement.</p>
+        <p className="text-[12px] font-medium text-[var(--text-muted)] mb-0.5">{t("profil.avatarTitle")}</p>
+        <p className="text-[11px] text-[var(--text-faint)] mb-3">{t("profil.avatarCaption")}</p>
         <div className="flex items-center gap-3">
           <div className="w-12 h-12 rounded-xl bg-violet-600 flex items-center justify-center text-lg font-bold text-white">
             {(nomComplet || user.email || "?").slice(0, 2).toUpperCase()}
           </div>
-          <button className={`${BTN_G} opacity-40 cursor-not-allowed`} disabled>Changer la photo</button>
+          <button className={`${BTN_G} opacity-40 cursor-not-allowed`} disabled>{t("profil.avatarChange")}</button>
         </div>
       </div>
     </div>
@@ -515,28 +533,28 @@ export default function ParametresModal({
   const renderSecurite = () => (
     <div className="flex flex-col gap-6">
       <div>
-        <p className={SECTION_TITLE}>Sécurité</p>
-        <p className={SECTION_SUB}>Gère le mot de passe de ton compte.</p>
+        <p className={SECTION_TITLE}>{t("securite.title")}</p>
+        <p className={SECTION_SUB}>{t("securite.subtitle")}</p>
       </div>
 
       <div className="flex flex-col gap-4">
         <div>
-          <label className={LABEL}>Mot de passe actuel</label>
-          <input type="password" value={currentPwd} onChange={(e) => setCurrentPwd(e.target.value)} placeholder="••••••••" className={FIELD} />
+          <label className={LABEL}>{t("securite.currentPwdLabel")}</label>
+          <input type="password" value={currentPwd} onChange={(e) => setCurrentPwd(e.target.value)} placeholder={t("securite.pwdPlaceholder")} className={FIELD} />
         </div>
         <div>
-          <label className={LABEL}>Nouveau mot de passe</label>
-          <input type="password" value={newPwd} onChange={(e) => setNewPwd(e.target.value)} placeholder="Minimum 6 caractères" className={FIELD} />
+          <label className={LABEL}>{t("securite.newPwdLabel")}</label>
+          <input type="password" value={newPwd} onChange={(e) => setNewPwd(e.target.value)} placeholder={t("securite.newPwdPlaceholder")} className={FIELD} />
         </div>
         <div>
-          <label className={LABEL}>Confirmer le mot de passe</label>
-          <input type="password" value={confirmPwd} onChange={(e) => setConfirmPwd(e.target.value)} placeholder="••••••••" className={FIELD} />
+          <label className={LABEL}>{t("securite.confirmPwdLabel")}</label>
+          <input type="password" value={confirmPwd} onChange={(e) => setConfirmPwd(e.target.value)} placeholder={t("securite.pwdPlaceholder")} className={FIELD} />
         </div>
       </div>
 
       <div className="flex items-center gap-3">
         <button onClick={handleChangePassword} disabled={changingPwd || !currentPwd || !newPwd || !confirmPwd} className={BTN_V}>
-          {changingPwd ? "Modification…" : "Changer le mot de passe"}
+          {changingPwd ? t("securite.submitting") : t("securite.submit")}
         </button>
         {pwdMsg && <p className={pwdMsg.ok ? MSG_OK : MSG_ERR}>{pwdMsg.text}</p>}
       </div>
@@ -544,11 +562,13 @@ export default function ParametresModal({
       <div className={DIVIDER} />
 
       <div>
-        <p className="text-[12px] font-medium text-[var(--text-muted)] mb-3">Sessions actives</p>
+        <p className="text-[12px] font-medium text-[var(--text-muted)] mb-3">{t("securite.sessionsTitle")}</p>
         <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3 flex items-center justify-between">
           <div>
-            <p className="text-sm text-[var(--text-primary)]">Session actuelle</p>
-            <p className="text-[11px] text-[var(--text-faint)] mt-0.5">Navigateur — {new Date().toLocaleDateString("fr-FR")}</p>
+            <p className="text-sm text-[var(--text-primary)]">{t("securite.currentSession")}</p>
+            <p className="text-[11px] text-[var(--text-faint)] mt-0.5">
+              {t("securite.currentSessionCaption", { date: new Date().toLocaleDateString(langue === "en" ? "en-US" : "fr-FR") })}
+            </p>
           </div>
           <span className="w-2 h-2 rounded-full bg-[var(--success)] shadow-[0_0_6px_var(--success)]" />
         </div>
@@ -559,23 +579,23 @@ export default function ParametresModal({
   const renderPreferences = () => (
     <div className="flex flex-col gap-6">
       <div>
-        <p className={SECTION_TITLE}>Préférences</p>
-        <p className={SECTION_SUB}>Personnalise ton expérience Dropvio.</p>
+        <p className={SECTION_TITLE}>{t("preferences.title")}</p>
+        <p className={SECTION_SUB}>{t("preferences.subtitle")}</p>
       </div>
 
       <div className="flex flex-col gap-5">
         <div className={ROW}>
           <div>
-            <p className="text-sm text-[var(--text-primary)]">Langue</p>
-            <p className="text-[11px] text-[var(--text-faint)] mt-0.5">Langue d&apos;affichage de l&apos;interface</p>
+            <p className="text-sm text-[var(--text-primary)]">{t("preferences.langueLabel")}</p>
+            <p className="text-[11px] text-[var(--text-faint)] mt-0.5">{t("preferences.langueCaption")}</p>
           </div>
           <select
             value={langue}
-            onChange={(e) => setLangue(e.target.value)}
+            onChange={(e) => setLangue(e.target.value === "en" ? "en" : "fr")}
             className="bg-[var(--bg-sunken)] border border-[var(--border)] rounded-lg px-3 py-2 text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)] transition shrink-0"
           >
-            <option value="fr">Français</option>
-            <option value="en" disabled>English (bientôt)</option>
+            <option value="fr">{t("preferences.langueFr")}</option>
+            <option value="en">{t("preferences.langueEn")}</option>
           </select>
         </div>
 
@@ -583,13 +603,13 @@ export default function ParametresModal({
 
         <div className={ROW}>
           <div>
-            <p className="text-sm text-[var(--text-primary)]">Thème</p>
-            <p className="text-[11px] text-[var(--text-faint)] mt-0.5">Sombre ou clair — ton choix est mémorisé sur cet appareil</p>
+            <p className="text-sm text-[var(--text-primary)]">{t("preferences.themeLabel")}</p>
+            <p className="text-[11px] text-[var(--text-faint)] mt-0.5">{t("preferences.themeCaption")}</p>
           </div>
           <div className="inline-flex gap-1 p-1 rounded-lg bg-[var(--surface-2)] border border-[var(--border)] shrink-0">
             {([
-              { id: "dark", label: "Sombre" },
-              { id: "light", label: "Clair" },
+              { id: "dark", label: t("preferences.themeDark") },
+              { id: "light", label: t("preferences.themeLight") },
             ] as const).map((opt) => (
               <button
                 key={opt.id}
@@ -610,19 +630,19 @@ export default function ParametresModal({
         <div className={DIVIDER} />
 
         <div>
-          <p className="text-[12px] font-medium text-[var(--text-muted)] mb-4">Notifications</p>
+          <p className="text-[12px] font-medium text-[var(--text-muted)] mb-4">{t("preferences.notifTitle")}</p>
           <div className="flex flex-col gap-4">
             <div className={ROW}>
               <div>
-                <p className="text-sm text-[var(--text-primary)]">Emails de suivi</p>
-                <p className="text-[11px] text-[var(--text-faint)] mt-0.5">Nouveaux produits gagnants, mises à jour Dropvio</p>
+                <p className="text-sm text-[var(--text-primary)]">{t("preferences.notifEmailLabel")}</p>
+                <p className="text-[11px] text-[var(--text-faint)] mt-0.5">{t("preferences.notifEmailCaption")}</p>
               </div>
               <Toggle on={notifEmail} onChange={setNotifEmail} />
             </div>
             <div className={ROW}>
               <div>
-                <p className="text-sm text-[var(--text-primary)]">Notifications push</p>
-                <p className="text-[11px] text-[var(--text-faint)] mt-0.5">Alertes tendances en temps réel</p>
+                <p className="text-sm text-[var(--text-primary)]">{t("preferences.notifPushLabel")}</p>
+                <p className="text-[11px] text-[var(--text-faint)] mt-0.5">{t("preferences.notifPushCaption")}</p>
               </div>
               <Toggle on={notifPush} onChange={setNotifPush} />
             </div>
@@ -633,21 +653,21 @@ export default function ParametresModal({
 
         <div className={ROW}>
           <div>
-            <p className="text-sm text-[var(--text-primary)]">Tutoriel de bienvenue</p>
-            <p className="text-[11px] text-[var(--text-faint)] mt-0.5">Revoir les bulles d&apos;aide qui présentent les outils Dropvio</p>
+            <p className="text-sm text-[var(--text-primary)]">{t("preferences.tutorialLabel")}</p>
+            <p className="text-[11px] text-[var(--text-faint)] mt-0.5">{t("preferences.tutorialCaption")}</p>
           </div>
           <button
             className={`${BTN_G} shrink-0`}
             onClick={() => { onClose(); restartOnboarding(); }}
           >
-            Relancer le tutoriel
+            {t("preferences.tutorialRestart")}
           </button>
         </div>
       </div>
 
       <div className="flex items-center gap-3">
         <button className={BTN_V} onClick={handleSavePreferences} disabled={savingPrefs}>
-          {savingPrefs ? "Enregistrement…" : "Sauvegarder"}
+          {savingPrefs ? t("preferences.saving") : t("preferences.save")}
         </button>
         {prefMsg && <p className={prefMsg.ok ? MSG_OK : MSG_ERR}>{prefMsg.text}</p>}
       </div>
@@ -657,51 +677,51 @@ export default function ParametresModal({
   const renderUsage = () => (
     <div className="flex flex-col gap-6">
       <div>
-        <p className={SECTION_TITLE}>Utilisation</p>
-        <p className={SECTION_SUB}>Ce que tu as consommé ce mois-ci sur le plan {PLAN_META[plan]?.label ?? plan}.</p>
+        <p className={SECTION_TITLE}>{t("usage.title")}</p>
+        <p className={SECTION_SUB}>{t("usage.subtitle", { plan: planLabel })}</p>
       </div>
 
       {usageLoading ? (
-        <p className="text-xs text-[var(--text-faint)]">Chargement de ton utilisation…</p>
+        <p className="text-xs text-[var(--text-faint)]">{t("usage.loading")}</p>
       ) : usageError ? (
         <div className="rounded-xl bg-[var(--danger)]/10 border border-[var(--danger)]/20 px-4 py-3 text-[var(--danger)] text-sm">{usageError}</div>
       ) : usage ? (
         <>
           <div className="flex flex-col gap-3">
-            <p className="text-[11px] font-semibold text-[var(--text-faint)] uppercase tracking-widest">Ce mois-ci</p>
+            <p className="text-[11px] font-semibold text-[var(--text-faint)] uppercase tracking-widest">{t("usage.thisMonth")}</p>
             {usage.monthly.map((m) => (
               <UsageMeter key={m.key} label={m.label} used={m.used} max={m.max} />
             ))}
           </div>
 
           <div className="flex flex-col gap-3">
-            <p className="text-[11px] font-semibold text-[var(--text-faint)] uppercase tracking-widest">Au total</p>
+            <p className="text-[11px] font-semibold text-[var(--text-faint)] uppercase tracking-widest">{t("usage.total")}</p>
             {usage.total.map((m) => (
               <UsageMeter key={m.key} label={m.label} used={m.used} max={m.max} />
             ))}
           </div>
 
           <div className="flex flex-col gap-3">
-            <p className="text-[11px] font-semibold text-[var(--text-faint)] uppercase tracking-widest">Catalogue & boutiques</p>
+            <p className="text-[11px] font-semibold text-[var(--text-faint)] uppercase tracking-widest">{t("usage.catalogueTitle")}</p>
             <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3.5 flex items-center justify-between gap-4">
               <div>
-                <p className="text-sm font-medium text-[var(--text-primary)]">Produits gagnants accessibles</p>
-                <p className="text-[11px] text-[var(--text-faint)] mt-0.5">Nombre de produits consultables dans le catalogue.</p>
+                <p className="text-sm font-medium text-[var(--text-primary)]">{t("usage.catalogueLabel")}</p>
+                <p className="text-[11px] text-[var(--text-faint)] mt-0.5">{t("usage.catalogueCaption")}</p>
               </div>
               <p className="text-xs font-semibold shrink-0">
                 {usage.catalogue.max === null ? (
-                  <span className="text-[var(--success)]">Catalogue complet</span>
+                  <span className="text-[var(--success)]">{t("usage.catalogueFull")}</span>
                 ) : (
-                  <span className="text-[var(--text-muted)]">{usage.catalogue.max} premiers produits</span>
+                  <span className="text-[var(--text-muted)]">{t("usage.catalogueLimited", { max: usage.catalogue.max })}</span>
                 )}
               </p>
             </div>
 
             {usage.boutiques.length === 0 ? (
-              <p className="text-[11px] text-[var(--text-faint)]">Tu n&apos;as pas encore de boutique — crée-en une depuis « Mode boutique ».</p>
+              <p className="text-[11px] text-[var(--text-faint)]">{t("usage.noBoutique")}</p>
             ) : (
               usage.boutiques.map((b) => (
-                <UsageMeter key={b.id} label={`Produits de « ${b.nom} »`} used={b.used} max={b.max} />
+                <UsageMeter key={b.id} label={t("usage.boutiqueProduits", { nom: b.nom })} used={b.used} max={b.max} />
               ))
             )}
           </div>
@@ -713,8 +733,8 @@ export default function ParametresModal({
   const renderIntegrations = () => (
     <div className="flex flex-col gap-6">
       <div>
-        <p className={SECTION_TITLE}>Intégrations</p>
-        <p className={SECTION_SUB}>Connecte tes outils externes à Dropvio.</p>
+        <p className={SECTION_TITLE}>{t("integrations.title")}</p>
+        <p className={SECTION_SUB}>{t("integrations.subtitle")}</p>
       </div>
 
       {/* Shopify */}
@@ -722,34 +742,34 @@ export default function ParametresModal({
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-xl bg-[#96bf48]/10 border border-[#96bf48]/20 flex items-center justify-center text-base">🛍️</div>
           <div>
-            <p className="text-sm font-medium text-[var(--text-primary)]">Shopify</p>
-            <p className="text-[11px] text-[var(--text-faint)]">Pousse tes produits, collections et designs directement sur ta boutique</p>
+            <p className="text-sm font-medium text-[var(--text-primary)]">{t("integrations.shopifyLabel")}</p>
+            <p className="text-[11px] text-[var(--text-faint)]">{t("integrations.shopifyDesc")}</p>
           </div>
         </div>
 
         {shopifyStatusLoading ? (
-          <p className="text-[11px] text-[var(--text-faint)]">Vérification de la connexion…</p>
+          <p className="text-[11px] text-[var(--text-faint)]">{t("integrations.shopifyChecking")}</p>
         ) : !shopifyStatus?.configured ? (
           <p className="text-[11px] text-[var(--warning)]">
-            L&apos;intégration Shopify n&apos;est pas encore configurée côté serveur (clés API manquantes). Contacte le support si le problème persiste.
+            {t("integrations.shopifyNotConfigured")}
           </p>
         ) : shopifyStatus.connected ? (
           <>
             <div className="rounded-lg border border-[var(--success)]/20 bg-[var(--success)]/[0.06] px-3 py-2.5 flex items-center gap-2">
               <span className="w-1.5 h-1.5 rounded-full bg-[var(--success)] shrink-0" />
               <p className="text-xs text-[var(--success)]">
-                Connecté à <span className="font-semibold">{shopifyStatus.shop_name || shopifyStatus.shop_domain}</span>
+                {t("integrations.shopifyConnectedPrefix")} <span className="font-semibold">{shopifyStatus.shop_name || shopifyStatus.shop_domain}</span>
                 {shopifyStatus.shop_name ? <span className="text-[var(--success)]/70"> ({shopifyStatus.shop_domain})</span> : null}
               </p>
             </div>
             <p className="text-[11px] text-[var(--text-faint)]">
               {shopifyStatus.disputesScopeGranted
-                ? "Remboursements, retours et litiges (chargebacks) synchronisés automatiquement."
-                : "Remboursements et retours synchronisés automatiquement. Litiges non disponibles pour cette boutique (Shopify Payments non activé, ou accès refusé à la connexion)."}
+                ? t("integrations.shopifyDisputesOn")
+                : t("integrations.shopifyDisputesOff")}
             </p>
             <div className="flex items-center gap-3">
               <button className={BTN_G} disabled={shopifyDisconnecting} onClick={handleDisconnectShopify}>
-                {shopifyDisconnecting ? "Déconnexion…" : "Déconnecter"}
+                {shopifyDisconnecting ? t("integrations.shopifyDisconnecting") : t("integrations.shopifyDisconnect")}
               </button>
               {intMsg && <p className={intMsg.ok ? MSG_OK : MSG_ERR}>{intMsg.text}</p>}
             </div>
@@ -760,18 +780,17 @@ export default function ParametresModal({
               <div className="rounded-lg border border-[var(--warning)]/20 bg-[var(--warning)]/[0.06] px-3 py-2.5 flex items-center gap-2">
                 <span className="w-1.5 h-1.5 rounded-full bg-[var(--warning)] shrink-0" />
                 <p className="text-xs text-[var(--warning)]">
-                  Ta connexion Shopify n&apos;est plus active — reconnecte ta boutique pour continuer à utiliser le
-                  push produits et le suivi des remboursements/litiges.
+                  {t("integrations.shopifyReconnectRequired")}
                 </p>
               </div>
             )}
             <div>
-              <label className={LABEL}>Domaine de ta boutique</label>
+              <label className={LABEL}>{t("integrations.shopifyDomainLabel")}</label>
               <input
                 type="text"
                 value={shopifyDomainInput}
                 onChange={(e) => setShopifyDomainInput(e.target.value)}
-                placeholder="ma-boutique.myshopify.com"
+                placeholder={t("integrations.shopifyDomainPlaceholder")}
                 className={FIELD}
               />
             </div>
@@ -782,10 +801,10 @@ export default function ParametresModal({
                 onClick={handleConnectShopify}
               >
                 {shopifyConnecting
-                  ? "Redirection…"
+                  ? t("integrations.shopifyConnecting")
                   : shopifyStatus.reconnectRequired
-                  ? "Reconnecter ma boutique Shopify"
-                  : "Connecter ma boutique Shopify"}
+                  ? t("integrations.shopifyReconnect")
+                  : t("integrations.shopifyConnect")}
               </button>
               {intMsg && <p className={intMsg.ok ? MSG_OK : MSG_ERR}>{intMsg.text}</p>}
             </div>
@@ -798,17 +817,17 @@ export default function ParametresModal({
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center text-base">📦</div>
           <div>
-            <p className="text-sm font-medium text-[var(--text-primary)]">AliExpress</p>
-            <p className="text-[11px] text-[var(--text-faint)]">Importe tes produits depuis AliExpress</p>
+            <p className="text-sm font-medium text-[var(--text-primary)]">{t("integrations.aliexpressLabel")}</p>
+            <p className="text-[11px] text-[var(--text-faint)]">{t("integrations.aliexpressDesc")}</p>
           </div>
-          <span className="ml-auto text-[10px] font-bold bg-[var(--surface-2)] border border-[var(--border)] text-[var(--text-muted)] px-2 py-0.5 rounded-full">Connecté</span>
+          <span className="ml-auto text-[10px] font-bold bg-[var(--surface-2)] border border-[var(--border)] text-[var(--text-muted)] px-2 py-0.5 rounded-full">{t("integrations.aliexpressConnected")}</span>
         </div>
-        <p className="text-[11px] text-[var(--text-faint)]">L&apos;import par URL est disponible directement dans le Site Builder.</p>
+        <p className="text-[11px] text-[var(--text-faint)]">{t("integrations.aliexpressCaption")}</p>
       </div>
 
       {/* Coming soon */}
       <div className="rounded-xl border border-dashed border-[var(--border)] p-4 text-center">
-        <p className="text-xs text-[var(--text-faint)]">Zapier, Make, Stripe — prochainement disponibles</p>
+        <p className="text-xs text-[var(--text-faint)]">{t("integrations.comingSoon")}</p>
       </div>
     </div>
   );
@@ -816,31 +835,31 @@ export default function ParametresModal({
   const renderFacturation = () => (
     <div className="flex flex-col gap-6">
       <div>
-        <p className={SECTION_TITLE}>Facturation</p>
-        <p className={SECTION_SUB}>Historique de paiements et gestion de l&apos;abonnement.</p>
+        <p className={SECTION_TITLE}>{t("facturation.title")}</p>
+        <p className={SECTION_SUB}>{t("facturation.subtitle")}</p>
       </div>
 
       <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4 flex flex-col gap-3">
         <div className={ROW}>
-          <p className="text-xs text-[var(--text-faint)] uppercase tracking-wider font-medium">Plan actuel</p>
-          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${planMeta.badge}`}>{planMeta.label.toUpperCase()}</span>
+          <p className="text-xs text-[var(--text-faint)] uppercase tracking-wider font-medium">{t("facturation.currentPlanLabel")}</p>
+          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${planStyle.badge}`}>{planLabel.toUpperCase()}</span>
         </div>
         <div className={DIVIDER} />
         <div className={ROW}>
-          <p className="text-sm text-[var(--text-muted)]">Prochain paiement</p>
-          <p className="text-sm text-[var(--text-faint)]">{plan === "free" ? "—" : "Non configuré"}</p>
+          <p className="text-sm text-[var(--text-muted)]">{t("facturation.nextPayment")}</p>
+          <p className="text-sm text-[var(--text-faint)]">{plan === "free" ? "—" : t("facturation.notConfigured")}</p>
         </div>
         <div className={ROW}>
-          <p className="text-sm text-[var(--text-muted)]">Moyen de paiement</p>
-          <p className="text-sm text-[var(--text-faint)]">{plan === "free" ? "—" : "Non configuré"}</p>
+          <p className="text-sm text-[var(--text-muted)]">{t("facturation.paymentMethod")}</p>
+          <p className="text-sm text-[var(--text-faint)]">{plan === "free" ? "—" : t("facturation.notConfigured")}</p>
         </div>
       </div>
 
       <div>
-        <p className="text-[12px] font-medium text-[var(--text-muted)] mb-3">Historique des factures</p>
+        <p className="text-[12px] font-medium text-[var(--text-muted)] mb-3">{t("facturation.invoicesTitle")}</p>
         <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-8 text-center">
-          <p className="text-sm text-[var(--text-faint)]">Aucune facture pour le moment.</p>
-          <p className="text-[11px] text-[var(--text-faint)] mt-1">Les factures Stripe apparaîtront ici après le premier paiement.</p>
+          <p className="text-sm text-[var(--text-faint)]">{t("facturation.noInvoices")}</p>
+          <p className="text-[11px] text-[var(--text-faint)] mt-1">{t("facturation.noInvoicesCaption")}</p>
         </div>
       </div>
 
@@ -848,9 +867,9 @@ export default function ParametresModal({
         <button
           className={`${BTN_G} self-start opacity-40 cursor-not-allowed`}
           disabled
-          title="Bientôt disponible — contacte support@dropvio.com pour toute question de facturation en attendant."
+          title={t("facturation.manageTooltip", { email: SUPPORT_EMAIL })}
         >
-          Gérer la facturation →
+          {t("facturation.manage")}
         </button>
       )}
     </div>
@@ -859,32 +878,16 @@ export default function ParametresModal({
   const renderLegal = () => (
     <div className="flex flex-col gap-6">
       <div>
-        <p className={SECTION_TITLE}>Légal</p>
-        <p className={SECTION_SUB}>Documents légaux et politiques de Dropvio.</p>
+        <p className={SECTION_TITLE}>{t("legal.title")}</p>
+        <p className={SECTION_SUB}>{t("legal.subtitle")}</p>
       </div>
 
       <div className="flex flex-col gap-3">
         {[
-          {
-            href: "/faq",
-            title: "Questions fréquentes",
-            desc: "Compte, facturation, fonctionnalités, données : réponses aux questions les plus courantes.",
-          },
-          {
-            href: "/mentions-legales",
-            title: "Mentions légales",
-            desc: "Informations légales sur l'éditeur et l'hébergeur de la plateforme.",
-          },
-          {
-            href: "/cgv",
-            title: "Conditions générales de vente",
-            desc: "Modalités d'utilisation des services et abonnements Dropvio.",
-          },
-          {
-            href: "/confidentialite",
-            title: "Politique de confidentialité",
-            desc: "Collecte et traitement de tes données personnelles (RGPD).",
-          },
+          { href: "/faq", title: t("legal.faqTitle"), desc: t("legal.faqDesc") },
+          { href: "/mentions-legales", title: t("legal.mentionsTitle"), desc: t("legal.mentionsDesc") },
+          { href: "/cgv", title: t("legal.cgvTitle"), desc: t("legal.cgvDesc") },
+          { href: "/confidentialite", title: t("legal.confidentialiteTitle"), desc: t("legal.confidentialiteDesc") },
         ].map(({ href, title, desc }) => (
           <a
             key={href}
@@ -905,8 +908,10 @@ export default function ParametresModal({
       <div className={DIVIDER} />
 
       <div className="text-[11px] text-[var(--text-faint)] leading-relaxed">
-        Pour toute question légale, contacte-nous à <span className="text-[var(--text-muted)]">legal@dropvio.com</span>.
-        Dropvio est conforme au RGPD européen.
+        {t.rich("legal.contact", {
+          email: LEGAL_EMAIL,
+          muted: (chunks) => <span className="text-[var(--text-muted)]">{chunks}</span>,
+        })}
       </div>
     </div>
   );
@@ -914,30 +919,28 @@ export default function ParametresModal({
   const renderDanger = () => (
     <div className="flex flex-col gap-6">
       <div>
-        <p className={SECTION_TITLE}>Zone dangereuse</p>
-        <p className={SECTION_SUB}>Actions irréversibles sur ton compte.</p>
+        <p className={SECTION_TITLE}>{t("danger.title")}</p>
+        <p className={SECTION_SUB}>{t("danger.subtitle")}</p>
       </div>
 
       <div className="rounded-xl border border-[var(--danger)]/20 bg-[var(--danger)]/[0.03] p-5 flex flex-col gap-4">
         <div>
-          <p className="text-sm font-medium text-[var(--danger)]">Supprimer mon compte</p>
+          <p className="text-sm font-medium text-[var(--danger)]">{t("danger.deleteLabel")}</p>
           <p className="text-[11px] text-[var(--text-faint)] mt-1 leading-relaxed">
-            Fonctionnalité bientôt disponible — écris-nous à support@dropvio.com pour une
-            suppression manuelle de compte en attendant.
+            {t("danger.deleteDesc", { email: SUPPORT_EMAIL })}
           </p>
         </div>
         <button
           className="self-start px-4 py-2 rounded-lg border border-[var(--danger)]/30 text-[var(--danger)] text-xs font-semibold opacity-40 cursor-not-allowed"
           disabled
-          title="Bientôt disponible — contacte support@dropvio.com pour supprimer ton compte en attendant."
+          title={t("danger.deleteTooltip", { email: SUPPORT_EMAIL })}
         >
-          Supprimer mon compte
+          {t("danger.deleteButton")}
         </button>
       </div>
 
       <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3 text-[11px] text-[var(--text-faint)]">
-        Tu veux juste faire une pause ? La suspension de compte n&apos;est pas encore
-        disponible — écris-nous à support@dropvio.com en attendant.
+        {t("danger.pauseText", { email: SUPPORT_EMAIL })}
       </div>
     </div>
   );
@@ -973,12 +976,12 @@ export default function ParametresModal({
             <div className="w-7 h-7 rounded-lg bg-violet-500/15 border border-violet-500/20 flex items-center justify-center">
               {Ico.preferences}
             </div>
-            <h2 className="text-sm font-semibold text-[var(--text-primary)]">Paramètres du compte</h2>
+            <h2 className="text-sm font-semibold text-[var(--text-primary)]">{t("header.title")}</h2>
           </div>
           <button
             onClick={onClose}
             className="w-7 h-7 rounded-lg flex items-center justify-center text-[var(--text-faint)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-3)] transition"
-            aria-label="Fermer"
+            aria-label={t("header.close")}
           >
             <svg width="11" height="11" viewBox="0 0 11 11" fill="none">
               <path d="M1 1l9 9M10 1L1 10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
@@ -992,7 +995,7 @@ export default function ParametresModal({
           {/* Left nav */}
           <nav className="w-[196px] shrink-0 border-r border-[var(--border)] flex flex-col p-2 overflow-y-auto">
             <div className="flex flex-col gap-0.5">
-              {NAV_ITEMS.map(({ id, label, icon }) => {
+              {NAV_SECTIONS.map((id) => {
                 const isActive = activeSection === id;
                 return (
                   <button
@@ -1004,8 +1007,8 @@ export default function ParametresModal({
                         : "text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-2)]"
                     }`}
                   >
-                    <span className={isActive ? "text-[var(--accent)]" : "text-[var(--text-faint)]"}>{icon}</span>
-                    {label}
+                    <span className={isActive ? "text-[var(--accent)]" : "text-[var(--text-faint)]"}>{NAV_ICONS[id]}</span>
+                    {t(`nav.${id}`)}
                   </button>
                 );
               })}
@@ -1023,7 +1026,7 @@ export default function ParametresModal({
               }`}
             >
               <span>{Ico.danger}</span>
-              Supprimer le compte
+              {t("nav.danger")}
             </button>
           </nav>
 

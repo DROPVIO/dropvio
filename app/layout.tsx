@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { NextIntlClientProvider } from "next-intl";
+import { getLocale, getMessages } from "next-intl/server";
 import "./globals.css";
 import AppShell from "@/components/AppShell";
 
@@ -18,14 +20,19 @@ export const metadata: Metadata = {
   description: "Trouve et lance tes produits gagnants en dropshipping",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // Résolus par i18n/request.ts à partir de l'en-tête posé par middleware.ts (cookie
+  // NEXT_LOCALE > Accept-Language > profils.langue si connecté) — voir lib/locale.ts.
+  const locale = await getLocale();
+  const messages = await getMessages();
+
   return (
     <html
-      lang="fr"
+      lang={locale}
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
       // data-theme est posé par le script inline ci-dessous avant hydratation (voir
       // lib/theme.ts) — React s'attend à ne pas le trouver dans le HTML serveur, ce qui
@@ -43,7 +50,9 @@ export default function RootLayout({
         />
       </head>
       <body className="min-h-full bg-[var(--bg)]">
-        <AppShell>{children}</AppShell>
+        <NextIntlClientProvider locale={locale} messages={messages}>
+          <AppShell>{children}</AppShell>
+        </NextIntlClientProvider>
       </body>
     </html>
   );

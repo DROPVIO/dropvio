@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
 import Logo from "@/components/Logo";
 import { Suspense } from "react";
@@ -11,6 +12,7 @@ function isEmailNotConfirmedError(err: { message: string; code?: string }): bool
 }
 
 function LoginForm() {
+  const t = useTranslations("auth.login");
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirect = searchParams.get("redirect") ?? "/dashboard";
@@ -41,9 +43,9 @@ function LoginForm() {
     if (authError) {
       if (isEmailNotConfirmedError(authError)) {
         setUnconfirmed(true);
-        setError("Ton compte n'est pas encore confirmé. Vérifie ta boîte mail pour confirmer ton compte avant de te connecter.");
+        setError(t("errorUnconfirmed"));
       } else {
-        setError("Email ou mot de passe incorrect.");
+        setError(t("errorInvalid"));
       }
       setLoading(false);
       return;
@@ -85,12 +87,12 @@ function LoginForm() {
         </div>
 
         <div className="rounded-2xl bg-[var(--surface)] border border-[var(--border)] p-8">
-          <h1 className="text-xl font-bold text-[var(--text-primary)] mb-1">Connexion</h1>
-          <p className="text-[var(--text-faint)] text-sm mb-8">Accède à ton espace Dropvio</p>
+          <h1 className="text-xl font-bold text-[var(--text-primary)] mb-1">{t("title")}</h1>
+          <p className="text-[var(--text-faint)] text-sm mb-8">{t("subtitle")}</p>
 
           {justConfirmed && !error && (
             <div className="mb-5 rounded-xl bg-[var(--success)]/10 border border-[var(--success)]/20 px-4 py-3 text-[var(--success)] text-sm">
-              Ton email est confirmé. Tu peux te connecter.
+              {t("confirmedBanner")}
             </div>
           )}
 
@@ -99,7 +101,7 @@ function LoginForm() {
               <span>{error}</span>
               {unconfirmed && (
                 resendState === "sent" ? (
-                  <span className="text-[var(--success)] text-xs">Email renvoyé ! Vérifie ta boîte mail (et tes spams).</span>
+                  <span className="text-[var(--success)] text-xs">{t("resendSent")}</span>
                 ) : (
                   <button
                     type="button"
@@ -107,7 +109,7 @@ function LoginForm() {
                     disabled={resendState === "loading"}
                     className="self-start text-xs text-[var(--accent)] hover:opacity-80 transition font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    {resendState === "loading" ? "Envoi…" : "Renvoyer l'email de confirmation"}
+                    {resendState === "loading" ? t("resendSending") : t("resend")}
                   </button>
                 )
               )}
@@ -119,24 +121,24 @@ function LoginForm() {
 
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-medium text-[var(--text-muted)] uppercase tracking-wider">Email</label>
+              <label className="text-xs font-medium text-[var(--text-muted)] uppercase tracking-wider">{t("emailLabel")}</label>
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="ton@email.com"
+                placeholder={t("emailPlaceholder")}
                 required
                 className="bg-[var(--bg)] border border-[var(--border-strong)] rounded-xl px-4 py-3 text-sm text-[var(--text-primary)] placeholder-[var(--text-faint)] focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition"
               />
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-medium text-[var(--text-muted)] uppercase tracking-wider">Mot de passe</label>
+              <label className="text-xs font-medium text-[var(--text-muted)] uppercase tracking-wider">{t("passwordLabel")}</label>
               <input
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
+                placeholder={t("passwordPlaceholder")}
                 required
                 className="bg-[var(--bg)] border border-[var(--border-strong)] rounded-xl px-4 py-3 text-sm text-[var(--text-primary)] placeholder-[var(--text-faint)] focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition"
               />
@@ -147,14 +149,14 @@ function LoginForm() {
               disabled={loading || !email.trim() || !password}
               className="mt-2 w-full py-3 rounded-xl bg-gradient-to-r from-violet-600 to-blue-600 text-white text-sm font-semibold hover:from-violet-500 hover:to-blue-500 transition-all shadow-lg shadow-violet-900/40 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? "Connexion…" : "Se connecter"}
+              {loading ? t("submitting") : t("submit")}
             </button>
           </form>
 
           <p className="mt-6 text-center text-sm text-[var(--text-faint)]">
-            Pas encore de compte ?{" "}
+            {t("noAccount")}{" "}
             <a href="/register" className="text-[var(--accent)] hover:opacity-80 font-medium transition">
-              Créer un compte
+              {t("createAccount")}
             </a>
           </p>
         </div>
@@ -164,10 +166,11 @@ function LoginForm() {
 }
 
 export default function LoginPage() {
+  const t = useTranslations("auth.login");
   return (
     <Suspense fallback={
       <div className="min-h-screen bg-[var(--bg)] flex items-center justify-center text-[var(--text-faint)] text-sm">
-        Chargement…
+        {t("loadingFallback")}
       </div>
     }>
       <LoginForm />

@@ -2,21 +2,21 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
 import Logo from "@/components/Logo";
-
-const FALLBACK_ERROR = "Une erreur est survenue, réessaie.";
 
 // authError.message peut être vide, absent, ou littéralement "{}" (cas observé avec
 // AuthRetryableFetchError quand Supabase ne renvoie pas de corps JSON exploitable) —
 // on n'affiche jamais l'objet brut, seulement un message texte utile.
-function getAuthErrorMessage(err: { message?: string } | null | undefined): string {
+function getAuthErrorMessage(err: { message?: string } | null | undefined, fallback: string): string {
   const msg = err?.message?.trim();
-  if (!msg || msg === "{}") return FALLBACK_ERROR;
+  if (!msg || msg === "{}") return fallback;
   return msg;
 }
 
 export default function RegisterPage() {
+  const t = useTranslations("auth.register");
   const router = useRouter();
 
   const [email, setEmail] = useState("");
@@ -33,11 +33,11 @@ export default function RegisterPage() {
     setError(null);
 
     if (password.length < 6) {
-      setError("Le mot de passe doit contenir au moins 6 caractères.");
+      setError(t("errorPasswordLength"));
       return;
     }
     if (password !== confirm) {
-      setError("Les mots de passe ne correspondent pas.");
+      setError(t("errorPasswordMismatch"));
       return;
     }
 
@@ -53,8 +53,8 @@ export default function RegisterPage() {
 
     if (authError) {
       setError(authError.message === "User already registered"
-        ? "Cet email est déjà utilisé. Connecte-toi."
-        : getAuthErrorMessage(authError)
+        ? t("errorAlreadyRegistered")
+        : getAuthErrorMessage(authError, t("errorFallback"))
       );
       setLoading(false);
       return;
@@ -84,7 +84,7 @@ export default function RegisterPage() {
 
     if (resendErr) {
       setResendState("error");
-      setResendError(getAuthErrorMessage(resendErr));
+      setResendError(getAuthErrorMessage(resendErr, t("errorFallback")));
       return;
     }
     setResendState("sent");
@@ -95,21 +95,23 @@ export default function RegisterPage() {
       <div className="min-h-screen bg-[var(--bg)] flex items-center justify-center px-4">
         <div className="w-full max-w-sm rounded-2xl bg-[var(--surface)] border border-[var(--border)] p-8 text-center flex flex-col items-center gap-4">
           <span className="text-4xl">📧</span>
-          <h2 className="text-[var(--text-primary)] font-bold text-lg">Vérifie ta boîte mail</h2>
+          <h2 className="text-[var(--text-primary)] font-bold text-lg">{t("successTitle")}</h2>
           <p className="text-[var(--text-muted)] text-sm leading-relaxed">
-            Un lien de confirmation a été envoyé à <span className="text-[var(--text-primary)] font-medium">{email}</span>.
-            Confirme ton compte avant de te connecter — le lien active ton accès.
+            {t.rich("successBody", {
+              emailValue: email,
+              bold: (chunks) => <span className="text-[var(--text-primary)] font-medium">{chunks}</span>,
+            })}
           </p>
 
           {resendState === "sent" ? (
-            <p className="mt-1 text-sm text-[var(--success)]">Email renvoyé ! Vérifie ta boîte mail (et tes spams).</p>
+            <p className="mt-1 text-sm text-[var(--success)]">{t("resendSent")}</p>
           ) : (
             <button
               onClick={handleResend}
               disabled={resendState === "loading"}
               className="mt-1 text-sm text-[var(--accent)] hover:opacity-80 transition font-medium disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {resendState === "loading" ? "Envoi…" : "Renvoyer l'email de confirmation"}
+              {resendState === "loading" ? t("resendSending") : t("resend")}
             </button>
           )}
           {resendState === "error" && resendError && (
@@ -117,7 +119,7 @@ export default function RegisterPage() {
           )}
 
           <a href="/login" className="mt-2 text-sm text-[var(--text-faint)] hover:text-[var(--text-muted)] transition font-medium">
-            Retour à la connexion →
+            {t("backToLogin")}
           </a>
         </div>
       </div>
@@ -136,8 +138,8 @@ export default function RegisterPage() {
         </div>
 
         <div className="rounded-2xl bg-[var(--surface)] border border-[var(--border)] p-8">
-          <h1 className="text-xl font-bold text-[var(--text-primary)] mb-1">Créer un compte</h1>
-          <p className="text-[var(--text-faint)] text-sm mb-8">Rejoins Dropvio gratuitement</p>
+          <h1 className="text-xl font-bold text-[var(--text-primary)] mb-1">{t("title")}</h1>
+          <p className="text-[var(--text-faint)] text-sm mb-8">{t("subtitle")}</p>
 
           {error && (
             <div className="mb-5 rounded-xl bg-[var(--danger)]/10 border border-[var(--danger)]/20 px-4 py-3 text-[var(--danger)] text-sm">
@@ -147,36 +149,36 @@ export default function RegisterPage() {
 
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-medium text-[var(--text-muted)] uppercase tracking-wider">Email</label>
+              <label className="text-xs font-medium text-[var(--text-muted)] uppercase tracking-wider">{t("emailLabel")}</label>
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="ton@email.com"
+                placeholder={t("emailPlaceholder")}
                 required
                 className="bg-[var(--bg)] border border-[var(--border-strong)] rounded-xl px-4 py-3 text-sm text-[var(--text-primary)] placeholder-[var(--text-faint)] focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition"
               />
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-medium text-[var(--text-muted)] uppercase tracking-wider">Mot de passe</label>
+              <label className="text-xs font-medium text-[var(--text-muted)] uppercase tracking-wider">{t("passwordLabel")}</label>
               <input
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="Minimum 6 caractères"
+                placeholder={t("passwordPlaceholder")}
                 required
                 className="bg-[var(--bg)] border border-[var(--border-strong)] rounded-xl px-4 py-3 text-sm text-[var(--text-primary)] placeholder-[var(--text-faint)] focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition"
               />
             </div>
 
             <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-medium text-[var(--text-muted)] uppercase tracking-wider">Confirmer le mot de passe</label>
+              <label className="text-xs font-medium text-[var(--text-muted)] uppercase tracking-wider">{t("confirmPasswordLabel")}</label>
               <input
                 type="password"
                 value={confirm}
                 onChange={(e) => setConfirm(e.target.value)}
-                placeholder="••••••••"
+                placeholder={t("confirmPasswordPlaceholder")}
                 required
                 className="bg-[var(--bg)] border border-[var(--border-strong)] rounded-xl px-4 py-3 text-sm text-[var(--text-primary)] placeholder-[var(--text-faint)] focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition"
               />
@@ -187,14 +189,14 @@ export default function RegisterPage() {
               disabled={loading || !email.trim() || !password || !confirm}
               className="mt-2 w-full py-3 rounded-xl bg-gradient-to-r from-violet-600 to-blue-600 text-white text-sm font-semibold hover:from-violet-500 hover:to-blue-500 transition-all shadow-lg shadow-violet-900/40 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? "Création…" : "Créer mon compte"}
+              {loading ? t("submitting") : t("submit")}
             </button>
           </form>
 
           <p className="mt-6 text-center text-sm text-[var(--text-faint)]">
-            Déjà un compte ?{" "}
+            {t("hasAccount")}{" "}
             <a href="/login" className="text-[var(--accent)] hover:opacity-80 font-medium transition">
-              Se connecter
+              {t("signIn")}
             </a>
           </p>
         </div>

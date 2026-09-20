@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
 import type { User } from "@supabase/supabase-js";
 import ParametresModal from "./ParametresModal";
@@ -9,6 +10,7 @@ import ParametresModal from "./ParametresModal";
 const PROTECTED_PATHS = ["/produits-gagnants", "/site-builder", "/mes-sites"];
 
 export default function AuthButton() {
+  const t = useTranslations("auth.button");
   const router = useRouter();
   const pathname = usePathname();
   const [user, setUser] = useState<User | null>(null);
@@ -80,9 +82,9 @@ export default function AuthButton() {
 
               <nav className="p-1.5 flex flex-col gap-0.5">
                 {[
-                  { href: "/produits-gagnants", label: "🏆 Produits gagnants" },
-                  { href: "/site-builder",      label: "🌐 Site Builder" },
-                  { href: "/mes-sites",         label: "📁 Mes sites" },
+                  { href: "/produits-gagnants", label: t("navProduitsGagnants") },
+                  { href: "/site-builder",      label: t("navSiteBuilder") },
+                  { href: "/mes-sites",         label: t("navMesSites") },
                 ].map(({ href, label }) => (
                   <a
                     key={href}
@@ -104,7 +106,7 @@ export default function AuthButton() {
                     <circle cx="6" cy="4" r="2" stroke="currentColor" strokeWidth="1.2"/>
                     <path d="M2 10.5c0-2 1.8-3.5 4-3.5s4 1.5 4 3.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
                   </svg>
-                  Compte
+                  {t("account")}
                 </button>
 
                 <button
@@ -115,7 +117,7 @@ export default function AuthButton() {
                   <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
                     <path d="M4.5 2H2.5C2.2 2 2 2.2 2 2.5v7c0 .3.2.5.5.5H4.5M8 8.5L10.5 6 8 3.5M10.5 6H4.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
                   </svg>
-                  {signingOut ? "Déconnexion…" : "Se déconnecter"}
+                  {signingOut ? t("signingOut") : t("signOut")}
                 </button>
               </div>
             </div>
