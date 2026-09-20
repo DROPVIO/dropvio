@@ -156,6 +156,21 @@ export const SEUIL_FRANCHISE_LU = 50_000;
 // fixe affiché dans l'UI à la place d'un pourcentage automatique. Contrairement à
 // Belgique/Suisse/Canada, le mode Luxembourg n'a donc pas de postCotisationsRate du tout.
 
+// ─── Constantes fiscales Allemagne (Kleinunternehmer, vente de marchandises) ──
+
+export const STRIPE_FIXED_DE = 0.25;
+export const STRIPE_RATE_DE_DEFAULT = "1.5";
+export const TVA_RATE_DE = 0.19;
+// Kleinunternehmerregelung (§19 UStG) : franchise de TVA à DOUBLE condition — CA de l'année
+// précédente ET CA prévisionnel de l'année en cours doivent chacun rester sous leur propre
+// seuil. Contrairement à France/Belgique/Suisse (un seul CA cumulé comparé à un seuil), ce
+// sont ici deux montants distincts, chacun avec son propre seuil — voir les deux
+// SeuilTracker indépendants dans l'UI plutôt qu'un tracker à double palier.
+export const SEUIL_KLEINUNTERNEHMER_PRECEDENT_DE = 25_000;    // CA année précédente
+export const SEUIL_KLEINUNTERNEHMER_PREVISIONNEL_DE = 100_000; // CA prévisionnel année en cours
+// Pas de postCotisationsRate — Gewerbesteuer/Einkommensteuer non modélisées ici (dépendent du
+// Hebesatz communal et d'un barème progressif), voir l'avertissement fixe affiché dans l'UI.
+
 // ─── Constantes fiscales Italie (régime forfettario, commerce de détail) ──────
 
 export const STRIPE_FIXED_IT = 0.25;
@@ -177,14 +192,14 @@ export const STRIPE_RATE_ES_DEFAULT = "1.5";
 // premier euro de CA, contrairement à France/Belgique/Suisse/Canada/Luxembourg/Italie.
 export const TVA_RATE_ES = 0.21;
 
-export type Mode = "france" | "uk" | "us" | "be" | "ch" | "ca" | "lu" | "it" | "es" | "manuel";
+export type Mode = "france" | "uk" | "us" | "be" | "ch" | "ca" | "lu" | "de" | "it" | "es" | "manuel";
 
 export function getDevise(mode: Mode): string {
   if (mode === "uk") return "£";
   if (mode === "us") return "$";
   if (mode === "ch") return "CHF";
   if (mode === "ca") return "C$";
-  return "€"; // france, be, lu, it, es
+  return "€"; // france, be, lu, de, it, es
 }
 
 export type ChargeInfo = {
@@ -209,6 +224,7 @@ export function getCharges(
     stripeRateCH, tauxRetourCH,
     stripeRateCA, tauxRetourCA,
     stripeRateLU, tauxRetourLU,
+    stripeRateDE, tauxRetourDE,
     stripeRateIT, tauxRetourIT, regimeImpostaIT,
     stripeRateES, tauxRetourES,
   }: {
@@ -229,6 +245,8 @@ export function getCharges(
     tauxRetourCA?: string;
     stripeRateLU?: string;
     tauxRetourLU?: string;
+    stripeRateDE?: string;
+    tauxRetourDE?: string;
     stripeRateIT?: string;
     tauxRetourIT?: string;
     regimeImpostaIT?: RegimeImpostaIT;
@@ -294,6 +312,22 @@ export function getCharges(
       breakdown: [
         { label: "Frais Stripe", detail: `${(stripeRate * 100).toFixed(2)}% + ${STRIPE_FIXED_LU.toFixed(2)}€` },
         { label: "TVA", detail: `${(TVA_RATE_LU * 100).toFixed(0)}%` },
+        { label: "Taux de retour hypothétique", detail: `${(tauxRetour * 100).toFixed(1)}%` },
+      ],
+    };
+  }
+
+  if (mode === "de") {
+    const stripeRate = (parseFloat(stripeRateDE ?? "") || 0) / 100;
+    const tauxRetour = (parseFloat(tauxRetourDE ?? "") || 0) / 100;
+    return {
+      rate: stripeRate + TVA_RATE_DE + tauxRetour,
+      fixed: STRIPE_FIXED_DE,
+      // Pas de postCotisationsRate — voir la constante SEUIL_KLEINUNTERNEHMER_PREVISIONNEL_DE
+      // ci-dessus (même traitement que le Luxembourg pour la même raison).
+      breakdown: [
+        { label: "Frais Stripe", detail: `${(stripeRate * 100).toFixed(2)}% + ${STRIPE_FIXED_DE.toFixed(2)}€` },
+        { label: "TVA (Mehrwertsteuer)", detail: `${(TVA_RATE_DE * 100).toFixed(0)}%` },
         { label: "Taux de retour hypothétique", detail: `${(tauxRetour * 100).toFixed(1)}%` },
       ],
     };

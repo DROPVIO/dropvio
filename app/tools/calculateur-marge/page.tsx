@@ -36,6 +36,11 @@ import {
   STRIPE_RATE_LU_DEFAULT,
   TVA_RATE_LU,
   SEUIL_FRANCHISE_LU,
+  STRIPE_FIXED_DE,
+  STRIPE_RATE_DE_DEFAULT,
+  TVA_RATE_DE,
+  SEUIL_KLEINUNTERNEHMER_PRECEDENT_DE,
+  SEUIL_KLEINUNTERNEHMER_PREVISIONNEL_DE,
   STRIPE_FIXED_IT,
   STRIPE_RATE_IT_DEFAULT,
   SEUIL_FORFETTARIO_IT,
@@ -83,6 +88,10 @@ type SimulationInputs = {
   stripeRateLU: string;
   tauxRetourLU: string;
   caAnnuelCumuleLU: string;
+  stripeRateDE: string;
+  tauxRetourDE: string;
+  caAnneePrecedenteDE: string;
+  caPrevisionnelDE: string;
   stripeRateIT: string;
   tauxRetourIT: string;
   caAnnuelCumuleIT: string;
@@ -115,6 +124,7 @@ const MODE_OPTIONS: { value: Mode; label: string }[] = [
   { value: "ch", label: "🇨🇭 Suisse auto" },
   { value: "ca", label: "🇨🇦 Canada (Québec) auto" },
   { value: "lu", label: "🇱🇺 Luxembourg auto" },
+  { value: "de", label: "🇩🇪 Allemagne auto" },
   { value: "it", label: "🇮🇹 Italie auto" },
   { value: "es", label: "🇪🇸 Espagne auto" },
   { value: "manuel", label: "🌍 International manuel" },
@@ -210,6 +220,14 @@ function CalculateurMargeInner() {
   const [tauxRetourLU, setTauxRetourLU] = useState("");
   const [caAnnuelCumuleLU, setCaAnnuelCumuleLU] = useState("");
 
+  // Mode Allemagne auto
+  const [stripeRateDE, setStripeRateDE] = useState(STRIPE_RATE_DE_DEFAULT);
+  const [tauxRetourDE, setTauxRetourDE] = useState("");
+  // Kleinunternehmerregelung : deux CA indépendants, chacun avec son propre seuil (voir
+  // SEUIL_KLEINUNTERNEHMER_PRECEDENT_DE / SEUIL_KLEINUNTERNEHMER_PREVISIONNEL_DE).
+  const [caAnneePrecedenteDE, setCaAnneePrecedenteDE] = useState("");
+  const [caPrevisionnelDE, setCaPrevisionnelDE] = useState("");
+
   // Mode Italie auto
   const [stripeRateIT, setStripeRateIT] = useState(STRIPE_RATE_IT_DEFAULT);
   const [tauxRetourIT, setTauxRetourIT] = useState("");
@@ -234,6 +252,7 @@ function CalculateurMargeInner() {
     stripeRateUS, tauxRetourUS, usState, salesTaxNexusUS,
     stripeRateBE, tauxRetourBE, stripeRateCH, tauxRetourCH,
     stripeRateCA, tauxRetourCA, stripeRateLU, tauxRetourLU,
+    stripeRateDE, tauxRetourDE,
     stripeRateIT, tauxRetourIT, regimeImpostaIT,
     stripeRateES, tauxRetourES,
   });
@@ -278,6 +297,7 @@ function CalculateurMargeInner() {
     prixFournisseur, fraisLivraison, prixVente, budgetPub, mode, extraUE, tauxCharge, tauxTaxe,
     stripeRateUK, tauxRetourUK, stripeRateUS, tauxRetourUS, usState, salesTaxNexusUS,
     stripeRateBE, tauxRetourBE, stripeRateCH, tauxRetourCH, stripeRateCA, tauxRetourCA, stripeRateLU, tauxRetourLU,
+    stripeRateDE, tauxRetourDE,
     stripeRateIT, tauxRetourIT, regimeImpostaIT, stripeRateES, tauxRetourES,
   ]);
 
@@ -355,6 +375,7 @@ function CalculateurMargeInner() {
       stripeRateCH, tauxRetourCH, caAnnuelCumuleCH,
       stripeRateCA, tauxRetourCA, caAnnuelCumuleCA, droitDouaneCA,
       stripeRateLU, tauxRetourLU, caAnnuelCumuleLU,
+      stripeRateDE, tauxRetourDE, caAnneePrecedenteDE, caPrevisionnelDE,
       stripeRateIT, tauxRetourIT, caAnnuelCumuleIT, regimeImpostaIT,
       stripeRateES, tauxRetourES,
       tauxCharge, tauxTaxe, margeCible,
@@ -421,6 +442,10 @@ function CalculateurMargeInner() {
     if (i.stripeRateLU !== undefined) setStripeRateLU(i.stripeRateLU);
     if (i.tauxRetourLU !== undefined) setTauxRetourLU(i.tauxRetourLU);
     if (i.caAnnuelCumuleLU !== undefined) setCaAnnuelCumuleLU(i.caAnnuelCumuleLU);
+    if (i.stripeRateDE !== undefined) setStripeRateDE(i.stripeRateDE);
+    if (i.tauxRetourDE !== undefined) setTauxRetourDE(i.tauxRetourDE);
+    if (i.caAnneePrecedenteDE !== undefined) setCaAnneePrecedenteDE(i.caAnneePrecedenteDE);
+    if (i.caPrevisionnelDE !== undefined) setCaPrevisionnelDE(i.caPrevisionnelDE);
     if (i.stripeRateIT !== undefined) setStripeRateIT(i.stripeRateIT);
     if (i.tauxRetourIT !== undefined) setTauxRetourIT(i.tauxRetourIT);
     if (i.caAnnuelCumuleIT !== undefined) setCaAnnuelCumuleIT(i.caAnnuelCumuleIT);
@@ -744,6 +769,37 @@ function CalculateurMargeInner() {
                   caption={`Franchise de TVA jusqu'à ${SEUIL_FRANCHISE_LU.toLocaleString("fr-FR")}€`}
                 />
               </div>
+            ) : mode === "de" ? (
+              <div className="bg-[var(--bg-sunken)] rounded-xl p-5 border border-[var(--border)] grid gap-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <InputField label="Frais Stripe (%)" placeholder="1.5" value={stripeRateDE} onChange={setStripeRateDE} />
+                  <InputField label="Taux de retour hypothétique (%)" placeholder="ex: 8" value={tauxRetourDE} onChange={setTauxRetourDE} />
+                </div>
+                <div className="text-xs text-[var(--text-faint)] leading-relaxed">
+                  Charges appliquées automatiquement : TVA (Mehrwertsteuer) {(TVA_RATE_DE * 100).toFixed(0)}% du prix de vente · Frais Stripe {stripeRateDE || "0"}% + {STRIPE_FIXED_DE.toFixed(2)}€. Pas de cotisations déduites ici (voir note sous le résultat).
+                </div>
+                <SeuilTracker
+                  label="CA de l'année précédente"
+                  devise="€"
+                  value={caAnneePrecedenteDE}
+                  onChange={setCaAnneePrecedenteDE}
+                  seuil={SEUIL_KLEINUNTERNEHMER_PRECEDENT_DE}
+                  caption={`Kleinunternehmerregelung (§19 UStG), condition 1/2 : doit rester sous ${SEUIL_KLEINUNTERNEHMER_PRECEDENT_DE.toLocaleString("fr-FR")}€.`}
+                />
+                <SeuilTracker
+                  label="CA prévisionnel de l'année en cours"
+                  devise="€"
+                  value={caPrevisionnelDE}
+                  onChange={setCaPrevisionnelDE}
+                  seuil={SEUIL_KLEINUNTERNEHMER_PREVISIONNEL_DE}
+                  caption={`Kleinunternehmerregelung (§19 UStG), condition 2/2 : doit rester sous ${SEUIL_KLEINUNTERNEHMER_PREVISIONNEL_DE.toLocaleString("fr-FR")}€.`}
+                />
+                {(parseFloat(caAnneePrecedenteDE) > SEUIL_KLEINUNTERNEHMER_PRECEDENT_DE || parseFloat(caPrevisionnelDE) > SEUIL_KLEINUNTERNEHMER_PREVISIONNEL_DE) && (
+                  <div className="text-[12.5px] text-[var(--danger)] bg-[var(--danger)]/10 border border-[var(--danger)]/20 rounded-lg px-4 py-3 leading-relaxed">
+                    ⚠️ Un des deux seuils est dépassé : le régime de franchise (Kleinunternehmerregelung) est perdu — la TVA à 19% est due sur toutes tes factures. Ce calcul continue de supposer que tu restes sous les deux seuils.
+                  </div>
+                )}
+              </div>
             ) : mode === "it" ? (
               <div className="bg-[var(--bg-sunken)] rounded-xl p-5 border border-[var(--border)] grid gap-4">
                 <div className="grid grid-cols-2 gap-4">
@@ -913,6 +969,13 @@ function CalculateurMargeInner() {
             {mode === "lu" && (
               <div className="mb-5 text-[12.5px] text-[var(--text-faint)] bg-[var(--bg-sunken)] border border-[var(--border)] rounded-lg px-4 py-3 leading-relaxed">
                 Cotisations sociales indépendant (CCSS) calculées sur ton revenu net annuel, taux variable selon statut — vérifie sur mss.public.lu ou avec un fiduciaire avant de fixer ta réserve.
+              </div>
+            )}
+
+            {/* Note fixe mode Allemagne */}
+            {mode === "de" && (
+              <div className="mb-5 text-[12.5px] text-[var(--text-faint)] bg-[var(--bg-sunken)] border border-[var(--border)] rounded-lg px-4 py-3 leading-relaxed">
+                Gewerbesteuer (taxe professionnelle) et Einkommensteuer (impôt sur le revenu) non inclus — la Gewerbesteuer dépend du taux communal (Hebesatz) de ta commune d&apos;immatriculation, avec un abattement de 24 500€ de profit annuel ; l&apos;Einkommensteuer suit un barème progressif sur ton revenu annuel total. Vérifie avec un Steuerberater (expert-comptable) avant de fixer ta réserve.
               </div>
             )}
 
