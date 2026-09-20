@@ -18,6 +18,24 @@ import {
   STRIPE_RATE_US_DEFAULT,
   US_STATE_SALES_TAX,
   getUsStateTax,
+  STRIPE_FIXED_BE,
+  STRIPE_RATE_BE_DEFAULT,
+  TVA_RATE_BE,
+  SEUIL_FRANCHISE_BE,
+  COTISATIONS_RATE_BE,
+  STRIPE_FIXED_CH,
+  STRIPE_RATE_CH_DEFAULT,
+  TVA_RATE_CH,
+  SEUIL_IMMAT_CH,
+  COTISATIONS_SEUIL_CH,
+  STRIPE_FIXED_CA,
+  STRIPE_RATE_CA_DEFAULT,
+  TPS_TVQ_RATE_CA,
+  SEUIL_PETIT_FOURNISSEUR_CA,
+  STRIPE_FIXED_LU,
+  STRIPE_RATE_LU_DEFAULT,
+  TVA_RATE_LU,
+  SEUIL_FRANCHISE_LU,
   getDevise,
   getCharges,
   calcPrixVenteMin,
@@ -42,6 +60,19 @@ type SimulationInputs = {
   tauxRetourUS: string;
   salesTaxNexusUS: boolean;
   droitDouaneUS: string;
+  stripeRateBE: string;
+  tauxRetourBE: string;
+  caAnnuelCumuleBE: string;
+  stripeRateCH: string;
+  tauxRetourCH: string;
+  caAnnuelCumuleCH: string;
+  stripeRateCA: string;
+  tauxRetourCA: string;
+  caAnnuelCumuleCA: string;
+  droitDouaneCA: string;
+  stripeRateLU: string;
+  tauxRetourLU: string;
+  caAnnuelCumuleLU: string;
   tauxCharge: string;
   tauxTaxe: string;
   margeCible: string;
@@ -56,6 +87,20 @@ type SimulationMarge = {
 };
 
 const PALIERS = [10, 50, 200];
+
+// 8 modes : un <select> reste lisible quel que soit le nombre d'entrées, contrairement à une
+// rangée de boutons (illisible/scrollable dès qu'on dépasse 4-5 items) — voir la demande
+// d'origine qui a explicitement soulevé ce risque en ajoutant 4 modes d'un coup.
+const MODE_OPTIONS: { value: Mode; label: string }[] = [
+  { value: "france", label: "🇫🇷 France auto" },
+  { value: "uk", label: "🇬🇧 UK auto" },
+  { value: "us", label: "🇺🇸 US auto" },
+  { value: "be", label: "🇧🇪 Belgique auto" },
+  { value: "ch", label: "🇨🇭 Suisse auto" },
+  { value: "ca", label: "🇨🇦 Canada (Québec) auto" },
+  { value: "lu", label: "🇱🇺 Luxembourg auto" },
+  { value: "manuel", label: "🌍 International manuel" },
+];
 
 // Tuple utilisé pour les couleurs qui ont besoin d'une variante avec alpha (bordures) —
 // getMargeColor() renvoie une chaîne var(--token) valide pour `color`/`background`, mais on
@@ -125,6 +170,28 @@ function CalculateurMargeInner() {
   // fixe affiché sous le résultat), juste capturé pour mémo dans la simulation sauvegardée.
   const [droitDouaneUS, setDroitDouaneUS] = useState("");
 
+  // Mode Belgique auto
+  const [stripeRateBE, setStripeRateBE] = useState(STRIPE_RATE_BE_DEFAULT);
+  const [tauxRetourBE, setTauxRetourBE] = useState("");
+  const [caAnnuelCumuleBE, setCaAnnuelCumuleBE] = useState("");
+
+  // Mode Suisse auto
+  const [stripeRateCH, setStripeRateCH] = useState(STRIPE_RATE_CH_DEFAULT);
+  const [tauxRetourCH, setTauxRetourCH] = useState("");
+  const [caAnnuelCumuleCH, setCaAnnuelCumuleCH] = useState("");
+
+  // Mode Canada (Québec) auto
+  const [stripeRateCA, setStripeRateCA] = useState(STRIPE_RATE_CA_DEFAULT);
+  const [tauxRetourCA, setTauxRetourCA] = useState("");
+  const [caAnnuelCumuleCA, setCaAnnuelCumuleCA] = useState("");
+  // Purement informatif, jamais inclus dans le calcul — même traitement que droitDouaneUS.
+  const [droitDouaneCA, setDroitDouaneCA] = useState("");
+
+  // Mode Luxembourg auto
+  const [stripeRateLU, setStripeRateLU] = useState(STRIPE_RATE_LU_DEFAULT);
+  const [tauxRetourLU, setTauxRetourLU] = useState("");
+  const [caAnnuelCumuleLU, setCaAnnuelCumuleLU] = useState("");
+
   // Mode International manuel
   const [tauxCharge, setTauxCharge] = useState("");
   const [tauxTaxe, setTauxTaxe] = useState("");
@@ -135,6 +202,8 @@ function CalculateurMargeInner() {
   const charges = getCharges(mode, {
     extraUE, tauxCharge, tauxTaxe, stripeRateUK, tauxRetourUK,
     stripeRateUS, tauxRetourUS, usState, salesTaxNexusUS,
+    stripeRateBE, tauxRetourBE, stripeRateCH, tauxRetourCH,
+    stripeRateCA, tauxRetourCA, stripeRateLU, tauxRetourLU,
   });
   const devise = getDevise(mode);
   const tauxMarginal = tauxMarginalUK(parseFloat(profitAnnuelUK) || 0);
@@ -151,17 +220,33 @@ function CalculateurMargeInner() {
       return null;
     }
 
-    const chargesTotal = charges.rate * vente + charges.fixed;
-    const coutTotal = fournisseur + livraison + pub + chargesTotal;
+    // Charges proportionnelles au CA (Stripe/TVA-VAT-sales tax/retour) + fixe — mêmes
+    // qu'avant l'ajout des cotisations post-marge.
+    const chargesProportionnelles = charges.rate * vente + charges.fixed;
     const margeBrute = vente - fournisseur - livraison;
-    const margeNette = vente - coutTotal;
+    // Belgique/Suisse/Canada : cotisations sociales appliquées sur la marge nette
+    // pré-cotisations (après Stripe/CAC/retour/TVA), jamais sur le CA — mécanique
+    // volontairement distincte de l'URSSAF française. Voir postCotisationsRate dans
+    // lib/calcul-marge.ts ; undefined pour tous les autres modes, donc 0 ici (comportement
+    // strictement inchangé pour France/UK/US/Luxembourg/manuel).
+    const margeNettePreCotisations = vente - fournisseur - livraison - pub - chargesProportionnelles;
+    const cotisationsAmount = margeNettePreCotisations * (charges.postCotisationsRate ?? 0);
+    const margeNette = margeNettePreCotisations - cotisationsAmount;
+    // chargesTotal/coutTotal replient les cotisations dedans pour garder l'invariant
+    // coutTotal = vente - margeNette (utilisé par le ROI, le break-even et les StatCards).
+    const chargesTotal = chargesProportionnelles + cotisationsAmount;
+    const coutTotal = fournisseur + livraison + pub + chargesTotal;
     const margePct = (margeNette / vente) * 100;
     const roi = coutTotal > 0 ? (margeNette / coutTotal) * 100 : 0;
     const breakEven = coutTotal;
 
     return { margeBrute, margeNette, margePct, roi, breakEven, coutTotal, chargesTotal };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [prixFournisseur, fraisLivraison, prixVente, budgetPub, mode, extraUE, tauxCharge, tauxTaxe, stripeRateUK, tauxRetourUK, stripeRateUS, tauxRetourUS, usState, salesTaxNexusUS]);
+  }, [
+    prixFournisseur, fraisLivraison, prixVente, budgetPub, mode, extraUE, tauxCharge, tauxTaxe,
+    stripeRateUK, tauxRetourUK, stripeRateUS, tauxRetourUS, usState, salesTaxNexusUS,
+    stripeRateBE, tauxRetourBE, stripeRateCH, tauxRetourCH, stripeRateCA, tauxRetourCA, stripeRateLU, tauxRetourLU,
+  ]);
 
   // Calcul inversé : prix de vente minimum pour la marge cible
   const prixVenteMin = margeCible
@@ -233,6 +318,10 @@ function CalculateurMargeInner() {
       mode, prixFournisseur, fraisLivraison, prixVente, budgetPub,
       extraUE, caAnnuelCumule, stripeRateUK, tauxRetourUK, profitAnnuelUK,
       usState, stripeRateUS, tauxRetourUS, salesTaxNexusUS, droitDouaneUS,
+      stripeRateBE, tauxRetourBE, caAnnuelCumuleBE,
+      stripeRateCH, tauxRetourCH, caAnnuelCumuleCH,
+      stripeRateCA, tauxRetourCA, caAnnuelCumuleCA, droitDouaneCA,
+      stripeRateLU, tauxRetourLU, caAnnuelCumuleLU,
       tauxCharge, tauxTaxe, margeCible,
     };
     const resultatsSnapshot = {
@@ -284,6 +373,19 @@ function CalculateurMargeInner() {
     if (i.tauxRetourUS !== undefined) setTauxRetourUS(i.tauxRetourUS);
     if (i.salesTaxNexusUS !== undefined) setSalesTaxNexusUS(i.salesTaxNexusUS);
     if (i.droitDouaneUS !== undefined) setDroitDouaneUS(i.droitDouaneUS);
+    if (i.stripeRateBE !== undefined) setStripeRateBE(i.stripeRateBE);
+    if (i.tauxRetourBE !== undefined) setTauxRetourBE(i.tauxRetourBE);
+    if (i.caAnnuelCumuleBE !== undefined) setCaAnnuelCumuleBE(i.caAnnuelCumuleBE);
+    if (i.stripeRateCH !== undefined) setStripeRateCH(i.stripeRateCH);
+    if (i.tauxRetourCH !== undefined) setTauxRetourCH(i.tauxRetourCH);
+    if (i.caAnnuelCumuleCH !== undefined) setCaAnnuelCumuleCH(i.caAnnuelCumuleCH);
+    if (i.stripeRateCA !== undefined) setStripeRateCA(i.stripeRateCA);
+    if (i.tauxRetourCA !== undefined) setTauxRetourCA(i.tauxRetourCA);
+    if (i.caAnnuelCumuleCA !== undefined) setCaAnnuelCumuleCA(i.caAnnuelCumuleCA);
+    if (i.droitDouaneCA !== undefined) setDroitDouaneCA(i.droitDouaneCA);
+    if (i.stripeRateLU !== undefined) setStripeRateLU(i.stripeRateLU);
+    if (i.tauxRetourLU !== undefined) setTauxRetourLU(i.tauxRetourLU);
+    if (i.caAnnuelCumuleLU !== undefined) setCaAnnuelCumuleLU(i.caAnnuelCumuleLU);
     if (i.tauxCharge !== undefined) setTauxCharge(i.tauxCharge);
     if (i.tauxTaxe !== undefined) setTauxTaxe(i.tauxTaxe);
     if (i.margeCible !== undefined) setMargeCible(i.margeCible);
@@ -325,19 +427,17 @@ function CalculateurMargeInner() {
           </p>
         </div>
 
-        {/* Toggle mode */}
-        <div className="flex gap-1.5 bg-[var(--surface)] border border-[var(--border-strong)] rounded-xl p-1.5 mb-5">
-          {(["france", "uk", "us", "manuel"] as Mode[]).map((m) => (
-            <button
-              key={m}
-              onClick={() => setMode(m)}
-              className={`flex-1 px-3.5 py-2.5 rounded-lg border-none text-[13.5px] font-semibold cursor-pointer transition-all ${
-                mode === m ? "bg-violet-600 text-white" : "bg-transparent text-[var(--text-faint)]"
-              }`}
-            >
-              {m === "france" ? "🇫🇷 France auto" : m === "uk" ? "🇬🇧 UK auto" : m === "us" ? "🇺🇸 US auto" : "🌍 International manuel"}
-            </button>
-          ))}
+        {/* Sélection du mode — <select> plutôt qu'une rangée de boutons, illisible à 8 modes */}
+        <div className="mb-5">
+          <select
+            value={mode}
+            onChange={(e) => setMode(e.target.value as Mode)}
+            className="w-full box-border bg-[var(--surface)] border border-[var(--border-strong)] rounded-xl px-4 py-3.5 text-[14.5px] font-semibold text-[var(--text-primary)] outline-none cursor-pointer focus:border-violet-500"
+          >
+            {MODE_OPTIONS.map((opt) => (
+              <option key={opt.value} value={opt.value}>{opt.label}</option>
+            ))}
+          </select>
         </div>
 
         {/* Formulaire */}
@@ -525,6 +625,84 @@ function CalculateurMargeInner() {
                   {salesTaxNexusUS && usState ? ` · Sales tax ${(getUsStateTax(usState) * 100).toFixed(3)}% (${usState})` : " · Sales tax 0% (nexus non confirmé)"}.
                 </div>
               </div>
+            ) : mode === "be" ? (
+              <div className="bg-[var(--bg-sunken)] rounded-xl p-5 border border-[var(--border)] grid gap-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <InputField label="Frais Stripe (%)" placeholder="1.5" value={stripeRateBE} onChange={setStripeRateBE} />
+                  <InputField label="Taux de retour hypothétique (%)" placeholder="ex: 8" value={tauxRetourBE} onChange={setTauxRetourBE} />
+                </div>
+                <div className="text-xs text-[var(--text-faint)] leading-relaxed">
+                  Charges appliquées automatiquement : TVA {(TVA_RATE_BE * 100).toFixed(0)}% du prix de vente · Frais Stripe {stripeRateBE || "0"}% + {STRIPE_FIXED_BE.toFixed(2)}€ · Cotisations sociales indépendant {(COTISATIONS_RATE_BE * 100).toFixed(1)}% sur la marge nette (pas sur le CA — voir note sous le résultat).
+                </div>
+                <SeuilTracker
+                  label="CA cumulé cette année"
+                  devise="€"
+                  value={caAnnuelCumuleBE}
+                  onChange={setCaAnnuelCumuleBE}
+                  seuil={SEUIL_FRANCHISE_BE}
+                  caption={`Franchise de TVA jusqu'à ${SEUIL_FRANCHISE_BE.toLocaleString("fr-FR")}€`}
+                />
+              </div>
+            ) : mode === "ch" ? (
+              <div className="bg-[var(--bg-sunken)] rounded-xl p-5 border border-[var(--border)] grid gap-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <InputField label="Frais Stripe (%)" placeholder="2.9" value={stripeRateCH} onChange={setStripeRateCH} />
+                  <InputField label="Taux de retour hypothétique (%)" placeholder="ex: 8" value={tauxRetourCH} onChange={setTauxRetourCH} />
+                </div>
+                <div className="text-xs text-[var(--text-faint)] leading-relaxed">
+                  Charges appliquées automatiquement : TVA {(TVA_RATE_CH * 100).toFixed(1)}% du prix de vente · Frais Stripe {stripeRateCH || "0"}% + CHF {STRIPE_FIXED_CH.toFixed(2)} · AVS/AI/APG indépendant sur la marge nette (voir note sous le résultat).
+                </div>
+                <SeuilTracker
+                  label="CA cumulé cette année"
+                  devise=" CHF"
+                  value={caAnnuelCumuleCH}
+                  onChange={setCaAnnuelCumuleCH}
+                  seuil={SEUIL_IMMAT_CH}
+                  caption={`Immatriculation TVA obligatoire à partir de CHF ${SEUIL_IMMAT_CH.toLocaleString("fr-CH")}`}
+                />
+              </div>
+            ) : mode === "ca" ? (
+              <div className="bg-[var(--bg-sunken)] rounded-xl p-5 border border-[var(--border)] grid gap-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <InputField label="Frais Stripe (%)" placeholder="2.9" value={stripeRateCA} onChange={setStripeRateCA} />
+                  <InputField label="Taux de retour hypothétique (%)" placeholder="ex: 8" value={tauxRetourCA} onChange={setTauxRetourCA} />
+                </div>
+                <InputField
+                  label="Droit de douane estimé (%) — informatif, non inclus dans le calcul"
+                  placeholder="ex: 0"
+                  value={droitDouaneCA}
+                  onChange={setDroitDouaneCA}
+                />
+                <div className="text-xs text-[var(--text-faint)] leading-relaxed">
+                  Charges appliquées automatiquement : TPS + TVQ {(TPS_TVQ_RATE_CA * 100).toFixed(3)}% du prix de vente · Frais Stripe {stripeRateCA || "0"}% + C${STRIPE_FIXED_CA.toFixed(2)} · RRQ + RQAP sur la marge nette (voir note sous le résultat).
+                </div>
+                <SeuilTracker
+                  label="CA cumulé cette année"
+                  devise=" CAD"
+                  value={caAnnuelCumuleCA}
+                  onChange={setCaAnnuelCumuleCA}
+                  seuil={SEUIL_PETIT_FOURNISSEUR_CA}
+                  caption={`Seuil de petit fournisseur courant à ${SEUIL_PETIT_FOURNISSEUR_CA.toLocaleString("fr-FR")} CAD — à reconfirmer sur revenuquebec.ca avant toute décision.`}
+                />
+              </div>
+            ) : mode === "lu" ? (
+              <div className="bg-[var(--bg-sunken)] rounded-xl p-5 border border-[var(--border)] grid gap-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <InputField label="Frais Stripe (%)" placeholder="1.5" value={stripeRateLU} onChange={setStripeRateLU} />
+                  <InputField label="Taux de retour hypothétique (%)" placeholder="ex: 8" value={tauxRetourLU} onChange={setTauxRetourLU} />
+                </div>
+                <div className="text-xs text-[var(--text-faint)] leading-relaxed">
+                  Charges appliquées automatiquement : TVA {(TVA_RATE_LU * 100).toFixed(0)}% du prix de vente · Frais Stripe {stripeRateLU || "0"}% + {STRIPE_FIXED_LU.toFixed(2)}€. Pas de cotisations sociales déduites ici (voir note sous le résultat).
+                </div>
+                <SeuilTracker
+                  label="CA cumulé cette année"
+                  devise="€"
+                  value={caAnnuelCumuleLU}
+                  onChange={setCaAnnuelCumuleLU}
+                  seuil={SEUIL_FRANCHISE_LU}
+                  caption={`Franchise de TVA jusqu'à ${SEUIL_FRANCHISE_LU.toLocaleString("fr-FR")}€`}
+                />
+              </div>
             ) : (
               <div className="bg-[var(--bg-sunken)] rounded-xl p-5 border border-[var(--border)] grid grid-cols-2 gap-4">
                 <InputField
@@ -609,6 +787,47 @@ function CalculateurMargeInner() {
                 <div className="text-[12.5px] text-[var(--text-faint)] bg-[var(--bg-sunken)] border border-[var(--border)] rounded-lg px-4 py-3 leading-relaxed">
                   Prévois de mettre de côté une réserve pour l&apos;impôt fédéral et l&apos;impôt d&apos;État sur ton profit annuel — calculé une fois par an, pas par vente. Consulte un comptable US pour ton taux réel selon ta structure (LLC, sole proprietor, etc.).
                 </div>
+              </div>
+            )}
+
+            {/* Note fixe mode Belgique */}
+            {mode === "be" && (
+              <div className="mb-5 text-[12.5px] text-[var(--text-faint)] bg-[var(--bg-sunken)] border border-[var(--border)] rounded-lg px-4 py-3 leading-relaxed">
+                Cotisations calculées sur base provisoire, régularisées 2-3 ans plus tard selon ton revenu annuel réel déclaré (INASTI) — ce calcul est une estimation à date.
+              </div>
+            )}
+
+            {/* Notes fixes mode Suisse */}
+            {mode === "ch" && (
+              <div className="mb-5 grid gap-2.5">
+                <div className="text-[12.5px] text-[var(--text-faint)] bg-[var(--bg-sunken)] border border-[var(--border)] rounded-lg px-4 py-3 leading-relaxed">
+                  Taux de 10,0% applicable au-dessus de CHF {COTISATIONS_SEUIL_CH.toLocaleString("fr-CH")} de revenu annuel net ; barème dégressif en dessous, non modélisé ici — vérifie ta caisse de compensation AVS si ton revenu annuel est plus bas.
+                </div>
+                <div className="text-[12.5px] text-[var(--text-faint)] bg-[var(--bg-sunken)] border border-[var(--border)] rounded-lg px-4 py-3 leading-relaxed">
+                  L&apos;impôt sur le revenu (fédéral + cantonal + communal) varie fortement selon ton canton de résidence — calculé une fois par an, pas par vente. Consulte un fiduciaire pour ton taux réel.
+                </div>
+              </div>
+            )}
+
+            {/* Avertissements fixes mode Canada — affichés en permanence sous le résultat */}
+            {mode === "ca" && (
+              <div className="mb-5 grid gap-2.5">
+                <div className="text-[12.5px] text-[var(--warning)] bg-[var(--warning)]/10 border border-[var(--warning)]/20 rounded-lg px-4 py-3 leading-relaxed">
+                  Ce calcul n&apos;inclut pas les droits de douane et taxes à l&apos;importation applicables à ta catégorie de produit — vérifie le seuil et le taux réels sur cbsa-asfc.gc.ca avant de fixer ton prix.
+                </div>
+                <div className="text-[12.5px] text-[var(--text-faint)] bg-[var(--bg-sunken)] border border-[var(--border)] rounded-lg px-4 py-3 leading-relaxed">
+                  Cotisations RRQ + RQAP plafonnées au-delà de 74 600$ de revenu net annuel — non modélisé ici pour un revenu élevé.
+                </div>
+                <div className="text-[12.5px] text-[var(--text-faint)] bg-[var(--bg-sunken)] border border-[var(--border)] rounded-lg px-4 py-3 leading-relaxed">
+                  Prévois de mettre de côté une réserve pour l&apos;impôt fédéral et provincial sur ton profit annuel — calculé une fois par an, pas par vente. Consulte un comptable pour ton taux réel selon ta structure.
+                </div>
+              </div>
+            )}
+
+            {/* Note fixe mode Luxembourg */}
+            {mode === "lu" && (
+              <div className="mb-5 text-[12.5px] text-[var(--text-faint)] bg-[var(--bg-sunken)] border border-[var(--border)] rounded-lg px-4 py-3 leading-relaxed">
+                Cotisations sociales indépendant (CCSS) calculées sur ton revenu net annuel, taux variable selon statut — vérifie sur mss.public.lu ou avec un fiduciaire avant de fixer ta réserve.
               </div>
             )}
 
@@ -769,6 +988,44 @@ function CalculateurMargeInner() {
             )}
           </div>
         )}
+      </div>
+    </div>
+  );
+}
+
+// Tracker de seuil à un seul palier (Belgique/Suisse/Canada/Luxembourg) — même mécanique
+// visuelle que le tracker TVA du mode France (qui a deux paliers, base + majoré, donc reste
+// géré inline dans son propre bloc plutôt que via ce composant).
+function SeuilTracker({
+  label,
+  devise,
+  value,
+  onChange,
+  seuil,
+  caption,
+}: {
+  label: string;
+  devise: string;
+  value: string;
+  onChange: (v: string) => void;
+  seuil: number;
+  caption: string;
+}) {
+  const cumule = parseFloat(value) || 0;
+  const pct = Math.min((cumule / seuil) * 100, 100);
+  const color = cumule > seuil ? "var(--danger)" : cumule > seuil * 0.85 ? "var(--warning)" : "var(--success)";
+  return (
+    <div>
+      <InputField label={`${label} (${devise})`} placeholder={`ex: ${Math.round(seuil * 0.4)}`} value={value} onChange={onChange} />
+      <div className="mt-3">
+        <div className="flex justify-between text-[11px] text-[var(--text-faint)] mb-1.5">
+          <span>Progression vers le seuil</span>
+          <span className="font-semibold" style={{ color }}>{cumule.toLocaleString("fr-FR")}{devise} / {seuil.toLocaleString("fr-FR")}{devise}</span>
+        </div>
+        <div className="h-2 rounded-full bg-[var(--surface-3)] overflow-hidden">
+          <div className="h-full rounded-full transition-[width] duration-300" style={{ width: `${pct}%`, background: color }} />
+        </div>
+        <div className="text-[10.5px] text-[var(--text-faint)] mt-1.5">{caption}</div>
       </div>
     </div>
   );

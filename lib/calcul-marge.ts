@@ -112,23 +112,83 @@ export function getUsStateTax(code: string): number {
   return US_STATE_SALES_TAX.find((s) => s.code === code)?.taux ?? 0;
 }
 
-export type Mode = "france" | "uk" | "us" | "manuel";
+// ─── Constantes fiscales Belgique (indépendant, vente de marchandises) ────────
+
+export const STRIPE_FIXED_BE = 0.25;
+export const STRIPE_RATE_BE_DEFAULT = "1.5";
+export const TVA_RATE_BE = 0.21;
+export const SEUIL_FRANCHISE_BE = 25_000;
+// Cotisations sociales indépendant — appliquées sur la MARGE NETTE (après Stripe/CAC/retour/
+// TVA), jamais sur le CA/prix de vente : mécanique volontairement différente de l'URSSAF
+// française, voir postCotisationsRate ci-dessous.
+export const COTISATIONS_RATE_BE = 0.205;
+
+// ─── Constantes fiscales Suisse (indépendant, vente de marchandises) ──────────
+
+export const STRIPE_FIXED_CH = 0.30;          // CHF 0,30
+export const STRIPE_RATE_CH_DEFAULT = "2.9";
+export const TVA_RATE_CH = 0.081;
+export const SEUIL_IMMAT_CH = 100_000;        // CHF
+// AVS/AI/APG — même mécanique post-marge que la Belgique. Le taux de 10,0% n'est le taux
+// plein qu'au-dessus de CHF 60 500 de revenu annuel net ; en dessous, barème dégressif non
+// modélisé ici (voir avertissement fixe affiché dans l'UI).
+export const COTISATIONS_RATE_CH = 0.10;
+export const COTISATIONS_SEUIL_CH = 60_500;
+
+// ─── Constantes fiscales Canada — Québec (travailleur autonome) ───────────────
+
+export const STRIPE_FIXED_CA = 0.30;          // CAD 0,30
+export const STRIPE_RATE_CA_DEFAULT = "2.9";
+export const TPS_TVQ_RATE_CA = 0.14975;       // TPS + TVQ combinées
+export const SEUIL_PETIT_FOURNISSEUR_CA = 30_000; // CAD — seuil courant, à reconfirmer sur revenuquebec.ca
+// RRQ + RQAP combinés — même mécanique post-marge. Plafonnées au-delà de 74 600$ de revenu
+// net annuel, plafond non modélisé ici (voir avertissement fixe).
+export const COTISATIONS_RATE_CA = 0.1136;    // 10,6% + 0,764%
+export const COTISATIONS_PLAFOND_CA = 74_600; // CAD
+
+// ─── Constantes fiscales Luxembourg (indépendant, vente de marchandises) ──────
+
+export const STRIPE_FIXED_LU = 0.25;
+export const STRIPE_RATE_LU_DEFAULT = "1.5";
+export const TVA_RATE_LU = 0.17;
+export const SEUIL_FRANCHISE_LU = 50_000;
+// Pas de taux de cotisations sociales (CCSS) fiable à modéliser ici — voir l'avertissement
+// fixe affiché dans l'UI à la place d'un pourcentage automatique. Contrairement à
+// Belgique/Suisse/Canada, le mode Luxembourg n'a donc pas de postCotisationsRate du tout.
+
+export type Mode = "france" | "uk" | "us" | "be" | "ch" | "ca" | "lu" | "manuel";
 
 export function getDevise(mode: Mode): string {
   if (mode === "uk") return "£";
   if (mode === "us") return "$";
-  return "€";
+  if (mode === "ch") return "CHF";
+  if (mode === "ca") return "C$";
+  return "€"; // france, be, lu
 }
 
 export type ChargeInfo = {
   rate: number;    // fraction du CA (proportionnel au prix de vente)
   fixed: number;   // montant flat en devise du mode
   breakdown: { label: string; detail: string }[];
+  // Taux de cotisations appliqué APRÈS les autres déductions (Stripe/CAC/retour/TVA-VAT-
+  // sales tax), sur la marge nette pré-cotisations — jamais sur le CA. Mécanique distincte de
+  // `rate`/`fixed` (qui s'appliquent au prix de vente), utilisée par Belgique/Suisse/Canada.
+  // undefined = pas de cotisations post-marge pour ce mode (France les inclut déjà dans
+  // `rate` puisqu'elles se calculent sur le CA ; UK/US/Luxembourg/manuel n'en ont pas ici).
+  postCotisationsRate?: number;
 };
 
 export function getCharges(
   mode: Mode,
-  { extraUE, tauxCharge, tauxTaxe, stripeRateUK, tauxRetourUK, stripeRateUS, tauxRetourUS, usState, salesTaxNexusUS }: {
+  {
+    extraUE, tauxCharge, tauxTaxe,
+    stripeRateUK, tauxRetourUK,
+    stripeRateUS, tauxRetourUS, usState, salesTaxNexusUS,
+    stripeRateBE, tauxRetourBE,
+    stripeRateCH, tauxRetourCH,
+    stripeRateCA, tauxRetourCA,
+    stripeRateLU, tauxRetourLU,
+  }: {
     extraUE: boolean;
     tauxCharge: string;
     tauxTaxe: string;
@@ -138,8 +198,79 @@ export function getCharges(
     tauxRetourUS?: string;
     usState?: string;
     salesTaxNexusUS?: boolean;
+    stripeRateBE?: string;
+    tauxRetourBE?: string;
+    stripeRateCH?: string;
+    tauxRetourCH?: string;
+    stripeRateCA?: string;
+    tauxRetourCA?: string;
+    stripeRateLU?: string;
+    tauxRetourLU?: string;
   }
 ): ChargeInfo {
+  if (mode === "be") {
+    const stripeRate = (parseFloat(stripeRateBE ?? "") || 0) / 100;
+    const tauxRetour = (parseFloat(tauxRetourBE ?? "") || 0) / 100;
+    return {
+      rate: stripeRate + TVA_RATE_BE + tauxRetour,
+      fixed: STRIPE_FIXED_BE,
+      postCotisationsRate: COTISATIONS_RATE_BE,
+      breakdown: [
+        { label: "Frais Stripe", detail: `${(stripeRate * 100).toFixed(2)}% + ${STRIPE_FIXED_BE.toFixed(2)}€` },
+        { label: "TVA", detail: `${(TVA_RATE_BE * 100).toFixed(0)}%` },
+        { label: "Taux de retour hypothétique", detail: `${(tauxRetour * 100).toFixed(1)}%` },
+        { label: "Cotisations sociales indépendant", detail: `${(COTISATIONS_RATE_BE * 100).toFixed(1)}% — sur la marge nette, pas sur le CA` },
+      ],
+    };
+  }
+
+  if (mode === "ch") {
+    const stripeRate = (parseFloat(stripeRateCH ?? "") || 0) / 100;
+    const tauxRetour = (parseFloat(tauxRetourCH ?? "") || 0) / 100;
+    return {
+      rate: stripeRate + TVA_RATE_CH + tauxRetour,
+      fixed: STRIPE_FIXED_CH,
+      postCotisationsRate: COTISATIONS_RATE_CH,
+      breakdown: [
+        { label: "Frais Stripe", detail: `${(stripeRate * 100).toFixed(2)}% + CHF ${STRIPE_FIXED_CH.toFixed(2)}` },
+        { label: "TVA", detail: `${(TVA_RATE_CH * 100).toFixed(1)}%` },
+        { label: "Taux de retour hypothétique", detail: `${(tauxRetour * 100).toFixed(1)}%` },
+        { label: "AVS/AI/APG indépendant", detail: `${(COTISATIONS_RATE_CH * 100).toFixed(1)}% — sur la marge nette, taux plein au-dessus de CHF ${COTISATIONS_SEUIL_CH.toLocaleString("fr-CH")}` },
+      ],
+    };
+  }
+
+  if (mode === "ca") {
+    const stripeRate = (parseFloat(stripeRateCA ?? "") || 0) / 100;
+    const tauxRetour = (parseFloat(tauxRetourCA ?? "") || 0) / 100;
+    return {
+      rate: stripeRate + TPS_TVQ_RATE_CA + tauxRetour,
+      fixed: STRIPE_FIXED_CA,
+      postCotisationsRate: COTISATIONS_RATE_CA,
+      breakdown: [
+        { label: "Frais Stripe", detail: `${(stripeRate * 100).toFixed(2)}% + C$${STRIPE_FIXED_CA.toFixed(2)}` },
+        { label: "TPS + TVQ", detail: `${(TPS_TVQ_RATE_CA * 100).toFixed(3)}%` },
+        { label: "Taux de retour hypothétique", detail: `${(tauxRetour * 100).toFixed(1)}%` },
+        { label: "RRQ + RQAP", detail: `${(COTISATIONS_RATE_CA * 100).toFixed(2)}% — sur la marge nette, plafonné au-delà de 74 600$ (non modélisé)` },
+      ],
+    };
+  }
+
+  if (mode === "lu") {
+    const stripeRate = (parseFloat(stripeRateLU ?? "") || 0) / 100;
+    const tauxRetour = (parseFloat(tauxRetourLU ?? "") || 0) / 100;
+    return {
+      rate: stripeRate + TVA_RATE_LU + tauxRetour,
+      fixed: STRIPE_FIXED_LU,
+      // Pas de postCotisationsRate — voir la constante SEUIL_FRANCHISE_LU ci-dessus.
+      breakdown: [
+        { label: "Frais Stripe", detail: `${(stripeRate * 100).toFixed(2)}% + ${STRIPE_FIXED_LU.toFixed(2)}€` },
+        { label: "TVA", detail: `${(TVA_RATE_LU * 100).toFixed(0)}%` },
+        { label: "Taux de retour hypothétique", detail: `${(tauxRetour * 100).toFixed(1)}%` },
+      ],
+    };
+  }
+
   if (mode === "uk") {
     const stripeRate = (parseFloat(stripeRateUK ?? "") || 0) / 100;
     const tauxRetour = (parseFloat(tauxRetourUK ?? "") || 0) / 100;
@@ -205,7 +336,11 @@ export function getCharges(
   };
 }
 
-// Prix de vente minimum pour atteindre une marge nette cible (%), charges/fixes du mode actif inclus
+// Prix de vente minimum pour atteindre une marge nette cible (%), charges/fixes du mode actif
+// inclus. Généralisé pour tenir compte de postCotisationsRate (Belgique/Suisse/Canada) : si
+// margeNette = (vente*(1-rate) - fixe) * (1-C) = target*vente, alors
+// vente = fixe*(1-C) / [(1-rate)*(1-C) - target] — se réduit exactement à l'ancienne formule
+// quand C = 0 (tous les autres modes).
 export function calcPrixVenteMin(
   margeCiblePct: number,
   fournisseur: number,
@@ -215,9 +350,10 @@ export function calcPrixVenteMin(
 ): number | null {
   const fixe = fournisseur + livraison + pub + charges.fixed;
   const target = margeCiblePct / 100;
-  const denom = 1 - charges.rate - target;
+  const unMoinsC = 1 - (charges.postCotisationsRate ?? 0);
+  const denom = (1 - charges.rate) * unMoinsC - target;
   if (denom <= 0) return null;
-  return fixe / denom;
+  return (fixe * unMoinsC) / denom;
 }
 
 // Code couleur partagé pour l'affichage d'une marge nette (%) — calculateur + dashboard.
