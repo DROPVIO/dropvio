@@ -141,7 +141,7 @@ export default function CalculateurMarge() {
 function CalculateurMargeInner() {
   const searchParams = useSearchParams();
 
-  const [mode, setMode] = useState<Mode>("france");
+  const [mode, setMode] = useState<Mode>("manuel");
 
   // Champs communs
   const [prixFournisseur, setPrixFournisseur] = useState(() => searchParams.get("cout") || "");
