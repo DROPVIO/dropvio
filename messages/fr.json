@@ -88,9 +88,9 @@
         "agency": "59€/mois"
       },
       "features": {
-        "free": ["Accès à 20 produits gagnants par mois", "Calculateur de marge illimité", "1 site généré par mois"],
-        "pro": ["Produits gagnants illimités", "Calculateur de marge illimité", "5 sites générés par mois", "Sauvegarde illimitée de vos sites"],
-        "agency": ["Tout le plan Pro", "20 sites générés par mois", "Support prioritaire sous 24h"]
+        "free": ["Accès aux 1000 premiers produits du catalogue", "2 simulations de calcul de marge sauvegardées", "5 sites générés par mois", "Audit IA non inclus"],
+        "pro": ["Produits gagnants illimités", "Calculateur de marge illimité", "20 sites générés par mois", "30 audits IA par mois", "Sauvegarde illimitée de vos sites"],
+        "agency": ["Tout le plan Pro", "50 sites générés par mois", "100 audits IA par mois", "Support prioritaire sous 24h"]
       }
     },
     "profil": {

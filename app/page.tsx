@@ -481,9 +481,8 @@ export default function LandingPage() {
               <p className="mt-3 text-[14.5px] leading-[1.6] text-[var(--dv-muted)]">Pour tester Dropvio sans limite de temps, à votre rythme.</p>
               <div className="mt-[22px] grid gap-[11px] text-[14.5px] text-[var(--dv-muted)]">
                 <div className="flex gap-2.5"><span className="text-[var(--dv-accent)]">✓</span>Audit IA réservé à Pro et Agency</div>
-                <div className="flex gap-2.5"><span className="text-[var(--dv-accent)]">✓</span>Calculateur de marge illimité</div>
+                <div className="flex gap-2.5"><span className="text-[var(--dv-accent)]">✓</span>2 simulations de calcul de marge sauvegardées</div>
                 <div className="flex gap-2.5"><span className="text-[var(--dv-accent)]">✓</span>5 pages générées avec le site builder par mois</div>
-                <div className="flex gap-2.5"><span className="text-[var(--dv-accent)]">✓</span>Export HTML simple</div>
               </div>
               <Link
                 href="/register"

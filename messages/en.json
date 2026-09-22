@@ -88,9 +88,9 @@
         "agency": "€59/month"
       },
       "features": {
-        "free": ["Access to 20 winning products per month", "Unlimited margin calculator", "1 generated site per month"],
-        "pro": ["Unlimited winning products", "Unlimited margin calculator", "5 generated sites per month", "Unlimited site saves"],
-        "agency": ["Everything in Pro", "20 generated sites per month", "Priority support within 24h"]
+        "free": ["Access to the first 1,000 products in the catalog", "2 saved margin calculations", "5 generated sites per month", "AI audit not included"],
+        "pro": ["Unlimited winning products", "Unlimited margin calculator", "20 generated sites per month", "30 AI audits per month", "Unlimited site saves"],
+        "agency": ["Everything in Pro", "50 generated sites per month", "100 AI audits per month", "Priority support within 24h"]
       }
     },
     "profil": {

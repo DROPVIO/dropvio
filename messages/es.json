@@ -88,9 +88,9 @@
         "agency": "59 €/mes"
       },
       "features": {
-        "free": ["Acceso a 20 productos ganadores al mes", "Calculadora de margen ilimitada", "1 sitio generado al mes"],
-        "pro": ["Productos ganadores ilimitados", "Calculadora de margen ilimitada", "5 sitios generados al mes", "Guardado ilimitado de tus sitios"],
-        "agency": ["Todo lo del plan Pro", "20 sitios generados al mes", "Soporte prioritario en 24h"]
+        "free": ["Acceso a los primeros 1000 productos del catálogo", "2 simulaciones de margen guardadas", "5 sitios generados al mes", "Auditoría IA no incluida"],
+        "pro": ["Productos ganadores ilimitados", "Calculadora de margen ilimitada", "20 sitios generados al mes", "30 auditorías IA al mes", "Guardado ilimitado de tus sitios"],
+        "agency": ["Todo lo del plan Pro", "50 sitios generados al mes", "100 auditorías IA al mes", "Soporte prioritario en 24h"]
       }
     },
     "profil": {

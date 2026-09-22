@@ -88,9 +88,9 @@
         "agency": "59 €/mese"
       },
       "features": {
-        "free": ["Accesso a 20 prodotti vincenti al mese", "Calcolatore di margine illimitato", "1 sito generato al mese"],
-        "pro": ["Prodotti vincenti illimitati", "Calcolatore di margine illimitato", "5 siti generati al mese", "Salvataggio illimitato dei tuoi siti"],
-        "agency": ["Tutto il piano Pro", "20 siti generati al mese", "Supporto prioritario entro 24h"]
+        "free": ["Accesso ai primi 1000 prodotti del catalogo", "2 simulazioni di margine salvate", "5 siti generati al mese", "Audit IA non incluso"],
+        "pro": ["Prodotti vincenti illimitati", "Calcolatore di margine illimitato", "20 siti generati al mese", "30 audit IA al mese", "Salvataggio illimitato dei tuoi siti"],
+        "agency": ["Tutto il piano Pro", "50 siti generati al mese", "100 audit IA al mese", "Supporto prioritario entro 24h"]
       }
     },
     "profil": {
