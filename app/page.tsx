@@ -1,246 +1,150 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef } from "react";
 import Link from "next/link";
 import Logo from "@/components/Logo";
+import { applyTheme, getStoredTheme } from "@/lib/theme";
 
 // ─── Static data ──────────────────────────────────────────────────────────────
 
-const MARQUEE_ITEMS = [
-  "Produits gagnants",
-  "Calculateur de marge",
-  "Site builder",
-  "Audit IA",
-  "Export Shopify-ready",
-  "20 niches de produits gagnants",
-];
+const FLOW_STEPS = [
+  { num: "01", title: "Recherche produit", desc: "Interrogez le catalogue AliExpress par niche, prix, délai de livraison et vendeur. Les produits sans marge viable sont écartés avant même l'analyse." },
+  { num: "02", title: "Calcul de marge — mode France", desc: "Cotisations URSSAF, TVA, taxes à l'import UE et commissions Stripe déduites automatiquement. Vous voyez la marge nette, pas la marge brute qui fait rêver." },
+  { num: "03", title: "Audit IA de la page de vente", desc: "Un score sur 100 et des correctifs classés par impact, appuyés sur les référentiels Nielsen Norman Group, Unbounce et McKinsey." },
+  { num: "04", title: "Génération du site", desc: "Mono-produit ou boutique multi-produits : 4 templates, palettes personnalisables, textes de vente pré-remplis. En quelques clics." },
+  { num: "05", title: "Commande AliExpress", desc: "Les commandes entrantes de votre boutique Shopify remontent dans Dropvio et partent chez le fournisseur, avec leur statut au même endroit." },
+  { num: "06", title: "Tracking poussé vers Shopify", desc: "Dès que le numéro de suivi existe, il est envoyé automatiquement à Shopify. Le client est notifié, votre SAV se vide." },
+] as const;
 
-const WORKFLOW_STEPS = [
-  { num: "01", title: "Trouvez la niche",   desc: "20 niches de produits gagnants, données AliExpress en direct." },
-  { num: "02", title: "Calculez la marge",  desc: "Prix, frais, marge nette — avant d'investir un centime en pub." },
-  { num: "03", title: "Générez la page",    desc: "Palette, prix, structure — votre page en quelques minutes." },
-  { num: "04", title: "Corrigez avec l'IA", desc: "Score sur 100, corrections précises, export en un clic." },
-];
+const PRODUCT_FEATURES = [
+  { icon: "◎", title: "Produits gagnants", desc: "Recherche directe dans l'API AliExpress, filtres sur le délai, le vendeur et le potentiel de marge.", variant: "a" },
+  { icon: "%", title: "Marge nette française", desc: "URSSAF, TVA, taxes UE et frais Stripe intégrés au calcul. Le chiffre que vous gardez vraiment.", variant: "a" },
+  { icon: "AI", title: "Audit IA, score sur 100", desc: "Diagnostic de votre page de vente sur des référentiels UX reconnus, avec priorités d'action.", variant: "a" },
+  { icon: "◧", title: "Site & boutique en 1 clic", desc: "4 templates, palettes personnalisables, mono-produit ou catalogue multi-produits.", variant: "b" },
+  { icon: "⇄", title: "Connexion Shopify", desc: "Reliez une boutique existante ou celle générée par Dropvio, sans manipulation technique.", variant: "b" },
+  { icon: "⤴", title: "Suivi & push tracking", desc: "Commandes AliExpress suivies et numéro de suivi renvoyé automatiquement dans Shopify.", variant: "b" },
+] as const;
 
-const SCORE_BARS = [
-  { label: "Hiérarchie visuelle", target: 93,  val: "14/15" },
-  { label: "CTA",                 target: 100, val: "15/15" },
-  { label: "Copywriting",         target: 90,  val: "9/10"  },
-  { label: "Typographie",         target: 100, val: "10/10" },
-  { label: "Preuve sociale",      target: 53,  val: "8/15"  },
-];
+const RESULT_BARS = [
+  { label: "Sourcing\nproduit", before: 72, after: 18 },
+  { label: "Calcul de\nmarge", before: 58, after: 9 },
+  { label: "Création\ndu site", before: 86, after: 22 },
+  { label: "Suivi des\ncommandes", before: 64, after: 7 },
+] as const;
 
-const FEATURES = [
-  {
-    title: "Produits gagnants",
-    desc: "Ce catalogue vous montre les produits qui se vendent bien en ce moment, classés par thème (fitness, beauté, maison...). Pour chaque produit : le prix d'achat sur AliExpress, le prix de vente conseillé, et la marge que vous pouvez espérer.",
-    statVal: "20", statLabel: "niches de produits gagnants",
-    more: "Vous n'avez pas besoin de fouiller AliExpress pendant des heures. Ouvrez un thème, regardez les produits déjà triés par popularité, et comparez leur marge en un coup d'œil. Les données sont mises à jour régulièrement, ce ne sont pas des chiffres d'il y a six mois.",
-    icon: (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7">
-        <path d="M3 12l4-7 5 4 5-8 4 6"/>
-        <circle cx="19" cy="7" r="1.5" fill="currentColor"/>
-      </svg>
-    ),
-    demo: (
-      <div className="feat-demo fd-produit">
-        <div className="fd-produit-thumb">🛍️</div>
-        <div className="fd-produit-info">
-          <p className="fd-produit-nom">Bandes de résistance fitness (lot de 5)</p>
-          <p className="fd-produit-meta">⭐ 4.7 · 12k commandes</p>
-          <p className="fd-produit-prix">Achat AliExpress <b>4,20 €</b> → Vente conseillée <b>19,99 €</b></p>
-        </div>
-        <span className="fd-marge-badge">Marge 79%</span>
-      </div>
-    ),
-  },
-  {
-    title: "Calculateur de marge",
-    desc: "Vous entrez le prix d'achat, les frais de livraison, le prix que vous comptez demander — et l'outil calcule ce qu'il vous reste vraiment en poche. Vous savez avant de payer une pub si le produit est rentable ou pas.",
-    statVal: "0€", statLabel: "surprise sur vos marges",
-    more: "Remplissez vos vrais coûts : achat, transport, frais de paiement, budget pub estimé. À chaque champ que vous changez, la marge se met à jour tout de suite. Vous voyez immédiatement si votre prix de vente est trop bas.",
-    icon: (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7">
-        <path d="M4 4h16v16H4z"/><path d="M4 10h16M10 4v16"/>
-      </svg>
-    ),
-    demo: (
-      <div className="feat-demo fd-calc">
-        <div className="fd-calc-row"><span>Prix d&apos;achat</span><span>8,50 €</span></div>
-        <div className="fd-calc-row"><span>Frais de livraison</span><span>2,00 €</span></div>
-        <div className="fd-calc-row"><span>Prix de vente</span><span>24,99 €</span></div>
-        <div className="fd-calc-divider" />
-        <div className="fd-calc-result">
-          <div>
-            <span className="fd-calc-result-label">Marge nette</span>
-            <span className="fd-calc-result-num" style={{ color: "var(--green)" }}>+14,49 €</span>
-          </div>
-          <span className="fd-calc-badge" style={{ color: "var(--green)", borderColor: "rgba(52,211,153,0.35)", background: "rgba(52,211,153,0.1)" }}>58%</span>
-        </div>
-      </div>
-    ),
-  },
-  {
-    title: "Site builder",
-    desc: "Cet outil crée automatiquement une page de vente pour votre produit : titre, photos, description, prix, bouton d'achat. Vous choisissez juste les couleurs et le style, tout le reste est déjà prêt.",
-    statVal: "6", statLabel: "styles de page",
-    more: "Choisissez un style et des couleurs, ajoutez vos photos et votre prix, et regardez le résultat en temps réel — sur ordinateur et sur mobile. Une fois satisfait, téléchargez la page HTML ou exportez-la en thème Shopify.",
-    icon: (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7">
-        <rect x="3" y="3" width="7" height="7" rx="1"/>
-        <rect x="14" y="3" width="7" height="7" rx="1"/>
-        <rect x="3" y="14" width="7" height="7" rx="1"/>
-        <rect x="14" y="14" width="7" height="7" rx="1"/>
-      </svg>
-    ),
-    demo: (
-      <div className="feat-demo fd-builder">
-        <div className="fd-browser-bar">
-          <span className="fd-dot" style={{ background: "#F87171" }} />
-          <span className="fd-dot" style={{ background: "var(--amber)" }} />
-          <span className="fd-dot" style={{ background: "var(--green)" }} />
-        </div>
-        <div className="fd-builder-preview">
-          <div className="fd-builder-img" />
-          <div className="fd-builder-content">
-            <p className="fd-builder-title">Ceinture chauffante lombaire</p>
-            <span className="fd-builder-line" />
-            <p className="fd-builder-price">29,99 €</p>
-            <span className="fd-builder-cta">Commander →</span>
-          </div>
-        </div>
-      </div>
-    ),
-  },
-  {
-    title: "Audit de page IA",
-    desc: "Avant de mettre votre page en ligne, notre IA la note sur 100 et vous dit précisément ce qui cloche : le titre pas assez visible, le bouton d'achat mal placé, aucun avis client, etc.",
-    statVal: "9", statLabel: "critères analysés",
-    more: "Collez le code de votre page (ou celle créée avec le site builder). L'IA l'analyse selon 9 points qui comptent vraiment pour vendre, y compris l'affichage mobile : voit-on bien le titre, comprend-on le prix, le bouton donne-t-il envie de cliquer, la page fonctionne-t-elle bien sur téléphone... Elle vous dit quoi corriger, et peut même vous donner la version déjà corrigée.",
-    icon: (
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7">
-        <path d="M12 3l7 3v6c0 5-3.5 7.5-7 9-3.5-1.5-7-4-7-9V6l7-3z"/>
-        <path d="M9 12l2 2 4-4"/>
-      </svg>
-    ),
-    demo: (
-      <div className="feat-demo fd-audit-mini">
-        <div className="fd-audit-ring">
-          <svg width="56" height="56" viewBox="0 0 56 56">
-            <circle cx="28" cy="28" r="24" fill="none" stroke="var(--surface-2)" strokeWidth="5" />
-            <circle cx="28" cy="28" r="24" fill="none" stroke="var(--green)" strokeWidth="5" strokeLinecap="round" strokeDasharray="150.8" strokeDashoffset="13.6" />
-          </svg>
-          <span>91</span>
-        </div>
-        <div className="fd-audit-bars">
-          <div>
-            <span className="fd-audit-bar-label">Titre visible</span>
-            <div className="fd-audit-bar-track"><div className="fd-audit-bar-fill" style={{ width: "95%" }} /></div>
-          </div>
-          <div>
-            <span className="fd-audit-bar-label">Bouton d&apos;achat</span>
-            <div className="fd-audit-bar-track"><div className="fd-audit-bar-fill" style={{ width: "90%" }} /></div>
-          </div>
-        </div>
-      </div>
-    ),
-  },
-];
-
-const TRUST_ITEMS = [
-  { src: "Nielsen Norman Group", text: "Hiérarchie visuelle et lecture en Z / F — comment l'œil parcourt réellement une page." },
-  { src: "Unbounce",             text: "Ratio d'attention et structure du CTA — ce qui fait réellement cliquer." },
-  { src: "McKinsey",             text: "Clarté du message et charge cognitive — pourquoi la simplicité convertit." },
-];
+const MINI_FAQ = [
+  { q: "Le calcul de marge est-il adapté au statut français ?", a: "Oui : le mode France intègre les cotisations URSSAF, la TVA, les taxes à l'import UE et les frais Stripe pour afficher une marge nette." },
+  { q: "Puis-je garder ma boutique Shopify existante ?", a: "Oui. Connectez votre boutique actuelle : les commandes remontent dans Dropvio et le numéro de suivi repart automatiquement vers Shopify." },
+  { q: "Sur quoi repose l'audit IA ?", a: "Sur des critères issus des travaux du Nielsen Norman Group, des benchmarks Unbounce et d'études McKinsey sur la conversion, traduits en un score sur 100." },
+] as const;
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export default function LandingPage() {
-  // openFeature: which feat-card is expanded
-  const [openFeature, setOpenFeature] = useState<number | null>(null);
-  // visibleFeatures: which feat-cards have been scrolled into view (React-owned)
-  const [visibleFeatures, setVisibleFeatures] = useState<Set<number>>(new Set());
+  const rootRef = useRef<HTMLDivElement>(null);
+
+  function toggleTheme() {
+    applyTheme(getStoredTheme() === "light" ? "dark" : "light");
+  }
+
+  function handleFaqToggle(event: React.SyntheticEvent<HTMLDetailsElement>) {
+    const mark = event.currentTarget.querySelector<HTMLElement>("summary span:last-child");
+    if (!mark) return;
+    mark.style.transition = "transform .3s cubic-bezier(.16,1,.3,1)";
+    mark.style.transform = event.currentTarget.open ? "rotate(135deg)" : "none";
+  }
 
   useEffect(() => {
-    // ── Score ring animation ──────────────────────────────────────
-    const circumference = 2 * Math.PI * 52;
-    const target = 91;
-    const ringFg  = document.getElementById("ringFg")   as SVGCircleElement | null;
-    const scoreEl = document.getElementById("scoreNum") as HTMLElement | null;
-    let running = false;
-    let raf = 0;
+    const root = rootRef.current;
+    if (!root) return;
 
-    function animateScore() {
-      if (running || !ringFg || !scoreEl) return;
-      running = true;
-      ringFg.style.strokeDashoffset = String(circumference - (target / 100) * circumference);
-      const start = performance.now();
-      (function step(now: number) {
-        const p = Math.min((now - start) / 1400, 1);
-        scoreEl!.textContent = String(Math.round(p * target));
-        if (p < 1) { raf = requestAnimationFrame(step); } else { running = false; }
-      })(start);
-      document.querySelectorAll<HTMLElement>(".bar-fill").forEach((bar) => {
-        const t = bar.getAttribute("data-target") ?? "0";
-        requestAnimationFrame(() => { bar.style.width = t + "%"; });
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const ease = (t: number) => 1 - Math.pow(1 - t, 4);
+
+    function fillBars(chart: Element) {
+      chart.querySelectorAll<HTMLElement>("[data-bar]").forEach((bar, i) => {
+        const value = (bar.getAttribute("data-val") ?? "0") + "%";
+        const prop = bar.getAttribute("data-axis") === "h" ? "height" : "width";
+        if (reduce) { bar.style[prop] = value; return; }
+        window.setTimeout(() => { bar.style[prop] = value; }, 90 * i);
       });
     }
 
-    function resetScore() {
-      running = false;
-      cancelAnimationFrame(raf);
-      if (ringFg)  ringFg.style.strokeDashoffset = String(circumference);
-      if (scoreEl) scoreEl.textContent = "0";
-      document.querySelectorAll<HTMLElement>(".bar-fill").forEach((b) => { b.style.width = "0%"; });
+    function count(el: HTMLElement) {
+      const to = parseFloat(el.getAttribute("data-to") ?? "0");
+      if (reduce) { el.textContent = String(to); return; }
+      const t0 = performance.now();
+      const dur = 1300;
+      function tick(now: number) {
+        const p = Math.min(1, (now - t0) / dur);
+        el.textContent = String(Math.round(to * ease(p)));
+        if (p < 1) requestAnimationFrame(tick);
+      }
+      requestAnimationFrame(tick);
     }
 
-    const auditDemo = document.querySelector(".audit-demo");
-    const scoreObs = auditDemo
-      ? new IntersectionObserver(
-          (entries) => entries.forEach((e) => (e.isIntersecting ? animateScore() : resetScore())),
-          { threshold: 0.3 }
-        )
-      : null;
-    if (auditDemo && scoreObs) scoreObs.observe(auditDemo);
-
-    // ── Reveal for non-interactive elements (workflow, trust, pricing) ──
-    const revealObs = new IntersectionObserver(
-      (entries) => entries.forEach((e) => e.target.classList.toggle("in-view", e.isIntersecting)),
-      { threshold: 0.15, rootMargin: "0px 0px -6% 0px" }
-    );
-    document.querySelectorAll(".reveal, .reveal-fade").forEach((el) => revealObs.observe(el));
-
-    // ── Feat-cards: React-state driven to survive re-renders ──────
-    // When a card is clicked, React re-renders and would overwrite any
-    // imperatively-added className. So we track visibility in React state.
-    const featObs = new IntersectionObserver(
+    // Reveal / chart-fill / count-up / line-fill — un seul IntersectionObserver
+    // pour tous les éléments, même modèle (seuil, marge, désabonnement après
+    // déclenchement) que le script inline d'origine du design.
+    const io = new IntersectionObserver(
       (entries) => {
-        entries.forEach((e) => {
-          if (e.isIntersecting) {
-            const idx = Number((e.target as HTMLElement).dataset.featIdx);
-            setVisibleFeatures((prev) => {
-              if (prev.has(idx)) return prev;
-              const next = new Set(prev);
-              next.add(idx);
-              return next;
-            });
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting) return;
+          const el = entry.target as HTMLElement;
+          io.unobserve(el);
+          if (el.hasAttribute("data-reveal")) {
+            const siblings = el.parentElement
+              ? Array.from(el.parentElement.children).filter((n) => n.hasAttribute("data-reveal"))
+              : [el];
+            const idx = Math.max(0, siblings.indexOf(el));
+            el.style.transitionDelay = reduce ? "0ms" : `${Math.min(idx * 80, 400)}ms`;
+            el.setAttribute("data-reveal", "in");
+          }
+          if (el.hasAttribute("data-chart")) fillBars(el);
+          if (el.hasAttribute("data-count")) count(el);
+          if (el.hasAttribute("data-line")) {
+            const fill = el.querySelector<HTMLElement>("[data-line-fill]");
+            if (fill) fill.style.height = "100%";
           }
         });
       },
-      { threshold: 0.1 }
+      { threshold: 0.18, rootMargin: "0px 0px -8% 0px" }
     );
-    document.querySelectorAll<HTMLElement>("[data-feat-idx]").forEach((el) => featObs.observe(el));
+    root.querySelectorAll("[data-reveal],[data-chart],[data-count],[data-line]").forEach((el) => io.observe(el));
+
+    // Anneau du score IA — toujours au-dessus de la ligne de flottaison,
+    // animé une fois au montage plutôt que déclenché au scroll.
+    const ring = root.querySelector<SVGCircleElement>("[data-ring]");
+    const ringNum = root.querySelector<HTMLElement>("[data-ring-num]");
+    const target = 91;
+    const circumference = 640.9;
+    let raf = 0;
+    if (ring) {
+      if (reduce) {
+        ring.style.strokeDashoffset = String(circumference * (1 - target / 100));
+        if (ringNum) ringNum.textContent = String(target);
+      } else {
+        const t0 = performance.now() + 250;
+        const dur = 2000;
+        const tick = (now: number) => {
+          const p = Math.max(0, Math.min(1, (now - t0) / dur));
+          const e = 1 - Math.pow(1 - p, 5);
+          ring.style.strokeDashoffset = String(circumference * (1 - (target / 100) * e));
+          if (ringNum) ringNum.textContent = String(Math.round(target * e));
+          if (p < 1) raf = requestAnimationFrame(tick);
+        };
+        raf = requestAnimationFrame(tick);
+      }
+    }
 
     return () => {
-      scoreObs?.disconnect();
-      revealObs.disconnect();
-      featObs.disconnect();
+      io.disconnect();
       cancelAnimationFrame(raf);
     };
   }, []);
 
   return (
-    <div className="landing-page">
+    <div ref={rootRef} className="dv-home relative min-h-screen overflow-hidden bg-[var(--dv-bg)] font-[Inter,system-ui,sans-serif] text-[var(--dv-ink)] antialiased">
       {/* Fonts */}
       {/* eslint-disable-next-line @next/next/no-page-custom-font */}
       <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -252,260 +156,462 @@ export default function LandingPage() {
         rel="stylesheet"
       />
 
+      {/* Fond décoratif : grille + halo */}
+      <div
+        aria-hidden
+        className="pointer-events-none fixed inset-0 z-0 opacity-[0.28]"
+        style={{
+          backgroundImage:
+            "linear-gradient(var(--dv-grid) 1px,transparent 1px),linear-gradient(90deg,var(--dv-grid) 1px,transparent 1px)",
+          backgroundSize: "78px 78px",
+          maskImage: "radial-gradient(120% 90% at 50% 0%,#000 10%,transparent 72%)",
+        }}
+      />
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -top-[220px] left-1/2 z-0 h-[620px] w-[1100px] -translate-x-1/2 opacity-[0.13] blur-[20px]"
+        style={{ background: "radial-gradient(50% 50% at 50% 50%,var(--dv-accent),transparent 70%)" }}
+      />
+
       {/* ── Nav ──────────────────────────────────────────────────── */}
-      <nav className="lp-nav">
-        <div className="wrap">
-          <Link href="/" className="lp-logo">
-            <Logo className="lp-logo-mark" />
-            Dropvio
+      <header className="sticky top-0 z-50 border-b border-[var(--dv-line)] bg-[var(--dv-glass)] backdrop-blur-[18px] backdrop-saturate-[1.4]">
+        <nav className="mx-auto flex max-w-[1200px] items-center gap-[22px] px-[22px] py-[14px]">
+          <a href="#top" className="flex items-center gap-2.5 text-[var(--dv-ink)]">
+            <Logo className="h-7 w-7 text-[var(--dv-logo)]" />
+            <span className="font-['Plus_Jakarta_Sans',sans-serif] text-[19px] font-extrabold tracking-[-0.03em]">Dropvio</span>
+          </a>
+          <div className="ml-auto hidden items-center gap-[26px] text-[14.5px] font-medium sm:flex">
+            <a href="#flux" className="dv-nav-link text-[var(--dv-muted)] transition-colors">Le flux</a>
+            <a href="#produit" className="dv-nav-link text-[var(--dv-muted)] transition-colors">Produit</a>
+            <a href="#resultats" className="dv-nav-link text-[var(--dv-muted)] transition-colors">Résultats</a>
+            <a href="#pricing" className="dv-nav-link text-[var(--dv-muted)] transition-colors">Tarifs</a>
+          </div>
+          <button
+            type="button"
+            onClick={toggleTheme}
+            aria-label="Changer de thème"
+            className="dv-theme-btn grid h-[38px] w-[38px] flex-none place-items-center rounded-[11px] border border-[var(--dv-line)] bg-[var(--dv-card)] text-[var(--dv-muted)] transition-[transform,color,border-color] duration-200"
+          >
+            <span className="dv-icon-dark text-[15px] leading-none">☾</span>
+            <span className="dv-icon-light text-[15px] leading-none">☀</span>
+          </button>
+          <Link
+            href="/register"
+            className="dv-btn-primary flex-none rounded-xl bg-[var(--dv-accent)] px-5 py-[11px] font-['Plus_Jakarta_Sans',sans-serif] text-[14.5px] font-bold text-[var(--dv-accent-ink)] shadow-[0_10px_30px_-12px_var(--dv-accent)] transition-[transform,box-shadow] duration-200"
+          >
+            Commencer gratuitement
           </Link>
-          <div className="nav-links">
-            <a href="#features">Fonctionnalités</a>
-            <a href="#workflow">Méthode</a>
-            <a href="#pricing">Tarifs</a>
-            <Link href="/faq">FAQ</Link>
-          </div>
-          <Link href="/register" className="nav-cta">Commencer gratuitement</Link>
-        </div>
-      </nav>
-
-      {/* ── Marquee — clic = pause, relâche = reprise ─────────────── */}
-      {/* CSS :active .marquee-track { animation-play-state: paused } handles it */}
-      <div className="lp-marquee" title="Clic pour mettre en pause">
-        <div className="marquee-track">
-          {[0, 1].flatMap((ri) =>
-            MARQUEE_ITEMS.map((item, i) => (
-              <span key={`${ri}-${i}`} className="marquee-item">
-                {item}<span className="mdot" />
-              </span>
-            ))
-          )}
-        </div>
-      </div>
-
-      {/* ── Hero — headline + sub + CTAs uniquement ───────────────── */}
-      <header className="lp-hero">
-        <div className="wrap">
-          <div className="eyebrow">
-            <span className="eyebrow-dot" />
-            Dropshipping — de la niche à la page qui convertit
-          </div>
-          <h1 className="hero-title">
-            La nouvelle voix<br />
-            <span className="accent">du dropshipping</span>
-          </h1>
-          <p className="hero-sub">
-            Trouvez le produit, calculez la marge, générez la page, et laissez notre IA la corriger avant que vos clients ne la voient.
-          </p>
-          <div className="hero-actions">
-            <Link href="/register" className="btn-primary">Commencer gratuitement</Link>
-            <a href="#features" className="btn-secondary">Voir les outils</a>
-          </div>
-        </div>
+        </nav>
       </header>
 
-      {/* ── 4 Features — poids égal 2×2 ──────────────────────────── */}
-      <section id="features">
-        <div className="wrap">
-          <div className="section-head">
-            <p className="kicker">Ce qu&apos;il y a dans Dropvio</p>
-            <h2>Quatre outils, un seul abonnement</h2>
-            <p>Chaque fonctionnalité fait un travail précis — pas de gadgets, que du concret pour vendre.</p>
-          </div>
-          <div className="feat-grid">
-            {FEATURES.map((feat, i) => (
-              <div
-                key={i}
-                data-feat-idx={i}
-                className={[
-                  "feat-card",
-                  visibleFeatures.has(i) ? "visible" : "",
-                  openFeature === i ? "open" : "",
-                ].filter(Boolean).join(" ")}
-                style={{ transitionDelay: visibleFeatures.has(i) ? "0s" : `${i * 0.1}s` }}
-                onClick={() => setOpenFeature(openFeature === i ? null : i)}
+      <main id="top" className="relative z-[1] mx-auto max-w-[1200px] px-[22px]">
+        {/* ── Hero ─────────────────────────────────────────────────── */}
+        <section className="grid items-center gap-14 py-[clamp(48px,7vw,104px)] pb-[clamp(40px,5vw,72px)] lg:grid-cols-2">
+          <div data-reveal="" data-slide="left">
+            <div className="inline-flex items-center gap-[9px] rounded-full border border-[var(--dv-line)] bg-[var(--dv-card)] py-[7px] pl-[9px] pr-[14px] text-[13px] font-medium text-[var(--dv-muted)]">
+              <span
+                className="h-[7px] w-[7px] animate-[dv-pulse_2.4s_ease-in-out_infinite] rounded-full bg-[var(--dv-accent)]"
+                style={{ boxShadow: "0 0 0 4px color-mix(in oklab,var(--dv-accent) 22%,transparent)" }}
+              />
+              Mode France : URSSAF, TVA, taxes UE, frais Stripe
+            </div>
+            <h1 className="mt-[22px] text-[clamp(40px,5.6vw,68px)] font-extrabold leading-[1.02]">
+              La nouvelle voix du <span className="text-[var(--dv-accent)]">dropshipping.</span>
+            </h1>
+            <p className="mt-5 max-w-[52ch] text-[clamp(16px,1.3vw,18.5px)] leading-[1.6] text-[var(--dv-muted)]">
+              Trouvez un produit gagnant, connaissez votre marge nette réelle, faites auditer votre page de vente par l&apos;IA et lancez la boutique — dans un seul outil, pensé pour la fiscalité française.
+            </p>
+            <div className="mt-[30px] flex flex-wrap gap-3">
+              <Link
+                href="/register"
+                className="dv-btn-primary rounded-2xl bg-[var(--dv-accent)] px-[26px] py-[15px] font-['Plus_Jakarta_Sans',sans-serif] text-[16px] font-bold text-[var(--dv-accent-ink)] shadow-[0_16px_40px_-16px_var(--dv-accent)] transition-[transform,box-shadow] duration-300"
               >
-                <div className="feat-icon">{feat.icon}</div>
-                <h3>{feat.title}</h3>
-                <p>{feat.desc}</p>
-                {feat.demo}
-                <div className="feat-stat">
-                  <b>{feat.statVal}</b>
-                  <span>{feat.statLabel}</span>
-                </div>
-                <div className="feat-toggle">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M12 5v14M5 12h14" />
-                  </svg>
-                  {openFeature === i ? "Voir moins" : "Voir plus"}
-                </div>
-                <div className="feat-more">
-                  <div className="feat-more-inner">{feat.more}</div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── Audit demo — section dédiée, poids équivalent aux features ── */}
-      <div className="lp-demo-section">
-        <div className="wrap">
-          <div className="section-head" style={{ marginBottom: 40 }}>
-            <p className="kicker">Analyse en direct</p>
-            <h2>Cette page a été notée par notre IA</h2>
-            <p>9 critères issus d&apos;études réelles (Nielsen Norman Group, Unbounce, McKinsey).</p>
+                Commencer gratuitement
+              </Link>
+              <a
+                href="#pricing"
+                className="dv-btn-secondary rounded-2xl border border-[var(--dv-line)] bg-[var(--dv-card)] px-6 py-[15px] font-['Plus_Jakarta_Sans',sans-serif] text-[16px] font-semibold text-[var(--dv-ink)] transition-[transform,border-color,background] duration-300"
+              >
+                Voir les tarifs
+              </a>
+            </div>
+            <p className="mt-[18px] text-[13px] text-[var(--dv-faint)]">Aucune carte bancaire requise · Sans engagement</p>
           </div>
 
-          <div className="audit-demo">
-            <div className="ring-wrap">
-              <svg className="lp-ring" width="140" height="140" viewBox="0 0 120 120">
-                <circle className="ring-bg" cx="60" cy="60" r="52" />
-                <circle className="ring-fg" id="ringFg" cx="60" cy="60" r="52" />
-              </svg>
-              <div style={{ marginTop: -92, textAlign: "center" }}>
-                <span
-                  id="scoreNum"
-                  style={{ display: "block", fontFamily: "'Plus Jakarta Sans',sans-serif", fontSize: 28, fontWeight: 600, color: "var(--text)" }}
-                >
-                  0
+          <div data-reveal="" data-slide="right" className="relative">
+            <div
+              aria-hidden
+              className="pointer-events-none absolute -inset-x-[8%] -inset-y-[14%] opacity-[0.18] blur-[30px]"
+              style={{ background: "radial-gradient(45% 45% at 62% 32%,var(--dv-accent),transparent 70%)" }}
+            />
+            <div className="dv-hero-card relative rounded-[26px] border border-[var(--dv-line)] bg-[var(--dv-card)] p-[26px] shadow-[0_44px_90px_-50px_oklch(0_0_0_/_0.8)] transition-transform duration-500">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <div className="font-['Plus_Jakarta_Sans',sans-serif] text-[15.5px] font-bold">Audit IA · page de vente</div>
+                  <div className="mt-[3px] text-[12.5px] text-[var(--dv-faint)]">Référentiels NN/g · Unbounce · McKinsey</div>
+                </div>
+                <span className="rounded-full bg-[color-mix(in_oklab,var(--dv-accent)_16%,transparent)] px-[11px] py-[6px] text-[11.5px] font-bold tracking-[0.04em] text-[var(--dv-accent)]">
+                  TERMINÉ
                 </span>
               </div>
-              <span className="ring-label" style={{ marginTop: 60 }}>Score / 100</span>
-            </div>
-            <div className="audit-info">
-              <p className="tag">Audit automatique</p>
-              <h3>Cette landing page a été analysée par notre IA</h3>
-              <p className="desc">
-                Hiérarchie visuelle, espace blanc, typographie, preuve sociale, CTA, copywriting, mobile — 9 critères, 1 score, des corrections actionnables.
-              </p>
-              <div className="audit-criteria">
-                <span className="crit ok">Hiérarchie visuelle</span>
-                <span className="crit ok">CTA contrasté</span>
-                <span className="crit ok">Copywriting clair</span>
-                <span className="crit">Preuve sociale</span>
-              </div>
-            </div>
-          </div>
 
-          <div className="breakdown reveal">
-            <p className="breakdown-title">Détail du score par critère</p>
-            {SCORE_BARS.map((row) => (
-              <div key={row.label} className="bar-row">
-                <span className="bar-label">{row.label}</span>
-                <div className="bar-track">
-                  <div className="bar-fill" data-target={String(row.target)} />
+              <div className="flex justify-center py-[22px] pb-2">
+                <div className="relative h-[236px] w-[236px]">
+                  <div
+                    aria-hidden
+                    className="absolute -inset-[18px] animate-[dv-spin_7s_linear_infinite] rounded-full opacity-[0.22] blur-[16px]"
+                    style={{ background: "conic-gradient(from 0deg,transparent 0deg,var(--dv-accent) 120deg,transparent 240deg)" }}
+                  />
+                  <svg viewBox="0 0 240 240" width="236" height="236" className="relative -rotate-90">
+                    <circle cx="120" cy="120" r="102" fill="none" stroke="var(--dv-line)" strokeWidth="14" />
+                    <circle
+                      data-ring=""
+                      cx="120"
+                      cy="120"
+                      r="102"
+                      fill="none"
+                      stroke="var(--dv-accent)"
+                      strokeWidth="14"
+                      strokeLinecap="round"
+                      strokeDasharray="640.9"
+                      strokeDashoffset="640.9"
+                      style={{ filter: "drop-shadow(0 0 12px color-mix(in oklab,var(--dv-accent) 60%,transparent))" }}
+                    />
+                  </svg>
+                  <div className="absolute inset-0 grid place-content-center text-center">
+                    <div className="font-['Plus_Jakarta_Sans',sans-serif] text-[60px] font-extrabold leading-none tracking-[-0.05em]">
+                      <span data-ring-num="">0</span>
+                      <span className="text-2xl font-semibold text-[var(--dv-faint)]">/100</span>
+                    </div>
+                    <div className="mt-2 text-xs font-semibold tracking-[0.14em] text-[var(--dv-faint)]">SCORE GLOBAL</div>
+                  </div>
                 </div>
-                <span className="bar-val">{row.val}</span>
               </div>
-            ))}
-          </div>
-        </div>
-      </div>
 
-      {/* ── Workflow ─────────────────────────────────────────────── */}
-      <section id="workflow">
-        <div className="wrap">
-          <div className="section-head">
-            <p className="kicker">Le flux de travail</p>
-            <h2>Du produit à la page qui convertit</h2>
-            <p>Quatre étapes, un seul outil — pas besoin de jongler entre cinq apps différentes.</p>
+              <div data-chart="" className="mt-2 grid gap-[13px]">
+                {[
+                  { label: "Clarté de la promesse", value: 94, bg: "var(--dv-accent)", opacity: 1 },
+                  { label: "Preuve sociale", value: 88, bg: "var(--dv-accent-2)", opacity: 1 },
+                  { label: "Friction du tunnel", value: 76, bg: "var(--dv-accent)", opacity: 0.75 },
+                ].map((row) => (
+                  <div key={row.label} className="grid grid-cols-[1fr_auto] items-center gap-2 text-[13px]">
+                    <div className="text-[var(--dv-muted)]">{row.label}</div>
+                    <div className="font-semibold tabular-nums text-[var(--dv-ink)]">{row.value}</div>
+                    <div className="col-span-2 h-[7px] overflow-hidden rounded-full bg-[var(--dv-card-2)]">
+                      <div
+                        data-bar=""
+                        data-val={row.value}
+                        style={{ width: "0%", height: "100%", borderRadius: 99, background: row.bg, opacity: row.opacity, transition: "width 1.25s cubic-bezier(.16,1,.3,1)" }}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
-          <div className="workflow">
-            {WORKFLOW_STEPS.map((step, i) => (
+        </section>
+
+        {/* ── Le flux ──────────────────────────────────────────────── */}
+        <section id="flux" className="py-[clamp(64px,8vw,116px)] pb-[clamp(40px,5vw,64px)]">
+          <div data-reveal="" className="max-w-[620px]">
+            <div className="text-xs font-bold tracking-[0.16em] text-[var(--dv-accent)]">LE FLUX COMPLET</div>
+            <h2 className="mt-3.5 text-[clamp(30px,3.8vw,46px)] font-extrabold leading-[1.08]">
+              Du produit repéré au colis suivi. Sans quitter Dropvio.
+            </h2>
+            <p className="mt-4 text-[16.5px] leading-[1.6] text-[var(--dv-muted)]">
+              Six étapes, une seule chaîne de décision. Chaque étape alimente la suivante avec vos vrais chiffres.
+            </p>
+          </div>
+
+          <div className="relative mt-12 grid gap-3.5">
+            <div data-line="" className="absolute bottom-[18px] left-[25px] top-[18px] w-0.5 overflow-hidden bg-[var(--dv-line)]">
+              <div
+                data-line-fill=""
+                className="absolute inset-0 h-0 transition-[height] duration-[1.6s]"
+                style={{ background: "linear-gradient(var(--dv-accent),var(--dv-accent-2))", transitionTimingFunction: "cubic-bezier(.16,1,.3,1)" }}
+              />
+            </div>
+
+            {FLOW_STEPS.map((step) => (
               <div
                 key={step.num}
-                className="wf-card reveal"
-                style={{ transitionDelay: `${i * 0.08}s` }}
+                data-reveal=""
+                className="dv-step relative grid grid-cols-[52px_1fr] items-start gap-[18px] rounded-[18px] border border-transparent p-4 transition-[border-color,background,transform] duration-300"
               >
-                <span className="wf-num">{step.num}</span>
-                <h3>{step.title}</h3>
-                <p>{step.desc}</p>
-                {i < 3 && <span className="wf-arrow">→</span>}
+                <div
+                  className={
+                    step.num === "06"
+                      ? "grid h-[52px] w-[52px] place-items-center rounded-[15px] border border-[var(--dv-accent)] bg-[var(--dv-accent)] font-['Plus_Jakarta_Sans',sans-serif] text-[17px] font-extrabold text-[var(--dv-accent-ink)] shadow-[0_14px_36px_-14px_var(--dv-accent)]"
+                      : "grid h-[52px] w-[52px] place-items-center rounded-[15px] border border-[var(--dv-line)] bg-[var(--dv-card)] font-['Plus_Jakarta_Sans',sans-serif] text-[17px] font-extrabold text-[var(--dv-accent)]"
+                  }
+                >
+                  {step.num}
+                </div>
+                <div>
+                  <h3 className="text-[19.5px] font-bold">{step.title}</h3>
+                  <p className="mt-[7px] max-w-[66ch] text-[15.2px] leading-[1.6] text-[var(--dv-muted)]">{step.desc}</p>
+                </div>
               </div>
             ))}
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* ── Trust ────────────────────────────────────────────────── */}
-      <section className="lp-trust">
-        <div className="wrap">
-          <div className="section-head">
-            <p className="kicker">Pourquoi faire confiance au score</p>
-            <h2>Le /100 vient de vraies études, pas d&apos;une impression</h2>
-            <p>Chacun des 9 critères notés par notre IA est directement issu de recherches UX publiées — pas de faux témoignages, pas de chiffres inventés.</p>
+        {/* ── Produit ──────────────────────────────────────────────── */}
+        <section id="produit" className="py-[clamp(56px,7vw,100px)]">
+          <div data-reveal="" className="flex flex-wrap items-end justify-between gap-5">
+            <div className="max-w-[580px]">
+              <div className="text-xs font-bold tracking-[0.16em] text-[var(--dv-accent)]">PRODUIT</div>
+              <h2 className="mt-3.5 text-[clamp(30px,3.8vw,46px)] font-extrabold leading-[1.08]">
+                Six modules. Une décision : est-ce que ce produit paie ?
+              </h2>
+            </div>
+            <Link href="/register" className="text-[15px] font-semibold">Tout tester gratuitement →</Link>
           </div>
-          <div className="trust-grid">
-            {TRUST_ITEMS.map((item, i) => (
-              <div key={item.src} className="trust-item reveal" style={{ transitionDelay: `${i * 0.1}s` }}>
-                <span className="src">{item.src}</span>
-                <p>{item.text}</p>
+
+          <div className="mt-[42px] grid grid-cols-1 gap-[18px] sm:grid-cols-2 lg:grid-cols-3">
+            {PRODUCT_FEATURES.map((feat) => (
+              <div
+                key={feat.title}
+                data-reveal=""
+                className={`dv-feature-card relative overflow-hidden rounded-[20px] border border-[var(--dv-line)] bg-[var(--dv-card)] p-[26px] transition-[transform,border-color,box-shadow] duration-[0.45s] ${feat.variant === "b" ? "is-accent-2" : ""}`}
+              >
+                <div
+                  className={
+                    feat.variant === "a"
+                      ? "grid h-10 w-10 place-items-center rounded-xl bg-[color-mix(in_oklab,var(--dv-accent)_16%,transparent)] font-['Plus_Jakarta_Sans',sans-serif] font-extrabold text-[var(--dv-accent)]"
+                      : "grid h-10 w-10 place-items-center rounded-xl bg-[color-mix(in_oklab,var(--dv-accent-2)_16%,transparent)] font-['Plus_Jakarta_Sans',sans-serif] font-extrabold text-[var(--dv-accent-2)]"
+                  }
+                >
+                  {feat.icon}
+                </div>
+                <h3 className="mt-[18px] text-[18.5px] font-bold">{feat.title}</h3>
+                <p className="mt-[9px] text-[14.8px] leading-[1.6] text-[var(--dv-muted)]">{feat.desc}</p>
               </div>
             ))}
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* ── Pricing ──────────────────────────────────────────────── */}
-      <section id="pricing">
-        <div className="wrap">
-          <div className="section-head">
-            <p className="kicker">Tarifs</p>
-            <h2>Simple, honnête, sans surprise</h2>
-            <p>Commencez gratuitement. Passez à l&apos;échelle quand votre boutique le justifie.</p>
-          </div>
-          <div className="pricing-grid">
-            <div className="price-card reveal-fade" style={{ transitionDelay: "0s" }}>
-              <h3>Free</h3>
-              <span className="amount">0€<span>/mois</span></span>
-              <ul>
-                <li>Audit IA réservé à Pro et Agency</li>
-                <li>Calculateur de marge illimité</li>
-                <li>5 pages générées avec le site builder par mois</li>
-                <li>Export HTML simple</li>
-              </ul>
-              <Link href="/register" className="price-btn">Commencer</Link>
+        {/* ── Résultats ────────────────────────────────────────────── */}
+        <section id="resultats" className="py-[clamp(56px,7vw,100px)]">
+          <div
+            data-reveal=""
+            className="grid grid-cols-1 items-center gap-10 rounded-[26px] border border-[var(--dv-line)] bg-[var(--dv-bg-soft)] p-[clamp(24px,3vw,40px)] lg:grid-cols-2"
+          >
+            <div>
+              <div className="text-xs font-bold tracking-[0.16em] text-[var(--dv-accent)]">RÉSULTATS</div>
+              <h2 className="mt-3.5 text-[clamp(27px,3.2vw,40px)] font-extrabold leading-[1.1]">
+                Le temps passe dans l&apos;analyse, plus dans les tableurs.
+              </h2>
+              <p className="mt-[15px] text-[15.8px] leading-[1.6] text-[var(--dv-muted)]">
+                Heures hebdomadaires par tâche, avant et après Dropvio. Données illustratives issues de nos scénarios d&apos;usage.
+              </p>
+              <div className="mt-6 flex flex-wrap gap-[18px]">
+                <div className="flex items-center gap-2 text-[13.5px] text-[var(--dv-muted)]">
+                  <span className="h-[11px] w-[11px] rounded-[3px] bg-[var(--dv-line)]" />Avant
+                </div>
+                <div className="flex items-center gap-2 text-[13.5px] text-[var(--dv-muted)]">
+                  <span className="h-[11px] w-[11px] rounded-[3px] bg-[var(--dv-accent)]" />Avec Dropvio
+                </div>
+              </div>
+              <div className="mt-[30px] grid grid-cols-3 gap-4">
+                <div>
+                  <div className="font-['Plus_Jakarta_Sans',sans-serif] text-[34px] font-extrabold tracking-[-0.04em]">
+                    <span data-count="" data-to="82">0</span>%
+                  </div>
+                  <div className="mt-1 text-[13px] text-[var(--dv-faint)]">de temps de setup en moins</div>
+                </div>
+                <div>
+                  <div className="font-['Plus_Jakarta_Sans',sans-serif] text-[34px] font-extrabold tracking-[-0.04em]">
+                    <span data-count="" data-to="4">0</span>
+                  </div>
+                  <div className="mt-1 text-[13px] text-[var(--dv-faint)]">templates prêts à vendre</div>
+                </div>
+                <div>
+                  <div className="font-['Plus_Jakarta_Sans',sans-serif] text-[34px] font-extrabold tracking-[-0.04em]">
+                    <span data-count="" data-to="9">0</span>
+                  </div>
+                  <div className="mt-1 text-[13px] text-[var(--dv-faint)]">critères d&apos;audit IA analysés</div>
+                </div>
+              </div>
             </div>
-            <div className="price-card featured reveal-fade" style={{ transitionDelay: "0.1s" }}>
-              <span className="badge-pop">Le plus choisi</span>
-              <h3>Pro</h3>
-              <span className="amount">29€<span>/mois</span></span>
-              <ul>
-                <li>30 audits IA par mois</li>
-                <li>20 pages avec le site builder par mois</li>
-                <li>Palettes et prix personnalisés</li>
-                <li>Export HTML corrigé par l&apos;IA</li>
-                <li>Guide d&apos;intégration Shopify</li>
-              </ul>
-              <Link href="/register" className="price-btn">Passer à Pro</Link>
-            </div>
-            <div className="price-card reveal-fade" style={{ transitionDelay: "0.2s" }}>
-              <h3>Agency</h3>
-              <span className="amount">59€<span>/mois</span></span>
-              <ul>
-                <li>100 audits IA par mois</li>
-                <li>50 pages avec le site builder par mois</li>
-                <li>Tout le reste de Pro inclus</li>
-                <li>Jusqu&apos;à 10 boutiques gérées</li>
-                <li>Comptes clients séparés</li>
-                <li>Export en lot des pages</li>
-                <li>Support prioritaire sous 24h</li>
-              </ul>
-              <Link href="/register" className="price-btn">Commencer</Link>
-            </div>
-          </div>
-        </div>
-      </section>
 
-      {/* ── Footer CTA ───────────────────────────────────────────── */}
-      <footer className="lp-cta">
-        <div className="wrap">
-          <h2>Votre prochaine page de vente mérite un score, pas une intuition</h2>
-          <p>Gratuit pour commencer. Aucune carte bancaire requise.</p>
-          <Link href="/register" className="btn-primary">Créer mon compte</Link>
-        </div>
-      </footer>
+            <div data-chart="" className="grid h-[290px] grid-cols-4 gap-3 border-b border-[var(--dv-line)] px-1 pt-[18px] sm:gap-[26px]">
+              {RESULT_BARS.map((bar) => (
+                <div key={bar.label} className="flex h-full flex-col items-center justify-end gap-2.5">
+                  <div className="flex h-full w-full items-end justify-center gap-1.5">
+                    <div
+                      data-bar=""
+                      data-val={bar.before}
+                      data-axis="h"
+                      className="w-[26px] rounded-t-lg bg-[var(--dv-line)] transition-[height] duration-[1.1s]"
+                      style={{ height: 0, transitionTimingFunction: "cubic-bezier(.16,1,.3,1)" }}
+                    />
+                    <div
+                      data-bar=""
+                      data-val={bar.after}
+                      data-axis="h"
+                      className="w-[26px] rounded-t-lg bg-[var(--dv-accent)] shadow-[0_0_26px_-6px_var(--dv-accent)] transition-[height] duration-[1.1s]"
+                      style={{ height: 0, transitionTimingFunction: "cubic-bezier(.16,1,.3,1)" }}
+                    />
+                  </div>
+                  <div className="whitespace-pre-line text-center text-[12.5px] leading-[1.3] text-[var(--dv-faint)]">{bar.label}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ── Pricing ──────────────────────────────────────────────── */}
+        <section id="pricing" className="py-[clamp(56px,7vw,100px)]">
+          <div data-reveal="" className="mx-auto max-w-[620px] text-center">
+            <div className="text-xs font-bold tracking-[0.16em] text-[var(--dv-accent)]">TARIFS</div>
+            <h2 className="mt-3.5 text-[clamp(30px,3.8vw,46px)] font-extrabold leading-[1.08]">Simple, honnête, sans surprise.</h2>
+            <p className="mt-[15px] text-[16px] leading-[1.6] text-[var(--dv-muted)]">
+              Commencez gratuitement. Passez à l&apos;échelle quand votre boutique le justifie.
+            </p>
+          </div>
+
+          <div className="mt-11 grid grid-cols-1 items-start gap-5 md:grid-cols-3">
+            <div data-reveal="" className="dv-price-card rounded-[22px] border border-[var(--dv-line)] bg-[var(--dv-card)] p-[30px] transition-[transform,box-shadow] duration-[0.45s]">
+              <div className="font-['Plus_Jakarta_Sans',sans-serif] text-[17px] font-bold">Free</div>
+              <div className="mt-3.5 flex items-baseline gap-1.5">
+                <span className="font-['Plus_Jakarta_Sans',sans-serif] text-[46px] font-extrabold tracking-[-0.045em]">0€</span>
+                <span className="text-[15px] text-[var(--dv-faint)]">/ mois</span>
+              </div>
+              <p className="mt-3 text-[14.5px] leading-[1.6] text-[var(--dv-muted)]">Pour tester Dropvio sans limite de temps, à votre rythme.</p>
+              <div className="mt-[22px] grid gap-[11px] text-[14.5px] text-[var(--dv-muted)]">
+                <div className="flex gap-2.5"><span className="text-[var(--dv-accent)]">✓</span>Audit IA réservé à Pro et Agency</div>
+                <div className="flex gap-2.5"><span className="text-[var(--dv-accent)]">✓</span>Calculateur de marge illimité</div>
+                <div className="flex gap-2.5"><span className="text-[var(--dv-accent)]">✓</span>5 pages générées avec le site builder par mois</div>
+                <div className="flex gap-2.5"><span className="text-[var(--dv-accent)]">✓</span>Export HTML simple</div>
+              </div>
+              <Link
+                href="/register"
+                className="dv-price-cta-outline mt-[26px] block rounded-[13px] border border-[var(--dv-line)] bg-[var(--dv-card-2)] py-[13px] text-center font-['Plus_Jakarta_Sans',sans-serif] text-[15px] font-bold text-[var(--dv-ink)] transition-[border-color,transform] duration-300"
+              >
+                Commencer
+              </Link>
+            </div>
+
+            <div
+              data-reveal=""
+              className="dv-price-card is-featured relative rounded-[22px] border border-[var(--dv-accent)] bg-[var(--dv-card)] p-[30px] pt-[34px] shadow-[0_34px_80px_-46px_var(--dv-accent)] transition-[transform,box-shadow] duration-[0.45s]"
+            >
+              <div className="absolute -top-[13px] left-[30px] rounded-full bg-[var(--dv-accent)] px-3 py-[5px] font-['Plus_Jakarta_Sans',sans-serif] text-[11.5px] font-extrabold tracking-[0.05em] text-[var(--dv-accent-ink)]">
+                LE PLUS CHOISI
+              </div>
+              <div className="font-['Plus_Jakarta_Sans',sans-serif] text-[17px] font-bold">Pro</div>
+              <div className="mt-3.5 flex items-baseline gap-1.5">
+                <span className="font-['Plus_Jakarta_Sans',sans-serif] text-[50px] font-extrabold tracking-[-0.045em] text-[var(--dv-accent)]">29€</span>
+                <span className="text-[15px] text-[var(--dv-faint)]">/ mois</span>
+              </div>
+              <p className="mt-3 text-[14.5px] leading-[1.6] text-[var(--dv-muted)]">Pour l&apos;e-commerçant qui lance et fait tourner ses produits.</p>
+              <div className="mt-[22px] grid gap-[11px] text-[14.5px] text-[var(--dv-muted)]">
+                <div className="flex gap-2.5"><span className="text-[var(--dv-accent)]">✓</span>Recherche produit illimitée</div>
+                <div className="flex gap-2.5"><span className="text-[var(--dv-accent)]">✓</span>30 audits IA par mois</div>
+                <div className="flex gap-2.5"><span className="text-[var(--dv-accent)]">✓</span>Sites &amp; boutiques multi-produits</div>
+                <div className="flex gap-2.5"><span className="text-[var(--dv-accent)]">✓</span>Connexion Shopify + push tracking</div>
+                <div className="flex gap-2.5"><span className="text-[var(--dv-accent)]">✓</span>Export et téléchargement</div>
+              </div>
+              <Link
+                href="/register"
+                className="dv-price-cta-solid mt-[26px] block rounded-[13px] bg-[var(--dv-accent)] py-3.5 text-center font-['Plus_Jakarta_Sans',sans-serif] text-[15.5px] font-extrabold text-[var(--dv-accent-ink)] shadow-[0_16px_40px_-18px_var(--dv-accent)] transition-[transform,box-shadow] duration-300"
+              >
+                Passer en Pro
+              </Link>
+            </div>
+
+            <div data-reveal="" className="dv-price-card is-agency rounded-[22px] border border-[var(--dv-line)] bg-[var(--dv-card)] p-[30px] transition-[transform,box-shadow,border-color] duration-[0.45s]">
+              <div className="font-['Plus_Jakarta_Sans',sans-serif] text-[17px] font-bold">Agency</div>
+              <div className="mt-3.5 flex items-baseline gap-1.5">
+                <span className="font-['Plus_Jakarta_Sans',sans-serif] text-[46px] font-extrabold tracking-[-0.045em] text-[var(--dv-accent-2)]">59€</span>
+                <span className="text-[15px] text-[var(--dv-faint)]">/ mois</span>
+              </div>
+              <p className="mt-3 text-[14.5px] leading-[1.6] text-[var(--dv-muted)]">Pour gérer plusieurs boutiques ou des comptes clients.</p>
+              <div className="mt-[22px] grid gap-[11px] text-[14.5px] text-[var(--dv-muted)]">
+                <div className="flex gap-2.5"><span className="text-[var(--dv-accent-2)]">✓</span>Tout le plan Pro</div>
+                <div className="flex gap-2.5"><span className="text-[var(--dv-accent-2)]">✓</span>Boutiques multiples</div>
+                <div className="flex gap-2.5"><span className="text-[var(--dv-accent-2)]">✓</span>Palettes &amp; templates par client</div>
+                <div className="flex gap-2.5"><span className="text-[var(--dv-accent-2)]">✓</span>Suivi des commandes consolidé</div>
+                <div className="flex gap-2.5"><span className="text-[var(--dv-accent-2)]">✓</span>Support prioritaire</div>
+              </div>
+              <Link
+                href="/register"
+                className="dv-price-cta-outline is-agency mt-[26px] block rounded-[13px] border border-[var(--dv-line)] bg-[var(--dv-card-2)] py-[13px] text-center font-['Plus_Jakarta_Sans',sans-serif] text-[15px] font-bold text-[var(--dv-ink)] transition-[border-color,transform] duration-300"
+              >
+                Choisir Agency
+              </Link>
+            </div>
+          </div>
+        </section>
+
+        {/* ── FAQ courte ───────────────────────────────────────────── */}
+        <section className="py-[clamp(40px,5vw,72px)]">
+          <div data-reveal="" className="grid grid-cols-1 gap-9 lg:grid-cols-[280px_1fr]">
+            <h2 className="text-[clamp(26px,3vw,36px)] font-extrabold leading-[1.12]">Questions fréquentes</h2>
+            <div className="grid gap-2.5">
+              {MINI_FAQ.map((item) => (
+                <details
+                  key={item.q}
+                  onToggle={handleFaqToggle}
+                  className="rounded-[14px] border border-[var(--dv-line)] bg-[var(--dv-card)] p-4 px-[18px]"
+                >
+                  <summary className="flex cursor-pointer list-none items-center justify-between gap-3 text-[15.5px] font-semibold">
+                    <span>{item.q}</span>
+                    <span className="text-[var(--dv-accent)]">+</span>
+                  </summary>
+                  <p className="mt-3 text-[14.8px] leading-[1.6] text-[var(--dv-muted)]">{item.a}</p>
+                </details>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ── CTA finale ───────────────────────────────────────────── */}
+        <section
+          data-reveal=""
+          className="relative my-[clamp(40px,5vw,72px)] overflow-hidden rounded-[28px] border border-[var(--dv-line)] bg-[var(--dv-bg-soft)] p-[clamp(34px,5vw,64px)] text-center"
+        >
+          <div
+            aria-hidden
+            className="pointer-events-none absolute -inset-x-[10%] -bottom-[60%] h-[320px] opacity-[0.18]"
+            style={{ background: "radial-gradient(50% 60% at 50% 100%,var(--dv-accent),transparent 70%)" }}
+          />
+          <div className="relative">
+            <Logo className="mx-auto h-[34px] w-[34px] animate-[dv-bob_5s_ease-in-out_infinite] text-[var(--dv-logo)]" />
+            <h2 className="mx-auto mt-[22px] max-w-[18ch] text-[clamp(28px,3.8vw,46px)] font-extrabold leading-[1.06]">
+              Lancez le prochain produit avec les bons chiffres.
+            </h2>
+            <div className="mt-7 flex flex-wrap justify-center gap-3">
+              <Link
+                href="/register"
+                className="dv-final-cta-primary rounded-2xl bg-[var(--dv-accent)] px-7 py-[15px] font-['Plus_Jakarta_Sans',sans-serif] text-[16px] font-extrabold text-[var(--dv-accent-ink)] shadow-[0_16px_44px_-16px_var(--dv-accent)] transition-[transform,box-shadow] duration-300"
+              >
+                Créer mon compte
+              </Link>
+              <a
+                href="#pricing"
+                className="dv-final-cta-secondary rounded-2xl border border-[var(--dv-line)] bg-[var(--dv-card)] px-[26px] py-[15px] font-['Plus_Jakarta_Sans',sans-serif] text-[16px] font-semibold text-[var(--dv-ink)] transition-[transform,border-color] duration-300"
+              >
+                Comparer les offres
+              </a>
+            </div>
+          </div>
+        </section>
+
+        {/* ── Footer ───────────────────────────────────────────────── */}
+        <footer className="flex flex-wrap items-center justify-between gap-5 border-t border-[var(--dv-line)] py-[34px] pb-[46px]">
+          <div className="flex items-center gap-2.5">
+            <Logo className="h-[21px] w-[21px] text-[var(--dv-logo)]" />
+            <span className="text-[13.5px] text-[var(--dv-faint)]">© 2026 Dropvio — La nouvelle voix du dropshipping.</span>
+          </div>
+          <div className="flex gap-[22px] text-[13.5px]">
+            <a href="#pricing" className="text-[var(--dv-muted)]">Tarifs</a>
+            <Link href="/register" className="text-[var(--dv-muted)]">Créer un compte</Link>
+            <a href="#top" className="text-[var(--dv-muted)]">Haut de page</a>
+          </div>
+        </footer>
+      </main>
     </div>
   );
 }

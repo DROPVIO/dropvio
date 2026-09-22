@@ -167,7 +167,7 @@ export default function FaqPage() {
   }
 
   return (
-    <div className="landing-page">
+    <div className="faq-page">
       {/* Balisage structuré FAQPage (schema.org) pour le SEO */}
       <script
         type="application/ld+json"
