@@ -4,9 +4,11 @@ export type Theme = "dark" | "light";
 // cette constante — il s'exécute avant tout bundle JS, pour poser data-theme sans flash).
 export const THEME_STORAGE_KEY = "dropvio-theme";
 
+// Clair par défaut : seule une préférence "dark" explicitement enregistrée bascule en
+// sombre. Doit rester aligné sur le script inline de app/layout.tsx (même défaut, même clé).
 export function getStoredTheme(): Theme {
-  if (typeof window === "undefined") return "dark";
-  return window.localStorage.getItem(THEME_STORAGE_KEY) === "light" ? "light" : "dark";
+  if (typeof window === "undefined") return "light";
+  return window.localStorage.getItem(THEME_STORAGE_KEY) === "dark" ? "dark" : "light";
 }
 
 // data-theme reste la seule source de vérité pour le CSS (voir app/globals.css) —

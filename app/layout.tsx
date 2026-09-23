@@ -34,18 +34,23 @@ export default async function RootLayout({
     <html
       lang={locale}
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
-      // data-theme est posé par le script inline ci-dessous avant hydratation (voir
-      // lib/theme.ts) — React s'attend à ne pas le trouver dans le HTML serveur, ce qui
-      // déclencherait un avertissement de mismatch sans rapport avec un vrai bug.
+      // Valeur de départ côté serveur = le défaut de l'app (clair), pour que le rendu sans
+      // JS soit déjà correct ; le script inline ci-dessous la remplace par "dark" si
+      // l'utilisateur a enregistré ce choix (voir lib/theme.ts). suppressHydrationWarning :
+      // React ne doit pas traiter cette réécriture avant hydratation comme un vrai mismatch.
+      data-theme="light"
       suppressHydrationWarning
     >
       <head>
         {/* Pose data-theme avant tout rendu React — évite un flash du mauvais thème le
             temps que le JS de l'app se charge. Doit rester en JS pur (pas d'import),
-            la clé localStorage est dupliquée depuis lib/theme.ts (THEME_STORAGE_KEY). */}
+            la clé localStorage est dupliquée depuis lib/theme.ts (THEME_STORAGE_KEY).
+            Le thème par défaut est "clair" : seule une préférence "dark" enregistrée
+            bascule en sombre, et un stockage indisponible (navigation privée stricte)
+            laisse bien le clair, pas le thème de secours du CSS. */}
         <script
           dangerouslySetInnerHTML={{
-            __html: `try{var t=localStorage.getItem('dropvio-theme');document.documentElement.setAttribute('data-theme',t==='light'?'light':'dark')}catch(e){}`,
+            __html: `var t='light';try{if(localStorage.getItem('dropvio-theme')==='dark')t='dark'}catch(e){}document.documentElement.setAttribute('data-theme',t)`,
           }}
         />
       </head>

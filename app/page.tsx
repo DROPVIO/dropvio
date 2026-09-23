@@ -112,34 +112,8 @@ export default function LandingPage() {
     );
     root.querySelectorAll("[data-reveal],[data-chart],[data-count],[data-line]").forEach((el) => io.observe(el));
 
-    // Anneau du score IA — toujours au-dessus de la ligne de flottaison,
-    // animé une fois au montage plutôt que déclenché au scroll.
-    const ring = root.querySelector<SVGCircleElement>("[data-ring]");
-    const ringNum = root.querySelector<HTMLElement>("[data-ring-num]");
-    const target = 91;
-    const circumference = 640.9;
-    let raf = 0;
-    if (ring) {
-      if (reduce) {
-        ring.style.strokeDashoffset = String(circumference * (1 - target / 100));
-        if (ringNum) ringNum.textContent = String(target);
-      } else {
-        const t0 = performance.now() + 250;
-        const dur = 2000;
-        const tick = (now: number) => {
-          const p = Math.max(0, Math.min(1, (now - t0) / dur));
-          const e = 1 - Math.pow(1 - p, 5);
-          ring.style.strokeDashoffset = String(circumference * (1 - (target / 100) * e));
-          if (ringNum) ringNum.textContent = String(Math.round(target * e));
-          if (p < 1) raf = requestAnimationFrame(tick);
-        };
-        raf = requestAnimationFrame(tick);
-      }
-    }
-
     return () => {
       io.disconnect();
-      cancelAnimationFrame(raf);
     };
   }, []);
 
@@ -156,10 +130,10 @@ export default function LandingPage() {
         rel="stylesheet"
       />
 
-      {/* Fond décoratif : grille + halo */}
+      {/* Fond décoratif : fine grille, sans halo lumineux */}
       <div
         aria-hidden
-        className="pointer-events-none fixed inset-0 z-0 opacity-[0.28]"
+        className="pointer-events-none fixed inset-0 z-0 opacity-[0.16]"
         style={{
           backgroundImage:
             "linear-gradient(var(--dv-grid) 1px,transparent 1px),linear-gradient(90deg,var(--dv-grid) 1px,transparent 1px)",
@@ -167,14 +141,9 @@ export default function LandingPage() {
           maskImage: "radial-gradient(120% 90% at 50% 0%,#000 10%,transparent 72%)",
         }}
       />
-      <div
-        aria-hidden
-        className="pointer-events-none absolute -top-[220px] left-1/2 z-0 h-[620px] w-[1100px] -translate-x-1/2 opacity-[0.13] blur-[20px]"
-        style={{ background: "radial-gradient(50% 50% at 50% 50%,var(--dv-accent),transparent 70%)" }}
-      />
 
       {/* ── Nav ──────────────────────────────────────────────────── */}
-      <header className="sticky top-0 z-50 border-b border-[var(--dv-line)] bg-[var(--dv-glass)] backdrop-blur-[18px] backdrop-saturate-[1.4]">
+      <header className="sticky top-0 z-50 border-b border-[var(--dv-line)] bg-[var(--dv-glass)] backdrop-blur-[12px]">
         <nav className="mx-auto flex max-w-[1200px] items-center gap-[22px] px-[22px] py-[14px]">
           <a href="#top" className="flex items-center gap-2.5 text-[var(--dv-ink)]">
             <Logo className="h-7 w-7 text-[var(--dv-logo)]" />
@@ -197,7 +166,7 @@ export default function LandingPage() {
           </button>
           <Link
             href="/register"
-            className="dv-btn-primary flex-none rounded-xl bg-[var(--dv-accent)] px-5 py-[11px] font-['Plus_Jakarta_Sans',sans-serif] text-[14.5px] font-bold text-[var(--dv-accent-ink)] shadow-[0_10px_30px_-12px_var(--dv-accent)] transition-[transform,box-shadow] duration-200"
+            className="dv-btn-primary flex-none rounded-xl bg-[var(--dv-accent)] px-5 py-[11px] font-['Plus_Jakarta_Sans',sans-serif] text-[14.5px] font-bold text-[var(--dv-accent-ink)] transition-colors duration-200"
           >
             Commencer gratuitement
           </Link>
@@ -209,10 +178,7 @@ export default function LandingPage() {
         <section className="grid items-center gap-14 py-[clamp(48px,7vw,104px)] pb-[clamp(40px,5vw,72px)] lg:grid-cols-2">
           <div data-reveal="" data-slide="left">
             <div className="inline-flex items-center gap-[9px] rounded-full border border-[var(--dv-line)] bg-[var(--dv-card)] py-[7px] pl-[9px] pr-[14px] text-[13px] font-medium text-[var(--dv-muted)]">
-              <span
-                className="h-[7px] w-[7px] animate-[dv-pulse_2.4s_ease-in-out_infinite] rounded-full bg-[var(--dv-accent)]"
-                style={{ boxShadow: "0 0 0 4px color-mix(in oklab,var(--dv-accent) 22%,transparent)" }}
-              />
+              <span className="h-[7px] w-[7px] rounded-full bg-[var(--dv-accent)]" />
               Mode France : URSSAF, TVA, taxes UE, frais Stripe
             </div>
             <h1 className="mt-[22px] text-[clamp(40px,5.6vw,68px)] font-extrabold leading-[1.02]">
@@ -224,7 +190,7 @@ export default function LandingPage() {
             <div className="mt-[30px] flex flex-wrap gap-3">
               <Link
                 href="/register"
-                className="dv-btn-primary rounded-2xl bg-[var(--dv-accent)] px-[26px] py-[15px] font-['Plus_Jakarta_Sans',sans-serif] text-[16px] font-bold text-[var(--dv-accent-ink)] shadow-[0_16px_40px_-16px_var(--dv-accent)] transition-[transform,box-shadow] duration-300"
+                className="dv-btn-primary rounded-2xl bg-[var(--dv-accent)] px-[26px] py-[15px] font-['Plus_Jakarta_Sans',sans-serif] text-[16px] font-bold text-[var(--dv-accent-ink)] transition-colors duration-300"
               >
                 Commencer gratuitement
               </Link>
@@ -238,74 +204,147 @@ export default function LandingPage() {
             <p className="mt-[18px] text-[13px] text-[var(--dv-faint)]">Aucune carte bancaire requise · Sans engagement</p>
           </div>
 
-          <div data-reveal="" data-slide="right" className="relative">
-            <div
-              aria-hidden
-              className="pointer-events-none absolute -inset-x-[8%] -inset-y-[14%] opacity-[0.18] blur-[30px]"
-              style={{ background: "radial-gradient(45% 45% at 62% 32%,var(--dv-accent),transparent 70%)" }}
-            />
-            <div className="dv-hero-card relative rounded-[26px] border border-[var(--dv-line)] bg-[var(--dv-card)] p-[26px] shadow-[0_44px_90px_-50px_oklch(0_0_0_/_0.8)] transition-transform duration-500">
-              <div className="flex items-center justify-between gap-3">
-                <div>
-                  <div className="font-['Plus_Jakarta_Sans',sans-serif] text-[15.5px] font-bold">Audit IA · page de vente</div>
-                  <div className="mt-[3px] text-[12.5px] text-[var(--dv-faint)]">Référentiels NN/g · Unbounce · McKinsey</div>
-                </div>
-                <span className="rounded-full bg-[color-mix(in_oklab,var(--dv-accent)_16%,transparent)] px-[11px] py-[6px] text-[11.5px] font-bold tracking-[0.04em] text-[var(--dv-accent)]">
-                  TERMINÉ
-                </span>
-              </div>
+          {/* Mockup téléphone vu de trois quarts. Tout est construit en CSS (aucune image) :
+              le conteneur porte la perspective, le châssis la rotation. L'écran montre une
+              miniature stylisée du dashboard — palette sombre réelle de l'app
+              (#0d0d14 / #13131f / accent violet #7c3aed, cf. :root dans globals.css), fixe
+              et indépendante du thème de la landing puisqu'il s'agit d'une « capture ». */}
+          <div data-reveal="" data-slide="right" className="flex justify-center">
+            <div style={{ perspective: "1200px" }}>
+              <div
+                className="relative h-[520px] w-[256px]"
+                style={{
+                  transform: "rotateY(-19deg) rotateX(3deg)",
+                  transformStyle: "preserve-3d",
+                }}
+              >
+                {/* Tranche : plaque arrière décalée en Z. Avec rotateY négatif, c'est le côté
+                    DROIT qui s'avance vers l'utilisateur, donc cette plaque dépasse à droite et
+                    donne une vraie épaisseur (et non un bandeau peint). */}
+                <div
+                  aria-hidden
+                  className="absolute inset-0 rounded-[46px]"
+                  style={{
+                    transform: "translateZ(-12px)",
+                    background: "linear-gradient(90deg,#08080a 0%,#1b1b21 55%,#3d3d47 100%)",
+                  }}
+                />
 
-              <div className="flex justify-center py-[22px] pb-2">
-                <div className="relative h-[236px] w-[236px]">
+                <div
+                  className="relative h-full w-full rounded-[46px] bg-[#0f0f13] p-[11px]"
+                  style={{ boxShadow: "0 38px 60px -34px rgba(0,0,0,0.55), 0 3px 8px rgba(0,0,0,0.16)" }}
+                >
+                  {/* Reflet du châssis — placé avant l'écran dans le DOM, donc peint dessous :
+                      il n'apparaît que sur l'anneau du cadre, jamais sur l'écran. */}
                   <div
                     aria-hidden
-                    className="absolute -inset-[18px] animate-[dv-spin_7s_linear_infinite] rounded-full opacity-[0.22] blur-[16px]"
-                    style={{ background: "conic-gradient(from 0deg,transparent 0deg,var(--dv-accent) 120deg,transparent 240deg)" }}
+                    className="pointer-events-none absolute inset-0 rounded-[46px]"
+                    style={{
+                      background:
+                        "linear-gradient(135deg,rgba(255,255,255,0.12) 0%,rgba(255,255,255,0) 34%,rgba(255,255,255,0) 68%,rgba(255,255,255,0.06) 100%)",
+                    }}
                   />
-                  <svg viewBox="0 0 240 240" width="236" height="236" className="relative -rotate-90">
-                    <circle cx="120" cy="120" r="102" fill="none" stroke="var(--dv-line)" strokeWidth="14" />
-                    <circle
-                      data-ring=""
-                      cx="120"
-                      cy="120"
-                      r="102"
-                      fill="none"
-                      stroke="var(--dv-accent)"
-                      strokeWidth="14"
-                      strokeLinecap="round"
-                      strokeDasharray="640.9"
-                      strokeDashoffset="640.9"
-                      style={{ filter: "drop-shadow(0 0 12px color-mix(in oklab,var(--dv-accent) 60%,transparent))" }}
-                    />
-                  </svg>
-                  <div className="absolute inset-0 grid place-content-center text-center">
-                    <div className="font-['Plus_Jakarta_Sans',sans-serif] text-[60px] font-extrabold leading-none tracking-[-0.05em]">
-                      <span data-ring-num="">0</span>
-                      <span className="text-2xl font-semibold text-[var(--dv-faint)]">/100</span>
+
+                  {/* Écran bord à bord */}
+                  <div className="relative flex h-full w-full flex-col overflow-hidden rounded-[38px] bg-[#0d0d14]">
+                    <div className="flex min-h-0 flex-1">
+                      {/* Sidebar */}
+                      <div className="flex w-[38px] shrink-0 flex-col items-center gap-[7px] border-r border-white/[0.06] bg-[#13131f] py-3">
+                        <div className="h-[16px] w-[16px] rounded-[5px] bg-[#7c3aed]" />
+                        <div className="mt-1 h-[3px] w-[16px] rounded-full bg-white/[0.07]" />
+                        <div className="flex h-[19px] w-[19px] items-center justify-center rounded-[6px] bg-[#7c3aed]/25">
+                          <div className="h-[7px] w-[7px] rounded-[2px] bg-[#a78bfa]" />
+                        </div>
+                        {[0, 1, 2, 3, 4].map((i) => (
+                          <div key={i} className="flex h-[19px] w-[19px] items-center justify-center rounded-[6px]">
+                            <div className="h-[7px] w-[7px] rounded-[2px] bg-white/20" />
+                          </div>
+                        ))}
+                        <div className="mt-auto h-[17px] w-[17px] rounded-full bg-white/[0.09]" />
+                      </div>
+
+                      {/* Contenu */}
+                      <div className="flex min-w-0 flex-1 flex-col gap-[9px] p-[11px]">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <div className="text-[8px] font-bold leading-none text-white">Dashboard</div>
+                            <div className="mt-[3px] h-[3px] w-[52px] rounded-full bg-white/[0.12]" />
+                          </div>
+                          <div className="h-[15px] w-[15px] rounded-full bg-[#7c3aed]/40" />
+                        </div>
+
+                        {/* Cartes de stats */}
+                        <div className="grid grid-cols-2 gap-[7px]">
+                          {[
+                            { l: "Sites", v: "12", c: "#a78bfa" },
+                            { l: "Audits", v: "30", c: "#60a5fa" },
+                            { l: "Marge", v: "58%", c: "#34d399" },
+                            { l: "Produits", v: "1,2k", c: "#fbbf24" },
+                          ].map((s) => (
+                            <div key={s.l} className="rounded-[7px] border border-white/[0.07] bg-[#13131f] px-[7px] py-[6px]">
+                              <div className="text-[5.5px] font-semibold uppercase tracking-[0.1em] text-white/35">{s.l}</div>
+                              <div className="mt-[3px] text-[11px] font-bold leading-none" style={{ color: s.c }}>
+                                {s.v}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+
+                        {/* Graphique */}
+                        <div className="rounded-[7px] border border-white/[0.07] bg-[#13131f] p-[8px]">
+                          <div className="mb-[6px] flex items-center justify-between">
+                            <div className="text-[5.5px] font-semibold uppercase tracking-[0.1em] text-white/35">Activité</div>
+                            <div className="h-[3px] w-[18px] rounded-full bg-white/[0.1]" />
+                          </div>
+                          <svg viewBox="0 0 150 46" className="h-[46px] w-full" aria-hidden>
+                            {[11, 23, 34].map((y) => (
+                              <line key={y} x1="0" y1={y} x2="150" y2={y} stroke="rgba(255,255,255,0.05)" strokeWidth="1" />
+                            ))}
+                            <path
+                              d="M0 38 L21 31 L42 34 L63 21 L84 25 L105 12 L126 16 L150 6 L150 46 L0 46 Z"
+                              fill="rgba(124,58,237,0.18)"
+                            />
+                            <path
+                              d="M0 38 L21 31 L42 34 L63 21 L84 25 L105 12 L126 16 L150 6"
+                              fill="none"
+                              stroke="#a78bfa"
+                              strokeWidth="1.8"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            />
+                            <circle cx="150" cy="6" r="2.4" fill="#a78bfa" />
+                          </svg>
+                        </div>
+
+                        {/* Liste */}
+                        <div className="flex flex-col gap-[5px]">
+                          {[
+                            { w: "72%", c: "#34d399" },
+                            { w: "54%", c: "#a78bfa" },
+                            { w: "63%", c: "#60a5fa" },
+                          ].map((row, i) => (
+                            <div
+                              key={i}
+                              className="flex items-center gap-[6px] rounded-[6px] border border-white/[0.06] bg-[#13131f] px-[7px] py-[6px]"
+                            >
+                              <div className="h-[11px] w-[11px] shrink-0 rounded-[3px]" style={{ background: `${row.c}33` }} />
+                              <div className="min-w-0 flex-1">
+                                <div className="h-[3px] rounded-full bg-white/[0.16]" style={{ width: row.w }} />
+                                <div className="mt-[3px] h-[2.5px] w-[38%] rounded-full bg-white/[0.08]" />
+                              </div>
+                              <div className="h-[3px] w-[13px] shrink-0 rounded-full" style={{ background: row.c, opacity: 0.55 }} />
+                            </div>
+                          ))}
+                        </div>
+                      </div>
                     </div>
-                    <div className="mt-2 text-xs font-semibold tracking-[0.14em] text-[var(--dv-faint)]">SCORE GLOBAL</div>
+
+                    {/* Indicateur d'accueil */}
+                    <div className="flex justify-center pb-[7px] pt-[5px]">
+                      <div className="h-[3px] w-[78px] rounded-full bg-white/25" />
+                    </div>
                   </div>
                 </div>
-              </div>
-
-              <div data-chart="" className="mt-2 grid gap-[13px]">
-                {[
-                  { label: "Clarté de la promesse", value: 94, bg: "var(--dv-accent)", opacity: 1 },
-                  { label: "Preuve sociale", value: 88, bg: "var(--dv-accent-2)", opacity: 1 },
-                  { label: "Friction du tunnel", value: 76, bg: "var(--dv-accent)", opacity: 0.75 },
-                ].map((row) => (
-                  <div key={row.label} className="grid grid-cols-[1fr_auto] items-center gap-2 text-[13px]">
-                    <div className="text-[var(--dv-muted)]">{row.label}</div>
-                    <div className="font-semibold tabular-nums text-[var(--dv-ink)]">{row.value}</div>
-                    <div className="col-span-2 h-[7px] overflow-hidden rounded-full bg-[var(--dv-card-2)]">
-                      <div
-                        data-bar=""
-                        data-val={row.value}
-                        style={{ width: "0%", height: "100%", borderRadius: 99, background: row.bg, opacity: row.opacity, transition: "width 1.25s cubic-bezier(.16,1,.3,1)" }}
-                      />
-                    </div>
-                  </div>
-                ))}
               </div>
             </div>
           </div>
@@ -341,7 +380,7 @@ export default function LandingPage() {
                 <div
                   className={
                     step.num === "06"
-                      ? "grid h-[52px] w-[52px] place-items-center rounded-[15px] border border-[var(--dv-accent)] bg-[var(--dv-accent)] font-['Plus_Jakarta_Sans',sans-serif] text-[17px] font-extrabold text-[var(--dv-accent-ink)] shadow-[0_14px_36px_-14px_var(--dv-accent)]"
+                      ? "grid h-[52px] w-[52px] place-items-center rounded-[15px] border border-[var(--dv-accent)] bg-[var(--dv-accent)] font-['Plus_Jakarta_Sans',sans-serif] text-[17px] font-extrabold text-[var(--dv-accent-ink)]"
                       : "grid h-[52px] w-[52px] place-items-center rounded-[15px] border border-[var(--dv-line)] bg-[var(--dv-card)] font-['Plus_Jakarta_Sans',sans-serif] text-[17px] font-extrabold text-[var(--dv-accent)]"
                   }
                 >
@@ -450,7 +489,7 @@ export default function LandingPage() {
                       data-bar=""
                       data-val={bar.after}
                       data-axis="h"
-                      className="w-[26px] rounded-t-lg bg-[var(--dv-accent)] shadow-[0_0_26px_-6px_var(--dv-accent)] transition-[height] duration-[1.1s]"
+                      className="w-[26px] rounded-t-lg bg-[var(--dv-accent)] transition-[height] duration-[1.1s]"
                       style={{ height: 0, transitionTimingFunction: "cubic-bezier(.16,1,.3,1)" }}
                     />
                   </div>
@@ -494,7 +533,7 @@ export default function LandingPage() {
 
             <div
               data-reveal=""
-              className="dv-price-card is-featured relative rounded-[22px] border border-[var(--dv-accent)] bg-[var(--dv-card)] p-[30px] pt-[34px] shadow-[0_34px_80px_-46px_var(--dv-accent)] transition-[transform,box-shadow] duration-[0.45s]"
+              className="dv-price-card is-featured relative rounded-[22px] border border-[var(--dv-accent)] bg-[var(--dv-card)] p-[30px] pt-[34px] shadow-[0_10px_28px_-22px_oklch(0_0_0_/_0.45)] transition-[transform,box-shadow] duration-[0.45s]"
             >
               <div className="absolute -top-[13px] left-[30px] rounded-full bg-[var(--dv-accent)] px-3 py-[5px] font-['Plus_Jakarta_Sans',sans-serif] text-[11.5px] font-extrabold tracking-[0.05em] text-[var(--dv-accent-ink)]">
                 LE PLUS CHOISI
@@ -514,7 +553,7 @@ export default function LandingPage() {
               </div>
               <Link
                 href="/register"
-                className="dv-price-cta-solid mt-[26px] block rounded-[13px] bg-[var(--dv-accent)] py-3.5 text-center font-['Plus_Jakarta_Sans',sans-serif] text-[15.5px] font-extrabold text-[var(--dv-accent-ink)] shadow-[0_16px_40px_-18px_var(--dv-accent)] transition-[transform,box-shadow] duration-300"
+                className="dv-price-cta-solid mt-[26px] block rounded-[13px] bg-[var(--dv-accent)] py-3.5 text-center font-['Plus_Jakarta_Sans',sans-serif] text-[15.5px] font-extrabold text-[var(--dv-accent-ink)] transition-colors duration-300"
               >
                 Passer en Pro
               </Link>
@@ -571,11 +610,6 @@ export default function LandingPage() {
           data-reveal=""
           className="relative my-[clamp(40px,5vw,72px)] overflow-hidden rounded-[28px] border border-[var(--dv-line)] bg-[var(--dv-bg-soft)] p-[clamp(34px,5vw,64px)] text-center"
         >
-          <div
-            aria-hidden
-            className="pointer-events-none absolute -inset-x-[10%] -bottom-[60%] h-[320px] opacity-[0.18]"
-            style={{ background: "radial-gradient(50% 60% at 50% 100%,var(--dv-accent),transparent 70%)" }}
-          />
           <div className="relative">
             <Logo className="mx-auto h-[34px] w-[34px] animate-[dv-bob_5s_ease-in-out_infinite] text-[var(--dv-logo)]" />
             <h2 className="mx-auto mt-[22px] max-w-[18ch] text-[clamp(28px,3.8vw,46px)] font-extrabold leading-[1.06]">
@@ -584,7 +618,7 @@ export default function LandingPage() {
             <div className="mt-7 flex flex-wrap justify-center gap-3">
               <Link
                 href="/register"
-                className="dv-final-cta-primary rounded-2xl bg-[var(--dv-accent)] px-7 py-[15px] font-['Plus_Jakarta_Sans',sans-serif] text-[16px] font-extrabold text-[var(--dv-accent-ink)] shadow-[0_16px_44px_-16px_var(--dv-accent)] transition-[transform,box-shadow] duration-300"
+                className="dv-final-cta-primary rounded-2xl bg-[var(--dv-accent)] px-7 py-[15px] font-['Plus_Jakarta_Sans',sans-serif] text-[16px] font-extrabold text-[var(--dv-accent-ink)] transition-colors duration-300"
               >
                 Créer mon compte
               </Link>
