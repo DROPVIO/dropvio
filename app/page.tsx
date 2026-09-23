@@ -38,6 +38,201 @@ const MINI_FAQ = [
   { q: "Sur quoi repose l'audit IA ?", a: "Sur des critères issus des travaux du Nielsen Norman Group, des benchmarks Unbounce et d'études McKinsey sur la conversion, traduits en un score sur 100." },
 ] as const;
 
+// ─── Mini-illustrations de la section « Le flux » ─────────────────────────────
+// Une par étape, en HTML/CSS/SVG pur (aucune image) : chacune reproduit en réduit
+// l'écran Dropvio correspondant. Hauteur fixe pour que les 6 cartes s'alignent.
+
+const VISUAL_BOX = "h-[104px]";
+
+function FlowVisual({ num }: { num: string }) {
+  // 01 — Recherche produit : filtres + grille de résultats
+  if (num === "01") {
+    return (
+      <div className={`${VISUAL_BOX} flex flex-col gap-2`}>
+        <div className="flex gap-1.5">
+          <span className="rounded-full bg-[var(--dv-accent)] px-2 py-[3px] text-[8px] font-semibold text-[var(--dv-accent-ink)]">
+            Fitness
+          </span>
+          <span className="rounded-full border border-[var(--dv-line)] px-2 py-[3px] text-[8px] text-[var(--dv-faint)]">
+            &lt; 15 j
+          </span>
+          <span className="rounded-full border border-[var(--dv-line)] px-2 py-[3px] text-[8px] text-[var(--dv-faint)]">
+            Marge 50%+
+          </span>
+        </div>
+        <div className="grid flex-1 grid-cols-3 gap-1.5">
+          {[
+            { m: "79%", on: true },
+            { m: "64%", on: false },
+            { m: "58%", on: false },
+          ].map((p, i) => (
+            <div
+              key={i}
+              className={`flex flex-col rounded-[7px] border bg-[var(--dv-card)] p-1.5 ${
+                p.on ? "border-[var(--dv-accent)]" : "border-[var(--dv-line)]"
+              }`}
+            >
+              <div className="h-[26px] rounded-[4px] bg-[var(--dv-card-2)]" />
+              <div className="mt-1 h-[3px] w-[80%] rounded-full bg-[var(--dv-line)]" />
+              <div className="mt-auto pt-1 text-[8px] font-bold text-[var(--dv-accent)]">{p.m}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  // 02 — Calcul de marge : décomposition ligne à ligne
+  if (num === "02") {
+    return (
+      <div className={`${VISUAL_BOX} flex flex-col justify-center gap-[5px] text-[9px]`}>
+        {[
+          { l: "Prix de vente", v: "29,90 €", muted: false },
+          { l: "− Achat + port", v: "10,50 €", muted: true },
+          { l: "− URSSAF 12,3%", v: "3,68 €", muted: true },
+          { l: "− Stripe 1,5%", v: "0,70 €", muted: true },
+        ].map((r) => (
+          <div key={r.l} className="flex items-center justify-between">
+            <span className={r.muted ? "text-[var(--dv-faint)]" : "text-[var(--dv-muted)]"}>{r.l}</span>
+            <span className={`tabular-nums ${r.muted ? "text-[var(--dv-faint)]" : "text-[var(--dv-ink)]"}`}>{r.v}</span>
+          </div>
+        ))}
+        <div className="mt-[3px] flex items-center justify-between border-t border-[var(--dv-line)] pt-[6px]">
+          <span className="font-semibold text-[var(--dv-ink)]">Marge nette</span>
+          <span className="font-bold tabular-nums text-[var(--dv-accent)]">+15,02 €</span>
+        </div>
+      </div>
+    );
+  }
+
+  // 03 — Audit IA : score circulaire + critères
+  if (num === "03") {
+    const c = 2 * Math.PI * 26;
+    return (
+      <div className={`${VISUAL_BOX} flex items-center gap-4`}>
+        <div className="relative h-[68px] w-[68px] shrink-0">
+          <svg viewBox="0 0 68 68" className="h-full w-full -rotate-90" aria-hidden>
+            <circle cx="34" cy="34" r="26" fill="none" stroke="var(--dv-line)" strokeWidth="7" />
+            <circle
+              cx="34"
+              cy="34"
+              r="26"
+              fill="none"
+              stroke="var(--dv-accent)"
+              strokeWidth="7"
+              strokeLinecap="round"
+              strokeDasharray={c}
+              strokeDashoffset={c * (1 - 0.91)}
+            />
+          </svg>
+          <div className="absolute inset-0 grid place-content-center text-center">
+            <div className="font-['Plus_Jakarta_Sans',sans-serif] text-[17px] font-extrabold leading-none">91</div>
+            <div className="text-[7px] text-[var(--dv-faint)]">/ 100</div>
+          </div>
+        </div>
+        <div className="flex min-w-0 flex-1 flex-col gap-[7px]">
+          {[
+            { l: "Clarté", v: 94 },
+            { l: "Preuve sociale", v: 88 },
+            { l: "Tunnel", v: 76 },
+          ].map((b) => (
+            <div key={b.l}>
+              <div className="mb-[3px] flex justify-between text-[8px]">
+                <span className="text-[var(--dv-muted)]">{b.l}</span>
+                <span className="tabular-nums text-[var(--dv-faint)]">{b.v}</span>
+              </div>
+              <div className="h-[4px] overflow-hidden rounded-full bg-[var(--dv-card-2)]">
+                <div className="h-full rounded-full bg-[var(--dv-accent)]" style={{ width: `${b.v}%` }} />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  // 04 — Génération du site : aperçu de template dans un cadre navigateur
+  if (num === "04") {
+    return (
+      <div className={`${VISUAL_BOX} overflow-hidden rounded-[8px] border border-[var(--dv-line)] bg-[var(--dv-card)]`}>
+        <div className="flex items-center gap-1 border-b border-[var(--dv-line)] bg-[var(--dv-card-2)] px-2 py-[5px]">
+          <span className="h-[4px] w-[4px] rounded-full bg-[var(--dv-line)]" />
+          <span className="h-[4px] w-[4px] rounded-full bg-[var(--dv-line)]" />
+          <span className="ml-1 h-[5px] flex-1 rounded-full bg-[var(--dv-line)]" />
+        </div>
+        <div className="flex gap-2 p-2">
+          <div className="h-[52px] w-[46px] shrink-0 rounded-[5px] bg-[color-mix(in_oklab,var(--dv-accent)_18%,transparent)]" />
+          <div className="flex min-w-0 flex-1 flex-col gap-[4px] pt-[2px]">
+            <div className="h-[5px] w-[85%] rounded-full bg-[var(--dv-line)]" />
+            <div className="h-[3px] w-[60%] rounded-full bg-[var(--dv-line)]" />
+            <div className="mt-[2px] text-[10px] font-bold text-[var(--dv-ink)]">29,90 €</div>
+            <div className="mt-auto w-[62px] rounded-full bg-[var(--dv-accent)] py-[3px] text-center text-[7px] font-semibold text-[var(--dv-accent-ink)]">
+              Commander
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // 05 — Commande AliExpress : fiche de commande à préparer
+  if (num === "05") {
+    return (
+      <div className={`${VISUAL_BOX} flex flex-col gap-2`}>
+        <div className="flex items-center justify-between">
+          <span className="text-[9px] font-semibold text-[var(--dv-ink)]">Commande #1043</span>
+          <span className="rounded-full bg-[color-mix(in_oklab,var(--dv-accent)_16%,transparent)] px-[7px] py-[2px] text-[7.5px] font-bold text-[var(--dv-accent)]">
+            À PRÉPARER
+          </span>
+        </div>
+        {[
+          { q: "2×", w: "70%" },
+          { q: "1×", w: "52%" },
+        ].map((l, i) => (
+          <div key={i} className="flex items-center gap-2">
+            <span className="text-[8px] tabular-nums text-[var(--dv-faint)]">{l.q}</span>
+            <div className="h-[4px] rounded-full bg-[var(--dv-line)]" style={{ width: l.w }} />
+            <span className="ml-auto text-[7.5px] text-[var(--dv-accent)]">AliExpress →</span>
+          </div>
+        ))}
+        <div className="mt-auto rounded-[6px] border border-[var(--dv-line)] bg-[var(--dv-card)] px-2 py-[6px]">
+          <div className="h-[3px] w-[66%] rounded-full bg-[var(--dv-line)]" />
+          <div className="mt-[4px] h-[3px] w-[44%] rounded-full bg-[var(--dv-line)]" />
+        </div>
+      </div>
+    );
+  }
+
+  // 06 — Tracking : progression du colis poussée vers Shopify
+  return (
+    <div className={`${VISUAL_BOX} flex flex-col justify-center gap-3`}>
+      <div className="relative flex items-center justify-between">
+        <div className="absolute left-[6px] right-[6px] top-[5px] h-[2px] bg-[var(--dv-line)]" />
+        <div className="absolute left-[6px] top-[5px] h-[2px] w-[62%] bg-[var(--dv-accent)]" />
+        {[true, true, true, false].map((done, i) => (
+          <span
+            key={i}
+            className={`relative h-[11px] w-[11px] rounded-full border-2 ${
+              done ? "border-[var(--dv-accent)] bg-[var(--dv-accent)]" : "border-[var(--dv-line)] bg-[var(--dv-card)]"
+            }`}
+          />
+        ))}
+      </div>
+      <div className="flex justify-between text-[7.5px] text-[var(--dv-faint)]">
+        <span>Commandée</span>
+        <span>Expédiée</span>
+        <span>En transit</span>
+        <span>Livrée</span>
+      </div>
+      <div className="flex items-center gap-1.5 rounded-[6px] border border-[var(--dv-line)] bg-[var(--dv-card)] px-2 py-[5px]">
+        <span className="text-[7.5px] text-[var(--dv-faint)]">Suivi</span>
+        <span className="text-[8.5px] font-semibold tabular-nums text-[var(--dv-ink)]">LX4821993FR</span>
+        <span className="ml-auto text-[7.5px] font-semibold text-[var(--dv-accent)]">→ Shopify ✓</span>
+      </div>
+    </div>
+  );
+}
+
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export default function LandingPage() {
@@ -102,15 +297,11 @@ export default function LandingPage() {
           }
           if (el.hasAttribute("data-chart")) fillBars(el);
           if (el.hasAttribute("data-count")) count(el);
-          if (el.hasAttribute("data-line")) {
-            const fill = el.querySelector<HTMLElement>("[data-line-fill]");
-            if (fill) fill.style.height = "100%";
-          }
         });
       },
       { threshold: 0.18, rootMargin: "0px 0px -8% 0px" }
     );
-    root.querySelectorAll("[data-reveal],[data-chart],[data-count],[data-line]").forEach((el) => io.observe(el));
+    root.querySelectorAll("[data-reveal],[data-chart],[data-count]").forEach((el) => io.observe(el));
 
     return () => {
       io.disconnect();
@@ -220,19 +411,26 @@ export default function LandingPage() {
               >
                 {/* Tranche : plaque arrière décalée en Z. Avec rotateY négatif, c'est le côté
                     DROIT qui s'avance vers l'utilisateur, donc cette plaque dépasse à droite et
-                    donne une vraie épaisseur (et non un bandeau peint). */}
+                    donne une vraie épaisseur (et non un bandeau peint). Titane plus sombre que
+                    la face, avec l'arête éclaircie. */}
                 <div
                   aria-hidden
                   className="absolute inset-0 rounded-[46px]"
                   style={{
                     transform: "translateZ(-12px)",
-                    background: "linear-gradient(90deg,#08080a 0%,#1b1b21 55%,#3d3d47 100%)",
+                    background: "linear-gradient(90deg,#5f5f66 0%,#7c7c85 50%,#b6b6bf 100%)",
                   }}
                 />
 
                 <div
-                  className="relative h-full w-full rounded-[46px] bg-[#0f0f13] p-[11px]"
-                  style={{ boxShadow: "0 38px 60px -34px rgba(0,0,0,0.55), 0 3px 8px rgba(0,0,0,0.16)" }}
+                  className="relative h-full w-full rounded-[46px] p-[11px]"
+                  style={{
+                    // Rail métal : arêtes plus sombres, méplat éclairci au centre.
+                    background:
+                      "linear-gradient(100deg,#7e7e87 0%,#c3c3cb 16%,#9a9aa3 38%,#8d8d96 62%,#c8c8d0 86%,#76767f 100%)",
+                    boxShadow:
+                      "0 0 0 1px rgba(20,20,30,0.14), 0 30px 50px -32px rgba(20,20,35,0.42), 0 2px 6px rgba(20,20,35,0.12)",
+                  }}
                 >
                   {/* Reflet du châssis — placé avant l'écran dans le DOM, donc peint dessous :
                       il n'apparaît que sur l'anneau du cadre, jamais sur l'écran. */}
@@ -241,12 +439,15 @@ export default function LandingPage() {
                     className="pointer-events-none absolute inset-0 rounded-[46px]"
                     style={{
                       background:
-                        "linear-gradient(135deg,rgba(255,255,255,0.12) 0%,rgba(255,255,255,0) 34%,rgba(255,255,255,0) 68%,rgba(255,255,255,0.06) 100%)",
+                        "linear-gradient(135deg,rgba(255,255,255,0.55) 0%,rgba(255,255,255,0) 26%,rgba(255,255,255,0) 72%,rgba(255,255,255,0.32) 100%)",
                     }}
                   />
 
-                  {/* Écran bord à bord */}
-                  <div className="relative flex h-full w-full flex-col overflow-hidden rounded-[38px] bg-[#0d0d14]">
+                  {/* Écran bord à bord — le ring sombre sépare la dalle du rail clair */}
+                  <div
+                    className="relative flex h-full w-full flex-col overflow-hidden rounded-[38px] bg-[#0d0d14]"
+                    style={{ boxShadow: "0 0 0 1.5px rgba(10,10,16,0.55)" }}
+                  >
                     <div className="flex min-h-0 flex-1">
                       {/* Sidebar */}
                       <div className="flex w-[38px] shrink-0 flex-col items-center gap-[7px] border-r border-white/[0.06] bg-[#13131f] py-3">
@@ -362,34 +563,27 @@ export default function LandingPage() {
             </p>
           </div>
 
-          <div className="relative mt-12 grid gap-3.5">
-            <div data-line="" className="absolute bottom-[18px] left-[25px] top-[18px] w-0.5 overflow-hidden bg-[var(--dv-line)]">
-              <div
-                data-line-fill=""
-                className="absolute inset-0 h-0 transition-[height] duration-[1.6s]"
-                style={{ background: "linear-gradient(var(--dv-accent),var(--dv-accent-2))", transitionTimingFunction: "cubic-bezier(.16,1,.3,1)" }}
-              />
-            </div>
-
+          {/* Une carte par étape : chaque mini-illustration (HTML/CSS/SVG, aucune image)
+              montre l'écran correspondant plutôt que de le décrire. */}
+          <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {FLOW_STEPS.map((step) => (
               <div
                 key={step.num}
                 data-reveal=""
-                className="dv-step relative grid grid-cols-[52px_1fr] items-start gap-[18px] rounded-[18px] border border-transparent p-4 transition-[border-color,background,transform] duration-300"
+                className="dv-feature-card flex flex-col overflow-hidden rounded-[18px] border border-[var(--dv-line)] bg-[var(--dv-card)] p-5 transition-[transform,border-color] duration-[0.45s]"
               >
-                <div
-                  className={
-                    step.num === "06"
-                      ? "grid h-[52px] w-[52px] place-items-center rounded-[15px] border border-[var(--dv-accent)] bg-[var(--dv-accent)] font-['Plus_Jakarta_Sans',sans-serif] text-[17px] font-extrabold text-[var(--dv-accent-ink)]"
-                      : "grid h-[52px] w-[52px] place-items-center rounded-[15px] border border-[var(--dv-line)] bg-[var(--dv-card)] font-['Plus_Jakarta_Sans',sans-serif] text-[17px] font-extrabold text-[var(--dv-accent)]"
-                  }
-                >
-                  {step.num}
+                <div className="flex items-center gap-2.5">
+                  <span className="grid h-[26px] w-[26px] place-items-center rounded-[8px] bg-[color-mix(in_oklab,var(--dv-accent)_14%,transparent)] font-['Plus_Jakarta_Sans',sans-serif] text-[11.5px] font-extrabold text-[var(--dv-accent)]">
+                    {step.num}
+                  </span>
+                  <h3 className="text-[16.5px] font-bold leading-tight">{step.title}</h3>
                 </div>
-                <div>
-                  <h3 className="text-[19.5px] font-bold">{step.title}</h3>
-                  <p className="mt-[7px] max-w-[66ch] text-[15.2px] leading-[1.6] text-[var(--dv-muted)]">{step.desc}</p>
+
+                <div className="mt-4 overflow-hidden rounded-[12px] border border-[var(--dv-line)] bg-[var(--dv-bg-soft)] p-3">
+                  <FlowVisual num={step.num} />
                 </div>
+
+                <p className="mt-4 text-[14.2px] leading-[1.6] text-[var(--dv-muted)]">{step.desc}</p>
               </div>
             ))}
           </div>
