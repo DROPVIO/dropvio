@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
+import { useTranslations } from "next-intl";
 import { useOnboarding } from "./OnboardingProvider";
 import { ONBOARDING_STEPS } from "./onboarding-steps";
 
@@ -16,6 +17,7 @@ interface Rect {
 }
 
 export default function OnboardingTour() {
+  const t = useTranslations("dashboard.onboarding");
   const { active, step, stepIndex, totalSteps, next, prev, skip } = useOnboarding();
   const [targetRect, setTargetRect] = useState<Rect | null>(null);
 
@@ -78,7 +80,7 @@ export default function OnboardingTour() {
       className="fixed inset-0 z-[400]"
       role="dialog"
       aria-modal="true"
-      aria-label="Tutoriel de bienvenue Dropvio"
+      aria-label={t("ariaLabel")}
     >
       {/* Spotlight : assombrit toute la page sauf l'élément ciblé */}
       <div
@@ -106,18 +108,18 @@ export default function OnboardingTour() {
 
         <div className="flex items-center justify-between mb-3">
           <span className="text-[10px] font-bold uppercase tracking-widest text-emerald-400/80">
-            Étape {stepIndex + 1}/{totalSteps}
+            {t("stepCounter", { current: stepIndex + 1, total: totalSteps })}
           </span>
           <button
             onClick={skip}
             className="text-[11px] text-zinc-400 hover:text-zinc-200 transition font-medium"
           >
-            Passer le tutoriel
+            {t("skip")}
           </button>
         </div>
 
-        <h3 className="text-[14px] font-semibold text-emerald-50 mb-1.5">{step.title}</h3>
-        <p className="text-[12.5px] text-emerald-100/70 leading-relaxed mb-4">{step.body}</p>
+        <h3 className="text-[14px] font-semibold text-emerald-50 mb-1.5">{t(step.titleKey)}</h3>
+        <p className="text-[12.5px] text-emerald-100/70 leading-relaxed mb-4">{t(step.bodyKey)}</p>
 
         <div className="flex items-center justify-between">
           <div className="flex gap-1.5">
@@ -136,14 +138,14 @@ export default function OnboardingTour() {
                 onClick={prev}
                 className="px-3 py-1.5 rounded-lg text-[12px] font-medium text-emerald-200/80 hover:bg-emerald-500/10 transition"
               >
-                Précédent
+                {t("prev")}
               </button>
             )}
             <button
               onClick={next}
               className="px-3.5 py-1.5 rounded-lg text-[12px] font-semibold text-[#052e1c] bg-emerald-400 hover:bg-emerald-300 transition"
             >
-              {stepIndex + 1 === totalSteps ? "Terminer" : "Suivant"}
+              {stepIndex + 1 === totalSteps ? t("finish") : t("next")}
             </button>
           </div>
         </div>

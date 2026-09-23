@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useLocale, useTranslations } from "next-intl";
+import { toIntlTag, type AppLocale } from "@/lib/locale";
 
 type LigneCommande = {
   shopify_product_id: number | null;
@@ -47,6 +49,8 @@ function formatAdresse(a: AdresseLivraison | null, nom: string | null, tel: stri
 }
 
 export default function CommandesAPreparerPage() {
+  const t = useTranslations("dashboard");
+  const intlTag = toIntlTag(useLocale() as AppLocale);
   const [commandes, setCommandes] = useState<Commande[] | null>(null);
   const [lookbackDays, setLookbackDays] = useState(30);
   const [copiedId, setCopiedId] = useState<string | null>(null);
@@ -93,7 +97,7 @@ export default function CommandesAPreparerPage() {
       });
       if (!res.ok) {
         const json = await res.json().catch(() => null);
-        throw new Error(json?.error ?? "Échec de la mise à jour du statut.");
+        throw new Error(json?.error ?? t("commandes.errorStatus"));
       }
     } catch (err) {
       if (previousStatut) {
@@ -101,7 +105,7 @@ export default function CommandesAPreparerPage() {
       }
       setActionErrors((prev) => ({
         ...prev,
-        [id]: err instanceof Error ? err.message : "Impossible de contacter le serveur.",
+        [id]: err instanceof Error ? err.message : t("commandes.errorServer"),
       }));
     } finally {
       setStatutBusyId(null);
@@ -137,7 +141,7 @@ export default function CommandesAPreparerPage() {
       });
       if (!res.ok) {
         const json = await res.json().catch(() => null);
-        throw new Error(json?.error ?? "Échec du rattachement du lien.");
+        throw new Error(json?.error ?? t("commandes.errorLink"));
       }
     } catch (err) {
       setCommandes(
@@ -150,7 +154,7 @@ export default function CommandesAPreparerPage() {
       );
       setActionErrors((prev) => ({
         ...prev,
-        [commandeId]: err instanceof Error ? err.message : "Impossible de contacter le serveur.",
+        [commandeId]: err instanceof Error ? err.message : t("commandes.errorServer"),
       }));
     } finally {
       setLienBusyKey(null);
@@ -177,7 +181,7 @@ export default function CommandesAPreparerPage() {
         setCommandes(
           (prev) =>
             prev?.map((c) =>
-              c.id === commandeId ? { ...c, fulfillment_erreur: json?.error ?? "Échec de l'enregistrement du suivi." } : c
+              c.id === commandeId ? { ...c, fulfillment_erreur: json?.error ?? t("commandes.errorTrackingSave") } : c
             ) ?? prev
         );
         return;
@@ -190,7 +194,7 @@ export default function CommandesAPreparerPage() {
           (prev) =>
             prev?.map((c) =>
               c.id === commandeId
-                ? { ...c, numero_suivi: numeroSuivi, transporteur: draft?.transporteur || null, fulfillment_erreur: json?.error ?? "Échec de l'envoi." }
+                ? { ...c, numero_suivi: numeroSuivi, transporteur: draft?.transporteur || null, fulfillment_erreur: json?.error ?? t("commandes.errorTrackingPush") }
                 : c
             ) ?? prev
         );
@@ -198,7 +202,7 @@ export default function CommandesAPreparerPage() {
     } catch {
       setCommandes(
         (prev) =>
-          prev?.map((c) => (c.id === commandeId ? { ...c, fulfillment_erreur: "Impossible de contacter le serveur." } : c)) ?? prev
+          prev?.map((c) => (c.id === commandeId ? { ...c, fulfillment_erreur: t("commandes.errorServer") } : c)) ?? prev
       );
     } finally {
       setSuiviBusyId(null);
@@ -227,30 +231,29 @@ export default function CommandesAPreparerPage() {
             href="/dashboard/shopify"
             className="text-xs text-[var(--text-faint)] hover:text-[var(--text-muted)] transition-colors"
           >
-            ← Shopify
+            {t("commandes.back")}
           </Link>
-          <h1 className="text-2xl font-bold text-[var(--text-primary)] mt-3">Commandes à préparer sur AliExpress</h1>
+          <h1 className="text-2xl font-bold text-[var(--text-primary)] mt-3">{t("commandes.title")}</h1>
           <p className="text-[var(--text-faint)] text-sm mt-1.5">
-            Une fiche par commande Shopify des {lookbackDays} derniers jours — à toi de passer la commande sur AliExpress et
-            d&apos;en valider le paiement. Dropvio ne commande jamais rien automatiquement.
+            {t("commandes.subtitle", { days: lookbackDays })}
           </p>
         </div>
 
         <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface-2)] p-6">
           {commandes === null ? (
-            <p className="text-[var(--text-faint)] text-sm text-center py-12">Chargement…</p>
+            <p className="text-[var(--text-faint)] text-sm text-center py-12">{t("common.loading")}</p>
           ) : aTraiter.length === 0 ? (
-            <p className="text-[var(--text-faint)] text-sm text-center py-12">Aucune commande à préparer pour le moment.</p>
+            <p className="text-[var(--text-faint)] text-sm text-center py-12">{t("commandes.empty")}</p>
           ) : (
             <div className="flex flex-col divide-y divide-[var(--border)]">
               {aTraiter.map((c) => (
                 <div key={c.id} className="py-5 first:pt-0 last:pb-0 flex flex-col gap-4">
                   <div className="flex items-center justify-between">
                     <p className="text-sm font-semibold text-[var(--text-primary)]">
-                      Commande {c.shopify_order_name ?? `#${c.shopify_order_id}`}
+                      {t("commandes.orderLabel", { name: c.shopify_order_name ?? `#${c.shopify_order_id}` })}
                     </p>
                     <p className="text-[11px] text-[var(--text-faint)]">
-                      {new Date(c.created_at).toLocaleDateString("fr-FR", { day: "numeric", month: "short", year: "numeric" })}
+                      {new Date(c.created_at).toLocaleDateString(intlTag, { day: "numeric", month: "short", year: "numeric" })}
                     </p>
                   </div>
 
@@ -262,7 +265,9 @@ export default function CommandesAPreparerPage() {
                             {l.quantite}× {l.nom}
                           </p>
                           {l.variant_title ? (
-                            <p className="text-[11px] text-[var(--text-faint)]">Variante Shopify : {l.variant_title}</p>
+                            <p className="text-[11px] text-[var(--text-faint)]">
+                              {t("commandes.variant", { variant: l.variant_title })}
+                            </p>
                           ) : null}
                         </div>
                         {l.lien_aliexpress ? (
@@ -272,13 +277,13 @@ export default function CommandesAPreparerPage() {
                             rel="noopener noreferrer"
                             className="shrink-0 text-xs font-semibold text-[var(--accent)] hover:underline"
                           >
-                            Ouvrir sur AliExpress →
+                            {t("commandes.openAliExpress")}
                           </a>
                         ) : (
                           <div className="shrink-0 flex items-center gap-1.5">
                             <input
                               type="url"
-                              placeholder="Coller le lien AliExpress…"
+                              placeholder={t("commandes.linkPlaceholder")}
                               value={lienDrafts[`${c.id}:${i}`] ?? ""}
                               onChange={(e) => setLienDrafts((prev) => ({ ...prev, [`${c.id}:${i}`]: e.target.value }))}
                               className="text-[11px] px-2 py-1 rounded-md border border-[var(--border)] bg-[var(--bg)] text-[var(--text-primary)] w-40"
@@ -288,7 +293,7 @@ export default function CommandesAPreparerPage() {
                               disabled={lienBusyKey === `${c.id}:${i}`}
                               className="text-[11px] font-semibold text-[var(--accent)] hover:underline disabled:opacity-50 disabled:cursor-not-allowed disabled:no-underline"
                             >
-                              {lienBusyKey === `${c.id}:${i}` ? "Rattachement…" : "Rattacher"}
+                              {lienBusyKey === `${c.id}:${i}` ? t("commandes.attaching") : t("commandes.attach")}
                             </button>
                           </div>
                         )}
@@ -302,17 +307,14 @@ export default function CommandesAPreparerPage() {
                         {formatAdresse(c.adresse_livraison, c.client_nom, c.client_telephone)}
                       </pre>
                     ) : (
-                      <p className="text-xs text-[var(--text-faint)]">
-                        Adresse non disponible — vérifie que l&apos;accès aux données clients protégées est bien approuvé côté
-                        Shopify.
-                      </p>
+                      <p className="text-xs text-[var(--text-faint)]">{t("commandes.noAddress")}</p>
                     )}
                     {c.adresse_livraison ? (
                       <button
                         onClick={() => copierAdresse(c)}
                         className="shrink-0 text-xs font-semibold text-[var(--accent)] hover:underline"
                       >
-                        {copiedId === c.id ? "Copié ✓" : "Copier"}
+                        {copiedId === c.id ? t("commandes.copied") : t("commandes.copy")}
                       </button>
                     ) : null}
                   </div>
@@ -323,14 +325,14 @@ export default function CommandesAPreparerPage() {
                       disabled={statutBusyId === c.id}
                       className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-[var(--accent)] text-white hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      Marquer comme commandée
+                      {t("commandes.markOrdered")}
                     </button>
                     <button
                       onClick={() => updateStatut(c.id, "ignoree")}
                       disabled={statutBusyId === c.id}
                       className="text-xs text-[var(--text-faint)] hover:text-[var(--text-muted)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      Ignorer
+                      {t("commandes.ignore")}
                     </button>
                   </div>
                   {actionErrors[c.id] ? (
@@ -344,29 +346,33 @@ export default function CommandesAPreparerPage() {
 
         {traitees.length > 0 ? (
           <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface-2)] p-6">
-            <p className="text-[10px] font-semibold uppercase tracking-widest text-[var(--text-faint)] mb-3">Traitées</p>
+            <p className="text-[10px] font-semibold uppercase tracking-widest text-[var(--text-faint)] mb-3">
+              {t("commandes.processedTitle")}
+            </p>
             <div className="flex flex-col divide-y divide-[var(--border)]">
               {traitees.map((c) => (
                 <div key={c.id} className="py-3 first:pt-0 last:pb-0 flex flex-col gap-2">
                   <div className="flex items-center justify-between">
-                    <p className="text-sm text-[var(--text-muted)]">Commande {c.shopify_order_name ?? `#${c.shopify_order_id}`}</p>
+                    <p className="text-sm text-[var(--text-muted)]">
+                      {t("commandes.orderLabel", { name: c.shopify_order_name ?? `#${c.shopify_order_id}` })}
+                    </p>
                     <span className="text-[11px] text-[var(--text-faint)]">
-                      {c.statut === "commandee" ? "Commandée" : "Ignorée"}
+                      {c.statut === "commandee" ? t("commandes.statusOrdered") : t("commandes.statusIgnored")}
                     </span>
                   </div>
 
                   {c.statut === "commandee" ? (
                     c.fulfillment_shopify_id ? (
                       <p className="text-[11px] text-[var(--accent-secondary)]">
-                        Suivi transmis ✓ {c.numero_suivi}
+                        {t("commandes.trackingSent", { tracking: c.numero_suivi ?? "" })}
                         {c.transporteur ? ` (${c.transporteur})` : ""}
                       </p>
                     ) : !fulfillmentScopeGranted ? (
                       <p className="text-[11px] text-[var(--text-faint)]">
                         <a href="/dashboard?openIntegrations=1" className="text-[var(--accent)] hover:underline">
-                          Reconnecte ta boutique Shopify
-                        </a>{" "}
-                        pour activer l&apos;envoi automatique du numéro de suivi.
+                          {t("commandes.reconnectPrefix")}
+                        </a>
+                        {t("commandes.reconnectSuffix")}
                       </p>
                     ) : (
                       <div className="flex flex-col gap-1.5">
@@ -376,7 +382,7 @@ export default function CommandesAPreparerPage() {
                         <div className="flex items-center gap-1.5">
                           <input
                             type="text"
-                            placeholder="Numéro de suivi"
+                            placeholder={t("commandes.trackingPlaceholder")}
                             value={suiviDrafts[c.id]?.numero ?? c.numero_suivi ?? ""}
                             onChange={(e) =>
                               setSuiviDrafts((prev) => ({
@@ -388,7 +394,7 @@ export default function CommandesAPreparerPage() {
                           />
                           <input
                             type="text"
-                            placeholder="Transporteur (optionnel)"
+                            placeholder={t("commandes.carrierPlaceholder")}
                             value={suiviDrafts[c.id]?.transporteur ?? c.transporteur ?? ""}
                             onChange={(e) =>
                               setSuiviDrafts((prev) => ({
@@ -403,7 +409,11 @@ export default function CommandesAPreparerPage() {
                             disabled={suiviBusyId === c.id}
                             className="text-[11px] font-semibold text-[var(--accent)] hover:underline disabled:opacity-50"
                           >
-                            {suiviBusyId === c.id ? "Envoi…" : c.fulfillment_erreur ? "Réessayer" : "Envoyer le suivi"}
+                            {suiviBusyId === c.id
+                              ? t("commandes.sending")
+                              : c.fulfillment_erreur
+                              ? t("commandes.retry")
+                              : t("commandes.sendTracking")}
                           </button>
                         </div>
                       </div>

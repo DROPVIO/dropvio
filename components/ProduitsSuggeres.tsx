@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import { slugify } from "@/lib/slugify";
 
 type Suggestion = {
@@ -28,6 +29,7 @@ export default function ProduitsSuggeres({
   refreshKey?: number | string;
   onAdded?: () => void;
 }) {
+  const t = useTranslations("dashboard.produitsSuggeres");
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -51,13 +53,13 @@ export default function ProduitsSuggeres({
         const json = await res.json();
         if (cancelled) return;
         if (!res.ok) {
-          setError(json.error ?? "Impossible de charger les suggestions.");
+          setError(json.error ?? t("errorLoad"));
           return;
         }
         setSuggestions(json.suggestions ?? []);
       })
       .catch(() => {
-        if (!cancelled) setError("Impossible de contacter le serveur.");
+        if (!cancelled) setError(t("errorServer"));
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -65,6 +67,7 @@ export default function ProduitsSuggeres({
     return () => {
       cancelled = true;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [boutiqueId, refreshKey]);
 
   async function handleAdd(suggestion: Suggestion) {
@@ -86,13 +89,13 @@ export default function ProduitsSuggeres({
       });
       const json = await response.json();
       if (!response.ok) {
-        setAddErrors((prev) => ({ ...prev, [suggestion.id]: json.error ?? "Impossible d'ajouter ce produit." }));
+        setAddErrors((prev) => ({ ...prev, [suggestion.id]: json.error ?? t("errorAdd") }));
         return;
       }
       setAddedIds((prev) => new Set(prev).add(suggestion.id));
       onAdded?.();
     } catch {
-      setAddErrors((prev) => ({ ...prev, [suggestion.id]: "Impossible de contacter le serveur." }));
+      setAddErrors((prev) => ({ ...prev, [suggestion.id]: t("errorServer") }));
     } finally {
       setAddingId(null);
     }
@@ -105,15 +108,13 @@ export default function ProduitsSuggeres({
   return (
     <section className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-6">
       <div className="mb-4">
-        <p className="text-xs uppercase tracking-[0.3em] text-violet-400">Suggestions</p>
-        <h3 className="mt-2 text-lg font-semibold text-[var(--text-primary)]">Produits complémentaires suggérés</h3>
-        <p className="mt-1 text-sm text-[var(--text-faint)]">
-          Basées sur la niche des produits déjà dans cette boutique.
-        </p>
+        <p className="text-xs uppercase tracking-[0.3em] text-violet-400">{t("kicker")}</p>
+        <h3 className="mt-2 text-lg font-semibold text-[var(--text-primary)]">{t("title")}</h3>
+        <p className="mt-1 text-sm text-[var(--text-faint)]">{t("subtitle")}</p>
       </div>
 
       {loading ? (
-        <p className="text-xs text-[var(--text-faint)]">Chargement des suggestions…</p>
+        <p className="text-xs text-[var(--text-faint)]">{t("loading")}</p>
       ) : error ? (
         <div className="rounded-xl border border-[var(--danger)]/20 bg-[var(--danger)]/10 px-4 py-3 text-sm text-[var(--danger)]">{error}</div>
       ) : (
@@ -137,13 +138,15 @@ export default function ProduitsSuggeres({
                   <p className="line-clamp-2 text-sm font-medium text-[var(--text-primary)]">{s.nom}</p>
                   <div className="flex items-center justify-between text-xs text-[var(--text-muted)]">
                     <span className="font-semibold text-violet-300">{s.prixVente.toFixed(2)}€</span>
-                    <span>{s.commandes > 1000 ? `${(s.commandes / 1000).toFixed(0)}k` : s.commandes} cmd</span>
+                    <span>
+                      {s.commandes > 1000 ? `${(s.commandes / 1000).toFixed(0)}k` : s.commandes} {t("ordersUnit")}
+                    </span>
                   </div>
                   {s.croissance !== null && (
                     <span
                       className={`text-[11px] font-semibold ${s.croissance >= 0 ? "text-[var(--success)]" : "text-[var(--danger)]"}`}
                     >
-                      {s.croissance >= 0 ? "↑" : "↓"} {Math.abs(s.croissance).toFixed(0)}% de croissance
+                      {s.croissance >= 0 ? "↑" : "↓"} {t("growth", { pct: Math.abs(s.croissance).toFixed(0) })}
                     </span>
                   )}
                   <button
@@ -152,7 +155,7 @@ export default function ProduitsSuggeres({
                     disabled={added || addingId === s.id}
                     className="mt-auto w-full rounded-xl bg-violet-600 py-2.5 text-xs font-semibold text-white transition hover:bg-violet-500 disabled:cursor-not-allowed disabled:opacity-50"
                   >
-                    {added ? "✓ Ajouté" : addingId === s.id ? "Ajout…" : "Ajouter à la boutique"}
+                    {added ? t("added") : addingId === s.id ? t("adding") : t("add")}
                   </button>
                   {addErrors[s.id] ? (
                     <p className="text-[11px] text-[var(--danger)]">{addErrors[s.id]}</p>

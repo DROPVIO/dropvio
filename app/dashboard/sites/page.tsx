@@ -3,7 +3,9 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
+import { useLocale, useTranslations } from "next-intl";
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
+import { toIntlTag, type AppLocale } from "@/lib/locale";
 import type { ChartPoint } from "@/components/dashboard/SitesChart";
 
 // recharts (~390 KB) ne doit jamais faire partie du bundle initial de cette page — chargé
@@ -20,7 +22,7 @@ const SitesChart = dynamic(() => import("@/components/dashboard/SitesChart"), {
 
 type SiteRow = { id: string; nom_produit: string; created_at: string };
 
-function buildChartData(createdAts: string[]): ChartPoint[] {
+function buildChartData(createdAts: string[], intlTag: string): ChartPoint[] {
   const now = new Date();
   const counts: Record<string, number> = {};
   for (const ts of createdAts) {
@@ -36,11 +38,11 @@ function buildChartData(createdAts: string[]): ChartPoint[] {
     dPrev.setUTCDate(now.getUTCDate() - (59 - i));
     const kPrev = dPrev.toISOString().slice(0, 10);
 
-    const label = dCur.toLocaleDateString("fr-FR", { day: "numeric", month: "short" });
+    const label = dCur.toLocaleDateString(intlTag, { day: "numeric", month: "short" });
     return {
       date: label,
-      "30 derniers jours": counts[kCur] || 0,
-      "Mois précédent": counts[kPrev] || 0,
+      current: counts[kCur] || 0,
+      previous: counts[kPrev] || 0,
     };
   });
 }
@@ -51,6 +53,8 @@ function fmt(n: number): string {
 }
 
 export default function SitesDetailPage() {
+  const t = useTranslations("dashboard");
+  const intlTag = toIntlTag(useLocale() as AppLocale);
   const [loading, setLoading] = useState(true);
   const [sites, setSites] = useState<SiteRow[]>([]);
 
@@ -69,7 +73,7 @@ export default function SitesDetailPage() {
     });
   }, []);
 
-  const chartData = buildChartData(sites.map((s) => s.created_at));
+  const chartData = buildChartData(sites.map((s) => s.created_at), intlTag);
   const now = new Date();
   const startOfMonth = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1)).toISOString();
   const sitesMois = sites.filter((s) => s.created_at >= startOfMonth).length;
@@ -79,34 +83,34 @@ export default function SitesDetailPage() {
       <div className="max-w-4xl mx-auto flex flex-col gap-8">
         <div>
           <Link href="/dashboard" className="text-xs text-[var(--text-faint)] hover:text-[var(--text-muted)] transition-colors">
-            ← Dashboard
+            {t("common.back")}
           </Link>
-          <h1 className="text-2xl font-bold text-[var(--text-primary)] mt-3">Sites générés</h1>
-          <p className="text-[var(--text-faint)] text-sm mt-1.5">Landing pages créées via le Site Builder.</p>
+          <h1 className="text-2xl font-bold text-[var(--text-primary)] mt-3">{t("sites.title")}</h1>
+          <p className="text-[var(--text-faint)] text-sm mt-1.5">{t("sites.subtitle")}</p>
         </div>
 
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
           <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface-2)] p-5">
-            <p className="text-[10px] font-semibold uppercase tracking-widest text-[var(--text-faint)]">Ce mois</p>
+            <p className="text-[10px] font-semibold uppercase tracking-widest text-[var(--text-faint)]">{t("sites.statMonth")}</p>
             <p className="text-2xl font-bold tabular-nums text-[var(--accent)] mt-2">{sitesMois}</p>
           </div>
           <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface-2)] p-5">
-            <p className="text-[10px] font-semibold uppercase tracking-widest text-[var(--text-faint)]">Au total</p>
+            <p className="text-[10px] font-semibold uppercase tracking-widest text-[var(--text-faint)]">{t("sites.statTotal")}</p>
             <p className="text-2xl font-bold tabular-nums text-[var(--accent-secondary)] mt-2">{fmt(sites.length)}</p>
           </div>
         </div>
 
         <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface-2)] p-6">
           <div className="mb-6">
-            <p className="text-sm font-semibold text-[var(--text-primary)]">Sites générés — 30 derniers jours</p>
-            <p className="text-[11px] text-[var(--text-faint)] mt-0.5">Comparaison avec les 30 jours précédents</p>
+            <p className="text-sm font-semibold text-[var(--text-primary)]">{t("sites.chartTitle")}</p>
+            <p className="text-[11px] text-[var(--text-faint)] mt-0.5">{t("sites.chartCaption")}</p>
           </div>
 
           {!loading && sites.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 gap-2">
-              <p className="text-[var(--text-faint)] text-sm">Aucun site généré pour l&apos;instant.</p>
+              <p className="text-[var(--text-faint)] text-sm">{t("sites.empty")}</p>
               <a href="/site-builder" className="text-[var(--accent)] text-xs hover:underline">
-                Créer ta première landing page →
+                {t("sites.cta")}
               </a>
             </div>
           ) : (
@@ -116,14 +120,14 @@ export default function SitesDetailPage() {
 
         <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface-2)] p-6">
           {loading ? (
-            <p className="text-[var(--text-faint)] text-sm text-center py-12">Chargement…</p>
+            <p className="text-[var(--text-faint)] text-sm text-center py-12">{t("common.loading")}</p>
           ) : sites.length === 0 ? null : (
             <div className="flex flex-col divide-y divide-[var(--border)]">
               {sites.map((s) => (
                 <div key={s.id} className="flex items-center justify-between py-3 first:pt-0 last:pb-0">
                   <p className="text-sm text-[var(--text-primary)] truncate">{s.nom_produit}</p>
                   <p className="text-[11px] text-[var(--text-faint)] shrink-0 ml-4">
-                    {new Date(s.created_at).toLocaleDateString("fr-FR", { day: "numeric", month: "short", year: "numeric" })}
+                    {new Date(s.created_at).toLocaleDateString(intlTag, { day: "numeric", month: "short", year: "numeric" })}
                   </p>
                 </div>
               ))}

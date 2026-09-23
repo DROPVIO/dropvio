@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
 import Sidebar from "@/components/Sidebar";
 import OnboardingProvider from "@/components/onboarding/OnboardingProvider";
@@ -31,38 +32,6 @@ const FORMATION_PRIX: Record<FormationOffre, number> = {
   bundle: 69.99,
 };
 
-const OFFRE_INFO: Record<FormationCollection, {
-  titre: string;
-  accroche: string;
-  public: string;
-  bullets: string[];
-}> = {
-  courte: {
-    titre: "Formation courte",
-    accroche: "L'essentiel pour lancer une boutique qui tient, sans y passer des semaines.",
-    public: "Pour ceux qui n'ont pas le temps de tout lire mais veulent des bases solides et applicables tout de suite.",
-    bullets: [
-      "Le calcul de marge complet à faire avant chaque lancement",
-      "Choisir un produit et un fournisseur fiable, avec méthode",
-      "Construire une fiche produit et une boutique qui convertissent",
-      "Trésorerie, cadre légal France et service client sans mauvaise surprise",
-      "Un condensé sérieux, pas un résumé superficiel",
-    ],
-  },
-  longue: {
-    titre: "Formation longue",
-    accroche: "La méthode complète, approfondie, avec études de cas et grilles prêtes à l'emploi.",
-    public: "Pour ceux qui veulent tout maîtriser en profondeur, avant de se lancer ou pour structurer une activité déjà démarrée.",
-    bullets: [
-      "Chaque sujet développé en profondeur, exemples chiffrés multiples",
-      "Études de cas complètes, anatomie des échecs les plus fréquents",
-      "Grilles d'évaluation fournisseurs, checklists boutique et lancement",
-      "Glossaire, sources, comparatif des canaux publicitaires",
-      "26 parties pour construire une activité qui dure",
-    ],
-  },
-};
-
 function formatPrix(prix: number): string {
   return `${prix.toFixed(2).replace(".", ",")}€`;
 }
@@ -83,6 +52,8 @@ function useIsLightTheme(): boolean {
 }
 
 export default function FormationPage() {
+  const t = useTranslations("dashboard.formation");
+  const tCommon = useTranslations("dashboard.common");
   const [state, setState] = useState<FormationState>({ status: "loading" });
   const [buying, setBuying] = useState<FormationOffre | null>(null);
   const [banner, setBanner] = useState<"success" | "canceled" | null>(null);
@@ -123,14 +94,18 @@ export default function FormationPage() {
       .then(async (res) => {
         const json = await res.json();
         if (!res.ok) {
-          setState({ status: "error", message: json.error ?? "Impossible de charger la formation." });
+          setState({ status: "error", message: json.error ?? t("errorLoad") });
           return;
         }
         setState({ status: "ok", modules: json.modules, owned: json.owned });
       })
-      .catch(() => setState({ status: "error", message: "Impossible de contacter le serveur." }));
+      .catch(() => setState({ status: "error", message: t("errorServer") }));
   };
 
+  // `load` n'est volontairement pas dans les deps (ni mémoïsé) : un seul chargement au
+  // montage. Il capture `t`, stable pour une locale donnée — un changement de langue
+  // recharge de toute façon l'arbre (router.refresh dans les Paramètres).
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(load, []);
 
   // Retour de Stripe Checkout. Le webhook (asynchrone) peut prendre une poignée de
@@ -149,6 +124,7 @@ export default function FormationPage() {
 
     setBanner(success ? "success" : "canceled");
     if (success) setTimeout(load, 3000);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const acheter = async (offre: FormationOffre) => {
@@ -165,13 +141,13 @@ export default function FormationPage() {
       }
       const json = await res.json();
       if (!res.ok) {
-        alert(json.error ?? "Impossible de démarrer le paiement.");
+        alert(json.error ?? t("errorCheckout"));
         setBuying(null);
         return;
       }
       window.location.href = json.url;
     } catch {
-      alert("Impossible de contacter le serveur.");
+      alert(t("errorServer"));
       setBuying(null);
     }
   };
@@ -179,34 +155,40 @@ export default function FormationPage() {
   const owned = state.status === "ok" ? state.owned : { courte: false, longue: false };
   const hasBoth = owned.courte && owned.longue;
 
+  // Titre/accroche/public/bullets par collection, résolus depuis les traductions.
+  const offreInfo = (collection: FormationCollection) => ({
+    titre: t(`${collection}Titre`),
+    accroche: t(`${collection}Accroche`),
+    public: t(`${collection}Public`),
+    bullets: t.raw(`${collection}Bullets`) as string[],
+  });
+
   const content = (
     <div className="min-h-screen bg-[var(--bg)] text-[var(--text-primary)] font-sans px-4 py-16">
       <div className="max-w-3xl mx-auto">
         <div className="mb-10 text-center">
           <div className="inline-flex items-center gap-2 mb-4 px-3 py-1 rounded-full bg-violet-500/10 border border-violet-500/20 text-[var(--accent)] text-xs font-medium tracking-widest uppercase">
             <span className="w-1.5 h-1.5 rounded-full bg-violet-400" />
-            Formation
+            {t("badge")}
           </div>
-          <h1 className="text-3xl font-extrabold tracking-tight">Formation dropshipping</h1>
-          <p className="text-[var(--text-muted)] text-sm max-w-md mx-auto mt-3">
-            Achat unique, accès à vie. Pas d&apos;abonnement.
-          </p>
+          <h1 className="text-3xl font-extrabold tracking-tight">{t("title")}</h1>
+          <p className="text-[var(--text-muted)] text-sm max-w-md mx-auto mt-3">{t("subtitle")}</p>
         </div>
 
         {banner === "success" && (
           <div className="mb-8 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-[var(--success)] text-sm text-center px-4 py-3">
-            Paiement reçu — l&apos;accès s&apos;active en quelques secondes.
+            {t("bannerSuccess")}
           </div>
         )}
         {banner === "canceled" && (
           <div className="mb-8 rounded-xl bg-[var(--surface-2)] border border-[var(--border-strong)] text-[var(--text-muted)] text-sm text-center px-4 py-3">
-            Paiement annulé, rien n&apos;a été débité.
+            {t("bannerCanceled")}
           </div>
         )}
 
         {state.status === "loading" && (
           <div className="rounded-2xl bg-[var(--surface)] border border-[var(--border)] p-10 text-center text-[var(--text-faint)] text-sm">
-            Chargement…
+            {tCommon("loading")}
           </div>
         )}
 
@@ -224,7 +206,7 @@ export default function FormationPage() {
                 {(["courte", "longue"] as const)
                   .filter((c) => !owned[c])
                   .map((collection) => {
-                    const info = OFFRE_INFO[collection];
+                    const info = offreInfo(collection);
                     return (
                       <div key={collection} className="rounded-2xl bg-[var(--surface)] border border-[var(--border)] p-6">
                         <div className="flex items-start justify-between gap-4 flex-wrap">
@@ -250,7 +232,9 @@ export default function FormationPage() {
                           disabled={buying !== null}
                           className="mt-5 w-full rounded-xl bg-gradient-to-br from-violet-600 to-violet-500 hover:from-violet-500 hover:to-violet-400 disabled:opacity-50 text-white font-semibold text-sm py-2.5 transition-all"
                         >
-                          {buying === collection ? "Redirection…" : `Acheter — ${formatPrix(FORMATION_PRIX[collection])}`}
+                          {buying === collection
+                            ? t("redirecting")
+                            : t("buy", { prix: formatPrix(FORMATION_PRIX[collection]) })}
                         </button>
                       </div>
                     );
@@ -260,19 +244,19 @@ export default function FormationPage() {
                 {!hasBoth && (
                   <div className="rounded-2xl bg-gradient-to-br from-violet-950/60 to-[var(--surface)] border border-violet-500/30 p-6 relative overflow-hidden">
                     <span className="absolute top-0 right-0 text-[10px] font-bold bg-violet-500 text-white px-3 py-1 rounded-bl-lg">
-                      MEILLEURE OFFRE
+                      {t("bundleBadge")}
                     </span>
-                    <h2 className="text-lg font-bold text-[var(--text-primary)]">Les deux formations</h2>
-                    <p className="text-[var(--text-muted)] text-sm mt-1">
-                      Version courte pour démarrer vite, version longue pour tout approfondir — l&apos;accès aux deux, à vie.
-                    </p>
+                    <h2 className="text-lg font-bold text-[var(--text-primary)]">{t("bundleTitle")}</h2>
+                    <p className="text-[var(--text-muted)] text-sm mt-1">{t("bundleDesc")}</p>
                     <div className="flex items-center gap-2 mt-4">
                       <span className="text-2xl font-extrabold text-[var(--text-primary)]">{formatPrix(FORMATION_PRIX.bundle)}</span>
                       <span className="text-sm text-[var(--text-faint)] line-through">
                         {formatPrix(FORMATION_PRIX.courte + FORMATION_PRIX.longue)}
                       </span>
                       <span className="text-xs text-[var(--success)] font-medium">
-                        économise {formatPrix(FORMATION_PRIX.courte + FORMATION_PRIX.longue - FORMATION_PRIX.bundle)}
+                        {t("bundleSave", {
+                          montant: formatPrix(FORMATION_PRIX.courte + FORMATION_PRIX.longue - FORMATION_PRIX.bundle),
+                        })}
                       </span>
                     </div>
                     <button
@@ -280,7 +264,9 @@ export default function FormationPage() {
                       disabled={buying !== null}
                       className="mt-5 w-full rounded-xl bg-violet-500 hover:bg-violet-400 disabled:opacity-50 text-white font-semibold text-sm py-2.5 transition-all"
                     >
-                      {buying === "bundle" ? "Redirection…" : `Acheter le bundle — ${formatPrix(FORMATION_PRIX.bundle)}`}
+                      {buying === "bundle"
+                        ? t("redirecting")
+                        : t("buyBundle", { prix: formatPrix(FORMATION_PRIX.bundle) })}
                     </button>
                   </div>
                 )}
@@ -293,7 +279,7 @@ export default function FormationPage() {
               const modules = state.modules.filter((m) => m.collection === collection);
               return (
                 <section key={collection}>
-                  <h2 className="text-lg font-bold text-[var(--text-primary)] mb-4">{OFFRE_INFO[collection].titre}</h2>
+                  <h2 className="text-lg font-bold text-[var(--text-primary)] mb-4">{t(`${collection}Titre`)}</h2>
                   <div className="flex flex-col gap-4">
                     {modules.map((m) => (
                       <details
@@ -311,7 +297,7 @@ export default function FormationPage() {
                               onClick={(e) => e.stopPropagation()}
                               className="rounded-lg border border-violet-500/30 bg-violet-500/10 px-3 py-1.5 text-xs font-medium text-[var(--accent)] transition hover:bg-violet-500/20"
                             >
-                              Lire →
+                              {t("read")}
                             </Link>
                             <span className="text-[var(--text-faint)] text-xs mt-1 group-open:rotate-180 transition-transform">
                               ▾

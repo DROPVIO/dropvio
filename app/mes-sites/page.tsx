@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useLocale, useTranslations } from "next-intl";
+import { toIntlTag, type AppLocale } from "@/lib/locale";
 
 type Site = {
   id: string;
@@ -21,6 +23,9 @@ function sortSites(list: Site[]): Site[] {
 }
 
 export default function MesSitesPage() {
+  const t = useTranslations("dashboard.mesSites");
+  const tCommon = useTranslations("dashboard.common");
+  const intlTag = toIntlTag(useLocale() as AppLocale);
   const [sites, setSites] = useState<Site[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -45,7 +50,7 @@ export default function MesSitesPage() {
         if (json.error) setError(json.error);
         else setSites(json.sites ?? []);
       })
-      .catch(() => setError("Impossible de charger les sites"))
+      .catch(() => setError(t("errorLoad")))
       .finally(() => setLoading(false));
 
     fetch("/api/shopify/status")
@@ -57,12 +62,13 @@ export default function MesSitesPage() {
       .then((r) => r.json())
       .then((json) => setPlan(json.plan ?? "free"))
       .catch(() => setPlan("free"));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   function handleConnectShopify() {
     const shop = shopifyDomainInput.trim().toLowerCase();
     if (!/^[a-z0-9][a-z0-9-]*\.myshopify\.com$/.test(shop)) {
-      alert("Format attendu : ma-boutique.myshopify.com");
+      alert(t("shopifyFormatAlert"));
       return;
     }
     const returnTo = window.location.pathname;
@@ -80,12 +86,12 @@ export default function MesSitesPage() {
       });
       const json = await res.json();
       if (!res.ok) {
-        setPushErrors((prev) => ({ ...prev, [site.id]: json.error || "Impossible de publier sur Shopify." }));
+        setPushErrors((prev) => ({ ...prev, [site.id]: json.error || t("errorPublish") }));
         return;
       }
       setPushResults((prev) => ({ ...prev, [site.id]: { url: json.url, admin_url: json.admin_url } }));
     } catch {
-      setPushErrors((prev) => ({ ...prev, [site.id]: "Impossible de contacter le serveur." }));
+      setPushErrors((prev) => ({ ...prev, [site.id]: t("errorServer") }));
     } finally {
       setPushingId(null);
     }
@@ -106,21 +112,21 @@ export default function MesSitesPage() {
       a.click();
       URL.revokeObjectURL(url);
     } catch {
-      alert("Erreur lors du téléchargement.");
+      alert(t("errorDownload"));
     } finally {
       setDownloading(null);
     }
   }
 
   async function handleDelete(site: Site) {
-    if (!confirm(`Supprimer « ${site.nom_produit} » ? Cette action est irréversible.`)) return;
+    if (!confirm(t("confirmDelete", { nom: site.nom_produit }))) return;
     setDeleting(site.id);
     try {
       const res = await fetch(`/api/sites-generes/${site.id}`, { method: "DELETE" });
       if (!res.ok) throw new Error();
       setSites((prev) => prev.filter((s) => s.id !== site.id));
     } catch {
-      alert("Erreur lors de la suppression.");
+      alert(t("errorDelete"));
     } finally {
       setDeleting(null);
     }
@@ -140,12 +146,12 @@ export default function MesSitesPage() {
       if (!res.ok) throw new Error();
     } catch {
       setSites((prev) => sortSites(prev.map((s) => (s.id === site.id ? { ...s, est_favori: !nextFavori } : s))));
-      alert("Erreur lors de la mise à jour du favori.");
+      alert(t("errorFavorite"));
     }
   }
 
   function formatDate(iso: string) {
-    return new Intl.DateTimeFormat("fr-FR", {
+    return new Intl.DateTimeFormat(intlTag, {
       day: "numeric",
       month: "short",
       year: "numeric",
@@ -162,34 +168,28 @@ export default function MesSitesPage() {
         <div className="mb-10">
           <div className="inline-flex items-center gap-2 mb-4 px-3 py-1 rounded-full bg-violet-500/10 border border-violet-500/20 text-[var(--accent)] text-xs font-medium tracking-widest uppercase">
             <span className="w-1.5 h-1.5 rounded-full bg-violet-400" />
-            Mes sites
+            {t("badge")}
           </div>
-          <h1 className="text-3xl font-extrabold tracking-tight mb-2">
-            Landing pages générées
-          </h1>
-          <p className="text-[var(--text-muted)] text-sm">
-            Toutes vos landing pages sauvegardées automatiquement après génération.
-          </p>
+          <h1 className="text-3xl font-extrabold tracking-tight mb-2">{t("title")}</h1>
+          <p className="text-[var(--text-muted)] text-sm">{t("subtitle")}</p>
         </div>
 
         {shopifyConnected === false && (
           <div className="mb-6 rounded-2xl bg-[var(--surface)] border border-[var(--border)] p-4 flex flex-col sm:flex-row sm:items-center gap-3">
-            <p className="text-xs text-[var(--text-muted)] flex-1">
-              Connecte ta boutique Shopify pour publier tes landing pages directement dessus.
-            </p>
+            <p className="text-xs text-[var(--text-muted)] flex-1">{t("shopifyPrompt")}</p>
             <div className="flex gap-2">
               <input
                 type="text"
                 value={shopifyDomainInput}
                 onChange={(e) => setShopifyDomainInput(e.target.value)}
-                placeholder="ma-boutique.myshopify.com"
+                placeholder={t("shopifyPlaceholder")}
                 className="flex-1 sm:w-56 px-3 py-2 rounded-xl bg-[var(--bg)] border border-[var(--border-strong)] text-xs text-[var(--text-primary)] placeholder:text-[var(--text-faint)] focus:outline-none focus:border-[var(--accent)]/40"
               />
               <button
                 onClick={handleConnectShopify}
                 className="px-4 py-2 rounded-xl bg-gradient-to-r from-violet-600 to-blue-600 text-white text-xs font-semibold hover:from-violet-500 hover:to-blue-500 transition-all whitespace-nowrap"
               >
-                Connecter
+                {t("shopifyConnect")}
               </button>
             </div>
           </div>
@@ -198,7 +198,7 @@ export default function MesSitesPage() {
         {loading ? (
           <div className="flex items-center justify-center py-24 text-[var(--text-faint)] text-sm gap-3">
             <div className="w-5 h-5 rounded-full border-2 border-[var(--border-strong)] border-t-violet-500 animate-spin" />
-            Chargement…
+            {tCommon("loading")}
           </div>
         ) : error ? (
           <div className="rounded-2xl bg-[var(--danger)]/10 border border-[var(--danger)]/20 px-6 py-8 text-center text-[var(--danger)] text-sm">
@@ -207,22 +207,18 @@ export default function MesSitesPage() {
         ) : sites.length === 0 ? (
           <div className="rounded-2xl bg-[var(--surface)] border border-[var(--border)] px-6 py-16 text-center flex flex-col items-center gap-4">
             <span className="text-4xl">🏗️</span>
-            <p className="text-[var(--text-primary)] font-semibold">Aucun site généré pour l&apos;instant</p>
-            <p className="text-[var(--text-faint)] text-sm max-w-xs">
-              Génère ta première landing page depuis le Site Builder et elle apparaîtra ici automatiquement.
-            </p>
+            <p className="text-[var(--text-primary)] font-semibold">{t("emptyTitle")}</p>
+            <p className="text-[var(--text-faint)] text-sm max-w-xs">{t("emptyBody")}</p>
             <a
               href="/site-builder"
               className="mt-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-violet-600 to-blue-600 text-white text-sm font-semibold hover:from-violet-500 hover:to-blue-500 transition-all"
             >
-              Créer une landing page →
+              {t("emptyCta")}
             </a>
           </div>
         ) : (
           <>
-            <p className="text-xs text-[var(--text-faint)] mb-4">
-              {sites.length} site{sites.length > 1 ? "s" : ""} sauvegardé{sites.length > 1 ? "s" : ""}
-            </p>
+            <p className="text-xs text-[var(--text-faint)] mb-4">{t("count", { count: sites.length })}</p>
             <div className="grid gap-3 sm:grid-cols-2">
               {sites.map((site) => (
                 <div
@@ -238,12 +234,12 @@ export default function MesSitesPage() {
                         {site.nom_produit}
                       </p>
                       <p className="text-[11px] text-[var(--text-faint)] mt-0.5">
-                        Généré le {formatDate(site.created_at)}
+                        {t("generatedOn", { date: formatDate(site.created_at) })}
                       </p>
                     </div>
                     <button
                       onClick={() => handleToggleFavori(site)}
-                      aria-label={site.est_favori ? "Retirer des favoris" : "Ajouter aux favoris"}
+                      aria-label={site.est_favori ? t("favoriteRemove") : t("favoriteAdd")}
                       className="shrink-0 text-lg leading-none transition hover:scale-110"
                     >
                       {site.est_favori ? "⭐" : "☆"}
@@ -255,7 +251,7 @@ export default function MesSitesPage() {
                       href={`/site-builder?regenerate=${site.id}`}
                       className="flex-1 py-2 rounded-xl border border-[var(--border-strong)] text-[var(--text-muted)] text-xs font-medium text-center hover:border-[var(--accent)]/40 hover:text-[var(--text-primary)] transition"
                     >
-                      Regénérer
+                      {t("regenerate")}
                     </a>
                     {canExport ? (
                       <button
@@ -263,14 +259,14 @@ export default function MesSitesPage() {
                         disabled={downloading === site.id}
                         className="flex-1 py-2 rounded-xl bg-gradient-to-r from-violet-600 to-blue-600 text-white text-xs font-semibold hover:from-violet-500 hover:to-blue-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                       >
-                        {downloading === site.id ? "…" : "Télécharger le HTML"}
+                        {downloading === site.id ? "…" : t("download")}
                       </button>
                     ) : (
                       <Link
                         href="/#pricing"
                         className="flex-1 py-2 rounded-xl bg-gradient-to-r from-violet-600 to-blue-600 text-white text-xs font-semibold hover:from-violet-500 hover:to-blue-500 transition-all text-center"
                       >
-                        🔒 Passe au plan Pro
+                        {t("lockPro")}
                       </Link>
                     )}
                   </div>
@@ -279,7 +275,7 @@ export default function MesSitesPage() {
                       href="/#pricing"
                       className="py-2 rounded-xl border border-[var(--border-strong)] text-[var(--text-muted)] text-xs font-medium text-center hover:border-[var(--accent)]/40 hover:text-[var(--text-primary)] transition"
                     >
-                      🔒 Passe au plan Pro pour publier sur Shopify
+                      {t("lockProShopify")}
                     </Link>
                   )}
                   {shopifyConnected && canExport && (
@@ -288,7 +284,7 @@ export default function MesSitesPage() {
                       disabled={pushingId === site.id}
                       className="py-2 rounded-xl border border-[var(--border-strong)] text-[var(--text-muted)] text-xs font-medium text-center hover:border-[var(--accent)]/40 hover:text-[var(--text-primary)] transition disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      {pushingId === site.id ? "Publication…" : "Publier sur Shopify"}
+                      {pushingId === site.id ? t("publishing") : t("publish")}
                     </button>
                   )}
                   {pushErrors[site.id] && (
@@ -296,14 +292,14 @@ export default function MesSitesPage() {
                   )}
                   {pushResults[site.id] && (
                     <p className="text-[11px] text-[var(--text-faint)]">
-                      Publié :{" "}
+                      {t("publishedPrefix")}
                       <a
                         href={pushResults[site.id].url}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-[var(--accent)] hover:underline"
                       >
-                        voir la page
+                        {t("publishedLink")}
                       </a>
                     </p>
                   )}
@@ -313,7 +309,7 @@ export default function MesSitesPage() {
                     disabled={deleting === site.id}
                     className="text-xs text-[var(--text-faint)] hover:text-[var(--danger)] transition disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    {deleting === site.id ? "Suppression…" : "Supprimer"}
+                    {deleting === site.id ? t("deleting") : t("delete")}
                   </button>
                 </div>
               ))}

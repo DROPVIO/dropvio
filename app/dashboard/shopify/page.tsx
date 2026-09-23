@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useLocale, useTranslations } from "next-intl";
+import { toIntlTag, type AppLocale } from "@/lib/locale";
 
 type ShopifyStatus = {
   connected: boolean;
@@ -21,10 +23,12 @@ type Incident = {
   created_at: string;
 };
 
-const TYPE_LABEL: Record<Incident["type"], string> = {
-  refund: "Remboursement",
-  return: "Retour",
-  dispute: "Litige (chargeback)",
+// Clé de traduction par type (dashboard.shopify.type*) — le libellé affiché est résolu
+// au rendu, pas figé ici.
+const TYPE_KEY: Record<Incident["type"], string> = {
+  refund: "typeRefund",
+  return: "typeReturn",
+  dispute: "typeDispute",
 };
 
 // Valeurs retournées comme des var() CSS (pas des hex figés) : valide dans un style={{ color }}
@@ -36,6 +40,8 @@ const TYPE_COLOR: Record<Incident["type"], string> = {
 };
 
 export default function ShopifyDetailPage() {
+  const t = useTranslations("dashboard");
+  const intlTag = toIntlTag(useLocale() as AppLocale);
   const [status, setStatus] = useState<ShopifyStatus | null>(null);
   const [incidents, setIncidents] = useState<Incident[] | null>(null);
   const [lookbackDays, setLookbackDays] = useState(90);
@@ -64,15 +70,15 @@ export default function ShopifyDetailPage() {
       <div className="max-w-4xl mx-auto flex flex-col gap-8">
         <div>
           <Link href="/dashboard" className="text-xs text-[var(--text-faint)] hover:text-[var(--text-muted)] transition-colors">
-            ← Dashboard
+            {t("common.back")}
           </Link>
-          <h1 className="text-2xl font-bold text-[var(--text-primary)] mt-3">Shopify — Remboursements & litiges</h1>
-          <p className="text-[var(--text-faint)] text-sm mt-1.5">Synchronisé automatiquement depuis ta boutique Shopify.</p>
+          <h1 className="text-2xl font-bold text-[var(--text-primary)] mt-3">{t("shopify.title")}</h1>
+          <p className="text-[var(--text-faint)] text-sm mt-1.5">{t("shopify.subtitle")}</p>
           <Link
             href="/dashboard/shopify/commandes"
             className="inline-flex items-center gap-2 mt-3 text-xs font-semibold text-[var(--accent)] hover:underline"
           >
-            Commandes à préparer sur AliExpress →
+            {t("shopify.commandesLink")}
             {aTraiterCount ? (
               <span className="rounded-full bg-[var(--danger)] text-white text-[10px] font-bold px-1.5 py-0.5 leading-none">
                 {aTraiterCount}
@@ -84,12 +90,10 @@ export default function ShopifyDetailPage() {
         {status && !status.connected ? (
           <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface-2)] p-10 flex flex-col items-center gap-2 text-center">
             <p className="text-[var(--text-faint)] text-sm">
-              {status.reconnectRequired
-                ? "Reconnecte ta boutique Shopify pour reprendre le suivi."
-                : "Connecte ta boutique Shopify pour voir tes remboursements et litiges ici."}
+              {status.reconnectRequired ? t("shopify.reconnectNeeded") : t("shopify.notConnected")}
             </p>
             <a href="/dashboard?openIntegrations=1" className="text-[var(--accent)] text-xs hover:underline">
-              {status.reconnectRequired ? "Reconnecter ma boutique →" : "Connecter ma boutique Shopify →"}
+              {status.reconnectRequired ? t("shopify.reconnectCta") : t("shopify.connectCta")}
             </a>
           </div>
         ) : (
@@ -97,28 +101,28 @@ export default function ShopifyDetailPage() {
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
               <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface-2)] p-5">
                 <p className="text-[10px] font-semibold uppercase tracking-widest text-[var(--text-faint)]">
-                  Remboursements & retours ({lookbackDays}j)
+                  {t("shopify.statRefunds", { days: lookbackDays })}
                 </p>
                 <p className="text-2xl font-bold tabular-nums text-[var(--accent-secondary)] mt-2">{refunds.length}</p>
               </div>
               <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface-2)] p-5">
                 <p className="text-[10px] font-semibold uppercase tracking-widest text-[var(--text-faint)]">
-                  Litiges ({lookbackDays}j)
+                  {t("shopify.statDisputes", { days: lookbackDays })}
                 </p>
                 {status?.disputesScopeGranted ? (
                   <p className="text-2xl font-bold tabular-nums text-[var(--danger)] mt-2">{disputes.length}</p>
                 ) : (
-                  <p className="text-xs font-semibold text-[var(--text-faint)] mt-3">Non disponible</p>
+                  <p className="text-xs font-semibold text-[var(--text-faint)] mt-3">{t("shopify.disputesUnavailable")}</p>
                 )}
               </div>
             </div>
 
             <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface-2)] p-6">
               {incidents === null ? (
-                <p className="text-[var(--text-faint)] text-sm text-center py-12">Chargement…</p>
+                <p className="text-[var(--text-faint)] text-sm text-center py-12">{t("common.loading")}</p>
               ) : incidents.length === 0 ? (
                 <p className="text-[var(--text-faint)] text-sm text-center py-12">
-                  Aucun remboursement, retour ou litige sur les {lookbackDays} derniers jours.
+                  {t("shopify.empty", { days: lookbackDays })}
                 </p>
               ) : (
                 <div className="flex flex-col divide-y divide-[var(--border)]">
@@ -126,10 +130,15 @@ export default function ShopifyDetailPage() {
                     <div key={i.id} className="flex items-center justify-between py-3 first:pt-0 last:pb-0">
                       <div className="min-w-0">
                         <p className="text-sm text-[var(--text-primary)]">
-                          {TYPE_LABEL[i.type]} · Commande #{i.shopify_order_id}
+                          {t("shopify.orderLine", {
+                            type: t(`shopify.${TYPE_KEY[i.type]}`),
+                            // String() et pas le nombre brut : ICU formaterait un id de
+                            // commande avec des séparateurs de milliers (1 234 567).
+                            orderId: String(i.shopify_order_id),
+                          })}
                         </p>
                         <p className="text-[11px] text-[var(--text-faint)] mt-0.5">
-                          {new Date(i.created_at).toLocaleDateString("fr-FR", { day: "numeric", month: "short", year: "numeric" })}
+                          {new Date(i.created_at).toLocaleDateString(intlTag, { day: "numeric", month: "short", year: "numeric" })}
                           {i.statut ? ` · ${i.statut}` : ""}
                         </p>
                       </div>

@@ -28,19 +28,20 @@ export const DOUANE_SEUIL_UK = 135;
 // demande d'origine : 12 570£ et 50 270£. Le seuil du taux additionnel (125 140£, régime
 // gov.uk en vigueur au moment de l'écriture) n'a pas été fourni explicitement — à revérifier
 // sur gov.uk, contrairement aux deux premiers seuils qui étaient explicites.
-const UK_TAX_BANDS: { max: number; rate: number; label: string }[] = [
-  { max: 12_570, rate: 0, label: "0% — en dessous du seuil d'imposition" },
-  { max: 50_270, rate: 0.26, label: "26% (Income Tax 20% + Class 4 NIC 6%)" },
-  { max: 125_140, rate: 0.42, label: "42% (Income Tax 40% + Class 4 NIC 2%)" },
-  { max: Infinity, rate: 0.47, label: "47% (Income Tax 45% + Class 4 NIC 2%)" },
+// labelKey : clé sous dashboard.calculateur, résolue par l'UI (ce module reste du calcul pur).
+const UK_TAX_BANDS: { max: number; rate: number; labelKey: string }[] = [
+  { max: 12_570, rate: 0, labelKey: "ukBand0" },
+  { max: 50_270, rate: 0.26, labelKey: "ukBand26" },
+  { max: 125_140, rate: 0.42, labelKey: "ukBand42" },
+  { max: Infinity, rate: 0.47, labelKey: "ukBand47" },
 ];
 
 // Taux marginal approximatif applicable au prochain livre de profit annuel — indicatif
 // seulement, n'entre jamais dans le calcul de marge par vente (Income Tax/NIC se calculent
 // sur le profit annuel cumulé, pas transaction par transaction).
-export function tauxMarginalUK(profitAnnuel: number): { rate: number; label: string } {
+export function tauxMarginalUK(profitAnnuel: number): { rate: number; labelKey: string } {
   const band = UK_TAX_BANDS.find((b) => profitAnnuel <= b.max) ?? UK_TAX_BANDS[UK_TAX_BANDS.length - 1];
-  return { rate: band.rate, label: band.label };
+  return { rate: band.rate, labelKey: band.labelKey };
 }
 
 // ─── Constantes fiscales États-Unis (sole proprietor / LLC, vente de marchandises) ────
@@ -54,58 +55,60 @@ export const STRIPE_RATE_US_DEFAULT = "2.9";  // %, pré-rempli mais éditable d
 // pourcentage selon la localité exacte. Sources publiques (Tax Foundation), à revérifier
 // périodiquement : ces taux évoluent d'une année sur l'autre. 5 États sans sales tax d'État :
 // Alaska, Delaware, Montana, New Hampshire, Oregon (souvent résumés "NOMAD").
-export const US_STATE_SALES_TAX: { code: string; nom: string; taux: number }[] = [
-  { code: "AL", nom: "Alabama", taux: 0.04 },
-  { code: "AK", nom: "Alaska", taux: 0 },
-  { code: "AZ", nom: "Arizona", taux: 0.056 },
-  { code: "AR", nom: "Arkansas", taux: 0.065 },
-  { code: "CA", nom: "Californie", taux: 0.0725 },
-  { code: "CO", nom: "Colorado", taux: 0.029 },
-  { code: "CT", nom: "Connecticut", taux: 0.0635 },
-  { code: "DE", nom: "Delaware", taux: 0 },
-  { code: "DC", nom: "District de Columbia", taux: 0.06 },
-  { code: "FL", nom: "Floride", taux: 0.06 },
-  { code: "GA", nom: "Géorgie", taux: 0.04 },
-  { code: "HI", nom: "Hawaï", taux: 0.04 },
-  { code: "ID", nom: "Idaho", taux: 0.06 },
-  { code: "IL", nom: "Illinois", taux: 0.0625 },
-  { code: "IN", nom: "Indiana", taux: 0.07 },
-  { code: "IA", nom: "Iowa", taux: 0.06 },
-  { code: "KS", nom: "Kansas", taux: 0.065 },
-  { code: "KY", nom: "Kentucky", taux: 0.06 },
-  { code: "LA", nom: "Louisiane", taux: 0.0445 },
-  { code: "ME", nom: "Maine", taux: 0.055 },
-  { code: "MD", nom: "Maryland", taux: 0.06 },
-  { code: "MA", nom: "Massachusetts", taux: 0.0625 },
-  { code: "MI", nom: "Michigan", taux: 0.06 },
-  { code: "MN", nom: "Minnesota", taux: 0.06875 },
-  { code: "MS", nom: "Mississippi", taux: 0.07 },
-  { code: "MO", nom: "Missouri", taux: 0.04225 },
-  { code: "MT", nom: "Montana", taux: 0 },
-  { code: "NE", nom: "Nebraska", taux: 0.055 },
-  { code: "NV", nom: "Nevada", taux: 0.0685 },
-  { code: "NH", nom: "New Hampshire", taux: 0 },
-  { code: "NJ", nom: "New Jersey", taux: 0.06625 },
-  { code: "NM", nom: "Nouveau-Mexique", taux: 0.05125 },
-  { code: "NY", nom: "New York", taux: 0.04 },
-  { code: "NC", nom: "Caroline du Nord", taux: 0.0475 },
-  { code: "ND", nom: "Dakota du Nord", taux: 0.05 },
-  { code: "OH", nom: "Ohio", taux: 0.0575 },
-  { code: "OK", nom: "Oklahoma", taux: 0.045 },
-  { code: "OR", nom: "Oregon", taux: 0 },
-  { code: "PA", nom: "Pennsylvanie", taux: 0.06 },
-  { code: "RI", nom: "Rhode Island", taux: 0.07 },
-  { code: "SC", nom: "Caroline du Sud", taux: 0.06 },
-  { code: "SD", nom: "Dakota du Sud", taux: 0.042 },
-  { code: "TN", nom: "Tennessee", taux: 0.07 },
-  { code: "TX", nom: "Texas", taux: 0.0625 },
-  { code: "UT", nom: "Utah", taux: 0.0485 },
-  { code: "VT", nom: "Vermont", taux: 0.06 },
-  { code: "VA", nom: "Virginie", taux: 0.043 },
-  { code: "WA", nom: "Washington", taux: 0.065 },
-  { code: "WV", nom: "Virginie-Occidentale", taux: 0.06 },
-  { code: "WI", nom: "Wisconsin", taux: 0.05 },
-  { code: "WY", nom: "Wyoming", taux: 0.04 },
+// Le nom affiché de chaque État vient des traductions (dashboard.calculateur.usStates),
+// pas de cette table : elle ne porte que le code et le taux.
+export const US_STATE_SALES_TAX: { code: string; taux: number }[] = [
+  { code: "AL", taux: 0.04 },
+  { code: "AK", taux: 0 },
+  { code: "AZ", taux: 0.056 },
+  { code: "AR", taux: 0.065 },
+  { code: "CA", taux: 0.0725 },
+  { code: "CO", taux: 0.029 },
+  { code: "CT", taux: 0.0635 },
+  { code: "DE", taux: 0 },
+  { code: "DC", taux: 0.06 },
+  { code: "FL", taux: 0.06 },
+  { code: "GA", taux: 0.04 },
+  { code: "HI", taux: 0.04 },
+  { code: "ID", taux: 0.06 },
+  { code: "IL", taux: 0.0625 },
+  { code: "IN", taux: 0.07 },
+  { code: "IA", taux: 0.06 },
+  { code: "KS", taux: 0.065 },
+  { code: "KY", taux: 0.06 },
+  { code: "LA", taux: 0.0445 },
+  { code: "ME", taux: 0.055 },
+  { code: "MD", taux: 0.06 },
+  { code: "MA", taux: 0.0625 },
+  { code: "MI", taux: 0.06 },
+  { code: "MN", taux: 0.06875 },
+  { code: "MS", taux: 0.07 },
+  { code: "MO", taux: 0.04225 },
+  { code: "MT", taux: 0 },
+  { code: "NE", taux: 0.055 },
+  { code: "NV", taux: 0.0685 },
+  { code: "NH", taux: 0 },
+  { code: "NJ", taux: 0.06625 },
+  { code: "NM", taux: 0.05125 },
+  { code: "NY", taux: 0.04 },
+  { code: "NC", taux: 0.0475 },
+  { code: "ND", taux: 0.05 },
+  { code: "OH", taux: 0.0575 },
+  { code: "OK", taux: 0.045 },
+  { code: "OR", taux: 0 },
+  { code: "PA", taux: 0.06 },
+  { code: "RI", taux: 0.07 },
+  { code: "SC", taux: 0.06 },
+  { code: "SD", taux: 0.042 },
+  { code: "TN", taux: 0.07 },
+  { code: "TX", taux: 0.0625 },
+  { code: "UT", taux: 0.0485 },
+  { code: "VT", taux: 0.06 },
+  { code: "VA", taux: 0.043 },
+  { code: "WA", taux: 0.065 },
+  { code: "WV", taux: 0.06 },
+  { code: "WI", taux: 0.05 },
+  { code: "WY", taux: 0.04 },
 ];
 
 export function getUsStateTax(code: string): number {
@@ -202,10 +205,22 @@ export function getDevise(mode: Mode): string {
   return "€"; // france, be, lu, de, it, es
 }
 
+/** Ligne du détail des charges. Ce module est du calcul pur (pas de contexte React), donc
+ *  il ne formule pas de texte traduit : il renvoie des clés (`labelKey`, `noteKey`) que
+ *  l'UI résout sous dashboard.calculateur, plus la partie chiffrée, neutre en langue. */
+export type ChargeLine = {
+  labelKey: string;
+  /** Partie numérique déjà formatée (pourcentages, montants) — indépendante de la langue. */
+  detail: string;
+  /** Complément explicatif éventuel, à concaténer après `detail`. */
+  noteKey?: string;
+  noteValues?: Record<string, string | number>;
+};
+
 export type ChargeInfo = {
   rate: number;    // fraction du CA (proportionnel au prix de vente)
   fixed: number;   // montant flat en devise du mode
-  breakdown: { label: string; detail: string }[];
+  breakdown: ChargeLine[];
   // Taux de cotisations appliqué APRÈS les autres déductions (Stripe/CAC/retour/TVA-VAT-
   // sales tax), sur la marge nette pré-cotisations — jamais sur le CA. Mécanique distincte de
   // `rate`/`fixed` (qui s'appliquent au prix de vente), utilisée par Belgique/Suisse/Canada.
@@ -262,10 +277,10 @@ export function getCharges(
       fixed: STRIPE_FIXED_BE,
       postCotisationsRate: COTISATIONS_RATE_BE,
       breakdown: [
-        { label: "Frais Stripe", detail: `${(stripeRate * 100).toFixed(2)}% + ${STRIPE_FIXED_BE.toFixed(2)}€` },
-        { label: "TVA", detail: `${(TVA_RATE_BE * 100).toFixed(0)}%` },
-        { label: "Taux de retour hypothétique", detail: `${(tauxRetour * 100).toFixed(1)}%` },
-        { label: "Cotisations sociales indépendant", detail: `${(COTISATIONS_RATE_BE * 100).toFixed(1)}% — sur la marge nette, pas sur le CA` },
+        { labelKey: "bdStripe", detail: `${(stripeRate * 100).toFixed(2)}% + ${STRIPE_FIXED_BE.toFixed(2)}€` },
+        { labelKey: "bdTva", detail: `${(TVA_RATE_BE * 100).toFixed(0)}%` },
+        { labelKey: "bdRetour", detail: `${(tauxRetour * 100).toFixed(1)}%` },
+        { labelKey: "bdCotisationsBe", detail: `${(COTISATIONS_RATE_BE * 100).toFixed(1)}%`, noteKey: "bdNoteSurMargeNette" },
       ],
     };
   }
@@ -278,10 +293,15 @@ export function getCharges(
       fixed: STRIPE_FIXED_CH,
       postCotisationsRate: COTISATIONS_RATE_CH,
       breakdown: [
-        { label: "Frais Stripe", detail: `${(stripeRate * 100).toFixed(2)}% + CHF ${STRIPE_FIXED_CH.toFixed(2)}` },
-        { label: "TVA", detail: `${(TVA_RATE_CH * 100).toFixed(1)}%` },
-        { label: "Taux de retour hypothétique", detail: `${(tauxRetour * 100).toFixed(1)}%` },
-        { label: "AVS/AI/APG indépendant", detail: `${(COTISATIONS_RATE_CH * 100).toFixed(1)}% — sur la marge nette, taux plein au-dessus de CHF ${COTISATIONS_SEUIL_CH.toLocaleString("fr-CH")}` },
+        { labelKey: "bdStripe", detail: `${(stripeRate * 100).toFixed(2)}% + CHF ${STRIPE_FIXED_CH.toFixed(2)}` },
+        { labelKey: "bdTva", detail: `${(TVA_RATE_CH * 100).toFixed(1)}%` },
+        { labelKey: "bdRetour", detail: `${(tauxRetour * 100).toFixed(1)}%` },
+        {
+          labelKey: "bdAvs",
+          detail: `${(COTISATIONS_RATE_CH * 100).toFixed(1)}%`,
+          noteKey: "bdNoteAvs",
+          noteValues: { seuil: COTISATIONS_SEUIL_CH.toLocaleString("fr-CH") },
+        },
       ],
     };
   }
@@ -294,10 +314,10 @@ export function getCharges(
       fixed: STRIPE_FIXED_CA,
       postCotisationsRate: COTISATIONS_RATE_CA,
       breakdown: [
-        { label: "Frais Stripe", detail: `${(stripeRate * 100).toFixed(2)}% + C$${STRIPE_FIXED_CA.toFixed(2)}` },
-        { label: "TPS + TVQ", detail: `${(TPS_TVQ_RATE_CA * 100).toFixed(3)}%` },
-        { label: "Taux de retour hypothétique", detail: `${(tauxRetour * 100).toFixed(1)}%` },
-        { label: "RRQ + RQAP", detail: `${(COTISATIONS_RATE_CA * 100).toFixed(2)}% — sur la marge nette, plafonné au-delà de 74 600$ (non modélisé)` },
+        { labelKey: "bdStripe", detail: `${(stripeRate * 100).toFixed(2)}% + C$${STRIPE_FIXED_CA.toFixed(2)}` },
+        { labelKey: "bdTpsTvq", detail: `${(TPS_TVQ_RATE_CA * 100).toFixed(3)}%` },
+        { labelKey: "bdRetour", detail: `${(tauxRetour * 100).toFixed(1)}%` },
+        { labelKey: "bdRrqRqap", detail: `${(COTISATIONS_RATE_CA * 100).toFixed(2)}%`, noteKey: "bdNoteRrq" },
       ],
     };
   }
@@ -310,9 +330,9 @@ export function getCharges(
       fixed: STRIPE_FIXED_LU,
       // Pas de postCotisationsRate — voir la constante SEUIL_FRANCHISE_LU ci-dessus.
       breakdown: [
-        { label: "Frais Stripe", detail: `${(stripeRate * 100).toFixed(2)}% + ${STRIPE_FIXED_LU.toFixed(2)}€` },
-        { label: "TVA", detail: `${(TVA_RATE_LU * 100).toFixed(0)}%` },
-        { label: "Taux de retour hypothétique", detail: `${(tauxRetour * 100).toFixed(1)}%` },
+        { labelKey: "bdStripe", detail: `${(stripeRate * 100).toFixed(2)}% + ${STRIPE_FIXED_LU.toFixed(2)}€` },
+        { labelKey: "bdTva", detail: `${(TVA_RATE_LU * 100).toFixed(0)}%` },
+        { labelKey: "bdRetour", detail: `${(tauxRetour * 100).toFixed(1)}%` },
       ],
     };
   }
@@ -326,9 +346,9 @@ export function getCharges(
       // Pas de postCotisationsRate — voir la constante SEUIL_KLEINUNTERNEHMER_PREVISIONNEL_DE
       // ci-dessus (même traitement que le Luxembourg pour la même raison).
       breakdown: [
-        { label: "Frais Stripe", detail: `${(stripeRate * 100).toFixed(2)}% + ${STRIPE_FIXED_DE.toFixed(2)}€` },
-        { label: "TVA (Mehrwertsteuer)", detail: `${(TVA_RATE_DE * 100).toFixed(0)}%` },
-        { label: "Taux de retour hypothétique", detail: `${(tauxRetour * 100).toFixed(1)}%` },
+        { labelKey: "bdStripe", detail: `${(stripeRate * 100).toFixed(2)}% + ${STRIPE_FIXED_DE.toFixed(2)}€` },
+        { labelKey: "bdTvaDe", detail: `${(TVA_RATE_DE * 100).toFixed(0)}%` },
+        { labelKey: "bdRetour", detail: `${(tauxRetour * 100).toFixed(1)}%` },
       ],
     };
   }
@@ -346,12 +366,17 @@ export function getCharges(
       rate: stripeRate + tauxRetour + impostaEffectiveRate,
       fixed: STRIPE_FIXED_IT,
       breakdown: [
-        { label: "Frais Stripe", detail: `${(stripeRate * 100).toFixed(2)}% + ${STRIPE_FIXED_IT.toFixed(2)}€` },
-        { label: "TVA", detail: "0% — régime forfettario (sous le seuil de 85 000€)" },
-        { label: "Taux de retour hypothétique", detail: `${(tauxRetour * 100).toFixed(1)}%` },
+        { labelKey: "bdStripe", detail: `${(stripeRate * 100).toFixed(2)}% + ${STRIPE_FIXED_IT.toFixed(2)}€` },
+        { labelKey: "bdTva", detail: "0%", noteKey: "bdNoteForfettario" },
+        { labelKey: "bdRetour", detail: `${(tauxRetour * 100).toFixed(1)}%` },
         {
-          label: "Imposta sostitutiva",
-          detail: `${(impostaEffectiveRate * 100).toFixed(2)}% du prix de vente (coefficiente ${(COEFFICIENTE_REDDITIVITA_IT * 100).toFixed(0)}% × ${(impostaTaux * 100).toFixed(0)}%)`,
+          labelKey: "bdImposta",
+          detail: `${(impostaEffectiveRate * 100).toFixed(2)}%`,
+          noteKey: "bdNoteImposta",
+          noteValues: {
+            coefficiente: (COEFFICIENTE_REDDITIVITA_IT * 100).toFixed(0),
+            taux: (impostaTaux * 100).toFixed(0),
+          },
         },
       ],
     };
@@ -364,9 +389,9 @@ export function getCharges(
       rate: stripeRate + TVA_RATE_ES + tauxRetour,
       fixed: STRIPE_FIXED_ES,
       breakdown: [
-        { label: "Frais Stripe", detail: `${(stripeRate * 100).toFixed(2)}% + ${STRIPE_FIXED_ES.toFixed(2)}€` },
-        { label: "IVA", detail: `${(TVA_RATE_ES * 100).toFixed(0)}%` },
-        { label: "Taux de retour hypothétique", detail: `${(tauxRetour * 100).toFixed(1)}%` },
+        { labelKey: "bdStripe", detail: `${(stripeRate * 100).toFixed(2)}% + ${STRIPE_FIXED_ES.toFixed(2)}€` },
+        { labelKey: "bdIva", detail: `${(TVA_RATE_ES * 100).toFixed(0)}%` },
+        { labelKey: "bdRetour", detail: `${(tauxRetour * 100).toFixed(1)}%` },
       ],
     };
   }
@@ -378,9 +403,9 @@ export function getCharges(
       rate: stripeRate + VAT_RATE_UK + tauxRetour,
       fixed: STRIPE_FIXED_UK,
       breakdown: [
-        { label: "Frais Stripe UK", detail: `${(stripeRate * 100).toFixed(2)}% + £${STRIPE_FIXED_UK.toFixed(2)}` },
-        { label: "VAT (taux standard)", detail: `${(VAT_RATE_UK * 100).toFixed(0)}%` },
-        { label: "Taux de retour hypothétique", detail: `${(tauxRetour * 100).toFixed(1)}%` },
+        { labelKey: "bdStripeUk", detail: `${(stripeRate * 100).toFixed(2)}% + £${STRIPE_FIXED_UK.toFixed(2)}` },
+        { labelKey: "bdVat", detail: `${(VAT_RATE_UK * 100).toFixed(0)}%` },
+        { labelKey: "bdRetour", detail: `${(tauxRetour * 100).toFixed(1)}%` },
       ],
     };
   }
@@ -396,26 +421,32 @@ export function getCharges(
       rate: stripeRate + tauxRetour + salesTaxRate,
       fixed: STRIPE_FIXED_US,
       breakdown: [
-        { label: "Frais Stripe US", detail: `${(stripeRate * 100).toFixed(2)}% + $${STRIPE_FIXED_US.toFixed(2)}` },
-        { label: "Taux de retour hypothétique", detail: `${(tauxRetour * 100).toFixed(1)}%` },
-        {
-          label: "Sales tax",
-          detail: salesTaxNexusUS
-            ? `${(salesTaxRate * 100).toFixed(3)}% (${usState || "—"}, taux de base État)`
-            : "0% — nexus non confirmé",
-        },
+        { labelKey: "bdStripeUs", detail: `${(stripeRate * 100).toFixed(2)}% + $${STRIPE_FIXED_US.toFixed(2)}` },
+        { labelKey: "bdRetour", detail: `${(tauxRetour * 100).toFixed(1)}%` },
+        salesTaxNexusUS
+          ? {
+              labelKey: "bdSalesTax",
+              detail: `${(salesTaxRate * 100).toFixed(3)}%`,
+              noteKey: "bdNoteSalesTaxEtat",
+              noteValues: { etat: usState || "—" },
+            }
+          : { labelKey: "bdSalesTax", detail: "0%", noteKey: "bdNoteNexus" },
       ],
     };
   }
 
   if (mode === "france") {
     const stripeRate = extraUE ? STRIPE_RATE_HORS_UE : STRIPE_RATE_UE;
-    const breakdown = [
-      { label: "URSSAF (auto-entrepreneur)", detail: "12,3% du CA" },
-      { label: "Frais Stripe", detail: `${(stripeRate * 100).toFixed(1)}% + ${STRIPE_FIXED.toFixed(2)}€${extraUE ? " (hors UE)" : " (UE)"}` },
+    const breakdown: ChargeLine[] = [
+      { labelKey: "bdUrssaf", detail: `${(URSSAF_RATE * 100).toFixed(1).replace(".", ",")}%`, noteKey: "bdNoteDuCa" },
+      {
+        labelKey: "bdStripe",
+        detail: `${(stripeRate * 100).toFixed(1)}% + ${STRIPE_FIXED.toFixed(2)}€`,
+        noteKey: extraUE ? "bdNoteHorsUe" : "bdNoteUe",
+      },
     ];
     if (extraUE) {
-      breakdown.push({ label: "Taxe UE (colis < 150€)", detail: `${TAXE_UE_FLAT.toFixed(2)}€ flat` });
+      breakdown.push({ labelKey: "bdTaxeUe", detail: `${TAXE_UE_FLAT.toFixed(2)}€`, noteKey: "bdNoteFlat" });
     }
     return {
       rate: URSSAF_RATE + stripeRate,
@@ -430,8 +461,8 @@ export function getCharges(
     rate: charge + taxe,
     fixed: 0,
     breakdown: [
-      { label: "Taux de charge", detail: `${tauxCharge || 0}%` },
-      { label: "Taux de taxe", detail: `${tauxTaxe || 0}%` },
+      { labelKey: "bdTauxCharge", detail: `${tauxCharge || 0}%` },
+      { labelKey: "bdTauxTaxe", detail: `${tauxTaxe || 0}%` },
     ],
   };
 }
@@ -467,8 +498,9 @@ export function getMargeColor(pct: number): string {
   return "var(--danger)";
 }
 
-export function getMargeLabel(pct: number): string {
-  if (pct >= 40) return "Excellente";
-  if (pct >= 20) return "Correcte";
-  return "Trop faible";
+/** Clé de traduction (dashboard.calculateur.*) du qualificatif de marge, résolue par l'UI. */
+export function getMargeLabelKey(pct: number): string {
+  if (pct >= 40) return "margeExcellente";
+  if (pct >= 20) return "margeCorrecte";
+  return "margeTropFaible";
 }

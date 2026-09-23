@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import {
   LineChart,
   Line,
@@ -16,10 +17,13 @@ import {
 // (ssr: false) — recharts (~390 KB) ne doit jamais faire partie du bundle initial de la
 // page, seulement du chunk de ce composant, chargé à la demande.
 
+// Clés de données neutres (pas les libellés affichés) : le nom montré dans la légende et
+// le tooltip vient du prop `name` de chaque <Line>, traduit — sans ça recharts retomberait
+// sur le dataKey, ce qui figerait l'affichage en français.
 export type ChartPoint = {
   date: string;
-  "30 derniers jours": number;
-  "Mois précédent": number;
+  current: number;
+  previous: number;
 };
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -54,6 +58,7 @@ function useIsLightTheme(): boolean {
 }
 
 export default function SitesChart({ data }: { data: ChartPoint[] }) {
+  const t = useTranslations("dashboard.sites");
   const isLight = useIsLightTheme();
 
   const gridStroke = isLight ? "rgba(0,0,0,0.06)" : "rgba(255,255,255,0.04)";
@@ -70,8 +75,8 @@ export default function SitesChart({ data }: { data: ChartPoint[] }) {
         <YAxis tick={{ fill: axisTickFill, fontSize: 10 }} axisLine={false} tickLine={false} allowDecimals={false} width={32} />
         <Tooltip content={ChartTooltip} cursor={{ stroke: cursorStroke, strokeWidth: 1 }} />
         <Legend iconType="plainline" iconSize={16} wrapperStyle={{ fontSize: 11, color: legendColor, paddingTop: 16 }} />
-        <Line type="monotone" dataKey="30 derniers jours" stroke="#7c3aed" strokeWidth={2} dot={false} activeDot={{ r: 4, fill: "#7c3aed", strokeWidth: 0 }} />
-        <Line type="monotone" dataKey="Mois précédent" stroke={mutedLineStroke} strokeWidth={1.5} strokeDasharray="4 3" dot={false} activeDot={{ r: 3, fill: axisTickFill, strokeWidth: 0 }} />
+        <Line type="monotone" dataKey="current" name={t("serieCurrent")} stroke="#7c3aed" strokeWidth={2} dot={false} activeDot={{ r: 4, fill: "#7c3aed", strokeWidth: 0 }} />
+        <Line type="monotone" dataKey="previous" name={t("seriePrevious")} stroke={mutedLineStroke} strokeWidth={1.5} strokeDasharray="4 3" dot={false} activeDot={{ r: 3, fill: axisTickFill, strokeWidth: 0 }} />
       </LineChart>
     </ResponsiveContainer>
   );

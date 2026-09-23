@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 
 // pagedjs (v0.4.3) est chargé via une balise <script> pointant sur le bundle UMD statique
 // public/formation/paged.min.js (copié depuis node_modules/pagedjs/dist/paged.min.js), pas
@@ -51,6 +52,7 @@ export default function PagedReader({
   titre: string;
   contenuHtml: string;
 }) {
+  const t = useTranslations("dashboard.formation");
   const containerRef = useRef<HTMLDivElement>(null);
   const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
 
@@ -81,19 +83,17 @@ export default function PagedReader({
     <div className="min-h-screen bg-[#3a3a3e]">
       <div className="sticky top-0 z-10 flex items-center justify-between border-b border-black/20 bg-[#2a2a2e] px-6 py-3">
         <Link href="/formation" className="text-sm text-zinc-300 transition hover:text-white">
-          ← Retour à la formation
+          {t("readerBack")}
         </Link>
         <p className="text-sm font-medium text-zinc-100">{titre}</p>
         <div className="w-32" />
       </div>
 
       {status === "loading" && (
-        <p className="py-16 text-center text-sm text-zinc-300">Mise en page du document…</p>
+        <p className="py-16 text-center text-sm text-zinc-300">{t("readerLoading")}</p>
       )}
       {status === "error" && (
-        <p className="py-16 text-center text-sm text-red-300">
-          Impossible de générer la vue paginée. Réessaie de recharger la page.
-        </p>
+        <p className="py-16 text-center text-sm text-red-300">{t("readerError")}</p>
       )}
 
       {/* Paged.js remplace ce conteneur par ses propres <div class="pagedjs_page"> (une par

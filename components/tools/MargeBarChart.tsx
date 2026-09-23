@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import {
   BarChart,
   Bar,
@@ -33,6 +34,7 @@ function useIsLightTheme(): boolean {
 }
 
 export default function MargeBarChart({ chartData, devise = "€" }: { chartData: MargeChartPoint[]; devise?: string }) {
+  const t = useTranslations("dashboard.calculateur");
   const isLight = useIsLightTheme();
 
   return (
@@ -47,8 +49,8 @@ export default function MargeBarChart({ chartData, devise = "€" }: { chartData
           formatter={(value) => `${Number(value).toFixed(2)} ${devise}`}
         />
         <Legend wrapperStyle={{ fontSize: 11, color: isLight ? "#52525b" : "#a1a1aa" }} />
-        <Bar dataKey="margeBrute" name="Marge brute" fill="#7c3aed" radius={[6, 6, 0, 0]} />
-        <Bar dataKey="margeNette" name="Marge nette" fill={isLight ? "#059669" : "#10b981"} radius={[6, 6, 0, 0]} />
+        <Bar dataKey="margeBrute" name={t("chartMargeBrute")} fill="#7c3aed" radius={[6, 6, 0, 0]} />
+        <Bar dataKey="margeNette" name={t("chartMargeNette")} fill={isLight ? "#059669" : "#10b981"} radius={[6, 6, 0, 0]} />
       </BarChart>
     </ResponsiveContainer>
   );

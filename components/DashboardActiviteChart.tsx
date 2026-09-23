@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useLocale, useTranslations } from "next-intl";
+import { toIntlTag, type AppLocale } from "@/lib/locale";
 import {
   LineChart,
   Line,
@@ -50,14 +52,27 @@ type DayPoint = {
 type SerieKey = "margePct" | "auditPct" | "shopifyPct" | "sitesPct" | "boutiquesPct" | "utilisationPct";
 type SerieConfig = { key: SerieKey; name: string; color: string };
 
-const SERIES: SerieConfig[] = [
-  { key: "margePct",       name: "Marges",       color: "#a78bfa" },
-  { key: "auditPct",       name: "Audits",       color: "#60a5fa" },
-  { key: "shopifyPct",     name: "Shopify",      color: "#fb7185" },
-  { key: "sitesPct",       name: "Sites",        color: "#34d399" },
-  { key: "boutiquesPct",   name: "Boutiques",    color: "#fbbf24" },
-  { key: "utilisationPct", name: "Utilisation",  color: "#22d3ee" },
+// Le libellé de chaque série est résolu au rendu (traduction) — seules la clé de données
+// et la couleur sont statiques ici.
+const SERIE_DEFS: { key: SerieKey; labelKey: string; color: string }[] = [
+  { key: "margePct",       labelKey: "serieMarges",      color: "#a78bfa" },
+  { key: "auditPct",       labelKey: "serieAudits",      color: "#60a5fa" },
+  { key: "shopifyPct",     labelKey: "serieShopify",     color: "#fb7185" },
+  { key: "sitesPct",       labelKey: "serieSites",       color: "#34d399" },
+  { key: "boutiquesPct",   labelKey: "serieBoutiques",   color: "#fbbf24" },
+  { key: "utilisationPct", labelKey: "serieUtilisation", color: "#22d3ee" },
 ];
+
+/** Libellés du tooltip, passés en props plutôt que lus via un hook : recharts invoque
+ *  `content` comme une simple fonction, pas comme un composant monté. */
+type TooltipTexts = {
+  noSimulation: string;
+  noAudit: string;
+  incidents: (count: number) => string;
+  sites: (count: number) => string;
+  produits: (count: number) => string;
+  actions: (count: number) => string;
+};
 
 function dateKeyOf(d: Date): string {
   return d.toISOString().slice(0, 10);
@@ -66,34 +81,46 @@ function dateKeyOf(d: Date): string {
 // 30 jours vides (clé + libellé), du plus ancien au plus récent — le squelette sur lequel
 // on vient agréger chaque source, pour que les jours sans activité restent des points à 0
 // plutôt que des trous dans la courbe.
-function buildEmptyDays(): { dateKey: string; dateLabel: string }[] {
+function buildEmptyDays(intlTag: string): { dateKey: string; dateLabel: string }[] {
   const now = new Date();
   return Array.from({ length: PERIOD_DAYS }, (_, i) => {
     const d = new Date(now);
     d.setUTCDate(now.getUTCDate() - (PERIOD_DAYS - 1 - i));
-    return { dateKey: dateKeyOf(d), dateLabel: d.toLocaleDateString("fr-FR", { day: "numeric", month: "short" }) };
+    return { dateKey: dateKeyOf(d), dateLabel: d.toLocaleDateString(intlTag, { day: "numeric", month: "short" }) };
   });
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function ActiviteTooltip({ active, payload, label }: any) {
+function ActiviteTooltip({
+  active,
+  payload,
+  label,
+  series,
+  texts,
+}: {
+  active?: boolean;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  payload?: readonly any[];
+  label?: string | number;
+  series: SerieConfig[];
+  texts: TooltipTexts;
+}) {
   if (!active || !payload?.length) return null;
   const point: DayPoint = payload[0].payload;
 
   const rows: { key: SerieKey; raw: string }[] = [
-    { key: "margePct", raw: point.margeHasData ? `${point.margeEur.toFixed(2)}€` : "aucune simulation" },
-    { key: "auditPct", raw: point.auditHasData ? `${Math.round(point.auditScore)}/100` : "aucun audit" },
-    { key: "shopifyPct", raw: `${point.shopifyIncidents} incident${point.shopifyIncidents > 1 ? "s" : ""}` },
-    { key: "sitesPct", raw: `${point.sites} site${point.sites > 1 ? "s" : ""}` },
-    { key: "boutiquesPct", raw: `${point.boutiqueProduits} produit${point.boutiqueProduits > 1 ? "s" : ""}` },
-    { key: "utilisationPct", raw: `${point.utilisation} action${point.utilisation > 1 ? "s" : ""}` },
+    { key: "margePct", raw: point.margeHasData ? `${point.margeEur.toFixed(2)}€` : texts.noSimulation },
+    { key: "auditPct", raw: point.auditHasData ? `${Math.round(point.auditScore)}/100` : texts.noAudit },
+    { key: "shopifyPct", raw: texts.incidents(point.shopifyIncidents) },
+    { key: "sitesPct", raw: texts.sites(point.sites) },
+    { key: "boutiquesPct", raw: texts.produits(point.boutiqueProduits) },
+    { key: "utilisationPct", raw: texts.actions(point.utilisation) },
   ];
 
   return (
     <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 py-2.5 shadow-xl flex flex-col gap-1.5 min-w-[220px]">
       <p className="text-[10px] text-[var(--text-faint)] mb-0.5">{label}</p>
       {rows.map(({ key, raw }) => {
-        const serie = SERIES.find((s) => s.key === key)!;
+        const serie = series.find((s) => s.key === key)!;
         return (
           <p key={key} className="text-xs flex items-center justify-between gap-4" style={{ color: serie.color }}>
             <span>{serie.name}</span>
@@ -125,7 +152,19 @@ function useIsLightTheme(): boolean {
 }
 
 export default function DashboardActiviteChart({ chartData }: { chartData: DashboardChartData | null }) {
+  const t = useTranslations("dashboard.chart");
+  const intlTag = toIntlTag(useLocale() as AppLocale);
   const isLight = useIsLightTheme();
+
+  const series: SerieConfig[] = SERIE_DEFS.map((s) => ({ key: s.key, name: t(s.labelKey), color: s.color }));
+  const tooltipTexts: TooltipTexts = {
+    noSimulation: t("noSimulation"),
+    noAudit: t("noAudit"),
+    incidents: (count) => t("incidents", { count }),
+    sites: (count) => t("sites", { count }),
+    produits: (count) => t("produits", { count }),
+    actions: (count) => t("actions", { count }),
+  };
 
   // Seule requête restante ici : les incidents Shopify, non chargés par le parent. Démarre
   // dès le montage — pas besoin d'attendre chartData ni un auth.getUser() local, la route
@@ -192,7 +231,7 @@ export default function DashboardActiviteChart({ chartData }: { chartData: Dashb
       boutiquesCount.set(key, (boutiquesCount.get(key) ?? 0) + 1);
     }
 
-    const points: DayPoint[] = buildEmptyDays().map((d) => {
+    const points: DayPoint[] = buildEmptyDays(intlTag).map((d) => {
       const margeN = margeCount.get(d.dateKey) ?? 0;
       const auditN = auditCount.get(d.dateKey) ?? 0;
       const sitesN = sitesCount.get(d.dateKey) ?? 0;
@@ -240,7 +279,7 @@ export default function DashboardActiviteChart({ chartData }: { chartData: Dashb
       data: points,
       hasActivity: points.some((p) => p.margeHasData || p.auditHasData || p.shopifyIncidents > 0 || p.sites > 0 || p.boutiqueProduits > 0),
     };
-  }, [chartData, incidents]);
+  }, [chartData, incidents, intlTag]);
 
   // Valeurs recharts non-Tailwind, recalculées selon le thème (voir useIsLightTheme
   // ci-dessus) — le reste du composant utilise déjà var(--token) via className.
@@ -252,10 +291,8 @@ export default function DashboardActiviteChart({ chartData }: { chartData: Dashb
   return (
     <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-6">
       <div className="mb-6">
-        <p className="text-sm font-semibold text-[var(--text-primary)]">Activité — 30 derniers jours</p>
-        <p className="text-[11px] text-[var(--text-faint)] mt-0.5">
-          Chaque courbe est normalisée en % de son propre maximum sur la période — survole un point pour voir la vraie valeur. Fais glisser les bornes sous le graphique pour zoomer.
-        </p>
+        <p className="text-sm font-semibold text-[var(--text-primary)]">{t("title")}</p>
+        <p className="text-[11px] text-[var(--text-faint)] mt-0.5">{t("caption")}</p>
       </div>
 
       {loading ? (
@@ -264,7 +301,7 @@ export default function DashboardActiviteChart({ chartData }: { chartData: Dashb
         </div>
       ) : !hasActivity ? (
         <div className="h-[220px] flex items-center justify-center">
-          <p className="text-[var(--text-faint)] text-sm">Pas encore d&apos;activité sur les 30 derniers jours.</p>
+          <p className="text-[var(--text-faint)] text-sm">{t("empty")}</p>
         </div>
       ) : (
         <ResponsiveContainer width="100%" height={340}>
@@ -279,9 +316,12 @@ export default function DashboardActiviteChart({ chartData }: { chartData: Dashb
               tickLine={false}
               width={40}
             />
-            <Tooltip content={ActiviteTooltip} cursor={{ stroke: cursorStroke, strokeWidth: 1 }} />
+            <Tooltip
+              content={(props) => <ActiviteTooltip {...props} series={series} texts={tooltipTexts} />}
+              cursor={{ stroke: cursorStroke, strokeWidth: 1 }}
+            />
             <Legend iconType="plainline" iconSize={16} wrapperStyle={{ fontSize: 11, color: legendColor, paddingTop: 12 }} />
-            {SERIES.map((s) => (
+            {series.map((s) => (
               <Line
                 key={s.key}
                 type="monotone"

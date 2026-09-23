@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useLocale, useTranslations } from "next-intl";
+import { toIntlTag, type AppLocale } from "@/lib/locale";
 
 interface SpyResult {
   productCount: number;
@@ -10,8 +12,8 @@ interface SpyResult {
   estimatedRevenue: number;
 }
 
-function formatCurrency(value: number) {
-  return new Intl.NumberFormat("fr-FR", {
+function formatCurrency(value: number, intlTag: string) {
+  return new Intl.NumberFormat(intlTag, {
     style: "currency",
     currency: "EUR",
     maximumFractionDigits: 2,
@@ -35,6 +37,8 @@ function useIsLightTheme(): boolean {
 }
 
 export default function SpyPage() {
+  const t = useTranslations("dashboard.spy");
+  const intlTag = toIntlTag(useLocale() as AppLocale);
   const [url, setUrl] = useState("");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<SpyResult | null>(null);
@@ -53,12 +57,12 @@ export default function SpyPage() {
       const json = await res.json();
 
       if (!res.ok) {
-        setError(json.error ?? "Une erreur est survenue");
+        setError(json.error ?? t("errorGeneric"));
       } else {
         setResult(json);
       }
     } catch {
-      setError("Impossible de contacter l'API");
+      setError(t("errorApi"));
     } finally {
       setLoading(false);
     }
@@ -74,28 +78,24 @@ export default function SpyPage() {
         {/* Header */}
         <div className="mb-12 text-center">
           <div className="inline-flex items-center gap-2 mb-4 px-3 py-1 rounded-full bg-violet-500/10 border border-violet-500/20 text-[var(--accent)] text-xs font-medium tracking-widest uppercase">
-            Intelligence concurrentielle
+            {t("badge")}
           </div>
           <h1 className="text-4xl font-bold bg-gradient-to-r from-[var(--accent)] to-[var(--accent-secondary)] bg-clip-text text-transparent mb-3">
-            Spy Tool
+            {t("title")}
           </h1>
-          <p className="text-[var(--text-muted)] text-base">
-            Analysez n&apos;importe quelle boutique Shopify en quelques secondes
-          </p>
+          <p className="text-[var(--text-muted)] text-base">{t("subtitle")}</p>
         </div>
 
         {/* Input */}
         <div className="rounded-2xl bg-[var(--surface)] border border-[var(--border)] p-6 mb-6 shadow-xl shadow-black/40">
-          <label className="block text-sm font-medium text-[var(--text-muted)] mb-3">
-            URL de la boutique concurrente
-          </label>
+          <label className="block text-sm font-medium text-[var(--text-muted)] mb-3">{t("urlLabel")}</label>
           <div className="flex gap-3">
             <input
               type="text"
               value={url}
               onChange={(e) => setUrl(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder="ex: boutique-exemple.com"
+              placeholder={t("urlPlaceholder")}
               className="flex-1 bg-[var(--bg)] border border-[var(--border-strong)] rounded-xl px-4 py-3 text-sm text-[var(--text-primary)] placeholder-[var(--text-faint)] focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition"
             />
             <button
@@ -109,10 +109,10 @@ export default function SpyPage() {
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
                   </svg>
-                  Analyse…
+                  {t("analyzing")}
                 </span>
               ) : (
-                "Analyser"
+                t("analyze")
               )}
             </button>
           </div>
@@ -129,28 +129,28 @@ export default function SpyPage() {
         {result && (
           <div className="rounded-2xl bg-[var(--surface)] border border-[var(--border)] p-6 shadow-xl shadow-black/40">
             <h2 className="text-sm font-semibold text-[var(--text-muted)] uppercase tracking-widest mb-6">
-              Résultats
+              {t("results")}
             </h2>
 
             <div className="grid grid-cols-2 gap-4 mb-6">
               <StatCard
-                label="Produits"
+                label={t("statProducts")}
                 value={result.productCount.toString()}
                 accent="violet"
               />
               <StatCard
-                label="Prix moyen"
-                value={formatCurrency(result.avgPrice)}
+                label={t("statAvgPrice")}
+                value={formatCurrency(result.avgPrice, intlTag)}
                 accent="blue"
               />
               <StatCard
-                label="Prix minimum"
-                value={formatCurrency(result.minPrice)}
+                label={t("statMinPrice")}
+                value={formatCurrency(result.minPrice, intlTag)}
                 accent="indigo"
               />
               <StatCard
-                label="Prix maximum"
-                value={formatCurrency(result.maxPrice)}
+                label={t("statMaxPrice")}
+                value={formatCurrency(result.maxPrice, intlTag)}
                 accent="purple"
               />
             </div>
@@ -158,14 +158,12 @@ export default function SpyPage() {
             {/* Revenue estimate */}
             <div className="rounded-xl bg-gradient-to-r from-violet-600/10 to-blue-600/10 border border-violet-500/20 p-5">
               <p className="text-xs text-[var(--text-faint)] uppercase tracking-widest font-medium mb-1">
-                CA mensuel estimé
+                {t("revenueLabel")}
               </p>
               <p className="text-3xl font-bold bg-gradient-to-r from-[var(--accent)] to-[var(--accent-secondary)] bg-clip-text text-transparent">
-                {formatCurrency(result.estimatedRevenue)}
+                {formatCurrency(result.estimatedRevenue, intlTag)}
               </p>
-              <p className="text-xs text-[var(--text-faint)] mt-2">
-                5 000 visites × 2,5% conversion × prix moyen
-              </p>
+              <p className="text-xs text-[var(--text-faint)] mt-2">{t("revenueCaption")}</p>
             </div>
           </div>
         )}

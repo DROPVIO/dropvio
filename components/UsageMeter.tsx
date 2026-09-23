@@ -1,4 +1,9 @@
+"use client";
+
+import { useTranslations } from "next-intl";
+
 export function UsageMeter({ label, sub, used, max }: { label: string; sub?: string; used: number; max: number | null }) {
+  const t = useTranslations("common");
   const unlimited = max === null;
   const ratio = unlimited || max === 0 ? 0 : Math.min(1, used / max);
   const barColor = ratio >= 1 ? "bg-red-500" : ratio >= 0.8 ? "bg-amber-500" : "bg-violet-500";
@@ -12,7 +17,7 @@ export function UsageMeter({ label, sub, used, max }: { label: string; sub?: str
         </div>
         <p className="text-xs font-semibold text-zinc-300 shrink-0 whitespace-nowrap">
           {unlimited ? (
-            <span className="text-emerald-400">Illimité</span>
+            <span className="text-emerald-400">{t("unlimited")}</span>
           ) : (
             <>
               {used} <span className="text-[var(--text-muted)]">/ {max}</span>

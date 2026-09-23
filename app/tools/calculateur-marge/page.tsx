@@ -3,7 +3,9 @@
 import { Suspense, useState, useEffect, useMemo } from "react";
 import { useSearchParams } from "next/navigation";
 import dynamic from "next/dynamic";
+import { useLocale, useTranslations } from "next-intl";
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
+import { toIntlTag, type AppLocale } from "@/lib/locale";
 import type { User } from "@supabase/supabase-js";
 import {
   SEUIL_TVA,
@@ -54,7 +56,7 @@ import {
   getCharges,
   calcPrixVenteMin,
   getMargeColor,
-  getMargeLabel,
+  getMargeLabelKey,
   type Mode,
   type RegimeImpostaIT,
 } from "@/lib/calcul-marge";
@@ -116,18 +118,19 @@ const PALIERS = [10, 50, 200];
 // 8 modes : un <select> reste lisible quel que soit le nombre d'entrées, contrairement à une
 // rangée de boutons (illisible/scrollable dès qu'on dépasse 4-5 items) — voir la demande
 // d'origine qui a explicitement soulevé ce risque en ajoutant 4 modes d'un coup.
-const MODE_OPTIONS: { value: Mode; label: string }[] = [
-  { value: "france", label: "🇫🇷 France auto" },
-  { value: "uk", label: "🇬🇧 UK auto" },
-  { value: "us", label: "🇺🇸 US auto" },
-  { value: "be", label: "🇧🇪 Belgique auto" },
-  { value: "ch", label: "🇨🇭 Suisse auto" },
-  { value: "ca", label: "🇨🇦 Canada (Québec) auto" },
-  { value: "lu", label: "🇱🇺 Luxembourg auto" },
-  { value: "de", label: "🇩🇪 Allemagne auto" },
-  { value: "it", label: "🇮🇹 Italie auto" },
-  { value: "es", label: "🇪🇸 Espagne auto" },
-  { value: "manuel", label: "🌍 International manuel" },
+// labelKey résolu au rendu (dashboard.calculateur.mode*).
+const MODE_OPTIONS: { value: Mode; labelKey: string }[] = [
+  { value: "france", labelKey: "modeFrance" },
+  { value: "uk", labelKey: "modeUk" },
+  { value: "us", labelKey: "modeUs" },
+  { value: "be", labelKey: "modeBe" },
+  { value: "ch", labelKey: "modeCh" },
+  { value: "ca", labelKey: "modeCa" },
+  { value: "lu", labelKey: "modeLu" },
+  { value: "de", labelKey: "modeDe" },
+  { value: "it", labelKey: "modeIt" },
+  { value: "es", labelKey: "modeEs" },
+  { value: "manuel", labelKey: "modeManuel" },
 ];
 
 // Tuple utilisé pour les couleurs qui ont besoin d'une variante avec alpha (bordures) —
@@ -167,6 +170,9 @@ export default function CalculateurMarge() {
 }
 
 function CalculateurMargeInner() {
+  const t = useTranslations("dashboard.calculateur");
+  const tCommon = useTranslations("dashboard.common");
+  const intlTag = toIntlTag(useLocale() as AppLocale);
   const searchParams = useSearchParams();
 
   const [mode, setMode] = useState<Mode>("manuel");
@@ -325,8 +331,12 @@ function CalculateurMargeInner() {
 
   const chartData = resultats
     ? [
-        { name: "Par vente", margeBrute: resultats.margeBrute, margeNette: resultats.margeNette },
-        ...scaleData.map((s) => ({ name: `${s.n} cmd/mois`, margeBrute: s.margeBrute, margeNette: s.margeNette })),
+        { name: t("chartParVente"), margeBrute: resultats.margeBrute, margeNette: resultats.margeNette },
+        ...scaleData.map((s) => ({
+          name: t("chartCmdParMois", { n: s.n }),
+          margeBrute: s.margeBrute,
+          margeNette: s.margeNette,
+        })),
       ]
     : [];
 
@@ -393,20 +403,22 @@ function CalculateurMargeInner() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          nom: nomSimulation.trim() || `Simulation du ${new Date().toLocaleDateString("fr-FR")}`,
+          nom:
+            nomSimulation.trim() ||
+            t("saveDefaultName", { date: new Date().toLocaleDateString(intlTag) }),
           inputs,
           resultats: resultatsSnapshot,
         }),
       });
       const data = await res.json();
       if (!res.ok) {
-        setSaveError(data.error ?? "Erreur lors de la sauvegarde.");
+        setSaveError(data.error ?? t("saveError"));
         return;
       }
       setSimulations((prev) => [data as SimulationMarge, ...prev]);
       setNomSimulation("");
     } catch {
-      setSaveError("Impossible de contacter le serveur.");
+      setSaveError(t("saveErrorServer"));
     } finally {
       setSaving(false);
     }
@@ -459,14 +471,14 @@ function CalculateurMargeInner() {
 
   async function handleSupprimer(id: string) {
     if (deletingSimId) return;
-    if (!confirm("Supprimer cette simulation ? Cette action est irréversible.")) return;
+    if (!confirm(t("simConfirmDelete"))) return;
     setDeletingSimId(id);
     setDeleteError(null);
     try {
       const supabase = createSupabaseBrowserClient();
       const { error } = await supabase.from("simulations_marge").delete().eq("id", id);
       if (error) {
-        setDeleteError("Impossible de supprimer cette simulation.");
+        setDeleteError(t("simDeleteError"));
         return;
       }
       setSimulations((prev) => prev.filter((s) => s.id !== id));
@@ -485,12 +497,8 @@ function CalculateurMargeInner() {
 
         {/* Header */}
         <div className="mb-10">
-          <h1 className="text-[32px] font-bold m-0 leading-tight text-[var(--text-primary)]">
-            Calculateur de marge
-          </h1>
-          <p className="text-[var(--text-faint)] mt-2.5 text-[15px]">
-            Calcule ta rentabilité avant de lancer un produit.
-          </p>
+          <h1 className="text-[32px] font-bold m-0 leading-tight text-[var(--text-primary)]">{t("title")}</h1>
+          <p className="text-[var(--text-faint)] mt-2.5 text-[15px]">{t("subtitle")}</p>
         </div>
 
         {/* Sélection du mode — <select> plutôt qu'une rangée de boutons, illisible à 8 modes */}
@@ -501,7 +509,7 @@ function CalculateurMargeInner() {
             className="w-full box-border bg-[var(--surface)] border border-[var(--border-strong)] rounded-xl px-4 py-3.5 text-[14.5px] font-semibold text-[var(--text-primary)] outline-none cursor-pointer focus:border-violet-500"
           >
             {MODE_OPTIONS.map((opt) => (
-              <option key={opt.value} value={opt.value}>{opt.label}</option>
+              <option key={opt.value} value={opt.value}>{t(opt.labelKey)}</option>
             ))}
           </select>
         </div>
@@ -511,28 +519,28 @@ function CalculateurMargeInner() {
           <div className="grid gap-5">
 
             <InputField
-              label={`Prix fournisseur (${devise})`}
-              placeholder="ex: 8.50"
+              label={t("fieldPrixFournisseur", { devise })}
+              placeholder="8.50"
               value={prixFournisseur}
               onChange={setPrixFournisseur}
               required
             />
             <InputField
-              label={`Frais de livraison (${devise})`}
-              placeholder="ex: 2.00"
+              label={t("fieldFraisLivraison", { devise })}
+              placeholder="2.00"
               value={fraisLivraison}
               onChange={setFraisLivraison}
             />
             <InputField
-              label={`Prix de vente (${devise})`}
-              placeholder="ex: 29.99"
+              label={t("fieldPrixVente", { devise })}
+              placeholder="29.99"
               value={prixVente}
               onChange={setPrixVente}
               required
             />
             <InputField
-              label={`Budget pub par vente / CAC (${devise})`}
-              placeholder="ex: 5.00"
+              label={t("fieldBudgetPub", { devise })}
+              placeholder="5.00"
               value={budgetPub}
               onChange={setBudgetPub}
             />
@@ -547,25 +555,28 @@ function CalculateurMargeInner() {
                     onChange={(e) => setExtraUE(e.target.checked)}
                     className="w-4 h-4 accent-violet-600"
                   />
-                  Vente / envoi hors UE (colis &lt; 150€)
+                  {t("franceExtraUE")}
                 </label>
 
                 <div className="text-xs text-[var(--text-faint)] leading-relaxed">
-                  Charges appliquées automatiquement : URSSAF 12,3% du CA · Frais Stripe {extraUE ? "2,5%" : "1,5%"} + 0,25€{extraUE ? " (hors UE)" : " (UE)"}
-                  {extraUE && ` · Taxe UE ${TAXE_UE_FLAT.toFixed(2)}€ flat`}.
+                  {t("franceCharges", {
+                    stripe: extraUE ? "2,5%" : "1,5%",
+                    zone: extraUE ? t("franceZoneHorsUE") : t("franceZoneUE"),
+                  })}
+                  {extraUE && t("franceTaxeUE", { montant: TAXE_UE_FLAT.toFixed(2) })}.
                 </div>
 
                 <div>
                   <InputField
-                    label="CA cumulé cette année (€)"
-                    placeholder="ex: 32000"
+                    label={t("fieldCaCumuleEuro")}
+                    placeholder="32000"
                     value={caAnnuelCumule}
                     onChange={setCaAnnuelCumule}
                   />
                   <div className="mt-3">
                     <div className="flex justify-between text-[11px] text-[var(--text-faint)] mb-1.5">
-                      <span>Progression vers le seuil de TVA</span>
-                      <span className="font-semibold" style={{ color: tvaColor }}>{caCumule.toLocaleString("fr-FR")}€ / {SEUIL_TVA.toLocaleString("fr-FR")}€</span>
+                      <span>{t("franceProgressionTva")}</span>
+                      <span className="font-semibold" style={{ color: tvaColor }}>{caCumule.toLocaleString(intlTag)}€ / {SEUIL_TVA.toLocaleString(intlTag)}€</span>
                     </div>
                     <div className="h-2 rounded-full bg-[var(--surface-3)] overflow-hidden relative">
                       <div
@@ -578,7 +589,10 @@ function CalculateurMargeInner() {
                       />
                     </div>
                     <div className="text-[10.5px] text-[var(--text-faint)] mt-1.5">
-                      Franchise en base jusqu’à {SEUIL_TVA.toLocaleString("fr-FR")}€ (limite majorée {SEUIL_TVA_MAJORE.toLocaleString("fr-FR")}€)
+                      {t("franceFranchise", {
+                        seuil: SEUIL_TVA.toLocaleString(intlTag),
+                        majore: SEUIL_TVA_MAJORE.toLocaleString(intlTag),
+                      })}
                     </div>
                   </div>
                 </div>
@@ -587,34 +601,38 @@ function CalculateurMargeInner() {
               <div className="bg-[var(--bg-sunken)] rounded-xl p-5 border border-[var(--border)] grid gap-4">
                 <div className="grid grid-cols-2 gap-4">
                   <InputField
-                    label="Frais Stripe UK (%)"
+                    label={t("fieldStripeUk")}
                     placeholder="1.5"
                     value={stripeRateUK}
                     onChange={setStripeRateUK}
                   />
                   <InputField
-                    label="Taux de retour hypothétique (%)"
-                    placeholder="ex: 8"
+                    label={t("fieldTauxRetour")}
+                    placeholder="8"
                     value={tauxRetourUK}
                     onChange={setTauxRetourUK}
                   />
                 </div>
 
                 <div className="text-xs text-[var(--text-faint)] leading-relaxed">
-                  Charges appliquées automatiquement : VAT {(VAT_RATE_UK * 100).toFixed(0)}% du prix de vente (taux standard) · Frais Stripe {stripeRateUK || "0"}% + £{STRIPE_FIXED_UK.toFixed(2)} (carte domestique).
+                  {t("ukCharges", {
+                    vat: (VAT_RATE_UK * 100).toFixed(0),
+                    stripe: stripeRateUK || "0",
+                    fixe: STRIPE_FIXED_UK.toFixed(2),
+                  })}
                 </div>
 
                 {(parseFloat(prixVente) || 0) >= DOUANE_SEUIL_UK && (
                   <div className="text-xs text-[var(--warning)] bg-[var(--warning)]/10 border border-[var(--warning)]/20 rounded-lg px-3.5 py-2.5 leading-relaxed">
-                    ⚠️ Droit de douane applicable au-delà de {DOUANE_SEUIL_UK}£ — variable par catégorie, non calculé automatiquement. Vérifie sur gov.uk.
+                    {t("ukDouane", { seuil: DOUANE_SEUIL_UK })}
                   </div>
                 )}
 
                 {/* Curseur profit annuel — indicatif, séparé du calcul de marge par vente */}
                 <div className="pt-3 border-t border-[var(--border)]">
                   <div className="flex justify-between text-[13px] text-[var(--text-muted)] mb-2">
-                    <span>Profit annuel estimé (indicatif)</span>
-                    <span className="font-semibold text-[var(--text-primary)]">£{(parseFloat(profitAnnuelUK) || 0).toLocaleString("fr-FR")}</span>
+                    <span>{t("ukProfitAnnuel")}</span>
+                    <span className="font-semibold text-[var(--text-primary)]">£{(parseFloat(profitAnnuelUK) || 0).toLocaleString(intlTag)}</span>
                   </div>
                   <input
                     type="range"
@@ -626,8 +644,9 @@ function CalculateurMargeInner() {
                     className="w-full accent-violet-600"
                   />
                   <div className="mt-2.5 text-[12px] text-[var(--text-faint)] leading-relaxed">
-                    Taux marginal approximatif : <span className="font-semibold text-[var(--text-muted)]">{tauxMarginal.label}</span>.
-                    Income Tax + Class 4 National Insurance sur le profit annuel — n&apos;entre pas dans le calcul de marge par vente ci-dessus, à titre indicatif. Seuils à vérifier sur gov.uk.
+                    {t("ukTauxMarginal")}
+                    <span className="font-semibold text-[var(--text-muted)]">{t(tauxMarginal.labelKey)}</span>.{" "}
+                    {t("ukTauxMarginalNote")}
                   </div>
                 </div>
               </div>
@@ -635,22 +654,22 @@ function CalculateurMargeInner() {
               <div className="bg-[var(--bg-sunken)] rounded-xl p-5 border border-[var(--border)] grid gap-4">
                 <div>
                   <label className="block text-[13px] font-medium text-[var(--text-muted)] mb-2">
-                    État du client <span className="text-[var(--accent)]">*</span>
+                    {t("usStateLabel")} <span className="text-[var(--accent)]">*</span>
                   </label>
                   <select
                     value={usState}
                     onChange={(e) => setUsState(e.target.value)}
                     className="w-full box-border bg-[var(--bg)] border border-[var(--border-strong)] rounded-lg px-3.5 py-3 text-[15px] text-[var(--text-primary)] outline-none transition-colors focus:border-violet-500"
                   >
-                    <option value="">Sélectionne l&apos;état du client…</option>
+                    <option value="">{t("usStatePlaceholder")}</option>
                     {US_STATE_SALES_TAX.map((s) => (
-                      <option key={s.code} value={s.code}>{s.nom} ({s.code})</option>
+                      <option key={s.code} value={s.code}>{t(`usStates.${s.code}`)} ({s.code})</option>
                     ))}
                   </select>
                   <div className="text-[11px] text-[var(--text-faint)] mt-1.5 leading-relaxed">
                     {usState
-                      ? `Sales tax de base indicative : ${(getUsStateTax(usState) * 100).toFixed(3)}% — taux d'État uniquement, hors surtaxes locales comté/ville qui peuvent s'ajouter selon la localité exacte du client.`
-                      : "Sales tax de base indicative : sélectionne un état — taux d'État uniquement, hors surtaxes locales comté/ville."}
+                      ? t("usStateTaxKnown", { taux: (getUsStateTax(usState) * 100).toFixed(3) })
+                      : t("usStateTaxUnknown")}
                   </div>
                 </div>
 
@@ -661,200 +680,256 @@ function CalculateurMargeInner() {
                     onChange={(e) => setSalesTaxNexusUS(e.target.checked)}
                     className="w-4 h-4 accent-violet-600"
                   />
-                  J&apos;ai un nexus économique dans cet État
+                  {t("usNexus")}
                 </label>
 
                 <div className="grid grid-cols-2 gap-4">
                   <InputField
-                    label="Frais Stripe US (%)"
+                    label={t("fieldStripeUs")}
                     placeholder="2.9"
                     value={stripeRateUS}
                     onChange={setStripeRateUS}
                   />
                   <InputField
-                    label="Taux de retour hypothétique (%)"
-                    placeholder="ex: 8"
+                    label={t("fieldTauxRetour")}
+                    placeholder="8"
                     value={tauxRetourUS}
                     onChange={setTauxRetourUS}
                   />
                 </div>
 
                 <InputField
-                  label="Droit de douane estimé (%) — informatif, non inclus dans le calcul"
-                  placeholder="ex: 0"
+                  label={t("fieldDouaneInfo")}
+                  placeholder="0"
                   value={droitDouaneUS}
                   onChange={setDroitDouaneUS}
                 />
 
                 <div className="text-xs text-[var(--text-faint)] leading-relaxed">
-                  Charges appliquées automatiquement : Frais Stripe {stripeRateUS || "0"}% + ${STRIPE_FIXED_US.toFixed(2)} (carte domestique)
-                  {salesTaxNexusUS && usState ? ` · Sales tax ${(getUsStateTax(usState) * 100).toFixed(3)}% (${usState})` : " · Sales tax 0% (nexus non confirmé)"}.
+                  {t("usCharges", {
+                    stripe: stripeRateUS || "0",
+                    fixe: STRIPE_FIXED_US.toFixed(2),
+                    salesTax:
+                      salesTaxNexusUS && usState
+                        ? t("usChargesSalesTax", {
+                            taux: (getUsStateTax(usState) * 100).toFixed(3),
+                            etat: usState,
+                          })
+                        : t("usChargesNoNexus"),
+                  })}
                 </div>
               </div>
             ) : mode === "be" ? (
               <div className="bg-[var(--bg-sunken)] rounded-xl p-5 border border-[var(--border)] grid gap-4">
                 <div className="grid grid-cols-2 gap-4">
-                  <InputField label="Frais Stripe (%)" placeholder="1.5" value={stripeRateBE} onChange={setStripeRateBE} />
-                  <InputField label="Taux de retour hypothétique (%)" placeholder="ex: 8" value={tauxRetourBE} onChange={setTauxRetourBE} />
+                  <InputField label={t("fieldStripe")} placeholder="1.5" value={stripeRateBE} onChange={setStripeRateBE} />
+                  <InputField label={t("fieldTauxRetour")} placeholder="8" value={tauxRetourBE} onChange={setTauxRetourBE} />
                 </div>
                 <div className="text-xs text-[var(--text-faint)] leading-relaxed">
-                  Charges appliquées automatiquement : TVA {(TVA_RATE_BE * 100).toFixed(0)}% du prix de vente · Frais Stripe {stripeRateBE || "0"}% + {STRIPE_FIXED_BE.toFixed(2)}€ · Cotisations sociales indépendant {(COTISATIONS_RATE_BE * 100).toFixed(1)}% sur la marge nette (pas sur le CA — voir note sous le résultat).
+                  {t("beCharges", {
+                    tva: (TVA_RATE_BE * 100).toFixed(0),
+                    stripe: stripeRateBE || "0",
+                    fixe: STRIPE_FIXED_BE.toFixed(2),
+                    cotisations: (COTISATIONS_RATE_BE * 100).toFixed(1),
+                  })}
                 </div>
                 <SeuilTracker
-                  label="CA cumulé cette année"
+                  label={t("fieldCaCumule")}
                   devise="€"
                   value={caAnnuelCumuleBE}
                   onChange={setCaAnnuelCumuleBE}
                   seuil={SEUIL_FRANCHISE_BE}
-                  caption={`Franchise de TVA jusqu'à ${SEUIL_FRANCHISE_BE.toLocaleString("fr-FR")}€`}
+                  progressionLabel={t("seuilProgression")}
+                  intlTag={intlTag}
+                  caption={t("beFranchise", { seuil: SEUIL_FRANCHISE_BE.toLocaleString(intlTag) })}
                 />
               </div>
             ) : mode === "ch" ? (
               <div className="bg-[var(--bg-sunken)] rounded-xl p-5 border border-[var(--border)] grid gap-4">
                 <div className="grid grid-cols-2 gap-4">
-                  <InputField label="Frais Stripe (%)" placeholder="2.9" value={stripeRateCH} onChange={setStripeRateCH} />
-                  <InputField label="Taux de retour hypothétique (%)" placeholder="ex: 8" value={tauxRetourCH} onChange={setTauxRetourCH} />
+                  <InputField label={t("fieldStripe")} placeholder="2.9" value={stripeRateCH} onChange={setStripeRateCH} />
+                  <InputField label={t("fieldTauxRetour")} placeholder="8" value={tauxRetourCH} onChange={setTauxRetourCH} />
                 </div>
                 <div className="text-xs text-[var(--text-faint)] leading-relaxed">
-                  Charges appliquées automatiquement : TVA {(TVA_RATE_CH * 100).toFixed(1)}% du prix de vente · Frais Stripe {stripeRateCH || "0"}% + CHF {STRIPE_FIXED_CH.toFixed(2)} · AVS/AI/APG indépendant sur la marge nette (voir note sous le résultat).
+                  {t("chCharges", {
+                    tva: (TVA_RATE_CH * 100).toFixed(1),
+                    stripe: stripeRateCH || "0",
+                    fixe: STRIPE_FIXED_CH.toFixed(2),
+                  })}
                 </div>
                 <SeuilTracker
-                  label="CA cumulé cette année"
+                  label={t("fieldCaCumule")}
                   devise=" CHF"
                   value={caAnnuelCumuleCH}
                   onChange={setCaAnnuelCumuleCH}
                   seuil={SEUIL_IMMAT_CH}
-                  caption={`Immatriculation TVA obligatoire à partir de CHF ${SEUIL_IMMAT_CH.toLocaleString("fr-CH")}`}
+                  progressionLabel={t("seuilProgression")}
+                  intlTag={intlTag}
+                  caption={t("chImmat", { seuil: SEUIL_IMMAT_CH.toLocaleString(intlTag) })}
                 />
               </div>
             ) : mode === "ca" ? (
               <div className="bg-[var(--bg-sunken)] rounded-xl p-5 border border-[var(--border)] grid gap-4">
                 <div className="grid grid-cols-2 gap-4">
-                  <InputField label="Frais Stripe (%)" placeholder="2.9" value={stripeRateCA} onChange={setStripeRateCA} />
-                  <InputField label="Taux de retour hypothétique (%)" placeholder="ex: 8" value={tauxRetourCA} onChange={setTauxRetourCA} />
+                  <InputField label={t("fieldStripe")} placeholder="2.9" value={stripeRateCA} onChange={setStripeRateCA} />
+                  <InputField label={t("fieldTauxRetour")} placeholder="8" value={tauxRetourCA} onChange={setTauxRetourCA} />
                 </div>
                 <InputField
-                  label="Droit de douane estimé (%) — informatif, non inclus dans le calcul"
-                  placeholder="ex: 0"
+                  label={t("fieldDouaneInfo")}
+                  placeholder="0"
                   value={droitDouaneCA}
                   onChange={setDroitDouaneCA}
                 />
                 <div className="text-xs text-[var(--text-faint)] leading-relaxed">
-                  Charges appliquées automatiquement : TPS + TVQ {(TPS_TVQ_RATE_CA * 100).toFixed(3)}% du prix de vente · Frais Stripe {stripeRateCA || "0"}% + C${STRIPE_FIXED_CA.toFixed(2)} · RRQ + RQAP sur la marge nette (voir note sous le résultat).
+                  {t("caCharges", {
+                    tps: (TPS_TVQ_RATE_CA * 100).toFixed(3),
+                    stripe: stripeRateCA || "0",
+                    fixe: STRIPE_FIXED_CA.toFixed(2),
+                  })}
                 </div>
                 <SeuilTracker
-                  label="CA cumulé cette année"
+                  label={t("fieldCaCumule")}
                   devise=" CAD"
                   value={caAnnuelCumuleCA}
                   onChange={setCaAnnuelCumuleCA}
                   seuil={SEUIL_PETIT_FOURNISSEUR_CA}
-                  caption={`Seuil de petit fournisseur courant à ${SEUIL_PETIT_FOURNISSEUR_CA.toLocaleString("fr-FR")} CAD — à reconfirmer sur revenuquebec.ca avant toute décision.`}
+                  progressionLabel={t("seuilProgression")}
+                  intlTag={intlTag}
+                  caption={t("caPetitFournisseur", { seuil: SEUIL_PETIT_FOURNISSEUR_CA.toLocaleString(intlTag) })}
                 />
               </div>
             ) : mode === "lu" ? (
               <div className="bg-[var(--bg-sunken)] rounded-xl p-5 border border-[var(--border)] grid gap-4">
                 <div className="grid grid-cols-2 gap-4">
-                  <InputField label="Frais Stripe (%)" placeholder="1.5" value={stripeRateLU} onChange={setStripeRateLU} />
-                  <InputField label="Taux de retour hypothétique (%)" placeholder="ex: 8" value={tauxRetourLU} onChange={setTauxRetourLU} />
+                  <InputField label={t("fieldStripe")} placeholder="1.5" value={stripeRateLU} onChange={setStripeRateLU} />
+                  <InputField label={t("fieldTauxRetour")} placeholder="8" value={tauxRetourLU} onChange={setTauxRetourLU} />
                 </div>
                 <div className="text-xs text-[var(--text-faint)] leading-relaxed">
-                  Charges appliquées automatiquement : TVA {(TVA_RATE_LU * 100).toFixed(0)}% du prix de vente · Frais Stripe {stripeRateLU || "0"}% + {STRIPE_FIXED_LU.toFixed(2)}€. Pas de cotisations sociales déduites ici (voir note sous le résultat).
+                  {t("luCharges", {
+                    tva: (TVA_RATE_LU * 100).toFixed(0),
+                    stripe: stripeRateLU || "0",
+                    fixe: STRIPE_FIXED_LU.toFixed(2),
+                  })}
                 </div>
                 <SeuilTracker
-                  label="CA cumulé cette année"
+                  label={t("fieldCaCumule")}
                   devise="€"
                   value={caAnnuelCumuleLU}
                   onChange={setCaAnnuelCumuleLU}
                   seuil={SEUIL_FRANCHISE_LU}
-                  caption={`Franchise de TVA jusqu'à ${SEUIL_FRANCHISE_LU.toLocaleString("fr-FR")}€`}
+                  progressionLabel={t("seuilProgression")}
+                  intlTag={intlTag}
+                  caption={t("luFranchise", { seuil: SEUIL_FRANCHISE_LU.toLocaleString(intlTag) })}
                 />
               </div>
             ) : mode === "de" ? (
               <div className="bg-[var(--bg-sunken)] rounded-xl p-5 border border-[var(--border)] grid gap-4">
                 <div className="grid grid-cols-2 gap-4">
-                  <InputField label="Frais Stripe (%)" placeholder="1.5" value={stripeRateDE} onChange={setStripeRateDE} />
-                  <InputField label="Taux de retour hypothétique (%)" placeholder="ex: 8" value={tauxRetourDE} onChange={setTauxRetourDE} />
+                  <InputField label={t("fieldStripe")} placeholder="1.5" value={stripeRateDE} onChange={setStripeRateDE} />
+                  <InputField label={t("fieldTauxRetour")} placeholder="8" value={tauxRetourDE} onChange={setTauxRetourDE} />
                 </div>
                 <div className="text-xs text-[var(--text-faint)] leading-relaxed">
-                  Charges appliquées automatiquement : TVA (Mehrwertsteuer) {(TVA_RATE_DE * 100).toFixed(0)}% du prix de vente · Frais Stripe {stripeRateDE || "0"}% + {STRIPE_FIXED_DE.toFixed(2)}€. Pas de cotisations déduites ici (voir note sous le résultat).
+                  {t("deCharges", {
+                    tva: (TVA_RATE_DE * 100).toFixed(0),
+                    stripe: stripeRateDE || "0",
+                    fixe: STRIPE_FIXED_DE.toFixed(2),
+                  })}
                 </div>
                 <SeuilTracker
-                  label="CA de l'année précédente"
+                  label={t("fieldCaAnneePrecedente")}
                   devise="€"
                   value={caAnneePrecedenteDE}
                   onChange={setCaAnneePrecedenteDE}
                   seuil={SEUIL_KLEINUNTERNEHMER_PRECEDENT_DE}
-                  caption={`Kleinunternehmerregelung (§19 UStG), condition 1/2 : doit rester sous ${SEUIL_KLEINUNTERNEHMER_PRECEDENT_DE.toLocaleString("fr-FR")}€.`}
+                  progressionLabel={t("seuilProgression")}
+                  intlTag={intlTag}
+                  caption={t("deCondition1", { seuil: SEUIL_KLEINUNTERNEHMER_PRECEDENT_DE.toLocaleString(intlTag) })}
                 />
                 <SeuilTracker
-                  label="CA prévisionnel de l'année en cours"
+                  label={t("fieldCaPrevisionnel")}
                   devise="€"
                   value={caPrevisionnelDE}
                   onChange={setCaPrevisionnelDE}
                   seuil={SEUIL_KLEINUNTERNEHMER_PREVISIONNEL_DE}
-                  caption={`Kleinunternehmerregelung (§19 UStG), condition 2/2 : doit rester sous ${SEUIL_KLEINUNTERNEHMER_PREVISIONNEL_DE.toLocaleString("fr-FR")}€.`}
+                  progressionLabel={t("seuilProgression")}
+                  intlTag={intlTag}
+                  caption={t("deCondition2", { seuil: SEUIL_KLEINUNTERNEHMER_PREVISIONNEL_DE.toLocaleString(intlTag) })}
                 />
                 {(parseFloat(caAnneePrecedenteDE) > SEUIL_KLEINUNTERNEHMER_PRECEDENT_DE || parseFloat(caPrevisionnelDE) > SEUIL_KLEINUNTERNEHMER_PREVISIONNEL_DE) && (
                   <div className="text-[12.5px] text-[var(--danger)] bg-[var(--danger)]/10 border border-[var(--danger)]/20 rounded-lg px-4 py-3 leading-relaxed">
-                    ⚠️ Un des deux seuils est dépassé : le régime de franchise (Kleinunternehmerregelung) est perdu — la TVA à 19% est due sur toutes tes factures. Ce calcul continue de supposer que tu restes sous les deux seuils.
+                    {t("deSeuilDepasse")}
                   </div>
                 )}
               </div>
             ) : mode === "it" ? (
               <div className="bg-[var(--bg-sunken)] rounded-xl p-5 border border-[var(--border)] grid gap-4">
                 <div className="grid grid-cols-2 gap-4">
-                  <InputField label="Frais Stripe (%)" placeholder="1.5" value={stripeRateIT} onChange={setStripeRateIT} />
-                  <InputField label="Taux de retour hypothétique (%)" placeholder="ex: 8" value={tauxRetourIT} onChange={setTauxRetourIT} />
+                  <InputField label={t("fieldStripe")} placeholder="1.5" value={stripeRateIT} onChange={setStripeRateIT} />
+                  <InputField label={t("fieldTauxRetour")} placeholder="8" value={tauxRetourIT} onChange={setTauxRetourIT} />
                 </div>
                 <div>
                   <label className="block text-[13px] font-medium text-[var(--text-muted)] mb-2">
-                    Régime imposta sostitutiva
+                    {t("itRegimeLabel")}
                   </label>
                   <select
                     value={regimeImpostaIT}
                     onChange={(e) => setRegimeImpostaIT(e.target.value as RegimeImpostaIT)}
                     className="w-full box-border bg-[var(--bg)] border border-[var(--border-strong)] rounded-lg px-3.5 py-3 text-[15px] text-[var(--text-primary)] outline-none transition-colors focus:border-violet-500"
                   >
-                    <option value="nuova">Nouvelle activité (5% — premières 5 années)</option>
-                    <option value="ordinaria">Activité établie (15%)</option>
+                    <option value="nuova">{t("itRegimeNuova")}</option>
+                    <option value="ordinaria">{t("itRegimeOrdinaria")}</option>
                   </select>
                   <div className="text-[11px] text-[var(--text-faint)] mt-1.5 leading-relaxed">
-                    Coefficiente di redditività fixé à {(COEFFICIENTE_REDDITIVITA_IT * 100).toFixed(0)}% (commerce de détail non alimentaire, le plus proche du dropshipping) — vérifie ton code ATECO réel, ce coefficient varie selon l&apos;activité déclarée.
+                    {t("itCoefficiente", { coefficiente: (COEFFICIENTE_REDDITIVITA_IT * 100).toFixed(0) })}
                   </div>
                 </div>
                 <div className="text-xs text-[var(--text-faint)] leading-relaxed">
-                  Charges appliquées automatiquement : Frais Stripe {stripeRateIT || "0"}% + {STRIPE_FIXED_IT.toFixed(2)}€ · TVA 0% (régime forfettario) · Imposta sostitutiva {(COEFFICIENTE_REDDITIVITA_IT * (regimeImpostaIT === "ordinaria" ? IMPOSTA_RATE_ORDINARIA_IT : IMPOSTA_RATE_NUOVA_IT) * 100).toFixed(2)}% du prix de vente.
+                  {t("itCharges", {
+                    stripe: stripeRateIT || "0",
+                    fixe: STRIPE_FIXED_IT.toFixed(2),
+                    imposta: (
+                      COEFFICIENTE_REDDITIVITA_IT *
+                      (regimeImpostaIT === "ordinaria" ? IMPOSTA_RATE_ORDINARIA_IT : IMPOSTA_RATE_NUOVA_IT) *
+                      100
+                    ).toFixed(2),
+                  })}
                 </div>
                 <SeuilTracker
-                  label="CA cumulé cette année"
+                  label={t("fieldCaCumule")}
                   devise="€"
                   value={caAnnuelCumuleIT}
                   onChange={setCaAnnuelCumuleIT}
                   seuil={SEUIL_FORFETTARIO_IT}
-                  caption={`Effet de seuil brutal à ${SEUIL_FORFETTARIO_IT.toLocaleString("fr-FR")}€ — pas une transition progressive : au premier euro au-dessus, TVA 22% standard obligatoire ET perte définitive du régime forfettario (ce calcul suppose que tu restes sous le seuil).`}
+                  progressionLabel={t("seuilProgression")}
+                  intlTag={intlTag}
+                  caption={t("itSeuil", { seuil: SEUIL_FORFETTARIO_IT.toLocaleString(intlTag) })}
                 />
               </div>
             ) : mode === "es" ? (
               <div className="bg-[var(--bg-sunken)] rounded-xl p-5 border border-[var(--border)] grid gap-4">
                 <div className="grid grid-cols-2 gap-4">
-                  <InputField label="Frais Stripe (%)" placeholder="1.5" value={stripeRateES} onChange={setStripeRateES} />
-                  <InputField label="Taux de retour hypothétique (%)" placeholder="ex: 8" value={tauxRetourES} onChange={setTauxRetourES} />
+                  <InputField label={t("fieldStripe")} placeholder="1.5" value={stripeRateES} onChange={setStripeRateES} />
+                  <InputField label={t("fieldTauxRetour")} placeholder="8" value={tauxRetourES} onChange={setTauxRetourES} />
                 </div>
                 <div className="text-xs text-[var(--text-faint)] leading-relaxed">
-                  Charges appliquées automatiquement : IVA {(TVA_RATE_ES * 100).toFixed(0)}% du prix de vente, dû dès le premier euro (pas de seuil de franchise en Espagne) · Frais Stripe {stripeRateES || "0"}% + {STRIPE_FIXED_ES.toFixed(2)}€.
+                  {t("esCharges", {
+                    iva: (TVA_RATE_ES * 100).toFixed(0),
+                    stripe: stripeRateES || "0",
+                    fixe: STRIPE_FIXED_ES.toFixed(2),
+                  })}
                 </div>
               </div>
             ) : (
               <div className="bg-[var(--bg-sunken)] rounded-xl p-5 border border-[var(--border)] grid grid-cols-2 gap-4">
                 <InputField
-                  label="Taux de charge (%)"
-                  placeholder="ex: 15"
+                  label={t("fieldTauxCharge")}
+                  placeholder="15"
                   value={tauxCharge}
                   onChange={setTauxCharge}
                 />
                 <InputField
-                  label="Taux de taxe (%)"
-                  placeholder="ex: 5"
+                  label={t("fieldTauxTaxe")}
+                  placeholder="5"
                   value={tauxTaxe}
                   onChange={setTauxTaxe}
                 />
@@ -866,30 +941,28 @@ function CalculateurMargeInner() {
         {/* Calcul inversé : marge cible -> prix de vente minimum */}
         <div className="bg-[var(--surface)] rounded-2xl p-7 border border-[var(--border-strong)] mb-6">
           <h2 className="mt-0 mb-4 text-base font-semibold text-[var(--text-faint)] uppercase tracking-[0.1em]">
-            Calcul inversé
+            {t("calculInverse")}
           </h2>
           <div className="grid grid-cols-2 gap-4 items-end">
             <InputField
-              label="Marge nette cible (%)"
-              placeholder="ex: 30"
+              label={t("fieldMargeCible")}
+              placeholder="30"
               value={margeCible}
               onChange={setMargeCible}
             />
             <div className="bg-[var(--bg-sunken)] rounded-[10px] px-4 py-3 border border-[var(--border)] h-[46px] flex items-center justify-between">
-              <span className="text-xs text-[var(--text-faint)]">Prix de vente minimum</span>
+              <span className="text-xs text-[var(--text-faint)]">{t("prixVenteMin")}</span>
               <span className={`text-base font-bold ${prixVenteMin !== null ? "text-[var(--accent)]" : "text-[var(--text-faint)]"}`}>
                 {margeCible
                   ? prixVenteMin !== null
                     ? `${prixVenteMin.toFixed(2)} ${devise}`
-                    : "impossible"
+                    : t("prixVenteImpossible")
                   : "—"}
               </span>
             </div>
           </div>
           {margeCible && prixVenteMin === null && (
-            <div className="mt-3 text-[12.5px] text-[var(--danger)]">
-              ⚠️ Objectif inatteignable : les charges + la marge visée dépassent 100% du prix de vente. Réduis la marge cible ou les coûts fixes.
-            </div>
+            <div className="mt-3 text-[12.5px] text-[var(--danger)]">{t("margeCibleInatteignable")}</div>
           )}
         </div>
 
@@ -897,13 +970,13 @@ function CalculateurMargeInner() {
         {resultats ? (
           <div className="bg-[var(--surface)] rounded-2xl p-8 border border-[var(--border-strong)]">
             <h2 className="mt-0 mb-6 text-base font-semibold text-[var(--text-faint)] uppercase tracking-[0.1em]">
-              Résultats
+              {t("resultats")}
             </h2>
 
             {/* Marge principale */}
             <div className={`bg-[var(--bg-sunken)] rounded-xl px-7 py-6 mb-5 border flex justify-between items-center ${MARGE_BORDER[margeTier(resultats.margePct)]}`}>
               <div>
-                <div className="text-[13px] text-[var(--text-faint)] mb-1">Marge nette par vente</div>
+                <div className="text-[13px] text-[var(--text-faint)] mb-1">{t("margeNetteParVente")}</div>
                 <div className="text-4xl font-bold" style={{ color: getMargeColor(resultats.margePct) }}>
                   {resultats.margeNette >= 0 ? "+" : ""}{resultats.margeNette.toFixed(2)} {devise}
                 </div>
@@ -913,7 +986,7 @@ function CalculateurMargeInner() {
                   {resultats.margePct.toFixed(1)}%
                 </div>
                 <div className="text-xs font-semibold mt-1" style={{ color: getMargeColor(resultats.margePct) }}>
-                  {getMargeLabel(resultats.margePct)}
+                  {t(getMargeLabelKey(resultats.margePct))}
                 </div>
               </div>
             </div>
@@ -923,10 +996,10 @@ function CalculateurMargeInner() {
             {mode === "us" && (
               <div className="mb-5 grid gap-2.5">
                 <div className="text-[12.5px] text-[var(--warning)] bg-[var(--warning)]/10 border border-[var(--warning)]/20 rounded-lg px-4 py-3 leading-relaxed">
-                  Ce calcul n&apos;inclut pas les droits de douane spécifiques à la catégorie de ton produit — l&apos;exemption de minimis a été supprimée en 2025 et les taux varient par classification douanière (HTS) et par pays d&apos;origine. Vérifie le taux réel sur cbp.gov avant de fixer ton prix. Le taux de sales tax affiché est indicatif : ton obligation réelle de le collecter dépend du seuil de nexus économique de l&apos;État concerné, pas uniquement de la vente elle-même.
+                  {t("noteUs1")}
                 </div>
                 <div className="text-[12.5px] text-[var(--text-faint)] bg-[var(--bg-sunken)] border border-[var(--border)] rounded-lg px-4 py-3 leading-relaxed">
-                  Prévois de mettre de côté une réserve pour l&apos;impôt fédéral et l&apos;impôt d&apos;État sur ton profit annuel — calculé une fois par an, pas par vente. Consulte un comptable US pour ton taux réel selon ta structure (LLC, sole proprietor, etc.).
+                  {t("noteUs2")}
                 </div>
               </div>
             )}
@@ -934,7 +1007,7 @@ function CalculateurMargeInner() {
             {/* Note fixe mode Belgique */}
             {mode === "be" && (
               <div className="mb-5 text-[12.5px] text-[var(--text-faint)] bg-[var(--bg-sunken)] border border-[var(--border)] rounded-lg px-4 py-3 leading-relaxed">
-                Cotisations calculées sur base provisoire, régularisées 2-3 ans plus tard selon ton revenu annuel réel déclaré (INASTI) — ce calcul est une estimation à date.
+                {t("noteBe")}
               </div>
             )}
 
@@ -942,10 +1015,10 @@ function CalculateurMargeInner() {
             {mode === "ch" && (
               <div className="mb-5 grid gap-2.5">
                 <div className="text-[12.5px] text-[var(--text-faint)] bg-[var(--bg-sunken)] border border-[var(--border)] rounded-lg px-4 py-3 leading-relaxed">
-                  Taux de 10,0% applicable au-dessus de CHF {COTISATIONS_SEUIL_CH.toLocaleString("fr-CH")} de revenu annuel net ; barème dégressif en dessous, non modélisé ici — vérifie ta caisse de compensation AVS si ton revenu annuel est plus bas.
+                  {t("noteCh1", { seuil: COTISATIONS_SEUIL_CH.toLocaleString(intlTag) })}
                 </div>
                 <div className="text-[12.5px] text-[var(--text-faint)] bg-[var(--bg-sunken)] border border-[var(--border)] rounded-lg px-4 py-3 leading-relaxed">
-                  L&apos;impôt sur le revenu (fédéral + cantonal + communal) varie fortement selon ton canton de résidence — calculé une fois par an, pas par vente. Consulte un fiduciaire pour ton taux réel.
+                  {t("noteCh2")}
                 </div>
               </div>
             )}
@@ -954,13 +1027,13 @@ function CalculateurMargeInner() {
             {mode === "ca" && (
               <div className="mb-5 grid gap-2.5">
                 <div className="text-[12.5px] text-[var(--warning)] bg-[var(--warning)]/10 border border-[var(--warning)]/20 rounded-lg px-4 py-3 leading-relaxed">
-                  Ce calcul n&apos;inclut pas les droits de douane et taxes à l&apos;importation applicables à ta catégorie de produit — vérifie le seuil et le taux réels sur cbsa-asfc.gc.ca avant de fixer ton prix.
+                  {t("noteCa1")}
                 </div>
                 <div className="text-[12.5px] text-[var(--text-faint)] bg-[var(--bg-sunken)] border border-[var(--border)] rounded-lg px-4 py-3 leading-relaxed">
-                  Cotisations RRQ + RQAP plafonnées au-delà de 74 600$ de revenu net annuel — non modélisé ici pour un revenu élevé.
+                  {t("noteCa2")}
                 </div>
                 <div className="text-[12.5px] text-[var(--text-faint)] bg-[var(--bg-sunken)] border border-[var(--border)] rounded-lg px-4 py-3 leading-relaxed">
-                  Prévois de mettre de côté une réserve pour l&apos;impôt fédéral et provincial sur ton profit annuel — calculé une fois par an, pas par vente. Consulte un comptable pour ton taux réel selon ta structure.
+                  {t("noteCa3")}
                 </div>
               </div>
             )}
@@ -968,45 +1041,49 @@ function CalculateurMargeInner() {
             {/* Note fixe mode Luxembourg */}
             {mode === "lu" && (
               <div className="mb-5 text-[12.5px] text-[var(--text-faint)] bg-[var(--bg-sunken)] border border-[var(--border)] rounded-lg px-4 py-3 leading-relaxed">
-                Cotisations sociales indépendant (CCSS) calculées sur ton revenu net annuel, taux variable selon statut — vérifie sur mss.public.lu ou avec un fiduciaire avant de fixer ta réserve.
+                {t("noteLu")}
               </div>
             )}
 
             {/* Note fixe mode Allemagne */}
             {mode === "de" && (
               <div className="mb-5 text-[12.5px] text-[var(--text-faint)] bg-[var(--bg-sunken)] border border-[var(--border)] rounded-lg px-4 py-3 leading-relaxed">
-                Gewerbesteuer (taxe professionnelle) et Einkommensteuer (impôt sur le revenu) non inclus — la Gewerbesteuer dépend du taux communal (Hebesatz) de ta commune d&apos;immatriculation, avec un abattement de 24 500€ de profit annuel ; l&apos;Einkommensteuer suit un barème progressif sur ton revenu annuel total. Vérifie avec un Steuerberater (expert-comptable) avant de fixer ta réserve.
+                {t("noteDe")}
               </div>
             )}
 
             {/* Note fixe mode Italie */}
             {mode === "it" && (
               <div className="mb-5 text-[12.5px] text-[var(--text-faint)] bg-[var(--bg-sunken)] border border-[var(--border)] rounded-lg px-4 py-3 leading-relaxed">
-                Cotisations INPS non incluses — caisse Commercianti (activité de commerce) : environ 4 200€/an fixe minimum + 24,48% au-delà de 17 504€ de revenu imposable annuel. Vérifie avec un commercialista.
+                {t("noteIt")}
               </div>
             )}
 
             {/* Note fixe mode Espagne */}
             {mode === "es" && (
               <div className="mb-5 text-[12.5px] text-[var(--text-faint)] bg-[var(--bg-sunken)] border border-[var(--border)] rounded-lg px-4 py-3 leading-relaxed">
-                Cuota d&apos;autónomo (RETA) et IRPF non inclus — le système espagnol fonctionne par tranches de revenu net mensuel avec une base de cotisation ajustable, pas par pourcentage fixe. Utilise le simulateur officiel sur seg-social.es pour estimer ta cuota réelle, et consulte un gestor pour l&apos;IRPF (barème progressif 19%-47%).
+                {t("noteEs")}
               </div>
             )}
 
             {/* Stats secondaires */}
             <div className="grid grid-cols-4 gap-3">
-              <StatCard label="Coût total" value={`${resultats.coutTotal.toFixed(2)} ${devise}`} />
-              <StatCard label="Charges" value={`${resultats.chargesTotal.toFixed(2)} ${devise}`} />
-              <StatCard label="ROI" value={`${resultats.roi.toFixed(0)}%`} />
-              <StatCard label="Break-even" value={`${resultats.breakEven.toFixed(2)} ${devise}`} />
+              <StatCard label={t("statCoutTotal")} value={`${resultats.coutTotal.toFixed(2)} ${devise}`} />
+              <StatCard label={t("statCharges")} value={`${resultats.chargesTotal.toFixed(2)} ${devise}`} />
+              <StatCard label={t("statRoi")} value={`${resultats.roi.toFixed(0)}%`} />
+              <StatCard label={t("statBreakEven")} value={`${resultats.breakEven.toFixed(2)} ${devise}`} />
             </div>
 
-            {/* Détail des charges */}
+            {/* Détail des charges — libellé et note traduits depuis les clés renvoyées par
+                getCharges (lib/calcul-marge reste du calcul pur, sans texte localisé). */}
             <div className="mt-5 grid gap-2">
               {charges.breakdown.map((c) => (
-                <div key={c.label} className="flex justify-between text-[12.5px] text-[var(--text-faint)]">
-                  <span>{c.label}</span>
-                  <span className="text-[var(--text-muted)]">{c.detail}</span>
+                <div key={c.labelKey} className="flex justify-between text-[12.5px] text-[var(--text-faint)]">
+                  <span>{t(c.labelKey)}</span>
+                  <span className="text-[var(--text-muted)]">
+                    {c.detail}
+                    {c.noteKey ? t(c.noteKey, c.noteValues) : null}
+                  </span>
                 </div>
               ))}
             </div>
@@ -1016,7 +1093,7 @@ function CalculateurMargeInner() {
               <div className="mt-5 flex gap-2.5">
                 <input
                   type="text"
-                  placeholder="Nom de la simulation (ex: Lampe LED - fitness)"
+                  placeholder={t("savePlaceholder")}
                   value={nomSimulation}
                   onChange={(e) => setNomSimulation(e.target.value)}
                   className="flex-1 bg-[var(--bg-sunken)] border border-[var(--border-strong)] rounded-lg px-3.5 py-2.5 text-[13.5px] text-[var(--text-primary)] outline-none focus:border-violet-500"
@@ -1026,7 +1103,7 @@ function CalculateurMargeInner() {
                   disabled={saving}
                   className={`bg-violet-600 text-white border-none px-4.5 py-2.5 rounded-lg text-[13.5px] font-semibold whitespace-nowrap ${saving ? "cursor-default opacity-60" : "cursor-pointer"}`}
                 >
-                  {saving ? "Sauvegarde…" : "💾 Sauvegarder"}
+                  {saving ? t("saving") : t("saveButton")}
                 </button>
               </div>
             ) : null}
@@ -1036,39 +1113,37 @@ function CalculateurMargeInner() {
               </div>
             )}
             {!user && (
-              <div className="mt-5 text-[12.5px] text-[var(--text-faint)]">
-                Connecte-toi pour sauvegarder cette simulation.
-              </div>
+              <div className="mt-5 text-[12.5px] text-[var(--text-faint)]">{t("loginToSave")}</div>
             )}
 
             {/* Conseil */}
             {resultats.margePct < 20 && (
               <div className="mt-5 px-4.5 py-3.5 bg-[var(--danger)]/10 rounded-[10px] border border-[var(--danger)]/20 text-[13px] text-[var(--danger)] leading-relaxed">
-                ⚠️ Marge trop faible pour absorber les imprévus. Essaie de négocier le prix fournisseur ou d’augmenter le prix de vente.
+                {t("conseilFaible")}
               </div>
             )}
             {resultats.margePct >= 40 && (
               <div className="mt-5 px-4.5 py-3.5 bg-[var(--success)]/10 rounded-[10px] border border-[var(--success)]/20 text-[13px] text-[var(--success)] leading-relaxed">
-                ✅ Bonne marge ! Ce produit peut absorber les coûts pubs et les retours.
+                {t("conseilBonne")}
               </div>
             )}
 
             {/* Simulation à l'échelle */}
             <div className="mt-8">
               <h2 className="mt-0 mb-4 text-base font-semibold text-[var(--text-faint)] uppercase tracking-[0.1em]">
-                Simulation à l’échelle
+                {t("simulationEchelle")}
               </h2>
               <div className="grid grid-cols-3 gap-3">
                 {scaleData.map((s) => (
                   <div key={s.n} className="bg-[var(--bg-sunken)] rounded-xl px-4 py-4.5 border border-[var(--border)]">
                     <div className="text-xs font-bold text-[var(--accent)] mb-3">
-                      {s.n} commandes/mois
+                      {t("commandesParMois", { n: s.n })}
                     </div>
                     <div className="grid gap-2">
-                      <MiniStat label="CA" value={`${s.ca.toFixed(0)} ${devise}`} />
-                      <MiniStat label="Marge brute" value={`${s.margeBrute.toFixed(0)} ${devise}`} />
-                      <MiniStat label="Marge nette" value={`${s.margeNette.toFixed(0)} ${devise}`} color={getMargeColor(resultats.margePct)} />
-                      <MiniStat label="Charges totales" value={`${s.charges.toFixed(0)} ${devise}`} />
+                      <MiniStat label={t("miniCa")} value={`${s.ca.toFixed(0)} ${devise}`} />
+                      <MiniStat label={t("miniMargeBrute")} value={`${s.margeBrute.toFixed(0)} ${devise}`} />
+                      <MiniStat label={t("miniMargeNette")} value={`${s.margeNette.toFixed(0)} ${devise}`} color={getMargeColor(resultats.margePct)} />
+                      <MiniStat label={t("miniCharges")} value={`${s.charges.toFixed(0)} ${devise}`} />
                     </div>
                   </div>
                 ))}
@@ -1078,7 +1153,7 @@ function CalculateurMargeInner() {
             {/* Graphique marge brute vs marge nette */}
             <div className="mt-7">
               <h2 className="mt-0 mb-4 text-base font-semibold text-[var(--text-faint)] uppercase tracking-[0.1em]">
-                Marge brute vs marge nette
+                {t("chartTitle")}
               </h2>
               <div className="bg-[var(--bg-sunken)] rounded-xl border border-[var(--border)] pt-4 px-2 pb-2">
                 <MargeBarChart chartData={chartData} devise={devise} />
@@ -1087,7 +1162,7 @@ function CalculateurMargeInner() {
           </div>
         ) : (
           <div className="bg-[var(--surface)] rounded-2xl p-10 border border-[var(--border-strong)] text-center text-[var(--text-faint)] text-sm">
-            Remplis le prix fournisseur et le prix de vente pour voir les résultats.
+            {t("emptyResults")}
           </div>
         )}
 
@@ -1095,7 +1170,7 @@ function CalculateurMargeInner() {
         {user && (
           <div className="bg-[var(--surface)] rounded-2xl p-7 border border-[var(--border-strong)] mt-6">
             <h2 className="mt-0 mb-4 text-base font-semibold text-[var(--text-faint)] uppercase tracking-[0.1em]">
-              Mes simulations
+              {t("mesSimulations")}
             </h2>
 
             {deleteError && (
@@ -1103,11 +1178,9 @@ function CalculateurMargeInner() {
             )}
 
             {loadingSims ? (
-              <div className="text-[13px] text-[var(--text-faint)]">Chargement…</div>
+              <div className="text-[13px] text-[var(--text-faint)]">{tCommon("loading")}</div>
             ) : simulations.length === 0 ? (
-              <div className="text-[13px] text-[var(--text-faint)]">
-                Aucune simulation sauvegardée pour l’instant.
-              </div>
+              <div className="text-[13px] text-[var(--text-faint)]">{t("simsEmpty")}</div>
             ) : (
               <div className="grid gap-2.5">
                 {simulations.map((sim) => {
@@ -1122,9 +1195,11 @@ function CalculateurMargeInner() {
                           {sim.nom}
                         </div>
                         <div className="text-[11.5px] text-[var(--text-faint)] mt-0.5">
-                          {new Date(sim.created_at).toLocaleDateString("fr-FR", { day: "numeric", month: "short", year: "numeric" })}
+                          {new Date(sim.created_at).toLocaleDateString(intlTag, { day: "numeric", month: "short", year: "numeric" })}
                           {margePct !== null && (
-                            <span className="font-semibold" style={{ color: getMargeColor(margePct) }}> · {margePct.toFixed(1)}% net</span>
+                            <span className="font-semibold" style={{ color: getMargeColor(margePct) }}>
+                              {t("simsNet", { pct: margePct.toFixed(1) })}
+                            </span>
                           )}
                         </div>
                       </div>
@@ -1133,14 +1208,14 @@ function CalculateurMargeInner() {
                           onClick={() => handleCharger(sim)}
                           className="bg-violet-500/10 border border-violet-500/30 text-[var(--accent)] px-3 py-[7px] rounded-[7px] text-xs font-semibold cursor-pointer"
                         >
-                          Charger
+                          {t("simCharger")}
                         </button>
                         <button
                           onClick={() => handleSupprimer(sim.id)}
                           disabled={deletingSimId === sim.id}
                           className="bg-transparent border border-[var(--danger)]/20 text-[var(--danger)] px-3 py-[7px] rounded-[7px] text-xs font-semibold cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                          {deletingSimId === sim.id ? "…" : "Supprimer"}
+                          {deletingSimId === sim.id ? "…" : t("simSupprimer")}
                         </button>
                       </div>
                     </div>
@@ -1165,6 +1240,8 @@ function SeuilTracker({
   onChange,
   seuil,
   caption,
+  progressionLabel,
+  intlTag,
 }: {
   label: string;
   devise: string;
@@ -1172,17 +1249,19 @@ function SeuilTracker({
   onChange: (v: string) => void;
   seuil: number;
   caption: string;
+  progressionLabel: string;
+  intlTag: string;
 }) {
   const cumule = parseFloat(value) || 0;
   const pct = Math.min((cumule / seuil) * 100, 100);
   const color = cumule > seuil ? "var(--danger)" : cumule > seuil * 0.85 ? "var(--warning)" : "var(--success)";
   return (
     <div>
-      <InputField label={`${label} (${devise})`} placeholder={`ex: ${Math.round(seuil * 0.4)}`} value={value} onChange={onChange} />
+      <InputField label={`${label} (${devise})`} placeholder={String(Math.round(seuil * 0.4))} value={value} onChange={onChange} />
       <div className="mt-3">
         <div className="flex justify-between text-[11px] text-[var(--text-faint)] mb-1.5">
-          <span>Progression vers le seuil</span>
-          <span className="font-semibold" style={{ color }}>{cumule.toLocaleString("fr-FR")}{devise} / {seuil.toLocaleString("fr-FR")}{devise}</span>
+          <span>{progressionLabel}</span>
+          <span className="font-semibold" style={{ color }}>{cumule.toLocaleString(intlTag)}{devise} / {seuil.toLocaleString(intlTag)}{devise}</span>
         </div>
         <div className="h-2 rounded-full bg-[var(--surface-3)] overflow-hidden">
           <div className="h-full rounded-full transition-[width] duration-300" style={{ width: `${pct}%`, background: color }} />

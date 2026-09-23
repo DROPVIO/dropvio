@@ -30,6 +30,13 @@ type SectionId =
 // Label/description/prix/features viennent des traductions (parametres.plan.*) — seules les
 // classes de style, non localisées, restent ici.
 
+// key renvoyée par /api/usage -> clé de traduction sous parametres.usage
+const USAGE_METRIC_KEYS: Record<string, string> = {
+  audits_ia: "metricAuditsIa",
+  sites_generes: "metricSitesGeneres",
+  simulations_marge: "metricSimulationsMarge",
+};
+
 const PLAN_STYLE: Record<string, { badge: string; border: string; bg: string; glow: string }> = {
   free:   { badge: "bg-zinc-700 text-zinc-200",  border: "border-[var(--border-strong)]", bg: "bg-[var(--surface)]",  glow: "" },
   pro:    { badge: "bg-violet-600 text-white",   border: "border-violet-500/40",   bg: "bg-violet-500/[0.06]",  glow: "shadow-[0_0_28px_rgba(124,58,237,0.14)]" },
@@ -412,6 +419,12 @@ export default function ParametresModal({
   const planLabel = t(`plan.meta.${planKey}.label`);
   const planDesc = t(`plan.meta.${planKey}.desc`);
 
+  // /api/usage renvoie un libellé en dur (français) à côté de chaque `key` — on ignore ce
+  // libellé et on traduit à partir de la clé stable, pour ne pas dépendre de la langue du
+  // serveur (même approche que app/dashboard/utilisation/page.tsx).
+  const metricLabel = (key: string, fallback: string) =>
+    key in USAGE_METRIC_KEYS ? t(`usage.${USAGE_METRIC_KEYS[key]}`) : fallback;
+
   // ── Section renderers ────────────────────────────────────────────────────
 
   const renderPlan = () => (
@@ -692,14 +705,14 @@ export default function ParametresModal({
           <div className="flex flex-col gap-3">
             <p className="text-[11px] font-semibold text-[var(--text-faint)] uppercase tracking-widest">{t("usage.thisMonth")}</p>
             {usage.monthly.map((m) => (
-              <UsageMeter key={m.key} label={m.label} used={m.used} max={m.max} />
+              <UsageMeter key={m.key} label={metricLabel(m.key, m.label)} used={m.used} max={m.max} />
             ))}
           </div>
 
           <div className="flex flex-col gap-3">
             <p className="text-[11px] font-semibold text-[var(--text-faint)] uppercase tracking-widest">{t("usage.total")}</p>
             {usage.total.map((m) => (
-              <UsageMeter key={m.key} label={m.label} used={m.used} max={m.max} />
+              <UsageMeter key={m.key} label={metricLabel(m.key, m.label)} used={m.used} max={m.max} />
             ))}
           </div>
 

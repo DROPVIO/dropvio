@@ -2,7 +2,9 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useLocale, useTranslations } from "next-intl";
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
+import { toIntlTag, type AppLocale } from "@/lib/locale";
 
 type AuditRow = {
   id: string;
@@ -20,6 +22,8 @@ function scoreColor(score: number): string {
 }
 
 export default function AuditsDetailPage() {
+  const t = useTranslations("dashboard");
+  const intlTag = toIntlTag(useLocale() as AppLocale);
   const [loading, setLoading] = useState(true);
   const [audits, setAudits] = useState<AuditRow[]>([]);
 
@@ -47,19 +51,19 @@ export default function AuditsDetailPage() {
       <div className="max-w-4xl mx-auto flex flex-col gap-8">
         <div>
           <Link href="/dashboard" className="text-xs text-[var(--text-faint)] hover:text-[var(--text-muted)] transition-colors">
-            ← Dashboard
+            {t("common.back")}
           </Link>
-          <h1 className="text-2xl font-bold text-[var(--text-primary)] mt-3">Audits IA</h1>
-          <p className="text-[var(--text-faint)] text-sm mt-1.5">Historique complet de tes audits de sites.</p>
+          <h1 className="text-2xl font-bold text-[var(--text-primary)] mt-3">{t("audits.title")}</h1>
+          <p className="text-[var(--text-faint)] text-sm mt-1.5">{t("audits.subtitle")}</p>
         </div>
 
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
           <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface-2)] p-5">
-            <p className="text-[10px] font-semibold uppercase tracking-widest text-[var(--text-faint)]">Audits réalisés</p>
+            <p className="text-[10px] font-semibold uppercase tracking-widest text-[var(--text-faint)]">{t("audits.statDone")}</p>
             <p className="text-2xl font-bold tabular-nums text-[var(--accent)] mt-2">{audits.length}</p>
           </div>
           <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface-2)] p-5">
-            <p className="text-[10px] font-semibold uppercase tracking-widest text-[var(--text-faint)]">Score moyen</p>
+            <p className="text-[10px] font-semibold uppercase tracking-widest text-[var(--text-faint)]">{t("audits.statAverage")}</p>
             <p className="text-2xl font-bold tabular-nums mt-2" style={{ color: scoreMoyen !== null ? scoreColor(scoreMoyen) : "var(--text-faint)" }}>
               {scoreMoyen !== null ? `${scoreMoyen}/100` : "—"}
             </p>
@@ -68,12 +72,12 @@ export default function AuditsDetailPage() {
 
         <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface-2)] p-6">
           {loading ? (
-            <p className="text-[var(--text-faint)] text-sm text-center py-12">Chargement…</p>
+            <p className="text-[var(--text-faint)] text-sm text-center py-12">{t("common.loading")}</p>
           ) : audits.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 gap-2">
-              <p className="text-[var(--text-faint)] text-sm">Aucun audit réalisé pour l&apos;instant.</p>
+              <p className="text-[var(--text-faint)] text-sm">{t("audits.empty")}</p>
               <a href="/audit" className="text-[var(--accent)] text-xs hover:underline">
-                Lancer un audit IA →
+                {t("audits.cta")}
               </a>
             </div>
           ) : (
@@ -83,7 +87,7 @@ export default function AuditsDetailPage() {
                   <div className="min-w-0">
                     <p className="text-sm text-[var(--text-primary)] truncate">{a.url_ou_nom_site}</p>
                     <p className="text-[11px] text-[var(--text-faint)] mt-0.5">
-                      {new Date(a.created_at).toLocaleDateString("fr-FR", { day: "numeric", month: "short", year: "numeric" })}
+                      {new Date(a.created_at).toLocaleDateString(intlTag, { day: "numeric", month: "short", year: "numeric" })}
                     </p>
                   </div>
                   <span className="text-sm font-semibold tabular-nums shrink-0 ml-4" style={{ color: scoreColor(a.score_total) }}>

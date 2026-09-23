@@ -2,7 +2,9 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useLocale, useTranslations } from "next-intl";
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
+import { toIntlTag, type AppLocale } from "@/lib/locale";
 
 type BoutiqueRow = {
   id: string;
@@ -14,6 +16,8 @@ type BoutiqueRow = {
 };
 
 export default function BoutiquesDetailPage() {
+  const t = useTranslations("dashboard");
+  const intlTag = toIntlTag(useLocale() as AppLocale);
   const [loading, setLoading] = useState(true);
   const [boutiques, setBoutiques] = useState<BoutiqueRow[]>([]);
 
@@ -61,31 +65,31 @@ export default function BoutiquesDetailPage() {
       <div className="max-w-4xl mx-auto flex flex-col gap-8">
         <div>
           <Link href="/dashboard" className="text-xs text-[var(--text-faint)] hover:text-[var(--text-muted)] transition-colors">
-            ← Dashboard
+            {t("common.back")}
           </Link>
-          <h1 className="text-2xl font-bold text-[var(--text-primary)] mt-3">Mes boutiques</h1>
-          <p className="text-[var(--text-faint)] text-sm mt-1.5">Boutiques multi-produits créées via le Site Builder.</p>
+          <h1 className="text-2xl font-bold text-[var(--text-primary)] mt-3">{t("boutiques.title")}</h1>
+          <p className="text-[var(--text-faint)] text-sm mt-1.5">{t("boutiques.subtitle")}</p>
         </div>
 
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
           <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5">
-            <p className="text-[10px] font-semibold uppercase tracking-widest text-[var(--text-faint)]">Boutiques</p>
+            <p className="text-[10px] font-semibold uppercase tracking-widest text-[var(--text-faint)]">{t("boutiques.statBoutiques")}</p>
             <p className="text-2xl font-bold tabular-nums text-[var(--accent)] mt-2">{boutiques.length}</p>
           </div>
           <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5">
-            <p className="text-[10px] font-semibold uppercase tracking-widest text-[var(--text-faint)]">Produits catalogués</p>
+            <p className="text-[10px] font-semibold uppercase tracking-widest text-[var(--text-faint)]">{t("boutiques.statProduits")}</p>
             <p className="text-2xl font-bold tabular-nums text-[var(--accent-secondary)] mt-2">{totalProduits}</p>
           </div>
         </div>
 
         <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-6">
           {loading ? (
-            <p className="text-[var(--text-faint)] text-sm text-center py-12">Chargement…</p>
+            <p className="text-[var(--text-faint)] text-sm text-center py-12">{t("common.loading")}</p>
           ) : boutiques.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 gap-2">
-              <p className="text-[var(--text-faint)] text-sm">Aucune boutique créée pour l&apos;instant.</p>
+              <p className="text-[var(--text-faint)] text-sm">{t("boutiques.empty")}</p>
               <a href="/site-builder" className="text-[var(--accent)] text-xs hover:underline">
-                Créer une boutique →
+                {t("boutiques.cta")}
               </a>
             </div>
           ) : (
@@ -99,12 +103,12 @@ export default function BoutiquesDetailPage() {
                   <div className="min-w-0">
                     <p className="text-sm text-[var(--text-primary)] truncate">{b.nom}</p>
                     <p className="text-[11px] text-[var(--text-faint)] mt-0.5">
-                      {new Date(b.created_at).toLocaleDateString("fr-FR", { day: "numeric", month: "short", year: "numeric" })}
-                      {b.est_publique && <span className="text-[var(--success)]"> · publique</span>}
+                      {new Date(b.created_at).toLocaleDateString(intlTag, { day: "numeric", month: "short", year: "numeric" })}
+                      {b.est_publique && <span className="text-[var(--success)]"> · {t("boutiques.public")}</span>}
                     </p>
                   </div>
                   <span className="text-sm font-semibold tabular-nums shrink-0 ml-4 text-[var(--text-muted)]">
-                    {b.produitsCount} produit{b.produitsCount > 1 ? "s" : ""}
+                    {t("boutiques.produitsCount", { count: b.produitsCount })}
                   </span>
                 </Link>
               ))}

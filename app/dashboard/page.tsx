@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
+import { useTranslations } from "next-intl";
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
 import { PLAN_LIMITS, getMonthlyUsage, type Plan } from "@/lib/plan-limits";
 import type { DashboardChartData } from "@/components/DashboardActiviteChart";
@@ -46,15 +47,16 @@ function fmt(n: number): string {
   return String(n);
 }
 
-function greeting() {
+function greetingKey(): string {
   const h = new Date().getHours();
-  if (h < 6)  return "Bonne nuit";
-  if (h < 12) return "Bonjour";
-  if (h < 18) return "Bon après-midi";
-  return "Bonsoir";
+  if (h < 6)  return "greetingNight";
+  if (h < 12) return "greetingMorning";
+  if (h < 18) return "greetingAfternoon";
+  return "greetingEvening";
 }
 
 export default function DashboardPage() {
+  const t = useTranslations("dashboard.home");
   const [user,          setUser]          = useState<import("@supabase/supabase-js").User | null>(null);
   const [profile,       setProfile]       = useState<Profile | null>(null);
   const [loading,       setLoading]       = useState(true);
@@ -182,33 +184,33 @@ export default function DashboardPage() {
   const planLimits = PLAN_LIMITS[planKey];
   const prenom   = profile?.nom_complet?.split(" ")[0]
     || user?.email?.split("@")[0]
-    || "là";
+    || t("fallbackName");
 
   const METRICS = [
     {
       id: "mois",
-      label: "Sites ce mois",
+      label: t("metricSitesMonth"),
       value: String(sitesMois),
-      sub: "landing pages créées",
+      sub: t("metricSitesMonthSub"),
       accent: "text-[var(--accent)]",
     },
     {
       id: "total",
-      label: "Sites au total",
+      label: t("metricSitesTotal"),
       value: fmt(sitesTotal),
-      sub: "toutes périodes",
+      sub: t("metricSitesTotalSub"),
       accent: "text-[var(--accent-secondary)]",
     },
     {
       id: "produits",
-      label: "Produits disponibles",
+      label: t("metricProducts"),
       value: fmt(produitsTotal),
-      sub: "dans le catalogue",
+      sub: t("metricProductsSub"),
       accent: "text-[var(--success)]",
     },
     {
       id: "plan",
-      label: "Plan actuel",
+      label: t("metricPlan"),
       value: planMeta.label,
       sub: null,
       badge: planMeta.badge,
@@ -221,65 +223,65 @@ export default function DashboardPage() {
       id: "marges",
       href: "/dashboard/marges",
       icon: "📊",
-      title: "Calculateur de marge",
+      title: t("cardMarges"),
       stats: [
-        { label: "Simulations", value: String(simulationsCount) },
-        { label: "Marge moyenne", value: margeMoyenne !== null ? `${margeMoyenne.toFixed(1)}%` : "—" },
+        { label: t("cardMargesSimulations"), value: String(simulationsCount) },
+        { label: t("cardMargesAverage"), value: margeMoyenne !== null ? `${margeMoyenne.toFixed(1)}%` : "—" },
       ],
     },
     {
       id: "audits",
       href: "/dashboard/audits",
       icon: "🔍",
-      title: "Audits IA",
+      title: t("cardAudits"),
       stats: [
-        { label: "Audits réalisés", value: String(auditsCount) },
-        { label: "Score moyen", value: scoreMoyen !== null ? `${scoreMoyen}/100` : "—" },
+        { label: t("cardAuditsDone"), value: String(auditsCount) },
+        { label: t("cardAuditsScore"), value: scoreMoyen !== null ? `${scoreMoyen}/100` : "—" },
       ],
     },
     {
       id: "shopify",
       href: "/dashboard/shopify",
       icon: "🛍️",
-      title: "Remboursements & litiges",
+      title: t("cardShopify"),
       stats: shopifyStatus?.connected
         ? [
-            { label: "Remboursements 30j", value: String(shopifyStatus.incidentsSummary?.refunds30d ?? "—") },
+            { label: t("cardShopifyRefunds"), value: String(shopifyStatus.incidentsSummary?.refunds30d ?? "—") },
             {
-              label: "Litiges 30j",
+              label: t("cardShopifyDisputes"),
               value: shopifyStatus.disputesScopeGranted ? String(shopifyStatus.incidentsSummary?.disputes30d ?? "—") : "N/A",
             },
           ]
-        : [{ label: "Statut", value: "Non connecté" }],
+        : [{ label: t("cardShopifyStatus"), value: t("cardShopifyNotConnected") }],
     },
     {
       id: "sites",
       href: "/dashboard/sites",
       icon: "🌐",
-      title: "Sites générés",
+      title: t("cardSites"),
       stats: [
-        { label: "Ce mois", value: String(sitesMois) },
-        { label: "Au total", value: fmt(sitesTotal) },
+        { label: t("cardSitesMonth"), value: String(sitesMois) },
+        { label: t("cardSitesTotal"), value: fmt(sitesTotal) },
       ],
     },
     {
       id: "boutiques",
       href: "/dashboard/boutiques",
       icon: "🏬",
-      title: "Mes boutiques",
+      title: t("cardBoutiques"),
       stats: [
-        { label: "Boutiques", value: String(boutiquesCount) },
-        { label: "Produits catalogués", value: String(produitsBoutiquesCount) },
+        { label: t("cardBoutiquesCount"), value: String(boutiquesCount) },
+        { label: t("cardBoutiquesProducts"), value: String(produitsBoutiquesCount) },
       ],
     },
     {
       id: "utilisation",
       href: "/dashboard/utilisation",
       icon: "📈",
-      title: "Utilisation du plan",
+      title: t("cardUsage"),
       stats: [
-        { label: "Audits ce mois", value: `${auditsMoisUsage}${planLimits.auditsParMoisMax !== null ? `/${planLimits.auditsParMoisMax}` : ""}` },
-        { label: "Sites ce mois", value: `${sitesMoisUsage}${planLimits.sitesParMoisMax !== null ? `/${planLimits.sitesParMoisMax}` : ""}` },
+        { label: t("cardUsageAudits"), value: `${auditsMoisUsage}${planLimits.auditsParMoisMax !== null ? `/${planLimits.auditsParMoisMax}` : ""}` },
+        { label: t("cardUsageSites"), value: `${sitesMoisUsage}${planLimits.sitesParMoisMax !== null ? `/${planLimits.sitesParMoisMax}` : ""}` },
       ],
     },
   ];
@@ -297,11 +299,9 @@ export default function DashboardPage() {
             {/* ── Welcome ─────────────────────────────────────────────────── */}
             <div>
               <h1 className="text-2xl font-bold text-[var(--text-primary)]">
-                {greeting()}, {prenom} 👋
+                {t("title", { greeting: t(greetingKey()), name: prenom })}
               </h1>
-              <p className="text-[var(--text-faint)] text-sm mt-1.5">
-                Voici un aperçu de ton activité sur Dropvio.
-              </p>
+              <p className="text-[var(--text-faint)] text-sm mt-1.5">{t("subtitle")}</p>
             </div>
 
             {/* ── Bannière reconnexion Shopify ─────────────────────────────── */}
@@ -312,12 +312,8 @@ export default function DashboardPage() {
               >
                 <span className="text-lg shrink-0">⚠️</span>
                 <div className="min-w-0">
-                  <p className="text-sm font-medium text-[var(--warning)]">
-                    Ta connexion Shopify n&apos;est plus active
-                  </p>
-                  <p className="text-[11px] text-[var(--warning)]/80 mt-0.5">
-                    Le push produits et le suivi des remboursements/litiges sont en pause jusqu&apos;à la reconnexion. Clique ici pour reconnecter ta boutique.
-                  </p>
+                  <p className="text-sm font-medium text-[var(--warning)]">{t("reconnectTitle")}</p>
+                  <p className="text-[11px] text-[var(--warning)]/80 mt-0.5">{t("reconnectBody")}</p>
                 </div>
               </a>
             )}
@@ -361,8 +357,8 @@ export default function DashboardPage() {
         {/* ── Dashboard complet ─────────────────────────────────────────── */}
         <div>
           <div className="mb-4">
-            <p className="text-sm font-semibold text-[var(--text-primary)]">Dashboard complet</p>
-            <p className="text-[11px] text-[var(--text-faint)] mt-0.5">Tous tes tableaux de bord Dropvio, en un seul endroit.</p>
+            <p className="text-sm font-semibold text-[var(--text-primary)]">{t("cardsTitle")}</p>
+            <p className="text-[11px] text-[var(--text-faint)] mt-0.5">{t("cardsSubtitle")}</p>
           </div>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {CARDS.map((card) => (
@@ -389,9 +385,7 @@ export default function DashboardPage() {
         </div>
 
         {/* ── Footer hint ─────────────────────────────────────────────── */}
-        <p className="text-center text-[11px] text-[var(--text-faint)]">
-          Accède aux paramètres de ton compte via la sidebar à gauche.
-        </p>
+        <p className="text-center text-[11px] text-[var(--text-faint)]">{t("footerHint")}</p>
         </>
         )}
 

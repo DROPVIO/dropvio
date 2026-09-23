@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
 import Logo from "./Logo";
 import ParametresModal from "./ParametresModal";
@@ -103,7 +104,8 @@ const IcoGear = () => (
 
 interface NavItem {
   href: string;
-  label: string;
+  /** Clé de traduction sous dashboard.nav — le libellé est résolu au rendu. */
+  labelKey: string;
   icon: React.ReactNode;
   soon?: boolean;
   /** Clé ciblée par le tutoriel d'onboarding (voir components/onboarding). */
@@ -111,13 +113,13 @@ interface NavItem {
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { href: "/dashboard",         label: "Dashboard",             icon: <IcoDashboard />, onboardingTarget: "dashboard" },
-  { href: "/produits-gagnants", label: "Produits gagnants",     icon: <IcoTrophy />,    onboardingTarget: "produits-gagnants" },
-  { href: "/site-builder",      label: "Site Builder",          icon: <IcoGlobe />,     onboardingTarget: "site-builder" },
-  { href: "/mes-sites",         label: "Mes sites",             icon: <IcoFolder /> },
-  { href: "/audit",             label: "Audit de site",         icon: <IcoAudit />,     onboardingTarget: "audit" },
-  { href: "/tools/calculateur-marge", label: "Calculateur de marge", icon: <IcoCalc />, onboardingTarget: "calculateur-marge" },
-  { href: "/formation",         label: "Formation",             icon: <IcoBook /> },
+  { href: "/dashboard",         labelKey: "itemDashboard",         icon: <IcoDashboard />, onboardingTarget: "dashboard" },
+  { href: "/produits-gagnants", labelKey: "itemProduitsGagnants",  icon: <IcoTrophy />,    onboardingTarget: "produits-gagnants" },
+  { href: "/site-builder",      labelKey: "itemSiteBuilder",       icon: <IcoGlobe />,     onboardingTarget: "site-builder" },
+  { href: "/mes-sites",         labelKey: "itemMesSites",          icon: <IcoFolder /> },
+  { href: "/audit",             labelKey: "itemAudit",             icon: <IcoAudit />,     onboardingTarget: "audit" },
+  { href: "/tools/calculateur-marge", labelKey: "itemCalculateurMarge", icon: <IcoCalc />, onboardingTarget: "calculateur-marge" },
+  { href: "/formation",         labelKey: "itemFormation",         icon: <IcoBook /> },
 ];
 
 const PLAN_CLS: Record<string, string> = {
@@ -135,6 +137,7 @@ export default function Sidebar({
   collapsed: boolean;
   onCollapse: () => void;
 }) {
+  const t        = useTranslations("dashboard.nav");
   const pathname = usePathname();
   const router   = useRouter();
 
@@ -167,7 +170,7 @@ export default function Sidebar({
     queueMicrotask(() => {
       if (connected || err) {
         setModalShopifyMsg(
-          connected ? { ok: true, text: "Boutique Shopify connectée avec succès." } : { ok: false, text: err! }
+          connected ? { ok: true, text: t("shopifyConnected") } : { ok: false, text: err! }
         );
       }
       if (connected || err || openIntegrations) setModalOpenIntegrations(true);
@@ -200,7 +203,7 @@ export default function Sidebar({
 
   const initials  = (profile?.nom_complet || user?.email || "?").slice(0, 2).toUpperCase();
   const planKey   = profile?.plan ?? "free";
-  const planLabel = `Plan ${planKey.charAt(0).toUpperCase() + planKey.slice(1)}`;
+  const planLabel = t("planLabel", { plan: planKey.charAt(0).toUpperCase() + planKey.slice(1) });
   const displayName = profile?.nom_complet || user?.email || "";
 
   return (
@@ -232,7 +235,7 @@ export default function Sidebar({
           {/* CTA */}
           <button
             onClick={() => router.push("/site-builder")}
-            title={collapsed ? "Nouvelle génération" : undefined}
+            title={collapsed ? t("newGeneration") : undefined}
             className={`flex items-center gap-2.5 rounded-xl font-semibold text-sm transition-all shadow-[0_0_18px_rgba(124,58,237,0.18)] bg-gradient-to-br from-violet-600 to-violet-500 hover:from-violet-500 hover:to-violet-400 text-white shrink-0 ${
               collapsed
                 ? "w-10 h-10 mx-auto justify-center"
@@ -240,13 +243,14 @@ export default function Sidebar({
             }`}
           >
             <IcoPlus />
-            {!collapsed && <span className="whitespace-nowrap">Nouvelle génération</span>}
+            {!collapsed && <span className="whitespace-nowrap">{t("newGeneration")}</span>}
           </button>
 
           <div className="h-px bg-[var(--border)] my-1.5 shrink-0" />
 
           {/* Links */}
-          {NAV_ITEMS.map(({ href, label, icon, soon, onboardingTarget }) => {
+          {NAV_ITEMS.map(({ href, labelKey, icon, soon, onboardingTarget }) => {
+            const label = t(labelKey);
             const isActive = pathname.startsWith(href);
             const className = `relative flex items-center gap-3 rounded-lg text-sm transition-all duration-150 shrink-0 ${
               collapsed ? "w-10 h-10 mx-auto justify-center" : "px-3 py-2.5"
@@ -273,7 +277,7 @@ export default function Sidebar({
                     <span className="flex-1 whitespace-nowrap">{label}</span>
                     {soon && (
                       <span className="text-[9px] font-bold bg-[var(--surface-2)] border border-[var(--border)] text-[var(--text-faint)] px-1.5 py-0.5 rounded-full">
-                        bientôt
+                        {t("soon")}
                       </span>
                     )}
                   </>
@@ -305,13 +309,13 @@ export default function Sidebar({
           <div className="h-px bg-[var(--border)] my-1 shrink-0" />
           <button
             onClick={() => setModalOpen(true)}
-            title={collapsed ? "Paramètres" : undefined}
+            title={collapsed ? t("settings") : undefined}
             className={`relative flex items-center gap-3 rounded-lg text-sm transition-all duration-150 shrink-0 text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-2)] ${
               collapsed ? "w-10 h-10 mx-auto justify-center" : "px-3 py-2.5"
             }`}
           >
             <span className="shrink-0 text-[var(--text-faint)]"><IcoSettings /></span>
-            {!collapsed && <span className="flex-1 whitespace-nowrap text-left">Paramètres</span>}
+            {!collapsed && <span className="flex-1 whitespace-nowrap text-left">{t("settings")}</span>}
           </button>
         </div>
 
@@ -319,7 +323,7 @@ export default function Sidebar({
         <div className={`px-2 pb-1 shrink-0 ${collapsed ? "flex justify-center" : ""}`}>
           <button
             onClick={onCollapse}
-            title={collapsed ? "Agrandir la sidebar" : "Réduire la sidebar"}
+            title={collapsed ? t("expandTooltip") : t("collapseTooltip")}
             className={`flex items-center gap-2 rounded-lg text-[11px] text-[var(--text-faint)] hover:text-[var(--text-muted)] hover:bg-[var(--surface-2)] transition h-8 ${
               collapsed ? "w-10 justify-center" : "w-full px-3"
             }`}
@@ -327,7 +331,7 @@ export default function Sidebar({
             {collapsed ? <IcoChevronRight /> : (
               <>
                 <IcoChevronLeft />
-                <span className="whitespace-nowrap">Réduire</span>
+                <span className="whitespace-nowrap">{t("collapse")}</span>
               </>
             )}
           </button>
@@ -338,7 +342,7 @@ export default function Sidebar({
           {user && (
             <button
               onClick={() => setModalOpen(true)}
-              title={collapsed ? `${displayName} · Paramètres` : undefined}
+              title={collapsed ? t("userTooltip", { name: displayName }) : undefined}
               className={`flex items-center gap-2.5 w-full rounded-xl hover:bg-[var(--surface-2)] transition-colors px-2 py-2 group text-left ${
                 collapsed ? "justify-center" : ""
               }`}

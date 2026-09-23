@@ -3,14 +3,29 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
 import { slugify } from "@/lib/slugify";
 import ProduitsSuggeres from "@/components/ProduitsSuggeres";
-import { NICHES as NICHES_CATALOGUE, nicheLabel } from "@/lib/niches";
-const NICHES = [
-  { id: "all", label: "Voir tout", emoji: "🗂️", desc: "Toutes les niches confondues" },
-  ...NICHES_CATALOGUE,
-];
+import { NICHES as NICHES_CATALOGUE, nicheI18nKey, nicheLabel } from "@/lib/niches";
+
+// L'entrée "all" est propre à cette page ; les autres viennent de lib/niches, dont le
+// libellé/description français ne sert que de repli — l'affichage passe par le namespace
+// `niches` (voir nicheI18nKey).
+function useNiches(t: (key: string) => string, tNiches: (key: string) => string) {
+  return [
+    { id: "all", label: t("nicheAll"), emoji: "🗂️", desc: t("nicheAllDesc") },
+    ...NICHES_CATALOGUE.map((n) => {
+      const labelKey = nicheI18nKey(n.id, "label");
+      const descKey = nicheI18nKey(n.id, "desc");
+      return {
+        ...n,
+        label: labelKey ? tNiches(labelKey) : n.label,
+        desc: descKey ? tNiches(descKey) : n.desc,
+      };
+    }),
+  ];
+}
 
 type Produit = {
   id: string;
@@ -37,6 +52,9 @@ const SWEET_SPOT_DEFAUT = { min: 500, max: 5000 };
 const PRODUITS_PAR_PAGE = 40;
 
 export default function ProduitsGagnants() {
+  const t = useTranslations("dashboard.produits");
+  const tNiches = useTranslations("niches");
+  const NICHES = useNiches(t, tNiches);
   const [nicheActive, setNicheActive] = useState<string>("all");
   const isHalloweenNiche = nicheActive === "halloween";
   const [tiroirOpen, setTiroirOpen] = useState(false);
@@ -104,10 +122,11 @@ export default function ProduitsGagnants() {
       }
     } catch (err) {
       if (err instanceof DOMException && err.name === "AbortError") return;
-      setErreur("Impossible de charger les produits. Vérifie ta connexion.");
+      setErreur(t("errorLoad"));
     } finally {
       if (chargementEnCoursRef.current === controller) setLoading(false);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [nicheActive, filtresPrix, filtreMarge, commandesMin, noteMin, sweetSpotActif, sweetMin, sweetMax, page]);
 
   useEffect(() => {
@@ -199,14 +218,10 @@ export default function ProduitsGagnants() {
       <div className="bg-[var(--bg-sunken)] border-b border-[var(--border-strong)] px-8 py-6">
         <div className="max-w-[1200px] mx-auto flex justify-between items-center">
           <div>
-            <h1 className="text-[28px] font-bold m-0 text-[var(--text-primary)]">
-              🏆 Produits Gagnants
-            </h1>
-            <p className="text-[var(--text-faint)] mt-1.5 mb-0 text-sm">
-              Les meilleurs produits AliExpress pour le dropshipping — sélectionnés par marge, avis et potentiel.
-            </p>
+            <h1 className="text-[28px] font-bold m-0 text-[var(--text-primary)]">{t("title")}</h1>
+            <p className="text-[var(--text-faint)] mt-1.5 mb-0 text-sm">{t("subtitle")}</p>
             <div className="bg-amber-500/10 border border-amber-500/25 text-[var(--warning)] rounded-lg px-3 py-2.5 text-[12.5px] mt-3">
-              ⚠️ Avant de vendre un produit, commande-le toi-même pour vérifier sa qualité, les délais de livraison réels et la fiabilité du fournisseur.
+              {t("warning")}
             </div>
           </div>
         </div>
@@ -223,7 +238,9 @@ export default function ProduitsGagnants() {
             }`}
           >
             <span>🎯</span>
-            {nicheSelectionnee ? `Niche : ${nicheSelectionnee.emoji} ${nicheSelectionnee.label}` : "Choisir une niche"}
+            {nicheSelectionnee
+              ? t("nicheButton", { emoji: nicheSelectionnee.emoji, label: nicheSelectionnee.label })
+              : t("nicheChoose")}
             <span className="ml-auto text-xs opacity-70">{tiroirOpen ? "▲" : "▼"}</span>
           </button>
 
@@ -253,13 +270,13 @@ export default function ProduitsGagnants() {
 
         {/* Filtres */}
         <div className="flex gap-3 mb-7 flex-wrap items-center">
-          <span className="text-[13px] text-[var(--text-faint)]">Filtres :</span>
+          <span className="text-[13px] text-[var(--text-faint)]">{t("filters")}</span>
 
           {[
-            { label: "Tous les prix", val: "tous" },
-            { label: "0–20€", val: "0-20" },
-            { label: "20–50€", val: "20-50" },
-            { label: "50€+", val: "50+" },
+            { label: t("priceAll"), val: "tous" },
+            { label: t("price020"), val: "0-20" },
+            { label: t("price2050"), val: "20-50" },
+            { label: t("price50"), val: "50+" },
           ].map(f => (
             <button
               key={f.val}
@@ -277,9 +294,9 @@ export default function ProduitsGagnants() {
           ))}
 
           {[
-            { label: "Toute marge", val: 0 },
-            { label: "Marge 50%+", val: 50 },
-            { label: "Marge 70%+", val: 70 },
+            { label: t("margeAll"), val: 0 },
+            { label: t("marge50"), val: 50 },
+            { label: t("marge70"), val: 70 },
           ].map(f => (
             <button
               key={f.val}
@@ -296,19 +313,19 @@ export default function ProduitsGagnants() {
         {/* Filtres avancés */}
         <div className="bg-[var(--surface)] border border-[var(--border-strong)] rounded-[14px] p-5 mb-7 grid gap-4.5">
           <div className="text-xs font-semibold text-[var(--text-faint)] uppercase tracking-[0.06em]">
-            Filtres avancés
+            {t("advanced")}
           </div>
 
           <div className="grid grid-cols-2 gap-5">
             {/* Commandes minimum */}
             <div>
               <label className="block text-[12.5px] text-[var(--text-muted)] mb-2">
-                Volume de commandes minimum
+                {t("ordersMinLabel")}
               </label>
               <input
                 type="number"
                 min={0}
-                placeholder="ex: 200"
+                placeholder={t("ordersMinPlaceholder")}
                 value={commandesMin}
                 onChange={(e) => { setCommandesMin(e.target.value); setPage(1); }}
                 className="w-full box-border bg-[var(--bg-sunken)] border border-[var(--border-strong)] rounded-lg px-3 py-2.5 text-[13.5px] text-[var(--text-primary)] outline-none"
@@ -318,9 +335,9 @@ export default function ProduitsGagnants() {
             {/* Note minimum */}
             <div>
               <label className="flex justify-between text-[12.5px] text-[var(--text-muted)] mb-2">
-                <span>Note minimum</span>
+                <span>{t("noteMinLabel")}</span>
                 <span className="text-[var(--warning)] font-semibold">
-                  {noteMin > 0 ? `⭐ ${noteMin.toFixed(1)}+` : "Toutes"}
+                  {noteMin > 0 ? `⭐ ${noteMin.toFixed(1)}+` : t("noteAll")}
                 </span>
               </label>
               <input
@@ -344,15 +361,13 @@ export default function ProduitsGagnants() {
                 onChange={(e) => { setSweetSpotActif(e.target.checked); setPage(1); }}
                 className="w-4 h-4 accent-[var(--success)]"
               />
-              🎯 Sweet spot saturation
+              {t("sweetSpot")}
             </label>
           </div>
 
           {sweetSpotActif && (
             <div className="bg-[var(--bg-sunken)] rounded-[10px] p-4 border border-emerald-500/20 flex items-center gap-4 flex-wrap">
-              <span className="text-xs text-[var(--text-faint)]">
-                Ni invendable, ni déjà saturé — commandes entre :
-              </span>
+              <span className="text-xs text-[var(--text-faint)]">{t("sweetSpotHint")}</span>
               <div className="flex items-center gap-2">
                 <input
                   type="number"
@@ -361,7 +376,7 @@ export default function ProduitsGagnants() {
                   onChange={(e) => { setSweetMin(parseInt(e.target.value) || 0); setPage(1); }}
                   className="w-[90px] bg-[var(--bg)] border border-[var(--border-strong)] rounded-[7px] px-2.5 py-1.5 text-[13px] text-[var(--text-primary)] outline-none"
                 />
-                <span className="text-[var(--text-faint)] text-xs">et</span>
+                <span className="text-[var(--text-faint)] text-xs">{t("and")}</span>
                 <input
                   type="number"
                   min={0}
@@ -369,13 +384,13 @@ export default function ProduitsGagnants() {
                   onChange={(e) => { setSweetMax(parseInt(e.target.value) || 0); setPage(1); }}
                   className="w-[90px] bg-[var(--bg)] border border-[var(--border-strong)] rounded-[7px] px-2.5 py-1.5 text-[13px] text-[var(--text-primary)] outline-none"
                 />
-                <span className="text-[var(--text-faint)] text-xs">commandes</span>
+                <span className="text-[var(--text-faint)] text-xs">{t("ordersUnit")}</span>
               </div>
               <button
                 onClick={() => { setSweetMin(SWEET_SPOT_DEFAUT.min); setSweetMax(SWEET_SPOT_DEFAUT.max); setPage(1); }}
                 className="ml-auto bg-transparent border border-[var(--border-strong)] text-[var(--text-faint)] px-3 py-1.5 rounded-[7px] text-[11.5px] cursor-pointer"
               >
-                Réinitialiser (500–5000)
+                {t("reset")}
               </button>
             </div>
           )}
@@ -386,7 +401,7 @@ export default function ProduitsGagnants() {
         {loading ? (
           <div className="text-center py-20">
             <div className="text-[32px] mb-4">⏳</div>
-            <div className="text-[var(--text-faint)] text-[15px]">Chargement des produits AliExpress...</div>
+            <div className="text-[var(--text-faint)] text-[15px]">{t("loadingProducts")}</div>
           </div>
         ) : erreur ? (
           <div className="bg-[var(--danger)]/10 border border-[var(--danger)]/20 rounded-xl p-8 text-center text-[var(--danger)]">
@@ -396,20 +411,21 @@ export default function ProduitsGagnants() {
               onClick={chargerProduits}
               className="mt-4 bg-violet-600 text-white border-none px-5 py-2.5 rounded-lg cursor-pointer text-[13px] font-semibold"
             >
-              Réessayer
+              {t("retry")}
             </button>
           </div>
         ) : (
           <>
             <div className="text-[13px] text-[var(--text-faint)] mb-4">
-              {totalProduits} produit{totalProduits > 1 ? "s" : ""} trouvé{totalProduits > 1 ? "s" : ""}
-              {nicheSelectionnee && nicheActive !== "all" && ` dans ${nicheSelectionnee.emoji} ${nicheSelectionnee.label}`}
-              {totalPages > 1 && ` · page ${page} sur ${totalPages}`}
+              {t("countFound", { count: totalProduits })}
+              {nicheSelectionnee && nicheActive !== "all" &&
+                t("inNiche", { emoji: nicheSelectionnee.emoji, label: nicheSelectionnee.label })}
+              {totalPages > 1 && t("pageSuffix", { page, total: totalPages })}
             </div>
 
             {produits.length === 0 ? (
               <div className="text-center py-16 text-[var(--text-faint)] text-[15px]">
-                Aucun produit pour ces filtres. Essaie de les élargir.
+                {t("emptyFilters")}
               </div>
             ) : (
               <>
@@ -418,6 +434,7 @@ export default function ProduitsGagnants() {
                     <CarteProduit
                       key={p.id}
                       produit={p}
+                      t={t}
                       croissancePct={croissance[p.id]}
                       isHalloweenNiche={isHalloweenNiche}
                       onAjouterBoutique={() => setAjouterBoutiqueProduit(p)}
@@ -435,11 +452,11 @@ export default function ProduitsGagnants() {
                         page <= 1 ? "text-[var(--text-faint)] cursor-not-allowed opacity-50" : "text-[var(--text-primary)] cursor-pointer"
                       }`}
                     >
-                      ← Précédent
+                      {t("prev")}
                     </button>
 
                     <span className="text-[13px] text-[var(--text-faint)] px-2.5">
-                      Page {page} sur {totalPages}
+                      {t("pageLabel", { page, total: totalPages })}
                     </span>
 
                     <button
@@ -449,7 +466,7 @@ export default function ProduitsGagnants() {
                         page >= totalPages ? "text-[var(--text-faint)] cursor-not-allowed opacity-50" : "text-[var(--text-primary)] cursor-pointer"
                       }`}
                     >
-                      Suivant →
+                      {t("next")}
                     </button>
                   </div>
                 )}
@@ -470,14 +487,20 @@ export default function ProduitsGagnants() {
   );
 }
 
+/** Traducteur du namespace dashboard.produits, passé en prop aux sous-composants de ce
+ *  fichier plutôt que ré-obtenu par hook dans chacun. */
+type ProduitsT = ReturnType<typeof useTranslations<"dashboard.produits">>;
+
 function CarteProduit({
   produit,
+  t,
   croissancePct,
   isHalloweenNiche,
   onAjouterBoutique,
   onVoirAlternatives,
 }: {
   produit: Produit;
+  t: ProduitsT;
   croissancePct?: number;
   isHalloweenNiche?: boolean;
   onAjouterBoutique: () => void;
@@ -510,7 +533,7 @@ function CarteProduit({
         )}
         {produit.commission && (
           <span className={`absolute top-2.5 right-2.5 text-white text-[11px] font-bold px-2 py-[3px] rounded-full ${isHalloweenNiche ? "bg-[#e07b2e]/80" : "bg-violet-600/80"}`}>
-            💰 {produit.commission}% comm.
+            {t("cardCommission", { rate: produit.commission })}
           </span>
         )}
       </div>
@@ -525,7 +548,7 @@ function CarteProduit({
           {/* Prix AliExpress */}
           <div className="flex items-center justify-between">
             <span className="text-[10px] text-[var(--text-faint)] uppercase tracking-[0.04em]">
-              Prix AliExpress
+              {t("cardPriceAli")}
             </span>
             <div className="flex items-center gap-1.5">
               {hasPrixOriginal && (
@@ -542,7 +565,7 @@ function CarteProduit({
           {/* Prix de vente suggéré */}
           <div className="flex items-center justify-between">
             <span className="text-[10px] text-[var(--text-faint)] uppercase tracking-[0.04em]">
-              Prix de vente suggéré
+              {t("cardPriceSuggested")}
             </span>
             <span className="text-[13px] font-bold text-[var(--accent)]">
               {produit.prixVente.toFixed(2)}€
@@ -553,13 +576,17 @@ function CarteProduit({
         {/* Marge */}
         <div className="bg-[var(--bg-sunken)] rounded-lg px-2.5 py-1.5 mb-3">
           <div className="flex justify-between items-center">
-            <span className="text-[10px] text-[var(--text-faint)] uppercase tracking-[0.04em]">Marge est.</span>
+            <span className="text-[10px] text-[var(--text-faint)] uppercase tracking-[0.04em]">{t("cardMarge")}</span>
             <span className="text-[15px] font-bold text-[var(--success)]">{produit.marge}%</span>
           </div>
         </div>
 
         <div className="flex justify-between items-center text-xs text-[var(--text-faint)] mb-3.5">
-          <span>⭐ {(produit.note ?? 0).toFixed(1)} · {produit.commandes > 1000 ? `${(produit.commandes / 1000).toFixed(0)}k` : produit.commandes} cmd</span>
+          <span>
+            ⭐ {(produit.note ?? 0).toFixed(1)} ·{" "}
+            {produit.commandes > 1000 ? `${(produit.commandes / 1000).toFixed(0)}k` : produit.commandes}{" "}
+            {t("cardOrdersUnit")}
+          </span>
           {croissancePct !== undefined && (
             <span className={`text-[11px] font-bold flex items-center gap-0.5 ${croissancePct >= 0 ? "text-[var(--success)]" : "text-[var(--danger)]"}`}>
               {croissancePct >= 0 ? "↑" : "↓"} {Math.abs(croissancePct).toFixed(0)}%
@@ -574,7 +601,7 @@ function CarteProduit({
             rel="noopener noreferrer"
             className={`block text-white text-center py-2.5 rounded-lg text-[13px] font-semibold no-underline ${isHalloweenNiche ? "bg-[#e07b2e]" : "bg-violet-600"}`}
           >
-            Voir sur AliExpress →
+            {t("cardViewAli")}
           </a>
           <a
             href={`/site-builder?name=${encodeURIComponent(produit.nom)}&description=${encodeURIComponent(produit.nom)}&image=${encodeURIComponent(produit.image ?? "")}&rating=${(produit.note ?? 0).toFixed(1)}&orders=${produit.commandes}`}
@@ -584,25 +611,25 @@ function CarteProduit({
                 : "bg-violet-500/10 border border-violet-500/30 text-[var(--accent)] hover:bg-violet-500/20"
             }`}
           >
-            ✨ Créer une landing page
+            {t("cardCreateLanding")}
           </a>
           <a
             href={`/tools/calculateur-marge?cout=${produit.prixFournisseur.toFixed(2)}`}
             className="block bg-transparent border border-[var(--border-strong)] text-[var(--text-muted)] text-center py-2 rounded-lg text-xs font-semibold no-underline transition-colors hover:bg-[var(--surface-2)]"
           >
-            🧮 Calculer la marge
+            {t("cardCalcMarge")}
           </a>
           <button
             onClick={onAjouterBoutique}
             className="block w-full bg-emerald-500/10 border border-emerald-500/25 text-[var(--success)] text-center py-2 rounded-lg text-xs font-semibold cursor-pointer transition-colors hover:bg-emerald-500/20"
           >
-            🛍️ Ajouter à une boutique
+            {t("cardAddBoutique")}
           </button>
           <button
             onClick={onVoirAlternatives}
             className="block w-full bg-transparent border border-[var(--border-strong)] text-[var(--text-muted)] text-center py-2 rounded-lg text-xs font-semibold cursor-pointer transition-colors hover:bg-[var(--surface-2)]"
           >
-            🔎 Alternatives fiables
+            {t("cardAlternatives")}
           </button>
         </div>
       </div>
@@ -626,6 +653,7 @@ type Alternative = {
 };
 
 function AlternativesModal({ produit, onClose }: { produit: Produit; onClose: () => void }) {
+  const t = useTranslations("dashboard.produits");
   const [loading, setLoading] = useState(true);
   const [erreur, setErreur] = useState<string | null>(null);
   const [alternatives, setAlternatives] = useState<Alternative[] | null>(null);
@@ -645,19 +673,20 @@ function AlternativesModal({ produit, onClose }: { produit: Produit; onClose: ()
         const json = await res.json();
         if (annule) return;
         if (!res.ok) {
-          setErreur(json.error ?? "Impossible de charger les alternatives.");
+          setErreur(json.error ?? t("altErrorLoad"));
           return;
         }
         setAlternatives(json.alternatives ?? []);
       })
       .catch(() => {
-        if (!annule) setErreur("Impossible de contacter le serveur.");
+        if (!annule) setErreur(t("altErrorServer"));
       })
       .finally(() => {
         if (!annule) setLoading(false);
       });
 
     return () => { annule = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [produit.id, produit.nom]);
 
   return (
@@ -672,7 +701,7 @@ function AlternativesModal({ produit, onClose }: { produit: Produit; onClose: ()
         <div className="flex justify-between items-start mb-4 gap-3">
           <div>
             <div className="text-xs text-[var(--text-faint)] uppercase tracking-[0.06em] mb-1">
-              🔎 Alternatives fiables · tout le catalogue AliExpress
+              {t("altTitle")}
             </div>
             <h3 className="text-[15px] font-semibold text-[var(--text-primary)] m-0 leading-snug">
               {produit.nom}
@@ -688,7 +717,7 @@ function AlternativesModal({ produit, onClose }: { produit: Produit; onClose: ()
 
         {loading ? (
           <div className="text-center py-10 text-[var(--text-faint)] text-[13.5px]">
-            ⏳ Recherche de vendeurs équivalents sur AliExpress...
+            {t("altLoading")}
           </div>
         ) : erreur ? (
           <div className="text-[var(--danger)] text-[13px] text-center py-5">
@@ -696,7 +725,7 @@ function AlternativesModal({ produit, onClose }: { produit: Produit; onClose: ()
           </div>
         ) : !alternatives || alternatives.length === 0 ? (
           <div className="text-[var(--text-muted)] text-[13px] text-center py-5 leading-relaxed">
-            Aucune alternative fiable trouvée pour ce produit (même catégorie, prix comparable, note vendeur suffisante).
+            {t("altEmpty")}
           </div>
         ) : (
           <div className="flex flex-col gap-2.5">
@@ -720,14 +749,19 @@ function AlternativesModal({ produit, onClose }: { produit: Produit; onClose: ()
                       {alt.title}
                     </div>
                     <div className="text-[11.5px] text-[var(--text-faint)] mb-1.5">
-                      {alt.shopName ?? "Boutique AliExpress"}
+                      {alt.shopName ?? t("altShopFallback")}
                     </div>
                     <div className="flex gap-3 flex-wrap text-[11.5px] text-[var(--text-muted)]">
                       <span>💶 {alt.priceEUR.toFixed(2)}€</span>
                       <span>⭐ {alt.evaluateRate ?? "—"}</span>
-                      <span>📦 {alt.orders > 1000 ? `${(alt.orders / 1000).toFixed(0)}k` : alt.orders} cmd</span>
-                      <span className="text-[var(--accent)]">🎯 {Math.round(alt.similarityScore * 100)}% similaire</span>
-                      {!hasLink && <span className="text-[var(--danger)]">🔒 Lien indisponible</span>}
+                      <span>
+                        📦 {alt.orders > 1000 ? `${(alt.orders / 1000).toFixed(0)}k` : alt.orders}{" "}
+                        {t("cardOrdersUnit")}
+                      </span>
+                      <span className="text-[var(--accent)]">
+                        {t("altSimilar", { pct: Math.round(alt.similarityScore * 100) })}
+                      </span>
+                      {!hasLink && <span className="text-[var(--danger)]">{t("altNoLink")}</span>}
                     </div>
                   </div>
                 </>
@@ -750,7 +784,7 @@ function AlternativesModal({ produit, onClose }: { produit: Produit; onClose: ()
                 <div
                   key={alt.productId}
                   aria-disabled="true"
-                  title="Lien indisponible pour ce produit"
+                  title={t("altNoLinkTitle")}
                   className="flex gap-3 bg-[var(--bg-sunken)] border border-[var(--border-strong)] rounded-[10px] p-3 text-inherit opacity-60 cursor-not-allowed"
                 >
                   {cardContent}
@@ -767,6 +801,16 @@ function AlternativesModal({ produit, onClose }: { produit: Produit; onClose: ()
 type BoutiqueOption = { id: string; nom: string; settings: { niche?: string } | null };
 
 function AjouterBoutiqueModal({ produit, onClose }: { produit: Produit; onClose: () => void }) {
+  const t = useTranslations("dashboard.produits");
+  const tNiches = useTranslations("niches");
+
+  // Traduction si la niche fait partie du catalogue, sinon libellé FR de repli (un id
+  // libre peut venir de boutiques.settings.niche).
+  const labelNiche = (id: string | null | undefined) => {
+    const key = nicheI18nKey(id, "label");
+    return key ? tNiches(key) : nicheLabel(id) ?? id ?? "";
+  };
+
   const [boutiques, setBoutiques] = useState<BoutiqueOption[] | null>(null);
   const [boutiquesError, setBoutiquesError] = useState<string | null>(null);
   const [selectedBoutiqueId, setSelectedBoutiqueId] = useState<string>("");
@@ -779,14 +823,15 @@ function AjouterBoutiqueModal({ produit, onClose }: { produit: Produit; onClose:
       .then(async (res) => {
         const json = await res.json();
         if (!res.ok) {
-          setBoutiquesError(json.error ?? "Impossible de charger tes boutiques.");
+          setBoutiquesError(json.error ?? t("addErrorBoutiques"));
           return;
         }
         const list: BoutiqueOption[] = json.boutiques ?? [];
         setBoutiques(list);
         if (list.length > 0) setSelectedBoutiqueId(list[0].id);
       })
-      .catch(() => setBoutiquesError("Impossible de contacter le serveur."));
+      .catch(() => setBoutiquesError(t("addErrorServer")));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   async function handleAdd() {
@@ -809,12 +854,12 @@ function AjouterBoutiqueModal({ produit, onClose }: { produit: Produit; onClose:
       });
       const json = await response.json();
       if (!response.ok) {
-        setAddError(json.error ?? "Impossible d'ajouter ce produit.");
+        setAddError(json.error ?? t("addErrorAdd"));
         return;
       }
       setAdded(true);
     } catch {
-      setAddError("Impossible de contacter le serveur.");
+      setAddError(t("addErrorServer"));
     } finally {
       setAdding(false);
     }
@@ -832,7 +877,7 @@ function AjouterBoutiqueModal({ produit, onClose }: { produit: Produit; onClose:
         <div className="flex justify-between items-start mb-4 gap-3">
           <div>
             <div className="text-xs text-[var(--text-faint)] uppercase tracking-[0.06em] mb-1">
-              🛍️ Ajouter à une boutique
+              {t("addTitle")}
             </div>
             <h3 className="text-[15px] font-semibold text-[var(--text-primary)] m-0 leading-snug">
               {produit.nom}
@@ -849,16 +894,16 @@ function AjouterBoutiqueModal({ produit, onClose }: { produit: Produit; onClose:
         {boutiquesError ? (
           <div className="text-[var(--danger)] text-[13px]">{boutiquesError}</div>
         ) : boutiques === null ? (
-          <p className="text-[13px] text-[var(--text-faint)]">Chargement de tes boutiques…</p>
+          <p className="text-[13px] text-[var(--text-faint)]">{t("addLoadingBoutiques")}</p>
         ) : boutiques.length === 0 ? (
           <div className="text-[13px] text-[var(--text-muted)] leading-relaxed">
-            Tu n&apos;as pas encore de boutique.{" "}
-            <Link href="/site-builder/boutique" className="text-[var(--accent)]">Crée-en une →</Link>
+            {t("addNoBoutique")}
+            <Link href="/site-builder/boutique" className="text-[var(--accent)]">{t("addCreateLink")}</Link>
           </div>
         ) : !added ? (
           <>
             <label className="block text-[11.5px] text-[var(--text-faint)] mb-1.5">
-              Boutique cible
+              {t("addTargetLabel")}
             </label>
             <select
               value={selectedBoutiqueId}
@@ -876,7 +921,10 @@ function AjouterBoutiqueModal({ produit, onClose }: { produit: Produit; onClose:
               if (!nicheCible || nicheCible === produit.niche) return null;
               return (
                 <div className="bg-amber-500/10 border border-amber-500/25 text-[var(--warning)] rounded-lg px-3 py-2.5 text-[12.5px] mb-4">
-                  ⚠️ Cette boutique est réglée sur la niche {nicheLabel(nicheCible)}, différente de la niche {nicheLabel(produit.niche)} de ce produit. Tu peux quand même l&apos;ajouter.
+                  {t("addNicheWarning", {
+                    nicheCible: labelNiche(nicheCible),
+                    nicheProduit: labelNiche(produit.niche),
+                  })}
                 </div>
               );
             })()}
@@ -890,13 +938,13 @@ function AjouterBoutiqueModal({ produit, onClose }: { produit: Produit; onClose:
               disabled={adding}
               className={`block w-full box-border text-center bg-violet-600 text-white px-5 py-3.5 rounded-[10px] text-sm font-bold border-none ${adding ? "cursor-default opacity-60" : "cursor-pointer"}`}
             >
-              {adding ? "Ajout…" : "Ajouter à cette boutique"}
+              {adding ? t("addSubmitting") : t("addSubmit")}
             </button>
           </>
         ) : (
           <div className="flex flex-col gap-5">
             <div className="bg-emerald-500/10 border border-emerald-500/25 text-[var(--success)] rounded-[10px] px-4 py-3 text-[13px] font-semibold">
-              ✓ Produit ajouté à la boutique.
+              {t("addSuccess")}
             </div>
             <ProduitsSuggeres boutiqueId={selectedBoutiqueId} />
           </div>
