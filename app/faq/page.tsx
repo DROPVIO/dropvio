@@ -18,6 +18,22 @@ interface FaqCategory {
   items: FaqItem[];
 }
 
+const SUPPORT_EMAIL = "support@dropvio.com";
+
+// Réponse unique à tout ce qui touche l'abonnement payant. Aucun plan Pro/Agency n'est
+// aujourd'hui souscriptible : components/ParametresModal.tsx désactive « Changer de plan »
+// et « Gérer la facturation » avec exactement ce message, et le seul paiement Stripe du
+// repo est l'achat unique de la formation (app/formation/checkout). Il n'y a donc ni
+// souscription, ni changement de plan, ni résiliation à documenter ici.
+// Le texte visible et aText doivent rester identiques mot pour mot (JSON-LD FAQPage).
+const PLANS_BIENTOT_TEXTE = `Les plans Pro et Agency arrivent bientôt. En attendant, contactez ${SUPPORT_EMAIL}.`;
+const PLANS_BIENTOT = (
+  <>
+    Les plans Pro et Agency arrivent bientôt. En attendant, contactez{" "}
+    <a href={`mailto:${SUPPORT_EMAIL}`}>{SUPPORT_EMAIL}</a>.
+  </>
+);
+
 const CATEGORIES: FaqCategory[] = [
   {
     title: "Général",
@@ -38,30 +54,30 @@ const CATEGORIES: FaqCategory[] = [
     title: "Comptes et facturation",
     items: [
       {
+        q: "Le plan Free coûte quelque chose ?",
+        a: "Non. Le compte Free est gratuit, sans limite de temps, et la création de compte ne demande aucune carte bancaire.",
+        aText: "Non. Le compte Free est gratuit, sans limite de temps, et la création de compte ne demande aucune carte bancaire.",
+      },
+      {
         q: "Quelle différence entre Free, Pro et Agency ?",
         a: (
-          <ul>
-            <li>Free (0€) : accès limité à chaque outil, pour tester</li>
-            <li>Pro (29€/mois) : accès complet au finder et au calculateur, 30 audits IA/mois</li>
-            <li>Agency (59€/mois) : comme Pro, avec 100 audits IA/mois</li>
-          </ul>
+          <>
+            <ul>
+              <li>Free (0€) : accès limité à chaque outil, audit IA non inclus</li>
+              <li>Pro (29€/mois) : accès complet au finder et au calculateur, 30 audits IA/mois</li>
+              <li>Agency (59€/mois) : comme Pro, avec 100 audits IA/mois</li>
+            </ul>
+            <p>Seul le plan Free est ouvert pour l&apos;instant : {PLANS_BIENTOT}</p>
+          </>
         ),
-        aText: "Free (0€) : accès limité à chaque outil, pour tester. Pro (29€/mois) : accès complet au finder et au calculateur, 30 audits IA par mois. Agency (59€/mois) : comme Pro, avec 100 audits IA par mois.",
+        // Mot pour mot le texte visible, à la seule différence des séparateurs de puces
+        // (« . » là où le rendu utilise des <li>) : schema.org attend un texte plat.
+        aText: `Free (0€) : accès limité à chaque outil, audit IA non inclus. Pro (29€/mois) : accès complet au finder et au calculateur, 30 audits IA/mois. Agency (59€/mois) : comme Pro, avec 100 audits IA/mois. Seul le plan Free est ouvert pour l'instant : ${PLANS_BIENTOT_TEXTE}`,
       },
       {
-        q: "Comment changer de plan ?",
-        a: "Depuis Paramètres → Abonnement. Le changement est immédiat.",
-        aText: "Depuis Paramètres → Abonnement. Le changement est immédiat.",
-      },
-      {
-        q: "Comment annuler mon abonnement ?",
-        a: "Depuis Paramètres → Abonnement → Annuler. Résiliation en un clic, effective à la fin de la période déjà payée. Pas d'engagement, pas de préavis à respecter.",
-        aText: "Depuis Paramètres → Abonnement → Annuler. Résiliation en un clic, effective à la fin de la période déjà payée. Pas d'engagement, pas de préavis à respecter.",
-      },
-      {
-        q: "Je peux repasser en Free au lieu d'annuler complètement ?",
-        a: "Oui, tu gardes ton compte et tes données, juste avec les limites du plan Free.",
-        aText: "Oui, tu gardes ton compte et tes données, juste avec les limites du plan Free.",
+        q: "Comment passer à Pro ou Agency, ou changer de plan ?",
+        a: PLANS_BIENTOT,
+        aText: PLANS_BIENTOT_TEXTE,
       },
       {
         q: "Que se passe-t-il si j'atteins la limite de mon plan ?",
@@ -93,10 +109,10 @@ const CATEGORIES: FaqCategory[] = [
         a: (
           <>
             Deux modes : génération IA (à partir d&apos;une description produit) ou templates prêts à personnaliser.
-            Export HTML direct, ou sauvegarde dans &laquo;&nbsp;Mes sites&nbsp;&raquo;.
+            Sauvegarde dans &laquo;&nbsp;Mes sites&nbsp;&raquo;, et téléchargement du HTML sur les plans Pro et Agency.
           </>
         ),
-        aText: "Deux modes : génération IA (à partir d'une description produit) ou templates prêts à personnaliser. Export HTML direct, ou sauvegarde dans « Mes sites ».",
+        aText: "Deux modes : génération IA (à partir d'une description produit) ou templates prêts à personnaliser. Sauvegarde dans « Mes sites », et téléchargement du HTML sur les plans Pro et Agency.",
       },
     ],
   },
@@ -174,16 +190,6 @@ export default function FaqPage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(FAQ_JSON_LD) }}
       />
 
-      {/* Fonts */}
-      {/* eslint-disable-next-line @next/next/no-page-custom-font */}
-      <link rel="preconnect" href="https://fonts.googleapis.com" />
-      {/* eslint-disable-next-line @next/next/no-page-custom-font */}
-      <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-      {/* eslint-disable-next-line @next/next/no-page-custom-font */}
-      <link
-        href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Inter:wght@400;500;600&display=swap"
-        rel="stylesheet"
-      />
 
       {/* ── Nav ──────────────────────────────────────────────────── */}
       <nav className="lp-nav">
@@ -193,8 +199,10 @@ export default function FaqPage() {
             Dropvio
           </Link>
           <div className="nav-links">
-            <Link href="/#features">Fonctionnalités</Link>
-            <Link href="/#workflow">Méthode</Link>
+            {/* Ancres réelles de app/page.tsx : #fonctionnalites (ChaineSection), #resultats,
+                #pricing. #features et #workflow ne renvoyaient vers aucune section existante. */}
+            <Link href="/#fonctionnalites">Fonctionnalités</Link>
+            <Link href="/#resultats">Résultats</Link>
             <Link href="/#pricing">Tarifs</Link>
             <Link href="/faq">FAQ</Link>
           </div>
