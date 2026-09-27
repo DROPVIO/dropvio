@@ -49,7 +49,20 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Connecte-toi pour sauvegarder un site." }, { status: 401 });
   }
 
-  const { nom_produit, html_content, boutique_id } = await request.json();
+  const {
+    nom_produit,
+    html_content,
+    boutique_id,
+    description,
+    lien_aliexpress,
+    image_url,
+    prix_vente,
+    prix_original,
+    style_id,
+    couleur_primary,
+    couleur_secondary,
+    couleur_accent,
+  } = await request.json();
 
   if (!nom_produit || !html_content) {
     return NextResponse.json(
@@ -98,9 +111,35 @@ export async function POST(request: NextRequest) {
     }
   }
 
+  // prix_vente/prix_original sont numeric(10,2) en base — une chaîne vide ("", état par
+  // défaut du champ prix côté Site Builder) ferait échouer l'insert si envoyée telle quelle.
+  const toNumberOrNull = (v: unknown): number | null => {
+    if (typeof v !== "string" || v.trim() === "") return typeof v === "number" ? v : null;
+    const n = Number(v);
+    return Number.isFinite(n) ? n : null;
+  };
+
+  // Champs de pré-remplissage pour une future régénération (voir 032_sites_generes_regeneration_fields.sql
+  // et app/site-builder/page.tsx ?regenerate=<id>) — tous optionnels : TemplateEditor.tsx (mode
+  // Éditeur de templates) et le mode boutique n'envoient aucun de ces champs, ils restent null,
+  // ce qui signale justement que le pré-remplissage n'est pas disponible pour ce site.
   const { data, error } = await supabase
     .from("sites_generes")
-    .insert({ user_id: user.id, nom_produit, html_content, boutique_id: verifiedBoutiqueId })
+    .insert({
+      user_id: user.id,
+      nom_produit,
+      html_content,
+      boutique_id: verifiedBoutiqueId,
+      description: description ?? null,
+      lien_aliexpress: lien_aliexpress ?? null,
+      image_url: image_url ?? null,
+      prix_vente: toNumberOrNull(prix_vente),
+      prix_original: toNumberOrNull(prix_original),
+      style_id: style_id ?? null,
+      couleur_primary: couleur_primary ?? null,
+      couleur_secondary: couleur_secondary ?? null,
+      couleur_accent: couleur_accent ?? null,
+    })
     .select("id")
     .single();
 

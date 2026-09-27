@@ -156,7 +156,15 @@ export async function POST(request: NextRequest) {
     return handleGenerateBoutique(body);
   }
 
-  const { productName, description, colorPrimary, colorSecondary, colorAccent, style, imageUrl, rating, orders, salePrice, originalPrice } = body;
+  const { productName, description, colorPrimary, colorSecondary, colorAccent, style, imageUrl, rating, orders, salePrice, originalPrice, corrections } = body;
+
+  // Régénération avec prise en compte d'un audit précédent (voir app/site-builder/page.tsx,
+  // textarea "Corrections à prendre en compte") — optionnel et additif : absent, le prompt
+  // est strictement identique à avant. Filtré/validé ici plutôt que de faire confiance
+  // aveuglément au JSON reçu.
+  const correctionsList: string[] = Array.isArray(corrections)
+    ? corrections.filter((c): c is string => typeof c === "string" && c.trim().length > 0)
+    : [];
 
   const imageInstruction = imageUrl
     ? `\nImage du produit : une balise <img src="${imageUrl}" alt="${productName}" style="max-width:100%;max-height:420px;object-fit:contain;border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,0.18);"> doit apparaître de façon prominente dans la section hero, centrée ou côte à côte avec le texte.`
@@ -301,7 +309,10 @@ Ces règles sont non négociables. La page sera auditée sur ces critères préc
 - IMAGE PRODUIT DOMINANTE : ${imageUrl ? `l'image <img src="${imageUrl}"> doit être visible IMMÉDIATEMENT à l'ouverture de la page (above the fold dans le hero), taille minimum 300px de large, clairement mise en valeur. Ne pas la réduire, la cacher derrière du texte, ou la pousser sous la ligne de flottaison.` : "pas d'image fournie : utilise un bloc visuel stylé (SVG ou gradient) en placeholder."}
 
 INTERDIT : noms de marques, journaux, magazines, médias, célébrités, plateformes e-commerce (AliExpress, Amazon, etc.). Aucun avis client inventé, aucun nom fictif, aucune citation fabriquée.
-
+${correctionsList.length > 0 ? `
+POINTS À CORRIGER PAR RAPPORT À UN AUDIT PRÉCÉDENT (prioritaire — cette page a déjà été générée une première fois et auditée par un expert CRO/UX ; corrige spécifiquement chacun de ces points dans cette nouvelle version, en plus de respecter toutes les règles ci-dessus) :
+${correctionsList.map((c) => `- ${c}`).join("\n")}
+` : ""}
 Réponds UNIQUEMENT avec le code HTML, sans explication ni balise markdown.`;
 
   try {
