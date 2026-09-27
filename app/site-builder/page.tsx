@@ -10,6 +10,8 @@ import { applyTokenValue } from "@/lib/color-tokens";
 import { htmlToLiquidSection } from "@/lib/html-to-liquid";
 import { readAndClearBoutiqueDraft, type BoutiqueDraft } from "@/lib/site-builder-handoff";
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
+import { slugFichier, telechargerTexte } from "@/lib/audit-download";
+import { ToastHost, useToast } from "@/components/Toast";
 
 type Step = 1 | 2 | 3;
 
@@ -33,6 +35,7 @@ function addTargetBlank(html: string): string {
 }
 
 function SiteBuilderContent() {
+  const { toast, succes, fermer } = useToast();
   const searchParams = useSearchParams();
 
   const [mode, setMode] = useState<"ia" | "template">(searchParams.get("mode") === "template" ? "template" : "ia");
@@ -442,25 +445,19 @@ function SiteBuilderContent() {
 
   function handleDownload() {
     const nom = boutiqueDraft ? boutiqueDraft.nomBoutique : productName;
-    const blob = new Blob([generatedHtml], { type: "text/html;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `${nom.replace(/\s+/g, "-").toLowerCase()}-landing.html`;
-    a.click();
-    URL.revokeObjectURL(url);
+    // slugFichier() : nom vient de l'utilisateur (nom de produit ou de boutique) et peut
+    // contenir des accents, que l'ancien replace() sur les espaces laissait passer.
+    const nomFichier = `${slugFichier(nom)}-landing.html`;
+    telechargerTexte(generatedHtml, nomFichier);
+    succes(`Fichier enregistré dans vos Téléchargements : ${nomFichier}`);
   }
 
   function handleDownloadLiquid() {
     const nom = boutiqueDraft ? boutiqueDraft.nomBoutique : productName;
     const liquid = htmlToLiquidSection(generatedHtml, nom);
-    const blob = new Blob([liquid], { type: "text/plain;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `${nom.replace(/\s+/g, "-").toLowerCase()}-section.liquid`;
-    a.click();
-    URL.revokeObjectURL(url);
+    const nomFichier = `${slugFichier(nom)}-section.liquid`;
+    telechargerTexte(liquid, nomFichier, "text/plain;charset=utf-8");
+    succes(`Fichier enregistré dans vos Téléchargements : ${nomFichier}`);
   }
 
   async function handleSaveColors() {
@@ -1217,6 +1214,8 @@ function SiteBuilderContent() {
         </>
         )}
       </div>
+
+      <ToastHost toast={toast} onClose={fermer} />
     </div>
   );
 }

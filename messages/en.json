@@ -503,7 +503,8 @@
       "errorDelete": "Error while deleting.",
       "errorFavorite": "Error while updating the favorite.",
       "errorPublish": "Could not publish to Shopify.",
-      "errorServer": "Could not reach the server."
+      "errorServer": "Could not reach the server.",
+      "downloadOk": "File saved to your Downloads: {nom}"
     },
     "spy": {
       "badge": "Competitive intelligence",

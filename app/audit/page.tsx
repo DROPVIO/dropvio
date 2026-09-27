@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { AUDIT_HTML_MAX_CHARS } from "@/lib/audit-config";
+import { nomFichierAudit, tailleLisible, telechargerTexte } from "@/lib/audit-download";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -132,17 +133,49 @@ export default function AuditPage() {
   const [htmlLoading, setHtmlLoading] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
+  // HTML corrigé mis en cache dès sa première génération : le téléchargement et le
+  // ré-audit le réutilisent au lieu de rappeler (et refacturer) la route.
+  const [correctedHtml, setCorrectedHtml] = useState<string | null>(null);
+  const [reauditing,    setReauditing]    = useState(false);
+  // Sert à nommer le fichier : hôte de l'URL analysée, ou nom du fichier déposé.
+  const [sourceLabel,  setSourceLabel]  = useState("landing-page");
+  const [fileInfo,     setFileInfo]     = useState<{ nom: string; taille: number } | null>(null);
+  const [dragOver,     setDragOver]     = useState(false);
+  const [toast,        setToast]        = useState<{ texte: string; ok: boolean } | null>(null);
+
+  useEffect(() => {
+    if (!toast) return;
+    const id = window.setTimeout(() => setToast(null), 6000);
+    return () => window.clearTimeout(id);
+  }, [toast]);
+
   const [urlInput,   setUrlInput]   = useState("");
   const [urlLoading, setUrlLoading] = useState(false);
   const [urlError,   setUrlError]   = useState<string | null>(null);
 
+  // Un fichier déposé ou choisi lance l'audit directement : pas d'étape de confirmation.
   const handleFile = useCallback((file: File) => {
+    const nomOk = /\.html?$/i.test(file.name);
+    if (!nomOk && file.type !== "text/html") {
+      setError("Ce type de fichier n'est pas accepté. Dépose un fichier .html ou .htm.");
+      return;
+    }
     const reader = new FileReader();
-    reader.onload = (e) => setHtml((e.target?.result as string) ?? "");
+    reader.onload = (e) => {
+      const contenu = (e.target?.result as string) ?? "";
+      setHtml(contenu);
+      setResult(null);
+      setCorrectedHtml(null);
+      setError(null);
+      setFileInfo({ nom: file.name, taille: file.size });
+      setSourceLabel(file.name.replace(/\.html?$/i, ""));
+      if (contenu.trim()) void runAudit(contenu);
+    };
     // Sans ce handler, un échec de lecture (fichier corrompu, permission refusée...) restait
     // totalement silencieux : html ne changeait jamais et rien n'indiquait pourquoi.
     reader.onerror = () => setError("Impossible de lire ce fichier. Vérifie qu'il s'agit bien d'un fichier HTML valide et réessaie.");
     reader.readAsText(file);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   async function handleFetchUrl() {
@@ -162,7 +195,14 @@ export default function AuditPage() {
       }
       setHtml(data.html);
       setResult(null);
+      setCorrectedHtml(null);
+      setFileInfo(null);
       setError(null);
+      try {
+        setSourceLabel(new URL(urlInput.trim()).hostname.replace(/^www\./, ""));
+      } catch {
+        setSourceLabel("landing-page");
+      }
     } catch {
       setUrlError("Impossible de contacter le serveur.");
     } finally {
@@ -170,8 +210,11 @@ export default function AuditPage() {
     }
   }
 
-  async function runAudit() {
-    if (!html.trim()) return;
+  // htmlArg permet d'auditer un contenu qu'on vient d'obtenir (fichier lu, version corrigée)
+  // sans dépendre de la mise à jour asynchrone de l'état `html`.
+  async function runAudit(htmlArg?: string) {
+    const cible = (htmlArg ?? html).trim();
+    if (!cible) return;
     setLoading(true);
     setError(null);
     setResult(null);
@@ -179,7 +222,7 @@ export default function AuditPage() {
       const res = await fetch("/api/audit-site", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ html }),
+        body: JSON.stringify({ html: cible }),
       });
       const data = await res.json();
       if (data.error) {
@@ -197,9 +240,13 @@ export default function AuditPage() {
     }
   }
 
-  async function downloadCorrectedHtml() {
-    if (!result || !html) return;
+  /** Génère (ou réutilise) le HTML corrigé. Renvoie null et signale l'erreur en cas d'échec —
+   *  jamais d'échec silencieux. */
+  async function obtenirHtmlCorrige(): Promise<string | null> {
+    if (correctedHtml) return correctedHtml;
+    if (!result || !html.trim()) return null;
     setHtmlLoading(true);
+    setError(null);
     try {
       const res = await fetch("/api/audit-site/html", {
         method: "POST",
@@ -207,22 +254,59 @@ export default function AuditPage() {
         body: JSON.stringify({ html, categories: result.categories }),
       });
       if (!res.ok) {
-        const data = await res.json();
-        setError(data.error || "Erreur lors de la génération du HTML.");
-        return;
+        // La route répond en JSON sur erreur, mais on ne suppose rien : un 502 du proxy
+        // renverrait du HTML et res.json() lèverait, ce qui masquait la vraie cause.
+        const brut = await res.text();
+        let message = "Erreur lors de la génération du HTML corrigé.";
+        try {
+          message = (JSON.parse(brut) as { error?: string }).error ?? message;
+        } catch {
+          /* réponse non JSON : on garde le message générique */
+        }
+        setError(message);
+        setToast({ texte: message, ok: false });
+        return null;
       }
-      const correctedHtml = await res.text();
-      const blob = new Blob([correctedHtml], { type: "text/html" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "landing-page-corrigee.html";
-      a.click();
-      URL.revokeObjectURL(url);
+      const corrige = await res.text();
+      if (!corrige.trim()) {
+        const message = "Le HTML corrigé reçu est vide. Réessaie dans un instant.";
+        setError(message);
+        setToast({ texte: message, ok: false });
+        return null;
+      }
+      setCorrectedHtml(corrige);
+      return corrige;
     } catch {
-      setError("Erreur lors de la génération du HTML corrigé.");
+      const message = "Erreur réseau lors de la génération du HTML corrigé.";
+      setError(message);
+      setToast({ texte: message, ok: false });
+      return null;
     } finally {
       setHtmlLoading(false);
+    }
+  }
+
+  async function downloadCorrectedHtml() {
+    const corrige = await obtenirHtmlCorrige();
+    if (!corrige) return;
+    const nom = nomFichierAudit(sourceLabel);
+    telechargerTexte(corrige, nom);
+    setToast({ texte: `Fichier enregistré dans vos Téléchargements : ${nom}`, ok: true });
+  }
+
+  /** Relance l'audit sur la version corrigée, sans passer par un fichier. */
+  async function reauditCorrected() {
+    setReauditing(true);
+    try {
+      const corrige = await obtenirHtmlCorrige();
+      if (!corrige) return;
+      setHtml(corrige);
+      setCorrectedHtml(null);
+      setFileInfo(null);
+      await runAudit(corrige);
+      setToast({ texte: "Nouvel audit lancé sur la version corrigée.", ok: true });
+    } finally {
+      setReauditing(false);
     }
   }
 
@@ -248,26 +332,67 @@ export default function AuditPage() {
             <div className="flex items-center gap-2">
               <input
                 type="file"
-                accept=".html,.htm"
+                accept=".html,.htm,text/html"
                 ref={fileRef}
-                onChange={(e) => e.target.files?.[0] && handleFile(e.target.files[0])}
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  if (f) handleFile(f);
+                  // Réinitialise la valeur : re-choisir le MÊME fichier doit relancer l'audit.
+                  e.target.value = "";
+                }}
                 className="hidden"
               />
-              <button
-                onClick={() => fileRef.current?.click()}
-                className="px-3 py-1.5 rounded-lg bg-[var(--surface-3)] border border-[var(--border-strong)] text-xs text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-3)] transition"
-              >
-                📁 Uploader .html
-              </button>
               {html && (
                 <button
-                  onClick={() => { setHtml(""); setResult(null); setError(null); }}
+                  onClick={() => { setHtml(""); setResult(null); setError(null); setCorrectedHtml(null); setFileInfo(null); }}
                   className="px-3 py-1.5 rounded-lg bg-[var(--surface-2)] border border-[var(--border)] text-xs text-[var(--text-faint)] hover:text-[var(--text-muted)] transition"
                 >
                   Effacer
                 </button>
               )}
             </div>
+          </div>
+
+          {/* ── Zone de dépôt : glisser-déposer ET clic ─────────────────── */}
+          <div
+            role="button"
+            tabIndex={0}
+            aria-label="Déposer ou choisir un fichier HTML"
+            onClick={() => fileRef.current?.click()}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                fileRef.current?.click();
+              }
+            }}
+            onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+            onDragLeave={() => setDragOver(false)}
+            onDrop={(e) => {
+              e.preventDefault();
+              setDragOver(false);
+              const f = e.dataTransfer.files?.[0];
+              if (f) handleFile(f);
+            }}
+            className={`rounded-xl border border-dashed px-4 py-6 text-center cursor-pointer transition ${
+              dragOver
+                ? "border-violet-500 bg-violet-500/[0.07]"
+                : "border-[var(--border-strong)] bg-[var(--bg-sunken)] hover:border-violet-500/50"
+            }`}
+          >
+            {fileInfo ? (
+              <p className="text-sm text-[var(--text-primary)]">
+                📄 {fileInfo.nom}{" "}
+                <span className="text-[var(--text-faint)]">({tailleLisible(fileInfo.taille)})</span>
+              </p>
+            ) : (
+              <p className="text-sm text-[var(--text-muted)]">
+                Déposez votre fichier .html{" "}
+                <span className="text-[var(--text-faint)]">(par défaut dans le dossier Téléchargements)</span>
+              </p>
+            )}
+            <p className="text-[11px] text-[var(--text-faint)] mt-1">
+              {fileInfo ? "Déposez un autre fichier pour relancer l'audit" : "ou cliquez pour choisir un fichier"}
+            </p>
           </div>
 
           {/* ── Analyser depuis une URL ─────────────────────────────────── */}
@@ -315,7 +440,7 @@ export default function AuditPage() {
           )}
 
           <button
-            onClick={runAudit}
+            onClick={() => runAudit()}
             disabled={loading || !html.trim()}
             className="w-full py-3 rounded-xl bg-violet-600 hover:bg-violet-500 text-white text-sm font-semibold transition disabled:opacity-40 disabled:cursor-not-allowed shadow-[0_0_24px_rgba(124,58,237,0.2)]"
           >
@@ -376,34 +501,77 @@ export default function AuditPage() {
               </div>
             </div>
 
-            {/* Download HTML */}
-            <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface-2)] p-5 flex flex-col sm:flex-row items-center justify-between gap-4">
+            {/* HTML corrigé : télécharger ou ré-auditer sans passer par un fichier */}
+            <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface-2)] p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div>
                 <p className="text-sm font-semibold text-[var(--text-primary)]">HTML corrigé</p>
                 <p className="text-[11px] text-[var(--text-faint)] mt-0.5">
                   Notre IA applique toutes les corrections et génère un fichier prêt à déployer (~30 s).
+                  {correctedHtml && " Version déjà générée : réutilisée sans nouvel appel."}
                 </p>
               </div>
-              <button
-                onClick={downloadCorrectedHtml}
-                disabled={htmlLoading}
-                className="shrink-0 flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-700 hover:bg-emerald-600 text-white text-sm font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {htmlLoading ? (
-                  <>
-                    <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                    Génération…
-                  </>
-                ) : (
-                  <>⬇ Télécharger le HTML corrigé</>
-                )}
-              </button>
+              <div className="shrink-0 flex flex-wrap gap-2">
+                <button
+                  onClick={downloadCorrectedHtml}
+                  disabled={htmlLoading || reauditing}
+                  className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-700 hover:bg-emerald-600 text-white text-sm font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {htmlLoading && !reauditing ? (
+                    <>
+                      <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                      Génération…
+                    </>
+                  ) : (
+                    <>⬇ Télécharger le HTML corrigé</>
+                  )}
+                </button>
+                <button
+                  onClick={reauditCorrected}
+                  disabled={htmlLoading || reauditing || loading}
+                  className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[var(--surface-3)] border border-[var(--border-strong)] text-[var(--text-primary)] text-sm font-semibold transition hover:bg-[var(--surface-2)] disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {reauditing ? (
+                    <>
+                      <span className="w-4 h-4 border-2 border-[var(--text-faint)]/40 border-t-[var(--text-primary)] rounded-full animate-spin" />
+                      Ré-audit…
+                    </>
+                  ) : (
+                    <>↻ Ré-auditer la version corrigée</>
+                  )}
+                </button>
+              </div>
             </div>
 
           </div>
         )}
 
       </div>
+
+      {/* ── Toast ────────────────────────────────────────────────────────
+          role="alert" pour une erreur (annonce immédiate), "status" pour un succès. */}
+      {toast && (
+        <div
+          role={toast.ok ? "status" : "alert"}
+          aria-live={toast.ok ? "polite" : "assertive"}
+          className={`fixed bottom-5 right-5 z-50 max-w-[min(92vw,26rem)] rounded-xl border px-4 py-3 text-sm shadow-lg ${
+            toast.ok
+              ? "border-[var(--success)]/25 bg-[var(--surface)] text-[var(--text-primary)]"
+              : "border-[var(--danger)]/30 bg-[var(--surface)] text-[var(--danger)]"
+          }`}
+        >
+          <div className="flex items-start gap-2.5">
+            <span className="shrink-0">{toast.ok ? "✓" : "⚠️"}</span>
+            <span className="break-words">{toast.texte}</span>
+            <button
+              onClick={() => setToast(null)}
+              aria-label="Fermer la notification"
+              className="ml-2 shrink-0 text-[var(--text-faint)] hover:text-[var(--text-muted)] transition"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

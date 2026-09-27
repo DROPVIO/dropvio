@@ -503,7 +503,8 @@
       "errorDelete": "Erreur lors de la suppression.",
       "errorFavorite": "Erreur lors de la mise à jour du favori.",
       "errorPublish": "Impossible de publier sur Shopify.",
-      "errorServer": "Impossible de contacter le serveur."
+      "errorServer": "Impossible de contacter le serveur.",
+      "downloadOk": "Fichier enregistré dans vos Téléchargements : {nom}"
     },
     "spy": {
       "badge": "Intelligence concurrentielle",

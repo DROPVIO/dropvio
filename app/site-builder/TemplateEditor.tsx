@@ -18,6 +18,8 @@ import {
 import type { BoutiqueDraft } from "@/lib/site-builder-handoff";
 import { applyTokenOverrides } from "@/lib/color-tokens";
 import ColorTokenPanel from "@/components/site-builder/ColorTokenPanel";
+import { slugFichier, telechargerTexte } from "@/lib/audit-download";
+import { ToastHost, useToast } from "@/components/Toast";
 
 type AuditLive = {
   score_global: number;
@@ -31,6 +33,7 @@ export default function TemplateEditor({
   boutiqueDraft?: BoutiqueDraft | null;
   canExport: boolean;
 }) {
+  const { toast, succes, fermer } = useToast();
   // Préremplissage depuis "Créer un site pour cette boutique" (page de gestion boutique) —
   // mêmes query params que le mode IA (app/site-builder/page.tsx), lus ici directement
   // puisque ce composant n'a pas accès aux props du parent pour ce préremplissage.
@@ -182,13 +185,11 @@ export default function TemplateEditor({
     // jamais perdu, juste pas téléchargeable) — voir diagnostic "restriction export Site
     // Builder". Le fichier n'est produit que pour Pro/Agency.
     if (canExport) {
-      const blob = new Blob([finalHtml], { type: "text/html;charset=utf-8" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `${nom.replace(/\s+/g, "-").toLowerCase()}.html`;
-      a.click();
-      URL.revokeObjectURL(url);
+      // slugFichier() : `nom` vient d'un champ libre (titre ou nom de boutique) et peut
+      // contenir des accents, que l'ancien replace() sur les espaces laissait passer.
+      const nomFichier = `${slugFichier(nom)}.html`;
+      telechargerTexte(finalHtml, nomFichier);
+      succes(`Fichier enregistré dans vos Téléchargements : ${nomFichier}`);
     }
 
     setSaving(true);
@@ -580,6 +581,8 @@ export default function TemplateEditor({
           </div>
         </div>
       </div>
+
+      <ToastHost toast={toast} onClose={fermer} />
     </div>
   );
 }

@@ -4,6 +4,8 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
 import { toIntlTag, type AppLocale } from "@/lib/locale";
+import { slugFichier, telechargerTexte } from "@/lib/audit-download";
+import { ToastHost, useToast } from "@/components/Toast";
 
 type Site = {
   id: string;
@@ -26,6 +28,7 @@ export default function MesSitesPage() {
   const t = useTranslations("dashboard.mesSites");
   const tCommon = useTranslations("dashboard.common");
   const intlTag = toIntlTag(useLocale() as AppLocale);
+  const { toast, succes, echec, fermer } = useToast();
   const [sites, setSites] = useState<Site[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -68,7 +71,7 @@ export default function MesSitesPage() {
   function handleConnectShopify() {
     const shop = shopifyDomainInput.trim().toLowerCase();
     if (!/^[a-z0-9][a-z0-9-]*\.myshopify\.com$/.test(shop)) {
-      alert(t("shopifyFormatAlert"));
+      echec(t("shopifyFormatAlert"));
       return;
     }
     const returnTo = window.location.pathname;
@@ -104,15 +107,14 @@ export default function MesSitesPage() {
       const json = await res.json();
       if (!res.ok || !json.html_content) throw new Error();
 
-      const blob = new Blob([json.html_content], { type: "text/html;charset=utf-8" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `${site.nom_produit.replace(/\s+/g, "-").toLowerCase()}-landing.html`;
-      a.click();
-      URL.revokeObjectURL(url);
+      // slugFichier() et non un simple replace() sur les espaces : nom_produit vient de
+      // l'utilisateur et contient souvent des accents, que l'ancien nom laissait passer tels
+      // quels dans le nom de fichier.
+      const nomFichier = `${slugFichier(site.nom_produit)}-landing.html`;
+      telechargerTexte(json.html_content, nomFichier);
+      succes(t("downloadOk", { nom: nomFichier }));
     } catch {
-      alert(t("errorDownload"));
+      echec(t("errorDownload"));
     } finally {
       setDownloading(null);
     }
@@ -126,7 +128,7 @@ export default function MesSitesPage() {
       if (!res.ok) throw new Error();
       setSites((prev) => prev.filter((s) => s.id !== site.id));
     } catch {
-      alert(t("errorDelete"));
+      echec(t("errorDelete"));
     } finally {
       setDeleting(null);
     }
@@ -146,7 +148,7 @@ export default function MesSitesPage() {
       if (!res.ok) throw new Error();
     } catch {
       setSites((prev) => sortSites(prev.map((s) => (s.id === site.id ? { ...s, est_favori: !nextFavori } : s))));
-      alert(t("errorFavorite"));
+      echec(t("errorFavorite"));
     }
   }
 
@@ -317,6 +319,8 @@ export default function MesSitesPage() {
           </>
         )}
       </div>
+
+      <ToastHost toast={toast} onClose={fermer} />
     </div>
   );
 }
