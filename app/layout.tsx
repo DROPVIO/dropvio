@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, Inter, Plus_Jakarta_Sans } from "next/font/google";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages } from "next-intl/server";
 import "./globals.css";
@@ -13,6 +13,23 @@ const geistSans = Geist({
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
+});
+
+// Polices de la landing et de /faq, auto-hébergées par next/font (plus aucune requête vers
+// fonts.googleapis.com / fonts.gstatic.com). Mêmes graisses que l'ancien <link> : Plus
+// Jakarta Sans 500/600/700/800, Inter 400/500/600.
+const jakarta = Plus_Jakarta_Sans({
+  variable: "--font-jakarta",
+  subsets: ["latin"],
+  weight: ["500", "600", "700", "800"],
+  display: "swap",
+});
+
+const inter = Inter({
+  variable: "--font-inter",
+  subsets: ["latin"],
+  weight: ["400", "500", "600"],
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -33,7 +50,7 @@ export default async function RootLayout({
   return (
     <html
       lang={locale}
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} ${jakarta.variable} ${inter.variable} h-full antialiased`}
       // Valeur de départ côté serveur = le défaut de l'app (clair), pour que le rendu sans
       // JS soit déjà correct ; le script inline ci-dessous la remplace par "dark" si
       // l'utilisateur a enregistré ce choix (voir lib/theme.ts). suppressHydrationWarning :
