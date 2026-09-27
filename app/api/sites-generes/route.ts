@@ -21,7 +21,25 @@ export async function GET() {
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
-  return NextResponse.json({ sites: data ?? [] });
+
+  // Sites sur lesquels une correction IA a été appliquée et reste annulable
+  // (html_content_precedent non null, voir 035_sites_generes_html_precedent.sql) : alimente
+  // le bouton « Annuler la dernière correction IA » de app/mes-sites/page.tsx.
+  // Requête séparée qui ne remonte que des ids, jamais le HTML sauvegardé — sélectionner la
+  // colonne dans la liste ci-dessus transférerait des centaines de Ko par site pour n'en
+  // garder qu'un booléen. Dégradation silencieuse si la migration 035 n'est pas appliquée
+  // (code 42703) : la liste des sites reste parfaitement fonctionnelle, seul le bouton
+  // d'annulation disparaît.
+  const { data: annulables } = await supabase
+    .from("sites_generes")
+    .select("id")
+    .eq("user_id", user.id)
+    .not("html_content_precedent", "is", null);
+
+  return NextResponse.json({
+    sites: data ?? [],
+    idsAnnulables: (annulables ?? []).map((s) => s.id),
+  });
 }
 
 export async function POST(request: NextRequest) {

@@ -41,13 +41,22 @@ export async function GET(
   return NextResponse.json(data);
 }
 
+// Code d'erreur PostgreSQL « undefined_column », remonté tel quel par PostgREST quand une
+// migration n'a pas encore été appliquée. Sert à transformer un message cryptique en
+// consigne exploitable au lieu d'un 500 opaque.
+const UNDEFINED_COLUMN = "42703";
+
+const MIGRATION_035_MANQUANTE =
+  "L'annulation de correction IA n'est pas encore activée sur cette base : applique la migration 035_sites_generes_html_precedent.sql.";
+
 // Sauvegarde la version personnalisée (couleurs) produite par le panneau de personnalisation
-// post-génération du Site Builder (voir components/site-builder/ColorTokenPanel.tsx), et/ou
-// bascule le favori (app/mes-sites/page.tsx) — les deux champs sont optionnels et
-// indépendants, un appel peut modifier l'un, l'autre, ou les deux. RLS (policy "update_own",
-// 013_sites_generes_update_policy.sql) garantit déjà qu'un utilisateur ne peut modifier que
-// ses propres sites — createSupabaseServerClient() porte le JWT de la session, jamais le
-// service role.
+// post-génération du Site Builder (voir components/site-builder/ColorTokenPanel.tsx), bascule
+// le favori (app/mes-sites/page.tsx), applique un HTML corrigé par l'audit IA
+// (app/audit/page.tsx, bouton « Appliquer au site ») ou annule cette application
+// (app/mes-sites/page.tsx, « Annuler la dernière correction IA »). Tous les champs sont
+// optionnels et indépendants. RLS (policy "update_own", 013_sites_generes_update_policy.sql)
+// garantit déjà qu'un utilisateur ne peut modifier que ses propres sites —
+// createSupabaseServerClient() porte le JWT de la session, jamais le service role.
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -62,6 +71,53 @@ export async function PATCH(
 
   const body = await request.json();
   const updates: Record<string, unknown> = {};
+
+  // Annulation de la dernière correction IA : on remet html_content_precedent dans
+  // html_content et on vide la sauvegarde (un seul niveau d'historique — voir la migration
+  // 035). Traité avant tout le reste et de façon exclusive : combiner une restauration avec
+  // une écriture de html_content dans le même appel n'aurait pas de sémantique claire.
+  if (body.restaurer_precedent === true) {
+    const { data: avant, error: lectureErr } = await supabase
+      .from("sites_generes")
+      .select("html_content_precedent")
+      .eq("id", id)
+      .maybeSingle();
+
+    if (lectureErr) {
+      const status = lectureErr.code === UNDEFINED_COLUMN ? 501 : 500;
+      return NextResponse.json(
+        { error: lectureErr.code === UNDEFINED_COLUMN ? MIGRATION_035_MANQUANTE : lectureErr.message },
+        { status }
+      );
+    }
+    // maybeSingle() + RLS : null couvre aussi bien « id inexistant » que « site d'un autre
+    // utilisateur », les deux devant renvoyer 404 sans révéler lequel des deux c'est.
+    if (!avant) {
+      return NextResponse.json({ error: "Site introuvable." }, { status: 404 });
+    }
+    if (!avant.html_content_precedent) {
+      return NextResponse.json(
+        { error: "Aucune correction IA à annuler sur ce site." },
+        { status: 409 }
+      );
+    }
+
+    const { data: restaure, error: restaureErr } = await supabase
+      .from("sites_generes")
+      .update({ html_content: avant.html_content_precedent, html_content_precedent: null })
+      .eq("id", id)
+      .select("id")
+      .maybeSingle();
+
+    if (restaureErr) {
+      return NextResponse.json({ error: restaureErr.message }, { status: 500 });
+    }
+    if (!restaure) {
+      return NextResponse.json({ error: "Site introuvable." }, { status: 404 });
+    }
+    return NextResponse.json({ success: true, restaure: true });
+  }
+
   if (typeof body.html_content === "string" && body.html_content) {
     updates.html_content = body.html_content;
   }
@@ -73,13 +129,51 @@ export async function PATCH(
     return NextResponse.json({ error: "Aucun champ valide à mettre à jour." }, { status: 400 });
   }
 
-  const { error } = await supabase
+  // sauvegarder_precedent : recopie la version actuelle dans html_content_precedent avant
+  // de l'écraser, pour rendre l'application d'un HTML corrigé annulable. La lecture se fait
+  // ici et non côté client — deux appels réseau séparés laisseraient la sauvegarde à moitié
+  // faite si le second échouait, et le client n'a de toute façon pas accès au html_content
+  // d'un site en plan free. Reste deux requêtes SQL (PostgREST ne sait pas exprimer
+  // « set a = b » dans un update), mais un seul aller-retour HTTP et un seul point d'échec
+  // côté appelant.
+  if (body.sauvegarder_precedent === true && typeof updates.html_content === "string") {
+    const { data: actuel, error: lectureErr } = await supabase
+      .from("sites_generes")
+      .select("html_content")
+      .eq("id", id)
+      .maybeSingle();
+
+    if (lectureErr) {
+      return NextResponse.json({ error: lectureErr.message }, { status: 500 });
+    }
+    if (!actuel) {
+      return NextResponse.json({ error: "Site introuvable." }, { status: 404 });
+    }
+    updates.html_content_precedent = actuel.html_content;
+  }
+
+  // .select("id") : sans lui, un update qui ne touche aucune ligne (id inexistant, ou site
+  // appartenant à un autre utilisateur donc filtré par RLS) renvoie error === null et était
+  // indistinguable d'un succès. Vaut pour tous les appelants de cette route, pas seulement
+  // pour « Appliquer au site » : le toggle favori et la sauvegarde des couleurs du Site
+  // Builder confirmaient eux aussi une écriture qui n'avait pas eu lieu.
+  const { data, error } = await supabase
     .from("sites_generes")
     .update(updates)
-    .eq("id", id);
+    .eq("id", id)
+    .select("id")
+    .maybeSingle();
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    const migrationManquante =
+      error.code === UNDEFINED_COLUMN && "html_content_precedent" in updates;
+    return NextResponse.json(
+      { error: migrationManquante ? MIGRATION_035_MANQUANTE : error.message },
+      { status: migrationManquante ? 501 : 500 }
+    );
+  }
+  if (!data) {
+    return NextResponse.json({ error: "Site introuvable." }, { status: 404 });
   }
   return NextResponse.json({ success: true });
 }

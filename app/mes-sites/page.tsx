@@ -46,12 +46,21 @@ export default function MesSitesPage() {
   const [plan, setPlan] = useState<"free" | "pro" | "agency" | null>(null);
   const canExport = plan === "pro" || plan === "agency";
 
+  // Sites sur lesquels une correction IA a été appliquée et reste annulable
+  // (html_content_precedent non null côté serveur, voir /api/sites-generes). Vide si la
+  // migration 035 n'est pas appliquée : le bouton d'annulation ne s'affiche simplement pas.
+  const [idsAnnulables, setIdsAnnulables] = useState<Set<string>>(new Set());
+  const [undoing, setUndoing] = useState<string | null>(null);
+
   useEffect(() => {
     fetch("/api/sites-generes")
       .then((r) => r.json())
       .then((json) => {
         if (json.error) setError(json.error);
-        else setSites(json.sites ?? []);
+        else {
+          setSites(json.sites ?? []);
+          setIdsAnnulables(new Set<string>(json.idsAnnulables ?? []));
+        }
       })
       .catch(() => setError(t("errorLoad")))
       .finally(() => setLoading(false));
@@ -117,6 +126,34 @@ export default function MesSitesPage() {
       echec(t("errorDownload"));
     } finally {
       setDownloading(null);
+    }
+  }
+
+  /** Remet le site dans l'état qui précédait l'application d'une correction IA depuis /audit.
+   *  La restauration est faite côté serveur en une requête (voir la route PATCH). */
+  async function handleUndoAiFix(site: Site) {
+    setUndoing(site.id);
+    try {
+      const res = await fetch(`/api/sites-generes/${site.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ restaurer_precedent: true }),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        echec(json.error || t("errorUndoAiFix"));
+        return;
+      }
+      setIdsAnnulables((prev) => {
+        const next = new Set(prev);
+        next.delete(site.id);
+        return next;
+      });
+      succes(t("undoAiFixOk"));
+    } catch {
+      echec(t("errorServer"));
+    } finally {
+      setUndoing(null);
     }
   }
 
@@ -272,6 +309,33 @@ export default function MesSitesPage() {
                       </Link>
                     )}
                   </div>
+                  {/* Audit IA : réservé aux plans Pro/Agency côté serveur (quota free = 0
+                      audit, voir lib/plan-limits.ts) — un free est donc renvoyé vers les
+                      tarifs plutôt que vers un audit qui échouerait en 403. */}
+                  {canExport ? (
+                    <Link
+                      href={`/audit?site=${site.id}`}
+                      className="py-2 rounded-xl border border-[var(--border-strong)] text-[var(--text-muted)] text-xs font-medium text-center hover:border-[var(--accent)]/40 hover:text-[var(--text-primary)] transition"
+                    >
+                      {t("audit")}
+                    </Link>
+                  ) : (
+                    <Link
+                      href="/#pricing"
+                      className="py-2 rounded-xl border border-[var(--border-strong)] text-[var(--text-muted)] text-xs font-medium text-center hover:border-[var(--accent)]/40 hover:text-[var(--text-primary)] transition"
+                    >
+                      {t("lockProAudit")}
+                    </Link>
+                  )}
+                  {idsAnnulables.has(site.id) && (
+                    <button
+                      onClick={() => handleUndoAiFix(site)}
+                      disabled={undoing === site.id}
+                      className="py-2 rounded-xl border border-[var(--warning)]/30 text-[var(--warning)] text-xs font-medium text-center hover:border-[var(--warning)]/60 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {undoing === site.id ? t("undoingAiFix") : t("undoAiFix")}
+                    </button>
+                  )}
                   {shopifyConnected && !canExport && (
                     <Link
                       href="/#pricing"

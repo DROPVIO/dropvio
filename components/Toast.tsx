@@ -2,7 +2,13 @@
 
 import { useCallback, useEffect, useState } from "react";
 
-export type ToastMessage = { texte: string; ok: boolean };
+/** action : bouton optionnel rendu dans le toast (ex. « Annuler » après l'application d'une
+ *  correction IA). Le toast se ferme dès que l'action est déclenchée. */
+export type ToastMessage = {
+  texte: string;
+  ok: boolean;
+  action?: { label: string; onClick: () => void };
+};
 
 /** État de toast local à une page. Volontairement sans contexte ni provider global : chaque
  *  page garde son état et rend son propre <ToastHost/>, ce qui évite de toucher AppShell. */
@@ -15,7 +21,10 @@ export function useToast(dureeMs = 6000) {
     return () => window.clearTimeout(id);
   }, [toast, dureeMs]);
 
-  const succes = useCallback((texte: string) => setToast({ texte, ok: true }), []);
+  const succes = useCallback(
+    (texte: string, action?: ToastMessage["action"]) => setToast({ texte, ok: true, action }),
+    []
+  );
   const echec = useCallback((texte: string) => setToast({ texte, ok: false }), []);
   const fermer = useCallback(() => setToast(null), []);
 
@@ -38,6 +47,17 @@ export function ToastHost({ toast, onClose }: { toast: ToastMessage | null; onCl
       <div className="flex items-start gap-2.5">
         <span className="shrink-0">{toast.ok ? "✓" : "⚠️"}</span>
         <span className="break-words">{toast.texte}</span>
+        {toast.action && (
+          <button
+            onClick={() => {
+              toast.action?.onClick();
+              onClose();
+            }}
+            className="ml-1 shrink-0 font-semibold text-[var(--accent)] underline decoration-dotted underline-offset-2 transition hover:opacity-80"
+          >
+            {toast.action.label}
+          </button>
+        )}
         <button
           onClick={onClose}
           aria-label="Fermer la notification"

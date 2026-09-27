@@ -219,7 +219,15 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const { html } = await request.json();
+    const { html, siteId } = await request.json();
+    // Rattachement optionnel à un site généré (app/audit/page.tsx ?site=<id>) : validé comme
+    // un uuid ici plutôt que transmis tel quel. RLS fait le reste — la FK vers sites_generes
+    // rejetterait de toute façon un id qui n'existe pas.
+    const siteIdValide =
+      typeof siteId === "string" &&
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(siteId)
+        ? siteId
+        : null;
 
     if (!html || typeof html !== "string" || html.trim().length < 50) {
       return NextResponse.json({ error: "HTML invalide ou trop court." }, { status: 400 });
@@ -291,13 +299,29 @@ export async function POST(request: NextRequest) {
     // Sauvegarde de l'historique — best-effort : un échec ici ne doit pas faire
     // échouer la réponse, l'audit lui-même a réussi.
     if (isAuditResult(result)) {
-      const { error: insertErr } = await supabase.from("audits_realises").insert({
+      // Record<string, unknown> et non un littéral : le type généré pour audits_realises ne
+      // connaît pas encore site_id (031 non appliquée au moment où les types ont été générés),
+      // et un littéral avec un champ en plus serait refusé à la compilation.
+      const ligne: Record<string, unknown> = {
         user_id: user.id,
         url_ou_nom_site: extraireNomSite(html),
         score_total: result.score_global,
         categories: result.categories,
-      });
-      if (insertErr) {
+      };
+      const { error: insertErr } = await supabase
+        .from("audits_realises")
+        .insert(siteIdValide ? { ...ligne, site_id: siteIdValide } : ligne);
+
+      // 42703 = undefined_column : 031_audits_realises_site_id.sql n'est pas appliquée sur
+      // cette base. L'audit lui-même est valide et son historique ne doit pas être perdu
+      // pour autant — on réinsère sans le rattachement, qui n'est qu'un confort
+      // (pré-remplissage des corrections au moment de regénérer le site).
+      if (insertErr?.code === "42703" && siteIdValide) {
+        const { error: repriseErr } = await supabase.from("audits_realises").insert(ligne);
+        if (repriseErr) {
+          console.error("[audit-site] failed to save audit history:", repriseErr);
+        }
+      } else if (insertErr) {
         console.error("[audit-site] failed to save audit history:", insertErr);
       }
     }

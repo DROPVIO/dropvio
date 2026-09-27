@@ -3,6 +3,7 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { AUDIT_HTML_MAX_CHARS } from "@/lib/audit-config";
 import { nomFichierAudit, tailleLisible, telechargerTexte } from "@/lib/audit-download";
+import { ToastHost, useToast } from "@/components/Toast";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -141,13 +142,14 @@ export default function AuditPage() {
   const [sourceLabel,  setSourceLabel]  = useState("landing-page");
   const [fileInfo,     setFileInfo]     = useState<{ nom: string; taille: number } | null>(null);
   const [dragOver,     setDragOver]     = useState(false);
-  const [toast,        setToast]        = useState<{ texte: string; ok: boolean } | null>(null);
+  const { toast, succes, echec, fermer } = useToast();
 
-  useEffect(() => {
-    if (!toast) return;
-    const id = window.setTimeout(() => setToast(null), 6000);
-    return () => window.clearTimeout(id);
-  }, [toast]);
+  // Site généré dont on audite le HTML (arrivée depuis /mes-sites, ?site=<id>). Non null =
+  // le bouton « Appliquer au site » est proposé, et l'audit enregistré est rattaché à ce site.
+  const [site, setSite] = useState<{ id: string; nom: string } | null>(null);
+  const [siteLoading, setSiteLoading] = useState(false);
+  const [applying, setApplying] = useState(false);
+  const [appliedAt, setAppliedAt] = useState<string | null>(null);
 
   const [urlInput,   setUrlInput]   = useState("");
   const [urlLoading, setUrlLoading] = useState(false);
@@ -169,6 +171,10 @@ export default function AuditPage() {
       setError(null);
       setFileInfo({ nom: file.name, taille: file.size });
       setSourceLabel(file.name.replace(/\.html?$/i, ""));
+      // Le contenu analysé n'est plus celui du site généré : « Appliquer au site » ne doit
+      // plus être proposé, au risque sinon d'écraser le site avec un HTML sans rapport.
+      setSite(null);
+      setAppliedAt(null);
       if (contenu.trim()) void runAudit(contenu);
     };
     // Sans ce handler, un échec de lecture (fichier corrompu, permission refusée...) restait
@@ -177,6 +183,99 @@ export default function AuditPage() {
     reader.readAsText(file);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Arrivée depuis /mes-sites : ?site=<id> charge le HTML du site et lance l'audit. Chaque
+  // cas d'échec produit un message explicite dans la zone d'erreur habituelle — jamais un
+  // écran vide, l'utilisateur doit toujours pouvoir enchaîner en collant son HTML à la main.
+  // Le HTML n'est pas exposé aux plans free par la route GET (voir app/api/sites-generes/[id]),
+  // ce qui se traduit ici par un message d'upgrade plutôt que par un audit qui échoue plus loin.
+  useEffect(() => {
+    const siteId = new URLSearchParams(window.location.search).get("site");
+    if (!siteId) return;
+
+    // setState différé (microtask) plutôt qu'appelé en synchrone dans le corps de l'effet,
+    // pour éviter le re-render en cascade immédiat (react-hooks/set-state-in-effect) — même
+    // pattern que components/Sidebar.tsx.
+    queueMicrotask(() => setSiteLoading(true));
+    fetch(`/api/sites-generes/${siteId}`)
+      .then(async (res) => {
+        const data = await res.json().catch(() => ({}));
+        if (res.status === 404) {
+          setError("Ce site est introuvable, ou il n'appartient pas à ton compte.");
+          return;
+        }
+        if (!res.ok) {
+          setError(data.error ?? "Impossible de charger ce site. Réessaie dans un instant.");
+          return;
+        }
+        if (typeof data.html_content !== "string" || !data.html_content.trim()) {
+          setError(
+            "Le HTML de ce site n'est pas accessible sur ton plan actuel. L'audit IA est réservé aux plans Pro et Agency — tu peux aussi coller le HTML à la main ci-dessous."
+          );
+          if (typeof data.nom_produit === "string") setSourceLabel(data.nom_produit);
+          return;
+        }
+        setHtml(data.html_content);
+        setSourceLabel(typeof data.nom_produit === "string" ? data.nom_produit : "landing-page");
+        setSite({ id: siteId, nom: typeof data.nom_produit === "string" ? data.nom_produit : "ce site" });
+        setFileInfo(null);
+        setError(null);
+        void runAudit(data.html_content, siteId);
+      })
+      .catch(() => setError("Impossible de contacter le serveur pour charger ce site."))
+      .finally(() => setSiteLoading(false));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  /** Écrit le HTML corrigé sur le site généré, en gardant la version précédente côté serveur
+   *  pour rendre l'opération annulable (voir 035_sites_generes_html_precedent.sql). */
+  async function applyToSite() {
+    if (!site) return;
+    const corrige = await obtenirHtmlCorrige();
+    if (!corrige) return;
+    setApplying(true);
+    try {
+      const res = await fetch(`/api/sites-generes/${site.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ html_content: corrige, sauvegarder_precedent: true }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        echec(data.error ?? "Impossible d'appliquer la correction à ce site.");
+        return;
+      }
+      setAppliedAt(new Date().toISOString());
+      succes("Site mis à jour.", { label: "Annuler", onClick: () => void undoApplyToSite() });
+    } catch {
+      echec("Erreur réseau : la correction n'a pas été appliquée.");
+    } finally {
+      setApplying(false);
+    }
+  }
+
+  async function undoApplyToSite() {
+    if (!site) return;
+    setApplying(true);
+    try {
+      const res = await fetch(`/api/sites-generes/${site.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ restaurer_precedent: true }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        echec(data.error ?? "Impossible d'annuler la correction.");
+        return;
+      }
+      setAppliedAt(null);
+      succes("Correction annulée : le site est revenu à sa version précédente.");
+    } catch {
+      echec("Erreur réseau : la correction n'a pas été annulée.");
+    } finally {
+      setApplying(false);
+    }
+  }
 
   async function handleFetchUrl() {
     if (!urlInput.trim()) return;
@@ -198,6 +297,8 @@ export default function AuditPage() {
       setCorrectedHtml(null);
       setFileInfo(null);
       setError(null);
+      setSite(null);
+      setAppliedAt(null);
       try {
         setSourceLabel(new URL(urlInput.trim()).hostname.replace(/^www\./, ""));
       } catch {
@@ -211,8 +312,9 @@ export default function AuditPage() {
   }
 
   // htmlArg permet d'auditer un contenu qu'on vient d'obtenir (fichier lu, version corrigée)
-  // sans dépendre de la mise à jour asynchrone de l'état `html`.
-  async function runAudit(htmlArg?: string) {
+  // sans dépendre de la mise à jour asynchrone de l'état `html`. siteIdArg : même raison, au
+  // chargement via ?site= l'état `site` n'est pas encore posé quand l'audit part.
+  async function runAudit(htmlArg?: string, siteIdArg?: string) {
     const cible = (htmlArg ?? html).trim();
     if (!cible) return;
     setLoading(true);
@@ -222,7 +324,9 @@ export default function AuditPage() {
       const res = await fetch("/api/audit-site", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ html: cible }),
+        // siteId rattache l'audit enregistré au site audité (audits_realises.site_id) pour
+        // que le Site Builder retrouve « les corrections du dernier audit de ce site ».
+        body: JSON.stringify({ html: cible, siteId: siteIdArg ?? site?.id ?? null }),
       });
       const data = await res.json();
       if (data.error) {
@@ -264,14 +368,14 @@ export default function AuditPage() {
           /* réponse non JSON : on garde le message générique */
         }
         setError(message);
-        setToast({ texte: message, ok: false });
+        echec(message);
         return null;
       }
       const corrige = await res.text();
       if (!corrige.trim()) {
         const message = "Le HTML corrigé reçu est vide. Réessaie dans un instant.";
         setError(message);
-        setToast({ texte: message, ok: false });
+        echec(message);
         return null;
       }
       setCorrectedHtml(corrige);
@@ -279,7 +383,7 @@ export default function AuditPage() {
     } catch {
       const message = "Erreur réseau lors de la génération du HTML corrigé.";
       setError(message);
-      setToast({ texte: message, ok: false });
+      echec(message);
       return null;
     } finally {
       setHtmlLoading(false);
@@ -291,7 +395,7 @@ export default function AuditPage() {
     if (!corrige) return;
     const nom = nomFichierAudit(sourceLabel);
     telechargerTexte(corrige, nom);
-    setToast({ texte: `Fichier enregistré dans vos Téléchargements : ${nom}`, ok: true });
+    succes(`Fichier enregistré dans vos Téléchargements : ${nom}`);
   }
 
   /** Relance l'audit sur la version corrigée, sans passer par un fichier. */
@@ -304,7 +408,7 @@ export default function AuditPage() {
       setCorrectedHtml(null);
       setFileInfo(null);
       await runAudit(corrige);
-      setToast({ texte: "Nouvel audit lancé sur la version corrigée.", ok: true });
+      succes("Nouvel audit lancé sur la version corrigée.");
     } finally {
       setReauditing(false);
     }
@@ -324,6 +428,23 @@ export default function AuditPage() {
             Analyse basée sur Nielsen Norman Group, Unbounce et McKinsey — score sur 100 en 9 critères.
           </p>
         </div>
+
+        {/* ── Site audité (arrivée depuis /mes-sites) ──────────────────── */}
+        {(siteLoading || site) && (
+          <div className="rounded-xl border border-violet-500/20 bg-violet-500/[0.05] px-4 py-3 text-sm flex items-start gap-2">
+            <span className="shrink-0">🌐</span>
+            <p className="text-[var(--text-muted)]">
+              {siteLoading ? (
+                "Chargement du site à auditer…"
+              ) : (
+                <>
+                  Audit du site <span className="font-semibold text-[var(--text-primary)]">{site!.nom}</span>. Les
+                  corrections pourront être appliquées directement dessus.
+                </>
+              )}
+            </p>
+          </div>
+        )}
 
         {/* ── Input ───────────────────────────────────────────────────── */}
         <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface-2)] p-6 flex flex-col gap-4">
@@ -511,6 +632,24 @@ export default function AuditPage() {
                 </p>
               </div>
               <div className="shrink-0 flex flex-wrap gap-2">
+                {site && (
+                  <button
+                    onClick={appliedAt ? undoApplyToSite : applyToSite}
+                    disabled={htmlLoading || reauditing || applying}
+                    className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-violet-600 hover:bg-violet-500 text-white text-sm font-semibold transition disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {applying ? (
+                      <>
+                        <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                        {appliedAt ? "Annulation…" : "Application…"}
+                      </>
+                    ) : appliedAt ? (
+                      <>↺ Annuler l&apos;application</>
+                    ) : (
+                      <>✓ Appliquer au site</>
+                    )}
+                  </button>
+                )}
                 <button
                   onClick={downloadCorrectedHtml}
                   disabled={htmlLoading || reauditing}
@@ -547,31 +686,7 @@ export default function AuditPage() {
 
       </div>
 
-      {/* ── Toast ────────────────────────────────────────────────────────
-          role="alert" pour une erreur (annonce immédiate), "status" pour un succès. */}
-      {toast && (
-        <div
-          role={toast.ok ? "status" : "alert"}
-          aria-live={toast.ok ? "polite" : "assertive"}
-          className={`fixed bottom-5 right-5 z-50 max-w-[min(92vw,26rem)] rounded-xl border px-4 py-3 text-sm shadow-lg ${
-            toast.ok
-              ? "border-[var(--success)]/25 bg-[var(--surface)] text-[var(--text-primary)]"
-              : "border-[var(--danger)]/30 bg-[var(--surface)] text-[var(--danger)]"
-          }`}
-        >
-          <div className="flex items-start gap-2.5">
-            <span className="shrink-0">{toast.ok ? "✓" : "⚠️"}</span>
-            <span className="break-words">{toast.texte}</span>
-            <button
-              onClick={() => setToast(null)}
-              aria-label="Fermer la notification"
-              className="ml-2 shrink-0 text-[var(--text-faint)] hover:text-[var(--text-muted)] transition"
-            >
-              ✕
-            </button>
-          </div>
-        </div>
-      )}
+      <ToastHost toast={toast} onClose={fermer} />
     </div>
   );
 }
