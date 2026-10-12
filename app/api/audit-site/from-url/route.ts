@@ -15,24 +15,24 @@ const FETCH_TIMEOUT_MS = 10_000;
 export async function POST(request: NextRequest) {
   const { user } = await getServerUserAndPlan();
   if (!user) {
-    return NextResponse.json({ error: "Connecte-toi pour utiliser cette fonctionnalité." }, { status: 401 });
+    return NextResponse.json({ error: "Connecte-toi pour utiliser cette fonctionnalité.", code: "auth_required" }, { status: 401 });
   }
 
   if (!checkRateLimit(`audit-site-from-url:${user.id}`, { max: 10, windowMs: 60_000 })) {
     return NextResponse.json(
-      { error: "Trop de requêtes. Réessaie dans une minute." },
+      { error: "Trop de requêtes. Réessaie dans une minute.", code: "rate_limit" },
       { status: 429 }
     );
   }
 
   const { url: rawUrl } = await request.json().catch(() => ({ url: null }));
   if (!rawUrl || typeof rawUrl !== "string") {
-    return NextResponse.json({ error: "URL manquante." }, { status: 400 });
+    return NextResponse.json({ error: "URL manquante.", code: "url_missing" }, { status: 400 });
   }
 
   const url = normalizeUrl(rawUrl);
   if (!(await isUrlAllowed(url))) {
-    return NextResponse.json({ error: "URL non autorisée." }, { status: 400 });
+    return NextResponse.json({ error: "URL non autorisée.", code: "url_forbidden" }, { status: 400 });
   }
 
   const controller = new AbortController();
@@ -45,20 +45,20 @@ export async function POST(request: NextRequest) {
       signal: controller.signal,
     });
   } catch {
-    return NextResponse.json({ error: "Page inaccessible ou URL invalide." }, { status: 502 });
+    return NextResponse.json({ error: "Page inaccessible ou URL invalide.", code: "page_unreachable" }, { status: 502 });
   } finally {
     clearTimeout(timeout);
   }
 
   if (!res.ok) {
     return NextResponse.json(
-      { error: `Impossible d'accéder à cette page (HTTP ${res.status}).` },
+      { error: `Impossible d'accéder à cette page (HTTP ${res.status}).`, code: "page_unreachable" },
       { status: 502 }
     );
   }
 
   if (!res.body) {
-    return NextResponse.json({ error: "Réponse vide." }, { status: 502 });
+    return NextResponse.json({ error: "Réponse vide.", code: "ai_invalid_response" }, { status: 502 });
   }
 
   // Lecture en flux plutôt que res.text() direct : on doit pouvoir couper avant MAX_BYTES
@@ -74,7 +74,7 @@ export async function POST(request: NextRequest) {
     if (totalBytes > MAX_BYTES) {
       await reader.cancel().catch(() => {});
       return NextResponse.json(
-        { error: "Cette page est trop volumineuse (> 2 Mo)." },
+        { error: "Cette page est trop volumineuse (> 2 Mo).", code: "page_too_large" },
         { status: 413 }
       );
     }
@@ -84,7 +84,7 @@ export async function POST(request: NextRequest) {
   const html = Buffer.concat(chunks.map((c) => Buffer.from(c))).toString("utf-8");
 
   if (html.trim().length < 50) {
-    return NextResponse.json({ error: "Contenu HTML introuvable ou trop court sur cette page." }, { status: 422 });
+    return NextResponse.json({ error: "Contenu HTML introuvable ou trop court sur cette page.", code: "page_no_html" }, { status: 422 });
   }
 
   return NextResponse.json({ html });

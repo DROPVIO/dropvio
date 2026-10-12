@@ -187,7 +187,7 @@ export async function POST(request: NextRequest) {
     const { supabase, user, plan } = await getServerUserAndPlan();
 
     if (!user) {
-      return NextResponse.json({ error: "Connecte-toi pour utiliser l'audit IA." }, { status: 401 });
+      return NextResponse.json({ error: "Connecte-toi pour utiliser l'audit IA.", code: "auth_required" }, { status: 401 });
     }
 
     // Garde-fou technique indépendant du quota métier mensuel : évite qu'un script ou
@@ -195,7 +195,7 @@ export async function POST(request: NextRequest) {
     // même sous le plafond mensuel.
     if (!checkRateLimit(`audit-site:${user.id}`, { max: 10, windowMs: 3_600_000 })) {
       return NextResponse.json(
-        { error: "Trop d'audits en peu de temps. Réessaie dans quelques minutes." },
+        { error: "Trop d'audits en peu de temps. Réessaie dans quelques minutes.", code: "rate_limit" },
         { status: 429 }
       );
     }
@@ -204,7 +204,7 @@ export async function POST(request: NextRequest) {
 
     if (maxParMois === 0) {
       return NextResponse.json(
-        { error: "L'audit IA n'est pas disponible sur le plan Free. Passe Pro pour débloquer 30 audits par mois." },
+        { error: "L'audit IA n'est pas disponible sur le plan Free. Passe Pro pour débloquer 30 audits par mois.", code: "audit_plan" },
         { status: 403 }
       );
     }
@@ -216,7 +216,7 @@ export async function POST(request: NextRequest) {
           {
             error: `Tu as atteint la limite de ${maxParMois} audits ce mois-ci sur le plan ${planLabel(plan)}. ${
               plan === "pro" ? "Passe Agency pour 100 audits par mois." : "La limite se réinitialise le mois prochain."
-            }`,
+            }`, code: "audit_limit", values: { max: maxParMois, plan: planLabel(plan) },
           },
           { status: 403 }
         );
@@ -237,7 +237,7 @@ export async function POST(request: NextRequest) {
         : null;
 
     if (!html || typeof html !== "string" || html.trim().length < 50) {
-      return NextResponse.json({ error: "HTML invalide ou trop court." }, { status: 400 });
+      return NextResponse.json({ error: "HTML invalide ou trop court.", code: "html_invalid" }, { status: 400 });
     }
 
     const truncated =
@@ -263,7 +263,7 @@ export async function POST(request: NextRequest) {
     if (raw === undefined) {
       console.error("[audit-site] no text block in response, stop_reason:", message.stop_reason);
       return NextResponse.json(
-        { error: "Réponse Claude vide ou inattendue. Réessaie." },
+        { error: "Réponse Claude vide ou inattendue. Réessaie.", code: "ai_invalid_response" },
         { status: 500 }
       );
     }
@@ -279,7 +279,7 @@ export async function POST(request: NextRequest) {
       console.error("[audit-site] full raw response:", raw);
       return NextResponse.json(
         {
-          error: `Réponse Claude non parseable : ${(extractErr as Error).message}. Réessaie.`,
+          error: `Réponse Claude non parseable : ${(extractErr as Error).message}. Réessaie.`, code: "ai_invalid_response",
         },
         { status: 500 }
       );
@@ -293,7 +293,7 @@ export async function POST(request: NextRequest) {
       console.error("[audit-site] jsonStr (first 800 chars):", jsonStr.slice(0, 800));
       return NextResponse.json(
         {
-          error: `JSON invalide : ${(parseErr as SyntaxError).message}. Réessaie.`,
+          error: `JSON invalide : ${(parseErr as SyntaxError).message}. Réessaie.`, code: "ai_invalid_response",
         },
         { status: 500 }
       );
@@ -337,7 +337,7 @@ export async function POST(request: NextRequest) {
   } catch (err) {
     console.error("[audit-site] unexpected error:", err);
     return NextResponse.json(
-      { error: "Erreur lors de l'analyse. Réessaie dans un instant." },
+      { error: "Erreur lors de l'analyse. Réessaie dans un instant.", code: "audit_failed" },
       { status: 500 }
     );
   }

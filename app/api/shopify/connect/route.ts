@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
   const { user } = await getServerUserAndPlan();
   if (!user) {
     return NextResponse.json(
-      { error: "Connecte-toi à ton compte dropvio avant de connecter Shopify." },
+      { error: "Connecte-toi à ton compte dropvio avant de connecter Shopify.", code: "auth_required" },
       { status: 401 }
     );
   }
@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(
       {
         error:
-          "L'intégration Shopify n'est pas encore configurée côté serveur (SHOPIFY_CLIENT_ID / SHOPIFY_CLIENT_SECRET manquants).",
+          "L'intégration Shopify n'est pas encore configurée côté serveur (SHOPIFY_CLIENT_ID / SHOPIFY_CLIENT_SECRET manquants).", code: "shopify_not_configured",
       },
       { status: 500 }
     );
@@ -33,7 +33,7 @@ export async function GET(request: NextRequest) {
 
   if (!isValidShopDomain(shop)) {
     return NextResponse.json(
-      { error: "Domaine de boutique invalide. Format attendu : ma-boutique.myshopify.com" },
+      { error: "Domaine de boutique invalide. Format attendu : ma-boutique.myshopify.com", code: "shopify_domain_invalid" },
       { status: 400 }
     );
   }

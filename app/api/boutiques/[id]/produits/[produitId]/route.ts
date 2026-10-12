@@ -20,7 +20,7 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
   const params = await context.params;
   const { supabase, user } = await getServerUserAndPlan();
   if (!user) {
-    return NextResponse.json({ error: "Connecte-toi pour modifier ce produit." }, { status: 401 });
+    return NextResponse.json({ error: "Connecte-toi pour modifier ce produit.", code: "auth_required" }, { status: 401 });
   }
 
   const payload = await request.json();
@@ -39,10 +39,10 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
     .maybeSingle();
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: error.message, code: "server_error" }, { status: 500 });
   }
   if (!data) {
-    return NextResponse.json({ error: "Produit introuvable." }, { status: 404 });
+    return NextResponse.json({ error: "Produit introuvable.", code: "product_not_found" }, { status: 404 });
   }
 
   return NextResponse.json({ id: data.id });
@@ -55,7 +55,7 @@ export async function DELETE(request: NextRequest, context: { params: Promise<{ 
   const params = await context.params;
   const { supabase, user } = await getServerUserAndPlan();
   if (!user) {
-    return NextResponse.json({ error: "Connecte-toi pour supprimer ce produit." }, { status: 401 });
+    return NextResponse.json({ error: "Connecte-toi pour supprimer ce produit.", code: "auth_required" }, { status: 401 });
   }
 
   const { data, error } = await supabase
@@ -66,10 +66,10 @@ export async function DELETE(request: NextRequest, context: { params: Promise<{ 
     .select("shopify_product_id, meta");
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: error.message, code: "server_error" }, { status: 500 });
   }
   if (!data || data.length === 0) {
-    return NextResponse.json({ error: "Produit introuvable." }, { status: 404 });
+    return NextResponse.json({ error: "Produit introuvable.", code: "product_not_found" }, { status: 404 });
   }
 
   const { shopify_product_id: shopifyProductId, meta } = data[0];

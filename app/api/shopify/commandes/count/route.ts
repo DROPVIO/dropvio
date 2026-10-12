@@ -7,7 +7,7 @@ import { createSupabaseAdminClient } from "@/lib/supabase-admin";
 export async function GET() {
   const { user } = await getServerUserAndPlan();
   if (!user) {
-    return NextResponse.json({ error: "Connecte-toi." }, { status: 401 });
+    return NextResponse.json({ error: "Connecte-toi.", code: "auth_required" }, { status: 401 });
   }
 
   const admin = createSupabaseAdminClient();
@@ -18,7 +18,7 @@ export async function GET() {
     .eq("statut", "a_traiter");
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: error.message, code: "server_error" }, { status: 500 });
   }
 
   return NextResponse.json({ count: count ?? 0 });

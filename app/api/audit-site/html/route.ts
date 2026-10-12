@@ -17,14 +17,14 @@ export async function POST(request: NextRequest) {
     const { supabase, user, plan } = await getServerUserAndPlan();
 
     if (!user) {
-      return NextResponse.json({ error: "Connecte-toi pour utiliser l'audit IA." }, { status: 401 });
+      return NextResponse.json({ error: "Connecte-toi pour utiliser l'audit IA.", code: "auth_required" }, { status: 401 });
     }
 
     // Même garde-fou technique que /api/audit-site (appel Claude facturé, clé de rate
     // limit distincte pour ne pas partager le compteur avec l'analyse elle-même).
     if (!checkRateLimit(`audit-site-html:${user.id}`, { max: 10, windowMs: 3_600_000 })) {
       return NextResponse.json(
-        { error: "Trop de requêtes en peu de temps. Réessaie dans quelques minutes." },
+        { error: "Trop de requêtes en peu de temps. Réessaie dans quelques minutes.", code: "rate_limit" },
         { status: 429 }
       );
     }
@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
 
     if (maxParMois === 0) {
       return NextResponse.json(
-        { error: "L'audit IA n'est pas disponible sur le plan Free. Passe Pro pour débloquer 30 audits par mois." },
+        { error: "L'audit IA n'est pas disponible sur le plan Free. Passe Pro pour débloquer 30 audits par mois.", code: "audit_plan" },
         { status: 403 }
       );
     }
@@ -47,7 +47,7 @@ export async function POST(request: NextRequest) {
           {
             error: `Tu as atteint la limite de ${maxParMois} audits ce mois-ci sur le plan ${planLabel(plan)}. ${
               plan === "pro" ? "Passe Agency pour 100 audits par mois." : "La limite se réinitialise le mois prochain."
-            }`,
+            }`, code: "audit_limit", values: { max: maxParMois, plan: planLabel(plan) },
           },
           { status: 403 }
         );
@@ -60,7 +60,7 @@ export async function POST(request: NextRequest) {
     };
 
     if (!html || !Array.isArray(categories)) {
-      return NextResponse.json({ error: "Données manquantes." }, { status: 400 });
+      return NextResponse.json({ error: "Données manquantes.", code: "invalid_request" }, { status: 400 });
     }
 
     const corrections = categories
@@ -122,7 +122,7 @@ Retourne le HTML complet corrigé.`,
   } catch (err) {
     console.error("[audit-site/html]", err);
     return NextResponse.json(
-      { error: "Erreur lors de la génération du HTML corrigé." },
+      { error: "Erreur lors de la génération du HTML corrigé.", code: "audit_html_failed" },
       { status: 500 }
     );
   }

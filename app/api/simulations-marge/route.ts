@@ -8,12 +8,12 @@ export async function POST(request: NextRequest) {
   const { supabase, user, plan } = await getServerUserAndPlan();
 
   if (!user) {
-    return NextResponse.json({ error: "Connecte-toi pour sauvegarder une simulation." }, { status: 401 });
+    return NextResponse.json({ error: "Connecte-toi pour sauvegarder une simulation.", code: "auth_required" }, { status: 401 });
   }
 
   const { nom, inputs, resultats } = await request.json();
   if (!nom || !inputs || !resultats) {
-    return NextResponse.json({ error: "nom, inputs et resultats sont requis" }, { status: 400 });
+    return NextResponse.json({ error: "nom, inputs et resultats sont requis", code: "invalid_request" }, { status: 400 });
   }
 
   const max = PLAN_LIMITS[plan].simulationsMax;
@@ -24,12 +24,12 @@ export async function POST(request: NextRequest) {
       .eq("user_id", user.id);
 
     if (countError) {
-      return NextResponse.json({ error: countError.message }, { status: 500 });
+      return NextResponse.json({ error: countError.message, code: "server_error" }, { status: 500 });
     }
     if ((count ?? 0) >= max) {
       return NextResponse.json(
         {
-          error: `Tu as atteint la limite de ${max} simulations sur le plan ${planLabel(plan)}. Passe Pro pour un accès illimité.`,
+          error: `Tu as atteint la limite de ${max} simulations sur le plan ${planLabel(plan)}. Passe Pro pour un accès illimité.`, code: "simulations_limit", values: { max, plan: planLabel(plan) },
         },
         { status: 403 }
       );
@@ -43,7 +43,7 @@ export async function POST(request: NextRequest) {
     .single();
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: error.message, code: "server_error" }, { status: 500 });
   }
   return NextResponse.json(data, { status: 201 });
 }

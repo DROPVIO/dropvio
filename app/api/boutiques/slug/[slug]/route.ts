@@ -29,11 +29,11 @@ export async function GET(request: NextRequest, context: { params: Promise<{ slu
   } | null;
 
   if (boutiqueError) {
-    return NextResponse.json({ error: boutiqueError.message }, { status: 500 });
+    return NextResponse.json({ error: boutiqueError.message, code: "server_error" }, { status: 500 });
   }
 
   if (!boutiqueRow || !(await canViewBoutique(boutiqueRow.est_publique, boutiqueRow.user_id))) {
-    return NextResponse.json({ error: "Boutique introuvable." }, { status: 404 });
+    return NextResponse.json({ error: "Boutique introuvable.", code: "boutique_not_found" }, { status: 404 });
   }
 
   const { id, nom, slug: boutiqueSlug, description, theme, settings, mentions_legales } = boutiqueRow;
@@ -56,7 +56,7 @@ export async function GET(request: NextRequest, context: { params: Promise<{ slu
     .order("position", { ascending: true });
 
   if (categoriesError) {
-    return NextResponse.json({ error: categoriesError.message }, { status: 500 });
+    return NextResponse.json({ error: categoriesError.message, code: "server_error" }, { status: 500 });
   }
 
   return NextResponse.json({ boutique, categories: categories ?? [] });

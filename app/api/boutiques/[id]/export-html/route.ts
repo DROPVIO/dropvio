@@ -20,14 +20,14 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
   const params = await context.params;
   const { supabase, user, plan } = await getServerUserPlanOnly();
   if (!user) {
-    return NextResponse.json({ error: "Connecte-toi pour exporter cette boutique." }, { status: 401 });
+    return NextResponse.json({ error: "Connecte-toi pour exporter cette boutique.", code: "auth_required" }, { status: 401 });
   }
 
   // Restriction plan free — cet endpoint renvoie le HTML complet (CSS inliné) prêt à être
   // exporté, exactement ce que la restriction Site Builder réserve à Pro/Agency ailleurs.
   if (plan === "free") {
     return NextResponse.json(
-      { error: "L'export HTML de la boutique est réservé aux plans Pro et Agency." },
+      { error: "L'export HTML de la boutique est réservé aux plans Pro et Agency.", code: "export_plan" },
       { status: 403 }
     );
   }
@@ -39,16 +39,16 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
     .maybeSingle();
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: error.message, code: "server_error" }, { status: 500 });
   }
   if (!boutique) {
-    return NextResponse.json({ error: "Boutique introuvable." }, { status: 404 });
+    return NextResponse.json({ error: "Boutique introuvable.", code: "boutique_not_found" }, { status: 404 });
   }
 
   const baseUrl = await getBaseUrl();
   const pageRes = await fetchBoutiqueApi(`${baseUrl}/boutiques/${boutique.slug}`);
   if (!pageRes.ok) {
-    return NextResponse.json({ error: "Impossible de récupérer le rendu de la boutique." }, { status: 502 });
+    return NextResponse.json({ error: "Impossible de récupérer le rendu de la boutique.", code: "export_render_failed" }, { status: 502 });
   }
   let html = await pageRes.text();
 

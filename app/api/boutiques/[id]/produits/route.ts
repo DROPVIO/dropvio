@@ -20,7 +20,7 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
 
   const { supabase, user } = await getServerUserPlanOnly();
   if (!user) {
-    return NextResponse.json({ error: "Connecte-toi pour voir les produits." }, { status: 401 });
+    return NextResponse.json({ error: "Connecte-toi pour voir les produits.", code: "auth_required" }, { status: 401 });
   }
 
   const categorieId = searchParams.get("categoryId");
@@ -47,7 +47,7 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
     .range(from, to);
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: error.message, code: "server_error" }, { status: 500 });
   }
 
   const total = count ?? 0;
@@ -64,14 +64,14 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
   const params = await context.params;
   const { supabase, user, plan } = await getServerUserPlanOnly();
   if (!user) {
-    return NextResponse.json({ error: "Connecte-toi pour ajouter un produit." }, { status: 401 });
+    return NextResponse.json({ error: "Connecte-toi pour ajouter un produit.", code: "auth_required" }, { status: 401 });
   }
 
   const payload = await request.json();
   const { nom, slug, description, image_urls, prix_vente, prix_original, category_id, source_produit_id, meta } = payload;
 
   if (!nom || !slug || typeof prix_vente !== "number") {
-    return NextResponse.json({ error: "nom, slug et prix_vente sont requis." }, { status: 400 });
+    return NextResponse.json({ error: "nom, slug et prix_vente sont requis.", code: "product_fields_required" }, { status: 400 });
   }
 
   const { count, error: countError } = await supabase
@@ -80,7 +80,7 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
     .eq("boutique_id", params.id);
 
   if (countError) {
-    return NextResponse.json({ error: countError.message }, { status: 500 });
+    return NextResponse.json({ error: countError.message, code: "server_error" }, { status: 500 });
   }
 
   const max = PLAN_LIMITS[plan].produitsBoutiqueMax;
@@ -122,7 +122,7 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
     .single();
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: error.message, code: "server_error" }, { status: 500 });
   }
 
   return NextResponse.json({ id: data.id }, { status: 201 });

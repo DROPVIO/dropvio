@@ -13,11 +13,11 @@ export async function GET(request: NextRequest, context: { params: Promise<{ slu
     .maybeSingle();
 
   if (boutiqueError) {
-    return NextResponse.json({ error: boutiqueError.message }, { status: 500 });
+    return NextResponse.json({ error: boutiqueError.message, code: "server_error" }, { status: 500 });
   }
 
   if (!boutique || !(await canViewBoutique(boutique.est_publique, boutique.user_id))) {
-    return NextResponse.json({ error: "Boutique introuvable." }, { status: 404 });
+    return NextResponse.json({ error: "Boutique introuvable.", code: "boutique_not_found" }, { status: 404 });
   }
 
   const { data: produit, error } = await supabase
@@ -28,11 +28,11 @@ export async function GET(request: NextRequest, context: { params: Promise<{ slu
     .maybeSingle();
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: error.message, code: "server_error" }, { status: 500 });
   }
 
   if (!produit) {
-    return NextResponse.json({ error: "Produit introuvable." }, { status: 404 });
+    return NextResponse.json({ error: "Produit introuvable.", code: "product_not_found" }, { status: 404 });
   }
 
   return NextResponse.json({ produit });

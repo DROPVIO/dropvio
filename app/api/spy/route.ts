@@ -5,12 +5,12 @@ import { isUrlAllowed, normalizeUrl } from "@/lib/ssrf-guard";
 export async function GET(request: Request) {
   const { user } = await getServerUserAndPlan();
   if (!user) {
-    return Response.json({ error: "Connecte-toi pour utiliser le spy tool." }, { status: 401 });
+    return Response.json({ error: "Connecte-toi pour utiliser le spy tool.", code: "auth_required" }, { status: 401 });
   }
 
   if (!checkRateLimit(`spy:${user.id}`, { max: 10, windowMs: 60_000 })) {
     return Response.json(
-      { error: "Trop de requêtes. Réessaie dans une minute." },
+      { error: "Trop de requêtes. Réessaie dans une minute.", code: "rate_limit" },
       { status: 429 }
     );
   }
@@ -19,13 +19,13 @@ export async function GET(request: Request) {
   let storeUrl = searchParams.get("url");
 
   if (!storeUrl) {
-    return Response.json({ error: "URL manquante" }, { status: 400 });
+    return Response.json({ error: "URL manquante", code: "url_missing" }, { status: 400 });
   }
 
   storeUrl = normalizeUrl(storeUrl);
 
   if (!(await isUrlAllowed(storeUrl))) {
-    return Response.json({ error: "URL non autorisée" }, { status: 400 });
+    return Response.json({ error: "URL non autorisée", code: "url_forbidden" }, { status: 400 });
   }
 
   let data: { products: Array<{ variants: Array<{ price: string }> }> };
@@ -37,7 +37,7 @@ export async function GET(request: Request) {
 
     if (!res.ok) {
       return Response.json(
-        { error: `Impossible d'accéder à la boutique (HTTP ${res.status})` },
+        { error: `Impossible d'accéder à la boutique (HTTP ${res.status})`, code: "spy_store_unreachable" },
         { status: 502 }
       );
     }
@@ -45,14 +45,14 @@ export async function GET(request: Request) {
     data = await res.json();
   } catch {
     return Response.json(
-      { error: "Boutique inaccessible ou URL invalide" },
+      { error: "Boutique inaccessible ou URL invalide", code: "spy_store_unreachable" },
       { status: 502 }
     );
   }
 
   if (!Array.isArray(data?.products)) {
     return Response.json(
-      { error: "Ce site ne semble pas être une boutique Shopify" },
+      { error: "Ce site ne semble pas être une boutique Shopify", code: "spy_not_shopify" },
       { status: 422 }
     );
   }

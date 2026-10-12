@@ -42,12 +42,12 @@ const MAX_TOKENS: Record<"nom" | "description", number> = {
 export async function POST(request: NextRequest) {
   const { user } = await getServerUserAndPlan();
   if (!user) {
-    return NextResponse.json({ error: "Connecte-toi pour utiliser la génération de texte." }, { status: 401 });
+    return NextResponse.json({ error: "Connecte-toi pour utiliser la génération de texte.", code: "auth_required" }, { status: 401 });
   }
 
   if (!checkRateLimit(`generer-texte-produit:${user.id}`, { max: 20, windowMs: 3_600_000 })) {
     return NextResponse.json(
-      { error: "Trop de générations en peu de temps. Réessaie dans quelques minutes." },
+      { error: "Trop de générations en peu de temps. Réessaie dans quelques minutes.", code: "rate_limit" },
       { status: 429 }
     );
   }
@@ -56,10 +56,10 @@ export async function POST(request: NextRequest) {
   const { champ, titre } = body;
 
   if (champ !== "nom" && champ !== "description") {
-    return NextResponse.json({ error: "Champ invalide (attendu : nom ou description)." }, { status: 400 });
+    return NextResponse.json({ error: "Champ invalide (attendu : nom ou description).", code: "invalid_request" }, { status: 400 });
   }
   if (!titre || typeof titre !== "string" || titre.trim().length < 3) {
-    return NextResponse.json({ error: "Titre manquant ou trop court." }, { status: 400 });
+    return NextResponse.json({ error: "Titre manquant ou trop court.", code: "title_too_short" }, { status: 400 });
   }
 
   try {
@@ -79,7 +79,7 @@ export async function POST(request: NextRequest) {
     }
 
     if (!texte) {
-      return NextResponse.json({ error: "Réponse vide. Réessaie." }, { status: 500 });
+      return NextResponse.json({ error: "Réponse vide. Réessaie.", code: "ai_invalid_response" }, { status: 500 });
     }
 
     // Filet de sécurité en sortie — la consigne du prompt système interdit déjà les
@@ -87,7 +87,7 @@ export async function POST(request: NextRequest) {
     // que de relancer automatiquement (pas de boucle de coût sur un cas censé rester rare).
     if (containsExcludedBrand(texte)) {
       return NextResponse.json(
-        { error: "Le texte généré mentionne une marque non autorisée. Réessaie, ou modifie le champ à la main." },
+        { error: "Le texte généré mentionne une marque non autorisée. Réessaie, ou modifie le champ à la main.", code: "ai_brand_forbidden" },
         { status: 422 }
       );
     }
@@ -95,6 +95,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ texte });
   } catch (err) {
     console.error("[generer-texte-produit]", err);
-    return NextResponse.json({ error: "Erreur lors de la génération. Réessaie." }, { status: 500 });
+    return NextResponse.json({ error: "Erreur lors de la génération. Réessaie.", code: "generation_failed" }, { status: 500 });
   }
 }

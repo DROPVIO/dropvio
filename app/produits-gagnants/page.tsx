@@ -8,6 +8,7 @@ import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
 import { slugify } from "@/lib/slugify";
 import ProduitsSuggeres from "@/components/ProduitsSuggeres";
 import { NICHES as NICHES_CATALOGUE, nicheI18nKey, nicheLabel } from "@/lib/niches";
+import { useApiErrorMessage } from "@/lib/use-api-error";
 
 // L'entrée "all" est propre à cette page ; les autres viennent de lib/niches, dont le
 // libellé/description français ne sert que de repli — l'affichage passe par le namespace
@@ -53,6 +54,7 @@ const PRODUITS_PAR_PAGE = 40;
 
 export default function ProduitsGagnants() {
   const t = useTranslations("dashboard.produits");
+  const apiErrorMessage = useApiErrorMessage();
   const tNiches = useTranslations("niches");
   const NICHES = useNiches(t, tNiches);
   const [nicheActive, setNicheActive] = useState<string>("all");
@@ -111,7 +113,7 @@ export default function ProduitsGagnants() {
       const data = await res.json();
 
       if (data.error) {
-        setErreur(data.error);
+        setErreur(apiErrorMessage(data, t("errorLoad")));
         setProduits([]);
         setTotalProduits(0);
         setTotalPages(1);
@@ -654,6 +656,7 @@ type Alternative = {
 
 function AlternativesModal({ produit, onClose }: { produit: Produit; onClose: () => void }) {
   const t = useTranslations("dashboard.produits");
+  const apiErrorMessage = useApiErrorMessage();
   const [loading, setLoading] = useState(true);
   const [erreur, setErreur] = useState<string | null>(null);
   const [alternatives, setAlternatives] = useState<Alternative[] | null>(null);
@@ -673,7 +676,7 @@ function AlternativesModal({ produit, onClose }: { produit: Produit; onClose: ()
         const json = await res.json();
         if (annule) return;
         if (!res.ok) {
-          setErreur(json.error ?? t("altErrorLoad"));
+          setErreur(apiErrorMessage(json, t("altErrorLoad")));
           return;
         }
         setAlternatives(json.alternatives ?? []);
@@ -802,6 +805,7 @@ type BoutiqueOption = { id: string; nom: string; settings: { niche?: string } | 
 
 function AjouterBoutiqueModal({ produit, onClose }: { produit: Produit; onClose: () => void }) {
   const t = useTranslations("dashboard.produits");
+  const apiErrorMessage = useApiErrorMessage();
   const tNiches = useTranslations("niches");
 
   // Traduction si la niche fait partie du catalogue, sinon libellé FR de repli (un id
@@ -823,7 +827,7 @@ function AjouterBoutiqueModal({ produit, onClose }: { produit: Produit; onClose:
       .then(async (res) => {
         const json = await res.json();
         if (!res.ok) {
-          setBoutiquesError(json.error ?? t("addErrorBoutiques"));
+          setBoutiquesError(apiErrorMessage(json, t("addErrorBoutiques")));
           return;
         }
         const list: BoutiqueOption[] = json.boutiques ?? [];
@@ -854,7 +858,7 @@ function AjouterBoutiqueModal({ produit, onClose }: { produit: Produit; onClose:
       });
       const json = await response.json();
       if (!response.ok) {
-        setAddError(json.error ?? t("addErrorAdd"));
+        setAddError(apiErrorMessage(json, t("addErrorAdd")));
         return;
       }
       setAdded(true);

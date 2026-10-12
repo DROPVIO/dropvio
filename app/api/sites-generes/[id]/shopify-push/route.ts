@@ -68,7 +68,7 @@ async function publierMultiPages(params: {
       {
         error: `Publication impossible : clés de page invalides (${
           clesInvalides.length > 0 ? clesInvalides.join(", ") : `page « ${CLE_ACCUEIL} » absente`
-        }).`,
+        }).`, code: "shopify_publish_failed",
       },
       { status: 422 }
     );
@@ -91,7 +91,7 @@ async function publierMultiPages(params: {
   let handleAccueil = pageAccueil?.handle ?? slugifyForShopify(site.nom_produit);
   if (!SLUG.test(handleAccueil)) {
     return NextResponse.json(
-      { error: `Publication impossible : le handle de la page d'accueil « ${handleAccueil} » n'est pas un slug valide.` },
+      { error: `Publication impossible : le handle de la page d'accueil « ${handleAccueil} » n'est pas un slug valide.`, code: "shopify_publish_failed" },
       { status: 422 }
     );
   }
@@ -174,7 +174,7 @@ async function publierMultiPages(params: {
       admin_url: accueil?.admin_url,
       pages: detail,
       ...(echecs.length > 0 && {
-        error: `Publication incomplète : ${echecs.map((r) => `« ${r.page} »`).join(", ")} en échec.`,
+        error: `Publication incomplète : ${echecs.map((r) => `« ${r.page} »`).join(", ")} en échec.`, code: "shopify_publish_partial",
       }),
     },
     { status: detail.every((r) => !r.ok) ? 502 : 200 }
@@ -194,7 +194,7 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
   const { id } = await context.params;
   const { supabase, user, plan } = await getServerUserAndPlan();
   if (!user) {
-    return NextResponse.json({ error: "Connecte-toi pour publier ce site sur Shopify." }, { status: 401 });
+    return NextResponse.json({ error: "Connecte-toi pour publier ce site sur Shopify.", code: "auth_required" }, { status: 401 });
   }
 
   // Restriction plan free — voir diagnostic "restriction export Site Builder" : la publication
@@ -203,14 +203,14 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
   // uniquement du frontend (appel direct à l'API sinon possible).
   if (plan === "free") {
     return NextResponse.json(
-      { error: "La publication sur Shopify est réservée aux plans Pro et Agency. Passe au plan Pro pour publier ce site." },
+      { error: "La publication sur Shopify est réservée aux plans Pro et Agency. Passe au plan Pro pour publier ce site.", code: "shopify_push_plan" },
       { status: 403 }
     );
   }
 
   if (!isShopifyConfigured()) {
     return NextResponse.json(
-      { error: "L'intégration Shopify n'est pas encore configurée côté serveur." },
+      { error: "L'intégration Shopify n'est pas encore configurée côté serveur.", code: "shopify_not_configured" },
       { status: 500 }
     );
   }
@@ -232,8 +232,8 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
   if (siteError?.code === UNDEFINED_COLUMN) {
     ({ data: siteBrut, error: siteError } = await lireSite(colonnes));
   }
-  if (siteError) return NextResponse.json({ error: siteError.message }, { status: 500 });
-  if (!siteBrut) return NextResponse.json({ error: "Site introuvable." }, { status: 404 });
+  if (siteError) return NextResponse.json({ error: siteError.message, code: "server_error" }, { status: 500 });
+  if (!siteBrut) return NextResponse.json({ error: "Site introuvable.", code: "site_not_found" }, { status: 404 });
   const site = siteBrut as unknown as {
     id: string;
     nom_produit: string;
@@ -247,7 +247,7 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
 
   if (pagesSite && mode === "liquid") {
     return NextResponse.json(
-      { error: "La publication Liquid multi-pages n'est pas encore disponible : utilise le mode HTML." },
+      { error: "La publication Liquid multi-pages n'est pas encore disponible : utilise le mode HTML.", code: "shopify_liquid_multipage" },
       { status: 409 }
     );
   }
@@ -255,7 +255,7 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
   const connection = await getShopifyConnection(user.id);
   if (!connection) {
     return NextResponse.json(
-      { error: "Connecte d'abord ta boutique Shopify dans les paramètres avant de publier ce site." },
+      { error: "Connecte d'abord ta boutique Shopify dans les paramètres avant de publier ce site.", code: "shopify_not_connected" },
       { status: 400 }
     );
   }
@@ -267,7 +267,7 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
     const scopes = (connection.scope ?? "").split(",").map((s) => s.trim());
     if (!scopes.includes("write_content") && !scopes.includes("write_online_store_pages")) {
       return NextResponse.json(
-        { error: "Reconnecte la boutique Shopify pour autoriser la publication de pages." },
+        { error: "Reconnecte la boutique Shopify pour autoriser la publication de pages.", code: "shopify_reconnect_pages" },
         { status: 403 }
       );
     }
@@ -283,10 +283,10 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
       });
     } catch (err) {
       if (err instanceof ShopifyApiError) {
-        return NextResponse.json({ error: err.message, code: err.code }, { status: shopifyErrorToHttpStatus(err) });
+        return NextResponse.json({ error: err.message, code: `shopify_${err.code}` }, { status: shopifyErrorToHttpStatus(err) });
       }
       console.error("[sites-generes/shopify-push] multi-pages, erreur inattendue :", err);
-      return NextResponse.json({ error: "Erreur inattendue lors de la publication sur Shopify." }, { status: 500 });
+      return NextResponse.json({ error: "Erreur inattendue lors de la publication sur Shopify.", code: "shopify_publish_failed" }, { status: 500 });
     }
   }
 
@@ -396,15 +396,16 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
       autoAttached,
       url: `https://${shop}/pages/${page.handle}`,
       admin_url: `https://${shop}/admin/pages/${page.id}`,
-      message: autoAttached
-        ? "Section Liquid poussée et attachée automatiquement à la page."
-        : `Section Liquid uploadée dans le thème, mais l'attachement automatique n'a pas fonctionné sur ce thème (probablement un thème sans templates JSON). Termine manuellement : Boutique en ligne → Thèmes → Personnaliser → ouvre la page créée → Ajouter une section → "${sectionType}".`,
+      // Message traduit côté client (siteBuilder.builder.shopify.<messageCode>) ; sectionType
+      // sert à l'étape manuelle quand le thème n'a pas pu recevoir la section automatiquement.
+      messageCode: autoAttached ? "liquidAttache" : "liquidManuel",
+      sectionType,
     });
   } catch (err) {
     if (err instanceof ShopifyApiError) {
-      return NextResponse.json({ error: err.message, code: err.code }, { status: shopifyErrorToHttpStatus(err) });
+      return NextResponse.json({ error: err.message, code: `shopify_${err.code}` }, { status: shopifyErrorToHttpStatus(err) });
     }
     console.error("[sites-generes/shopify-push] erreur inattendue :", err);
-    return NextResponse.json({ error: "Erreur inattendue lors de la publication sur Shopify." }, { status: 500 });
+    return NextResponse.json({ error: "Erreur inattendue lors de la publication sur Shopify.", code: "shopify_publish_failed" }, { status: 500 });
   }
 }

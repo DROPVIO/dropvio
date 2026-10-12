@@ -7,7 +7,7 @@ import { RESERVED_SUBDOMAINS } from "@/lib/boutique-subdomains";
 export async function GET() {
   const { supabase, user } = await getServerUserAndPlan();
   if (!user) {
-    return NextResponse.json({ error: "Connecte-toi pour voir tes boutiques." }, { status: 401 });
+    return NextResponse.json({ error: "Connecte-toi pour voir tes boutiques.", code: "auth_required" }, { status: 401 });
   }
 
   const { data, error } = await supabase
@@ -17,7 +17,7 @@ export async function GET() {
     .order("created_at", { ascending: false });
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: error.message, code: "server_error" }, { status: 500 });
   }
 
   return NextResponse.json({ boutiques: data ?? [] });
@@ -26,7 +26,7 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   const { supabase, user } = await getServerUserAndPlan();
   if (!user) {
-    return NextResponse.json({ error: "Connecte-toi pour créer une boutique." }, { status: 401 });
+    return NextResponse.json({ error: "Connecte-toi pour créer une boutique.", code: "auth_required" }, { status: 401 });
   }
 
   const { nom, slug, description, theme, settings } = await request.json();
@@ -50,7 +50,7 @@ export async function POST(request: NextRequest) {
     if (error.code === UNIQUE_VIOLATION) {
       return apiError("slug_taken", 409, "Ce slug est déjà utilisé par une autre boutique.");
     }
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: error.message, code: "server_error" }, { status: 500 });
   }
 
   return NextResponse.json({ id: data.id }, { status: 201 });

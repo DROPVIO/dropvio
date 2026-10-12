@@ -6,7 +6,7 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
   const params = await context.params;
   const { supabase, user } = await getServerUserAndPlan();
   if (!user) {
-    return NextResponse.json({ error: "Connecte-toi pour modifier cette catégorie." }, { status: 401 });
+    return NextResponse.json({ error: "Connecte-toi pour modifier cette catégorie.", code: "auth_required" }, { status: 401 });
   }
 
   const { nom, slug, position } = await request.json();
@@ -28,7 +28,7 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
     if (error.code === UNIQUE_VIOLATION) {
       return apiError("category_slug_taken", 409, "Une autre catégorie de cette boutique utilise déjà ce slug.");
     }
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: error.message, code: "server_error" }, { status: 500 });
   }
   if (!data) {
     return apiError("category_not_found", 404, "Catégorie introuvable.");
@@ -43,7 +43,7 @@ export async function DELETE(request: NextRequest, context: { params: Promise<{ 
   const params = await context.params;
   const { supabase, user } = await getServerUserAndPlan();
   if (!user) {
-    return NextResponse.json({ error: "Connecte-toi pour supprimer cette catégorie." }, { status: 401 });
+    return NextResponse.json({ error: "Connecte-toi pour supprimer cette catégorie.", code: "auth_required" }, { status: 401 });
   }
 
   const { error: detachErr } = await supabase
@@ -52,7 +52,7 @@ export async function DELETE(request: NextRequest, context: { params: Promise<{ 
     .eq("boutique_id", params.id)
     .eq("category_id", params.categoryId);
   if (detachErr) {
-    return NextResponse.json({ error: detachErr.message }, { status: 500 });
+    return NextResponse.json({ error: detachErr.message, code: "server_error" }, { status: 500 });
   }
 
   const { data, error } = await supabase
@@ -63,7 +63,7 @@ export async function DELETE(request: NextRequest, context: { params: Promise<{ 
     .select("id");
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: error.message, code: "server_error" }, { status: 500 });
   }
   if (!data || data.length === 0) {
     return apiError("category_not_found", 404, "Catégorie introuvable.");

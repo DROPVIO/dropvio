@@ -9,6 +9,7 @@ import { useOnboarding } from "./onboarding/OnboardingProvider";
 import { UsageMeter } from "./UsageMeter";
 import { applyTheme, getStoredTheme, type Theme } from "@/lib/theme";
 import { setLocaleCookie, isAppLocale, toIntlTag, type AppLocale } from "@/lib/locale";
+import { useApiErrorMessage } from "@/lib/use-api-error";
 
 const SUPPORT_EMAIL = "support@dropvio.com";
 const LEGAL_EMAIL = "legal@dropvio.com";
@@ -172,6 +173,7 @@ export default function ParametresModal({
   initialShopifyMessage?: { ok: boolean; text: string } | null;
 }) {
   const t = useTranslations("parametres");
+  const apiErrorMessage = useApiErrorMessage();
   const supabase = createSupabaseBrowserClient();
   const router = useRouter();
   const overlayRef = useRef<HTMLDivElement>(null);
@@ -302,7 +304,7 @@ export default function ParametresModal({
       const res = await fetch("/api/shopify/disconnect", { method: "POST" });
       const json = await res.json();
       if (!res.ok) {
-        setIntMsg({ ok: false, text: json.error ?? t("integrations.shopifyDisconnectError") });
+        setIntMsg({ ok: false, text: apiErrorMessage(json, t("integrations.shopifyDisconnectError")) });
         return;
       }
       setShopifyStatus((s) => (s ? { ...s, connected: false, reconnectRequired: false, shop_domain: null, shop_name: null } : s));

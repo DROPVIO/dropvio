@@ -9,7 +9,7 @@ const INCIDENTS_LOOKBACK_DAYS = 30;
 export async function GET() {
   const { user } = await getServerUserAndPlan();
   if (!user) {
-    return NextResponse.json({ error: "Connecte-toi." }, { status: 401 });
+    return NextResponse.json({ error: "Connecte-toi.", code: "auth_required" }, { status: 401 });
   }
 
   const admin = createSupabaseAdminClient();

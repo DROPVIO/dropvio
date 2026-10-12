@@ -10,13 +10,13 @@ export async function POST(request: NextRequest) {
   const { url } = await request.json();
 
   if (!url || typeof url !== "string") {
-    return NextResponse.json({ error: "URL manquante" }, { status: 400 });
+    return NextResponse.json({ error: "URL manquante", code: "url_missing" }, { status: 400 });
   }
 
   const productId = extractProductId(url);
   if (!productId) {
     return NextResponse.json(
-      { error: "URL AliExpress invalide. Format attendu : aliexpress.com/item/XXXXXXXXXX.html" },
+      { error: "URL AliExpress invalide. Format attendu : aliexpress.com/item/XXXXXXXXXX.html", code: "aliexpress_url_invalid" },
       { status: 400 }
     );
   }
@@ -30,7 +30,7 @@ export async function POST(request: NextRequest) {
 
   if (error || !data) {
     return NextResponse.json(
-      { error: "Produit introuvable dans notre catalogue. Remplis les champs manuellement." },
+      { error: "Produit introuvable dans notre catalogue. Remplis les champs manuellement.", code: "aliexpress_not_in_catalog" },
       { status: 404 }
     );
   }

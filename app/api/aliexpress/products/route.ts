@@ -62,7 +62,7 @@ export async function GET(request: NextRequest) {
     const { data, error, count } = await query;
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      return NextResponse.json({ error: error.message, code: "server_error" }, { status: 500 });
     }
 
     const products = data ?? [];
@@ -80,7 +80,7 @@ export async function GET(request: NextRequest) {
   } catch (err) {
     console.error("Supabase query error:", err);
     return NextResponse.json(
-      { error: "Erreur de connexion à Supabase" },
+      { error: "Erreur de connexion à Supabase", code: "server_error" },
       { status: 500 }
     );
   }

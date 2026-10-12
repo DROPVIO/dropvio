@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
 import { toIntlTag, type AppLocale } from "@/lib/locale";
+import { useApiErrorMessage } from "@/lib/use-api-error";
 
 type LigneCommande = {
   shopify_product_id: number | null;
@@ -50,6 +51,11 @@ function formatAdresse(a: AdresseLivraison | null, nom: string | null, tel: stri
 
 export default function CommandesAPreparerPage() {
   const t = useTranslations("dashboard");
+  const tApi = useTranslations("apiErrors");
+  const apiErrorMessage = useApiErrorMessage();
+  // fulfillment_erreur contient un code d'erreur (apiErrors) ; une valeur plus ancienne en
+  // texte libre est remplacée par le message générique traduit.
+  const libelleErreurSuivi = (valeur: string) => (tApi.has(valeur) ? tApi(valeur) : valeur);
   const intlTag = toIntlTag(useLocale() as AppLocale);
   const [commandes, setCommandes] = useState<Commande[] | null>(null);
   const [lookbackDays, setLookbackDays] = useState(30);
@@ -71,7 +77,13 @@ export default function CommandesAPreparerPage() {
     fetch("/api/shopify/commandes")
       .then((r) => r.json())
       .then((json) => {
-        setCommandes(json.commandes ?? []);
+        setCommandes(
+          ((json.commandes ?? []) as Commande[]).map((c) =>
+            c.fulfillment_erreur && !tApi.has(c.fulfillment_erreur)
+              ? { ...c, fulfillment_erreur: t("commandes.errorTrackingPush") }
+              : c
+          )
+        );
         if (json.lookbackDays) setLookbackDays(json.lookbackDays);
       })
       .catch(() => setCommandes([]));
@@ -81,6 +93,8 @@ export default function CommandesAPreparerPage() {
       .catch(() => setFulfillmentScopeGranted(false));
   }
 
+  // Chargement au montage seulement ; t et tApi sont stables pour une langue donnée.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(reload, []);
 
   async function updateStatut(id: string, statut: "commandee" | "ignoree") {
@@ -97,7 +111,7 @@ export default function CommandesAPreparerPage() {
       });
       if (!res.ok) {
         const json = await res.json().catch(() => null);
-        throw new Error(json?.error ?? t("commandes.errorStatus"));
+        throw new Error(apiErrorMessage(json, t("commandes.errorStatus")));
       }
     } catch (err) {
       if (previousStatut) {
@@ -141,7 +155,7 @@ export default function CommandesAPreparerPage() {
       });
       if (!res.ok) {
         const json = await res.json().catch(() => null);
-        throw new Error(json?.error ?? t("commandes.errorLink"));
+        throw new Error(apiErrorMessage(json, t("commandes.errorLink")));
       }
     } catch (err) {
       setCommandes(
@@ -181,7 +195,7 @@ export default function CommandesAPreparerPage() {
         setCommandes(
           (prev) =>
             prev?.map((c) =>
-              c.id === commandeId ? { ...c, fulfillment_erreur: json?.error ?? t("commandes.errorTrackingSave") } : c
+              c.id === commandeId ? { ...c, fulfillment_erreur: apiErrorMessage(json, t("commandes.errorTrackingSave")) } : c
             ) ?? prev
         );
         return;
@@ -194,7 +208,7 @@ export default function CommandesAPreparerPage() {
           (prev) =>
             prev?.map((c) =>
               c.id === commandeId
-                ? { ...c, numero_suivi: numeroSuivi, transporteur: draft?.transporteur || null, fulfillment_erreur: json?.error ?? t("commandes.errorTrackingPush") }
+                ? { ...c, numero_suivi: numeroSuivi, transporteur: draft?.transporteur || null, fulfillment_erreur: json?.code ?? t("commandes.errorTrackingPush") }
                 : c
             ) ?? prev
         );
@@ -377,7 +391,7 @@ export default function CommandesAPreparerPage() {
                     ) : (
                       <div className="flex flex-col gap-1.5">
                         {c.fulfillment_erreur ? (
-                          <p className="text-[11px] text-[var(--danger)]">{c.fulfillment_erreur}</p>
+                          <p className="text-[11px] text-[var(--danger)]">{libelleErreurSuivi(c.fulfillment_erreur)}</p>
                         ) : null}
                         <div className="flex items-center gap-1.5">
                           <input

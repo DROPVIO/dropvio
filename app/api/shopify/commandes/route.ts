@@ -21,7 +21,7 @@ type LigneCommande = {
 export async function GET() {
   const { user } = await getServerUserAndPlan();
   if (!user) {
-    return NextResponse.json({ error: "Connecte-toi." }, { status: 401 });
+    return NextResponse.json({ error: "Connecte-toi.", code: "auth_required" }, { status: 401 });
   }
 
   const admin = createSupabaseAdminClient();
@@ -37,7 +37,7 @@ export async function GET() {
     .order("created_at", { ascending: false });
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: error.message, code: "server_error" }, { status: 500 });
   }
 
   return NextResponse.json({ commandes: data ?? [], lookbackDays: LOOKBACK_DAYS });
@@ -54,13 +54,13 @@ export async function GET() {
 export async function PATCH(request: NextRequest) {
   const { user } = await getServerUserAndPlan();
   if (!user) {
-    return NextResponse.json({ error: "Connecte-toi." }, { status: 401 });
+    return NextResponse.json({ error: "Connecte-toi.", code: "auth_required" }, { status: 401 });
   }
 
   const body = await request.json().catch(() => null);
   const id = body?.id;
   if (typeof id !== "string") {
-    return NextResponse.json({ error: "Requête invalide." }, { status: 400 });
+    return NextResponse.json({ error: "Requête invalide.", code: "invalid_request" }, { status: 400 });
   }
 
   const admin = createSupabaseAdminClient();
@@ -75,7 +75,7 @@ export async function PATCH(request: NextRequest) {
 
   const statut = body?.statut;
   if (statut !== "commandee" && statut !== "ignoree") {
-    return NextResponse.json({ error: "Requête invalide." }, { status: 400 });
+    return NextResponse.json({ error: "Requête invalide.", code: "invalid_request" }, { status: 400 });
   }
 
   const { error } = await admin
@@ -85,7 +85,7 @@ export async function PATCH(request: NextRequest) {
     .eq("user_id", user.id);
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: error.message, code: "server_error" }, { status: 500 });
   }
 
   return NextResponse.json({ ok: true });
@@ -102,12 +102,12 @@ async function attachLien(admin: AdminClient, userId: string, id: string, ligneI
     .maybeSingle();
 
   if (fetchError || !commande) {
-    return NextResponse.json({ error: fetchError?.message ?? "Commande introuvable." }, { status: 404 });
+    return NextResponse.json({ error: fetchError?.message ?? "Commande introuvable.", code: "order_not_found" }, { status: 404 });
   }
 
   const lignes: LigneCommande[] = commande.lignes ?? [];
   if (ligneIndex < 0 || ligneIndex >= lignes.length) {
-    return NextResponse.json({ error: "Ligne introuvable." }, { status: 400 });
+    return NextResponse.json({ error: "Ligne introuvable.", code: "not_found" }, { status: 400 });
   }
 
   lignes[ligneIndex] = { ...lignes[ligneIndex], lien_aliexpress: lienAliExpress };
@@ -119,7 +119,7 @@ async function attachLien(admin: AdminClient, userId: string, id: string, ligneI
     .eq("user_id", userId);
 
   if (updateError) {
-    return NextResponse.json({ error: updateError.message }, { status: 500 });
+    return NextResponse.json({ error: updateError.message, code: "server_error" }, { status: 500 });
   }
 
   // Best-effort : propage vers le catalogue pour ne pas retomber sur le même trou aux
@@ -140,7 +140,7 @@ async function pushSuivi(admin: AdminClient, userId: string, id: string, numeroS
     .eq("user_id", userId);
 
   if (saveError) {
-    return NextResponse.json({ error: saveError.message }, { status: 500 });
+    return NextResponse.json({ error: saveError.message, code: "server_error" }, { status: 500 });
   }
 
   const { data: commande } = await admin
@@ -152,13 +152,14 @@ async function pushSuivi(admin: AdminClient, userId: string, id: string, numeroS
 
   const connection = await getShopifyConnection(userId);
   if (!connection || !connection.fulfillment_scope_granted || !commande) {
-    const erreur = !connection
-      ? "Boutique Shopify non connectée."
+    // fulfillment_erreur garde un code (traduit à l'affichage, namespace apiErrors), plus un texte.
+    const code = !connection
+      ? "shopify_not_connected"
       : !connection.fulfillment_scope_granted
-        ? "Reconnecte ta boutique Shopify pour activer l'envoi automatique du suivi."
-        : "Commande introuvable.";
-    await admin.from("commandes_a_preparer").update({ fulfillment_erreur: erreur }).eq("id", id).eq("user_id", userId);
-    return NextResponse.json({ ok: true, fulfillmentPushed: false, error: erreur });
+        ? "shopify_reconnect_fulfillment"
+        : "order_not_found";
+    await admin.from("commandes_a_preparer").update({ fulfillment_erreur: code }).eq("id", id).eq("user_id", userId);
+    return NextResponse.json({ ok: true, fulfillmentPushed: false, error: code, code });
   }
 
   try {
@@ -173,8 +174,9 @@ async function pushSuivi(admin: AdminClient, userId: string, id: string, numeroS
       .eq("user_id", userId);
     return NextResponse.json({ ok: true, fulfillmentPushed: true });
   } catch (err) {
-    const message = err instanceof ShopifyApiError ? err.message : "Erreur inconnue lors de l'envoi à Shopify.";
-    await admin.from("commandes_a_preparer").update({ fulfillment_erreur: message }).eq("id", id).eq("user_id", userId);
-    return NextResponse.json({ ok: true, fulfillmentPushed: false, error: message });
+    console.warn("[shopify/commandes] Envoi du suivi échoué :", err);
+    const code = err instanceof ShopifyApiError ? `shopify_${err.code}` : "shopify_unknown";
+    await admin.from("commandes_a_preparer").update({ fulfillment_erreur: code }).eq("id", id).eq("user_id", userId);
+    return NextResponse.json({ ok: true, fulfillmentPushed: false, error: code, code });
   }
 }

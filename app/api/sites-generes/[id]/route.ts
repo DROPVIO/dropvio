@@ -24,7 +24,7 @@ export async function GET(
     .single();
 
   if (error || !data) {
-    return NextResponse.json({ error: "Site introuvable" }, { status: 404 });
+    return NextResponse.json({ error: "Site introuvable", code: "site_not_found" }, { status: 404 });
   }
 
   // Restriction plan free : l'aperçu/la régénération restent disponibles (le pré-remplissage
@@ -70,7 +70,7 @@ export async function PATCH(
 
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) {
-    return NextResponse.json({ error: "Connecte-toi pour modifier ce site." }, { status: 401 });
+    return NextResponse.json({ error: "Connecte-toi pour modifier ce site.", code: "auth_required" }, { status: 401 });
   }
 
   const body = await request.json();
@@ -90,18 +90,18 @@ export async function PATCH(
     if (lectureErr) {
       const status = lectureErr.code === UNDEFINED_COLUMN ? 501 : 500;
       return NextResponse.json(
-        { error: lectureErr.code === UNDEFINED_COLUMN ? MIGRATION_035_MANQUANTE : lectureErr.message },
+        { error: lectureErr.code === UNDEFINED_COLUMN ? MIGRATION_035_MANQUANTE : lectureErr.message, code: lectureErr.code === UNDEFINED_COLUMN ? "migration_missing" : "server_error" },
         { status }
       );
     }
     // maybeSingle() + RLS : null couvre aussi bien « id inexistant » que « site d'un autre
     // utilisateur », les deux devant renvoyer 404 sans révéler lequel des deux c'est.
     if (!avant) {
-      return NextResponse.json({ error: "Site introuvable." }, { status: 404 });
+      return NextResponse.json({ error: "Site introuvable.", code: "site_not_found" }, { status: 404 });
     }
     if (!avant.html_content_precedent) {
       return NextResponse.json(
-        { error: "Aucune correction IA à annuler sur ce site." },
+        { error: "Aucune correction IA à annuler sur ce site.", code: "no_ai_fix_to_undo" },
         { status: 409 }
       );
     }
@@ -114,10 +114,10 @@ export async function PATCH(
       .maybeSingle();
 
     if (restaureErr) {
-      return NextResponse.json({ error: restaureErr.message }, { status: 500 });
+      return NextResponse.json({ error: restaureErr.message, code: "server_error" }, { status: 500 });
     }
     if (!restaure) {
-      return NextResponse.json({ error: "Site introuvable." }, { status: 404 });
+      return NextResponse.json({ error: "Site introuvable.", code: "site_not_found" }, { status: 404 });
     }
     return NextResponse.json({ success: true, restaure: true });
   }
@@ -136,7 +136,7 @@ export async function PATCH(
   }
 
   if (Object.keys(updates).length === 0) {
-    return NextResponse.json({ error: "Aucun champ valide à mettre à jour." }, { status: 400 });
+    return NextResponse.json({ error: "Aucun champ valide à mettre à jour.", code: "invalid_request" }, { status: 400 });
   }
 
   // sauvegarder_precedent : recopie la version actuelle dans html_content_precedent avant
@@ -154,10 +154,10 @@ export async function PATCH(
       .maybeSingle();
 
     if (lectureErr) {
-      return NextResponse.json({ error: lectureErr.message }, { status: 500 });
+      return NextResponse.json({ error: lectureErr.message, code: "server_error" }, { status: 500 });
     }
     if (!actuel) {
-      return NextResponse.json({ error: "Site introuvable." }, { status: 404 });
+      return NextResponse.json({ error: "Site introuvable.", code: "site_not_found" }, { status: 404 });
     }
     updates.html_content_precedent = actuel.html_content;
   }
@@ -178,15 +178,15 @@ export async function PATCH(
     // 501 plutôt que 500 quand la cause est une migration non appliquée : le message dit quoi
     // faire au lieu de laisser un code PostgREST cryptique remonter jusqu'à l'utilisateur.
     if (error.code === UNDEFINED_COLUMN && "html_content_precedent" in updates) {
-      return NextResponse.json({ error: MIGRATION_035_MANQUANTE }, { status: 501 });
+      return NextResponse.json({ error: MIGRATION_035_MANQUANTE, code: "migration_missing" }, { status: 501 });
     }
     if (error.code === UNDEFINED_COLUMN && "format_export" in updates) {
-      return NextResponse.json({ error: MIGRATION_039_MANQUANTE }, { status: 501 });
+      return NextResponse.json({ error: MIGRATION_039_MANQUANTE, code: "migration_missing" }, { status: 501 });
     }
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: error.message, code: "server_error" }, { status: 500 });
   }
   if (!data) {
-    return NextResponse.json({ error: "Site introuvable." }, { status: 404 });
+    return NextResponse.json({ error: "Site introuvable.", code: "site_not_found" }, { status: 404 });
   }
   return NextResponse.json({ success: true });
 }
@@ -203,13 +203,13 @@ export async function DELETE(
 
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) {
-    return NextResponse.json({ error: "Connecte-toi pour supprimer ce site." }, { status: 401 });
+    return NextResponse.json({ error: "Connecte-toi pour supprimer ce site.", code: "auth_required" }, { status: 401 });
   }
 
   const { error } = await supabase.from("sites_generes").delete().eq("id", id);
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: error.message, code: "server_error" }, { status: 500 });
   }
   return NextResponse.json({ success: true });
 }

@@ -26,7 +26,13 @@ type ItemResult = {
   nom: string;
   status: "created" | "updated" | "reset" | "error";
   error?: string;
+  // Code traduit côté client (namespace apiErrors) ; error reste le détail pour les logs.
+  code?: string;
 };
+
+function codeErreur(err: unknown): string {
+  return err instanceof ShopifyApiError ? `shopify_${err.code}` : "shopify_unknown";
+}
 
 function errMessage(err: unknown): string {
   if (err instanceof ShopifyApiError) return err.message;
@@ -57,7 +63,7 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
   const { id } = await context.params;
   const { supabase, user, plan } = await getServerUserAndPlan();
   if (!user) {
-    return NextResponse.json({ error: "Connecte-toi pour publier cette boutique sur Shopify." }, { status: 401 });
+    return NextResponse.json({ error: "Connecte-toi pour publier cette boutique sur Shopify.", code: "auth_required" }, { status: 401 });
   }
 
   // Restriction plan free — même règle que sites-generes/[id]/shopify-push : publier une
@@ -89,7 +95,7 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
     .eq("user_id", user.id)
     .maybeSingle();
   if (boutiqueError) {
-    return NextResponse.json({ error: boutiqueError.message }, { status: 500 });
+    return NextResponse.json({ error: boutiqueError.message, code: "server_error" }, { status: 500 });
   }
   if (!boutique) {
     return apiError("boutique_not_found", 404, "Boutique introuvable.");
@@ -140,7 +146,7 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
       .limit(MAX_PAR_LOT);
     if (suivant.apres) query = query.gt("id", suivant.apres);
     const { data: categories, error } = await query;
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    if (error) return NextResponse.json({ error: error.message, code: "server_error" }, { status: 500 });
 
     let dernier = suivant.apres;
     let interrompu = false;
@@ -175,7 +181,7 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
         }
       } catch (err) {
         if (err instanceof ShopifyApiError && err.code === "auth_expired") return connexionMorte(err);
-        categoryResults.push({ id: cat.id, nom: cat.nom, status: "error", error: errMessage(err) });
+        categoryResults.push({ id: cat.id, nom: cat.nom, status: "error", error: errMessage(err), code: codeErreur(err) });
       }
       dernier = cat.id;
     }
@@ -191,7 +197,7 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
       .from("boutique_categories")
       .select("id, shopify_collection_id")
       .eq("boutique_id", id);
-    if (catErr) return NextResponse.json({ error: catErr.message }, { status: 500 });
+    if (catErr) return NextResponse.json({ error: catErr.message, code: "server_error" }, { status: 500 });
     const collectionParCategorie = new Map<string, number>();
     for (const c of categories ?? []) {
       if (c.shopify_collection_id) collectionParCategorie.set(c.id, c.shopify_collection_id);
@@ -205,7 +211,7 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
       .limit(MAX_PAR_LOT);
     if (suivant.apres) query = query.gt("id", suivant.apres);
     const { data: produits, error } = await query;
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    if (error) return NextResponse.json({ error: error.message, code: "server_error" }, { status: 500 });
 
     let dernier = suivant.apres;
     let interrompu = false;
@@ -234,7 +240,7 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
         }
       } catch (err) {
         if (err instanceof ShopifyApiError && err.code === "auth_expired") return connexionMorte(err);
-        productResults.push({ id: p.id, nom: p.nom, status: "error", error: errMessage(err) });
+        productResults.push({ id: p.id, nom: p.nom, status: "error", error: errMessage(err), code: codeErreur(err) });
       }
       dernier = p.id;
     }

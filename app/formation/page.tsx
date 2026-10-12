@@ -7,6 +7,7 @@ import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
 import Sidebar from "@/components/Sidebar";
 import OnboardingProvider from "@/components/onboarding/OnboardingProvider";
 import OnboardingTour from "@/components/onboarding/OnboardingTour";
+import { useApiErrorMessage } from "@/lib/use-api-error";
 
 type FormationCollection = "courte" | "longue";
 type FormationOffre = FormationCollection | "bundle";
@@ -53,6 +54,7 @@ function useIsLightTheme(): boolean {
 
 export default function FormationPage() {
   const t = useTranslations("dashboard.formation");
+  const apiErrorMessage = useApiErrorMessage();
   const tCommon = useTranslations("dashboard.common");
   const [state, setState] = useState<FormationState>({ status: "loading" });
   const [buying, setBuying] = useState<FormationOffre | null>(null);
@@ -94,7 +96,7 @@ export default function FormationPage() {
       .then(async (res) => {
         const json = await res.json();
         if (!res.ok) {
-          setState({ status: "error", message: json.error ?? t("errorLoad") });
+          setState({ status: "error", message: apiErrorMessage(json, t("errorLoad")) });
           return;
         }
         setState({ status: "ok", modules: json.modules, owned: json.owned });
@@ -141,7 +143,7 @@ export default function FormationPage() {
       }
       const json = await res.json();
       if (!res.ok) {
-        alert(json.error ?? t("errorCheckout"));
+        alert(apiErrorMessage(json, t("errorCheckout")));
         setBuying(null);
         return;
       }

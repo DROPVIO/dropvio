@@ -10,7 +10,7 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
   const params = await context.params;
   const { supabase, user } = await getServerUserAndPlan();
   if (!user) {
-    return NextResponse.json({ error: "Connecte-toi pour voir cette boutique." }, { status: 401 });
+    return NextResponse.json({ error: "Connecte-toi pour voir cette boutique.", code: "auth_required" }, { status: 401 });
   }
 
   const colonnes = "id, nom, slug, description, theme, settings, mentions_legales, est_publique, created_at, updated_at";
@@ -27,10 +27,10 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
   const data = ligne ? { ...(ligne as unknown as Record<string, unknown>), langue: langueBoutique(ligne as { langue?: unknown }) } : null;
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: error.message, code: "server_error" }, { status: 500 });
   }
   if (!data) {
-    return NextResponse.json({ error: "Boutique introuvable." }, { status: 404 });
+    return NextResponse.json({ error: "Boutique introuvable.", code: "boutique_not_found" }, { status: 404 });
   }
 
   // Compteurs non filtrés pour les réglages : publication (au moins un produit), limite du
@@ -55,7 +55,7 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
   const params = await context.params;
   const { supabase, user } = await getServerUserAndPlan();
   if (!user) {
-    return NextResponse.json({ error: "Connecte-toi pour modifier cette boutique." }, { status: 401 });
+    return NextResponse.json({ error: "Connecte-toi pour modifier cette boutique.", code: "auth_required" }, { status: 401 });
   }
 
   const payload = await request.json();
@@ -92,7 +92,7 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
     .eq("user_id", user.id)
     .maybeSingle();
   if (lectureErr) {
-    return NextResponse.json({ error: lectureErr.message }, { status: 500 });
+    return NextResponse.json({ error: lectureErr.message, code: "server_error" }, { status: 500 });
   }
   if (!actuelle) {
     return apiError("boutique_not_found", 404, "Boutique introuvable.");
@@ -110,7 +110,7 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
       .select("id", { count: "exact", head: true })
       .eq("boutique_id", params.id);
     if (countErr) {
-      return NextResponse.json({ error: countErr.message }, { status: 500 });
+      return NextResponse.json({ error: countErr.message, code: "server_error" }, { status: 500 });
     }
     if (!count) {
       return apiError("publish_requires_product", 400, "Ajoute au moins un produit avant de rendre la boutique publique.");
@@ -133,7 +133,7 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
     if (error.code === UNDEFINED_COLUMN && "langue" in updates) {
       return apiError("langue_migration_missing", 501, "Le choix de langue n'est pas encore activé : applique la migration 042_boutiques_langue.sql.");
     }
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: error.message, code: "server_error" }, { status: 500 });
   }
 
   return NextResponse.json({ id: data.id, boutique: data });
@@ -146,7 +146,7 @@ export async function DELETE(request: NextRequest, context: { params: Promise<{ 
   const params = await context.params;
   const { supabase, user } = await getServerUserAndPlan();
   if (!user) {
-    return NextResponse.json({ error: "Connecte-toi pour supprimer cette boutique." }, { status: 401 });
+    return NextResponse.json({ error: "Connecte-toi pour supprimer cette boutique.", code: "auth_required" }, { status: 401 });
   }
 
   const { data, error } = await supabase
@@ -157,7 +157,7 @@ export async function DELETE(request: NextRequest, context: { params: Promise<{ 
     .select("id");
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: error.message, code: "server_error" }, { status: 500 });
   }
   if (!data || data.length === 0) {
     return apiError("boutique_not_found", 404, "Boutique introuvable.");

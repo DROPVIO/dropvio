@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { toIntlTag, type AppLocale } from "@/lib/locale";
+import { useApiErrorMessage } from "@/lib/use-api-error";
 
 interface SpyResult {
   productCount: number;
@@ -38,6 +39,7 @@ function useIsLightTheme(): boolean {
 
 export default function SpyPage() {
   const t = useTranslations("dashboard.spy");
+  const apiErrorMessage = useApiErrorMessage();
   const intlTag = toIntlTag(useLocale() as AppLocale);
   const [url, setUrl] = useState("");
   const [loading, setLoading] = useState(false);
@@ -57,7 +59,7 @@ export default function SpyPage() {
       const json = await res.json();
 
       if (!res.ok) {
-        setError(json.error ?? t("errorGeneric"));
+        setError(apiErrorMessage(json, t("errorGeneric")));
       } else {
         setResult(json);
       }

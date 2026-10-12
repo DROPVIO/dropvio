@@ -405,7 +405,7 @@ export async function POST(request: NextRequest) {
   const { supabase, user, plan } = await getServerUserAndPlan();
 
   if (!user) {
-    return NextResponse.json({ error: "Connecte-toi pour générer une landing page." }, { status: 401 });
+    return NextResponse.json({ error: "Connecte-toi pour générer une landing page.", code: "auth_required" }, { status: 401 });
   }
 
   // Lu et vérifié avant le compteur de générations et le quota : une demande sans prompt
@@ -414,7 +414,7 @@ export async function POST(request: NextRequest) {
   if (promptUtilisateurDe(body).length < PROMPT_MIN_CARACTERES) {
     return NextResponse.json(
       {
-        error: `Décris ton site en au moins ${PROMPT_MIN_CARACTERES} caractères : ce prompt guide toute la génération (sections, textes, animations).`,
+        error: `Décris ton site en au moins ${PROMPT_MIN_CARACTERES} caractères : ce prompt guide toute la génération (sections, textes, animations).`, code: "prompt_too_short", values: { min: PROMPT_MIN_CARACTERES },
       },
       { status: 400 }
     );
@@ -426,7 +426,7 @@ export async function POST(request: NextRequest) {
   // compromis...).
   if (!checkRateLimit(`generate-site:${user.id}`, { max: 10, windowMs: 3_600_000 })) {
     return NextResponse.json(
-      { error: "Trop de générations en peu de temps. Réessaie dans quelques minutes." },
+      { error: "Trop de générations en peu de temps. Réessaie dans quelques minutes.", code: "rate_limit" },
       { status: 429 }
     );
   }
@@ -446,14 +446,14 @@ export async function POST(request: NextRequest) {
       .gte("created_at", debutMois);
 
     if (countError) {
-      return NextResponse.json({ error: countError.message }, { status: 500 });
+      return NextResponse.json({ error: countError.message, code: "server_error" }, { status: 500 });
     }
     if ((count ?? 0) >= maxSites) {
       return NextResponse.json(
         {
           error: `Tu as atteint la limite de ${maxSites} sites générés ce mois-ci sur le plan ${planLabel(plan)}. ${
             plan === "free" ? "Passe Pro pour 20 sites par mois." : plan === "pro" ? "Passe Agency pour 50 sites par mois." : "La limite se réinitialise le mois prochain."
-          }`,
+          }`, code: "sites_limit", values: { max: maxSites, plan: planLabel(plan) },
         },
         { status: 403 }
       );
@@ -490,7 +490,7 @@ export async function POST(request: NextRequest) {
 
   if (!productName || !description) {
     return NextResponse.json(
-      { error: "productName et description sont requis" },
+      { error: "productName et description sont requis", code: "invalid_request" },
       { status: 400 }
     );
   }
@@ -655,7 +655,7 @@ Réponds UNIQUEMENT avec le code HTML, sans explication ni balise markdown.`;
     // bug local.
     if (err instanceof HtmlTronqueError) {
       console.error("[generate-site]", err.message);
-      return NextResponse.json({ error: ERREUR_HTML_TRONQUE }, { status: 502 });
+      return NextResponse.json({ error: ERREUR_HTML_TRONQUE, code: "generation_truncated" }, { status: 502 });
     }
     console.error("[generate-site] Erreur Anthropic complète :", err);
     if (err instanceof Error) {
@@ -666,7 +666,7 @@ Réponds UNIQUEMENT avec le code HTML, sans explication ni balise markdown.`;
     if (errObj?.status) console.error("[generate-site] HTTP status :", errObj.status);
     if (errObj?.error)  console.error("[generate-site] Détail API :", JSON.stringify(errObj.error));
     return NextResponse.json(
-      { error: "Erreur lors de la génération de la landing page" },
+      { error: "Erreur lors de la génération de la landing page", code: "generation_failed" },
       { status: 500 }
     );
   }
@@ -710,7 +710,7 @@ async function handleGenerateBoutique(
 
   if (!nomBoutique || !Array.isArray(produits) || produits.length === 0) {
     return NextResponse.json(
-      { error: "nomBoutique et au moins un produit sont requis" },
+      { error: "nomBoutique et au moins un produit sont requis", code: "invalid_request" },
       { status: 400 }
     );
   }
@@ -861,7 +861,7 @@ Réponds UNIQUEMENT avec le code HTML, sans explication ni balise markdown.`;
   } catch (err) {
     if (err instanceof HtmlTronqueError) {
       console.error("[generate-site] (mode boutique)", err.message);
-      return NextResponse.json({ error: ERREUR_HTML_TRONQUE }, { status: 502 });
+      return NextResponse.json({ error: ERREUR_HTML_TRONQUE, code: "generation_truncated" }, { status: 502 });
     }
     console.error("[generate-site] Erreur Anthropic complète (mode boutique) :", err);
     if (err instanceof Error) {
@@ -869,7 +869,7 @@ Réponds UNIQUEMENT avec le code HTML, sans explication ni balise markdown.`;
       console.error("[generate-site] Stack :", err.stack);
     }
     return NextResponse.json(
-      { error: "Erreur lors de la génération du site boutique" },
+      { error: "Erreur lors de la génération du site boutique", code: "generation_failed" },
       { status: 500 }
     );
   }

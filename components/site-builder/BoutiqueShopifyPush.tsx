@@ -7,7 +7,7 @@ import { useApiErrorMessage } from "@/lib/use-api-error";
 import { LIEN_CHANGER_DE_PLAN } from "@/lib/plan-links";
 
 type Curseur = { etape: "categories" | "produits"; apres: string | null };
-type ItemResult = { id: string; nom: string; status: "created" | "updated" | "reset" | "error"; error?: string };
+type ItemResult = { id: string; nom: string; status: "created" | "updated" | "reset" | "error"; error?: string; code?: string };
 type Reprise = { curseur: Curseur; bilan: { total: number; erreurs: number } };
 
 const cleReprise = (boutiqueId: string) => `dropvio-shopify-push-${boutiqueId}`;
@@ -200,7 +200,7 @@ export default function BoutiqueShopifyPush({ boutiqueId, canExport }: { boutiqu
               key={item.id}
               className="rounded-lg border border-[var(--danger)]/10 bg-[var(--danger)]/[0.04] px-3 py-2 text-xs text-[var(--danger)]"
             >
-              <span className="font-semibold">{item.nom}</span> : {item.error}
+              {t("erreurElement", { nom: item.nom, erreur: apiErrorMessage({ code: item.code }) })}
             </div>
           ))}
         </div>

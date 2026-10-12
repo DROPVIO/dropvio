@@ -12,7 +12,7 @@ export async function GET() {
   const { supabase, user } = await getServerUserAndPlan();
 
   if (!user) {
-    return NextResponse.json({ error: "Connecte-toi pour voir tes sites." }, { status: 401 });
+    return NextResponse.json({ error: "Connecte-toi pour voir tes sites.", code: "auth_required" }, { status: 401 });
   }
 
   const { data, error } = await supabase
@@ -25,7 +25,7 @@ export async function GET() {
     .order("created_at", { ascending: false });
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: error.message, code: "server_error" }, { status: 500 });
   }
 
   // Sites sur lesquels une correction IA a été appliquée et reste annulable
@@ -74,7 +74,7 @@ export async function POST(request: NextRequest) {
   const { supabase, user, plan } = await getServerUserAndPlan();
 
   if (!user) {
-    return NextResponse.json({ error: "Connecte-toi pour sauvegarder un site." }, { status: 401 });
+    return NextResponse.json({ error: "Connecte-toi pour sauvegarder un site.", code: "auth_required" }, { status: 401 });
   }
 
   const {
@@ -96,7 +96,7 @@ export async function POST(request: NextRequest) {
 
   if (!nom_produit || !html_content) {
     return NextResponse.json(
-      { error: "nom_produit et html_content sont requis" },
+      { error: "nom_produit et html_content sont requis", code: "invalid_request" },
       { status: 400 }
     );
   }
@@ -127,14 +127,14 @@ export async function POST(request: NextRequest) {
       .gte("created_at", debutMois);
 
     if (countError) {
-      return NextResponse.json({ error: countError.message }, { status: 500 });
+      return NextResponse.json({ error: countError.message, code: "server_error" }, { status: 500 });
     }
     if ((count ?? 0) >= max) {
       return NextResponse.json(
         {
           error: `Tu as atteint la limite de ${max} sites générés ce mois-ci sur le plan ${planLabel(plan)}. ${
             plan === "free" ? "Passe Pro pour 20 sites par mois." : plan === "pro" ? "Passe Agency pour 50 sites par mois." : "La limite se réinitialise le mois prochain."
-          }`,
+          }`, code: "sites_limit", values: { max, plan: planLabel(plan) },
         },
         { status: 403 }
       );
@@ -196,7 +196,7 @@ export async function POST(request: NextRequest) {
   }
 
   if (error || !data) {
-    return NextResponse.json({ error: error?.message ?? "Sauvegarde impossible." }, { status: 500 });
+    return NextResponse.json({ error: error?.message ?? "Sauvegarde impossible.", code: "server_error" }, { status: 500 });
   }
   return NextResponse.json({ id: data.id }, { status: 201 });
 }

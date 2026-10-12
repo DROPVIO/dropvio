@@ -63,7 +63,7 @@ export async function POST(request: NextRequest) {
   const { supabase, user, plan } = await getServerUserAndPlan();
 
   if (!user) {
-    return NextResponse.json({ error: "Connecte-toi pour voir des alternatives." }, { status: 401 });
+    return NextResponse.json({ error: "Connecte-toi pour voir des alternatives.", code: "auth_required" }, { status: 401 });
   }
 
   // Garde-fou technique indépendant du quota métier mensuel : chaque appel déclenche 2
@@ -71,7 +71,7 @@ export async function POST(request: NextRequest) {
   // enchaîne des dizaines de recherches d'affilée même sous le plafond mensuel.
   if (!checkRateLimit(`finder-alternatives:${user.id}`, { max: 10, windowMs: 3_600_000 })) {
     return NextResponse.json(
-      { error: "Trop de recherches en peu de temps. Réessaie dans quelques minutes." },
+      { error: "Trop de recherches en peu de temps. Réessaie dans quelques minutes.", code: "rate_limit" },
       { status: 429 }
     );
   }
@@ -80,7 +80,7 @@ export async function POST(request: NextRequest) {
 
   if (maxParMois === 0) {
     return NextResponse.json(
-      { error: "Les alternatives fiables ne sont pas disponibles sur le plan Free." },
+      { error: "Les alternatives fiables ne sont pas disponibles sur le plan Free.", code: "alternatives_plan" },
       { status: 403 }
     );
   }
@@ -90,7 +90,7 @@ export async function POST(request: NextRequest) {
     if (used >= maxParMois) {
       return NextResponse.json(
         {
-          error: `Tu as atteint la limite de ${maxParMois} recherches d'alternatives ce mois-ci sur le plan ${planLabel(plan)}. Passe Pro pour un accès illimité.`,
+          error: `Tu as atteint la limite de ${maxParMois} recherches d'alternatives ce mois-ci sur le plan ${planLabel(plan)}. Passe Pro pour un accès illimité.`, code: "alternatives_limit", values: { max: maxParMois, plan: planLabel(plan) },
         },
         { status: 403 }
       );
@@ -102,7 +102,7 @@ export async function POST(request: NextRequest) {
   const nom = body?.nom;
 
   if (!id || typeof id !== "string" || !nom || typeof nom !== "string") {
-    return NextResponse.json({ error: "id et nom sont requis." }, { status: 400 });
+    return NextResponse.json({ error: "id et nom sont requis.", code: "invalid_request" }, { status: 400 });
   }
 
   // Prix et catégorie du produit d'origine dérivés en direct (target_sale_price, EUR) plutôt
@@ -113,7 +113,7 @@ export async function POST(request: NextRequest) {
 
   if (!origin) {
     return NextResponse.json(
-      { error: "Produit introuvable sur AliExpress (retiré ou identifiant invalide)." },
+      { error: "Produit introuvable sur AliExpress (retiré ou identifiant invalide).", code: "aliexpress_product_not_found" },
       { status: 404 }
     );
   }

@@ -19,7 +19,7 @@ export async function GET(request: NextRequest) {
     .range(from, to);
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: error.message, code: "server_error" }, { status: 500 });
   }
 
   const total = count ?? (data?.length ?? 0);

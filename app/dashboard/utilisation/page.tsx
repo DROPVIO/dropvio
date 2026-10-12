@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { UsageMeter } from "@/components/UsageMeter";
+import { useApiErrorMessage } from "@/lib/use-api-error";
 
 type UsageMetric = { key: string; label: string; used: number; max: number | null };
 type BoutiqueUsage = { id: string; nom: string; used: number; max: number | null };
@@ -28,6 +29,7 @@ const METRIC_KEYS: Record<string, string> = {
 
 export default function UtilisationDetailPage() {
   const t = useTranslations("dashboard");
+  const apiErrorMessage = useApiErrorMessage();
   const [usage, setUsage] = useState<UsageData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -37,7 +39,7 @@ export default function UtilisationDetailPage() {
       .then(async (res) => {
         const json = await res.json();
         if (!res.ok) {
-          setError(json.error ?? t("utilisation.errorLoad"));
+          setError(apiErrorMessage(json, t("utilisation.errorLoad")));
           return;
         }
         setUsage(json);

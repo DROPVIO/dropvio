@@ -23,11 +23,11 @@ export async function GET(request: NextRequest, context: { params: Promise<{ slu
     .maybeSingle();
 
   if (boutiqueError) {
-    return NextResponse.json({ error: boutiqueError.message }, { status: 500 });
+    return NextResponse.json({ error: boutiqueError.message, code: "server_error" }, { status: 500 });
   }
 
   if (!boutique || !(await canViewBoutique(boutique.est_publique, boutique.user_id))) {
-    return NextResponse.json({ error: "Boutique introuvable." }, { status: 404 });
+    return NextResponse.json({ error: "Boutique introuvable.", code: "boutique_not_found" }, { status: 404 });
   }
 
   // Bestsellers/spotlight = triés par produits.commandes (nombre de commandes fournisseur,
@@ -45,7 +45,7 @@ export async function GET(request: NextRequest, context: { params: Promise<{ slu
       .eq("boutique_id", boutique.id);
 
     if (rankedError) {
-      return NextResponse.json({ error: rankedError.message }, { status: 500 });
+      return NextResponse.json({ error: rankedError.message, code: "server_error" }, { status: 500 });
     }
 
     const ranked = (withSource ?? [])
@@ -76,7 +76,7 @@ export async function GET(request: NextRequest, context: { params: Promise<{ slu
   const { data, error, count } = await query.range(from, to);
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: error.message, code: "server_error" }, { status: 500 });
   }
 
   const total = count ?? (data?.length ?? 0);

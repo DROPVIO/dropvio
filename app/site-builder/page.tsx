@@ -260,7 +260,8 @@ function SiteBuilderContent() {
     url: string;
     admin_url: string;
     autoAttached?: boolean;
-    message?: string;
+    messageCode?: "liquidAttache" | "liquidManuel";
+    sectionType?: string;
   } | null>(null);
 
   useEffect(() => {
@@ -1397,8 +1398,10 @@ function SiteBuilderContent() {
                           ? t("shopify.etapeManuelle")
                           : t("shopify.publie")}
                       </p>
-                      {shopifyPushResult.message && (
-                        <p className="text-xs text-[var(--text-muted)]">{shopifyPushResult.message}</p>
+                      {shopifyPushResult.messageCode && (
+                        <p className="text-xs text-[var(--text-muted)]">
+                          {t(`shopify.${shopifyPushResult.messageCode}`, { section: shopifyPushResult.sectionType ?? "" })}
+                        </p>
                       )}
                       <div className="flex gap-3 mt-1">
                         <a

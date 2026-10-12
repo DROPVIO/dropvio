@@ -7,6 +7,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
 import { toIntlTag, type AppLocale } from "@/lib/locale";
 import type { User } from "@supabase/supabase-js";
+import { useApiErrorMessage } from "@/lib/use-api-error";
 import {
   SEUIL_TVA,
   SEUIL_TVA_MAJORE,
@@ -171,6 +172,7 @@ export default function CalculateurMarge() {
 
 function CalculateurMargeInner() {
   const t = useTranslations("dashboard.calculateur");
+  const apiErrorMessage = useApiErrorMessage();
   const tCommon = useTranslations("dashboard.common");
   const intlTag = toIntlTag(useLocale() as AppLocale);
   const searchParams = useSearchParams();
@@ -412,7 +414,7 @@ function CalculateurMargeInner() {
       });
       const data = await res.json();
       if (!res.ok) {
-        setSaveError(data.error ?? t("saveError"));
+        setSaveError(apiErrorMessage(data, t("saveError")));
         return;
       }
       setSimulations((prev) => [data as SimulationMarge, ...prev]);

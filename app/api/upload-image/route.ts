@@ -32,7 +32,7 @@ async function getUser() {
 export async function POST(request: NextRequest) {
   const user = await getUser();
   if (!user) {
-    return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
+    return NextResponse.json({ error: "Non autorisé", code: "auth_required" }, { status: 401 });
   }
 
   const form = await request.formData();
@@ -41,13 +41,13 @@ export async function POST(request: NextRequest) {
   const slot = slotRaw in SLOT_CONFIG ? slotRaw : "galerie";
 
   if (!(file instanceof File)) {
-    return NextResponse.json({ error: "Fichier manquant" }, { status: 400 });
+    return NextResponse.json({ error: "Fichier manquant", code: "file_missing" }, { status: 400 });
   }
   if (!file.type.startsWith("image/")) {
-    return NextResponse.json({ error: "Format non supporté — envoie une image (JPEG, PNG, WebP...)" }, { status: 400 });
+    return NextResponse.json({ error: "Format non supporté — envoie une image (JPEG, PNG, WebP...)", code: "image_format" }, { status: 400 });
   }
   if (file.size > MAX_UPLOAD_BYTES) {
-    return NextResponse.json({ error: "Image trop lourde (8 Mo max)" }, { status: 400 });
+    return NextResponse.json({ error: "Image trop lourde (8 Mo max)", code: "image_too_large" }, { status: 400 });
   }
 
   try {
@@ -69,7 +69,7 @@ export async function POST(request: NextRequest) {
 
     if (uploadError) {
       console.error("[upload-image] Erreur storage:", uploadError.message);
-      return NextResponse.json({ error: uploadError.message }, { status: 500 });
+      return NextResponse.json({ error: uploadError.message, code: "server_error" }, { status: 500 });
     }
 
     const { data } = admin.storage.from("site-images").getPublicUrl(path);
@@ -81,6 +81,6 @@ export async function POST(request: NextRequest) {
     });
   } catch (err) {
     console.error("[upload-image] Erreur compression/upload:", err);
-    return NextResponse.json({ error: "Erreur lors du traitement de l'image" }, { status: 500 });
+    return NextResponse.json({ error: "Erreur lors du traitement de l'image", code: "image_processing_failed" }, { status: 500 });
   }
 }

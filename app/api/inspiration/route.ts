@@ -89,7 +89,7 @@ function extraireJson(texte: string): unknown {
 export async function POST(request: NextRequest) {
   const { supabase, user } = await getServerUserPlanOnly();
   if (!user) {
-    return NextResponse.json({ error: "Connecte-toi pour analyser des captures." }, { status: 401 });
+    return NextResponse.json({ error: "Connecte-toi pour analyser des captures.", code: "auth_required" }, { status: 401 });
   }
 
   const form = await request.formData();

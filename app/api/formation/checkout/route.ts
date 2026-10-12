@@ -10,12 +10,12 @@ export async function POST(request: Request) {
   const { user, formationOwned } = await getServerUserAndPlan();
 
   if (!user) {
-    return NextResponse.json({ error: "Connecte-toi pour acheter une formation." }, { status: 401 });
+    return NextResponse.json({ error: "Connecte-toi pour acheter une formation.", code: "auth_required" }, { status: 401 });
   }
 
   if (!isStripeConfigured()) {
     return NextResponse.json(
-      { error: "Le paiement n'est pas encore configuré côté serveur (clé Stripe manquante)." },
+      { error: "Le paiement n'est pas encore configuré côté serveur (clé Stripe manquante).", code: "payment_not_configured" },
       { status: 500 }
     );
   }
@@ -24,12 +24,12 @@ export async function POST(request: Request) {
   const offre = body?.offre as FormationOffre | undefined;
 
   if (offre !== "courte" && offre !== "longue" && offre !== "bundle") {
-    return NextResponse.json({ error: "Offre invalide." }, { status: 400 });
+    return NextResponse.json({ error: "Offre invalide.", code: "offer_invalid" }, { status: 400 });
   }
 
   const collectionsVisees = collectionsDeOffre(offre);
   if (collectionsVisees.every((c) => formationOwned[c])) {
-    return NextResponse.json({ error: "Tu possèdes déjà cette formation." }, { status: 400 });
+    return NextResponse.json({ error: "Tu possèdes déjà cette formation.", code: "formation_already_owned" }, { status: 400 });
   }
 
   const origin = new URL(request.url).origin;
@@ -46,7 +46,7 @@ export async function POST(request: Request) {
   });
 
   if (!session.url) {
-    return NextResponse.json({ error: "Impossible de créer la session de paiement." }, { status: 502 });
+    return NextResponse.json({ error: "Impossible de créer la session de paiement.", code: "payment_session_failed" }, { status: 502 });
   }
 
   return NextResponse.json({ url: session.url });
