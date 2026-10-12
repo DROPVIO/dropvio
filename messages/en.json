@@ -1135,5 +1135,17 @@
       "faq": "FAQ",
       "contact": "Contact"
     }
+  },
+  "apiErrors": {
+    "generic": "Something went wrong. Please try again.",
+    "network": "Unable to reach the server.",
+    "invalid_request": "Invalid request.",
+    "boutique_not_found": "Store not found.",
+    "boutique_name_required": "The store name is required.",
+    "slug_invalid": "Invalid slug: lowercase letters, numbers and hyphens, 2 to 60 characters.",
+    "slug_reserved": "This slug is reserved. Please choose another one.",
+    "slug_taken": "This slug is already used by another store. Please choose another one.",
+    "publish_slug_invalid": "Fix the store slug before making it public.",
+    "publish_requires_product": "Add at least one product before making the store public."
   }
 }

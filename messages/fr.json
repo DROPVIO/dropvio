@@ -1135,5 +1135,17 @@
       "faq": "FAQ",
       "contact": "Contact"
     }
+  },
+  "apiErrors": {
+    "generic": "Une erreur est survenue. Réessaie.",
+    "network": "Impossible de contacter le serveur.",
+    "invalid_request": "Requête invalide.",
+    "boutique_not_found": "Boutique introuvable.",
+    "boutique_name_required": "Le nom de la boutique est requis.",
+    "slug_invalid": "Slug invalide : lettres minuscules, chiffres et tirets, entre 2 et 60 caractères.",
+    "slug_reserved": "Ce slug est réservé. Choisis-en un autre.",
+    "slug_taken": "Ce slug est déjà utilisé par une autre boutique. Choisis-en un autre.",
+    "publish_slug_invalid": "Corrige le slug de la boutique avant de la rendre publique.",
+    "publish_requires_product": "Ajoute au moins un produit avant de rendre la boutique publique."
   }
 }
