@@ -103,8 +103,9 @@ function SiteBuilderContent() {
   // comprises. multi=1 sans brouillon (nouvel onglet, session expirée) : brouillonIntrouvable.
   const modeBoutique = searchParams.get("multi") === "1";
   const [brouillonLu, setBoutiqueDraft] = useBoutiqueDraft(modeBoutique);
-  const boutiqueDraft = brouillonLu ?? null;
-  const brouillonIntrouvable = modeBoutique && brouillonLu === null;
+  // Un brouillon resté dans l'onglet pour une autre boutique n'est jamais repris.
+  const boutiqueDraft = brouillonLu && (!boutiqueId || brouillonLu.boutiqueId === boutiqueId) ? brouillonLu : null;
+  const brouillonIntrouvable = modeBoutique && brouillonLu !== undefined && boutiqueDraft === null;
 
   // Style & palette
   const [selectedStyleId, setSelectedStyleId] = useState("premium");
