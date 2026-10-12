@@ -440,158 +440,177 @@ footer.lp-cta p { color: var(--text-2); margin-bottom: 32px; }
 }
 
 /* ─── Landing page (/) ──────────────────────────────────────────────────
-   Scope totalement indépendant de .faq-page — porté depuis l'export .dc.html
-   fourni (mêmes tokens oklch, mêmes keyframes), la mise en page/typo étant
-   gérée directement en JSX via des classes Tailwind (voir app/page.tsx). */
+   Porté depuis l'export .dc.html « Dropvio Landing-2 ». Scope totalement
+   indépendant de .faq-page. La mise en page et la typo sont en JSX (Tailwind
+   + styles calculés) ; ne vivent ici que les keyframes, le système de reveal
+   au scroll et les quelques pseudo-éléments qu'une classe utilitaire ne peut
+   pas exprimer (placeholders, scrollbar, ::-webkit-details-marker).
 
-@keyframes dv-bob   { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-9px); } }
+   Palette FIXE (fond blanc, encre #111, une section sombre) : contrairement à
+   l'ancienne landing, cette maquette n'a pas de bascule de thème et son contraste
+   est construit sur l'alternance clair → sombre → clair. La landing ne suit donc
+   pas data-theme ; le reste de l'app, lui, est inchangé. */
 
 .dv-home {
-  --dv-bg: oklch(0.168 0.014 162);
-  --dv-bg-soft: oklch(0.205 0.016 162);
-  --dv-card: oklch(0.213 0.016 162);
-  --dv-card-2: oklch(0.238 0.018 162);
-  --dv-line: oklch(0.315 0.018 162);
-  --dv-ink: oklch(0.975 0.006 162);
-  --dv-muted: oklch(0.755 0.014 162);
-  --dv-faint: oklch(0.60 0.014 162);
-  --dv-accent-h: 295;
-  --dv-accent: oklch(0.735 0.165 var(--dv-accent-h));
-  --dv-accent-2: oklch(0.735 0.165 calc(var(--dv-accent-h) + 35));
-  --dv-accent-ink: oklch(0.20 0.06 var(--dv-accent-h));
-  --dv-logo: oklch(0.80 0.17 158);
-  --dv-grid: oklch(0.30 0.02 162 / 0.5);
-  --dv-glass: oklch(0.20 0.016 162 / 0.72);
-}
-:root[data-theme="light"] .dv-home {
-  --dv-bg: oklch(0.985 0.006 162);
-  --dv-bg-soft: oklch(0.962 0.008 162);
-  --dv-card: oklch(1 0 0);
-  --dv-card-2: oklch(0.975 0.006 162);
-  --dv-line: oklch(0.895 0.010 162);
-  --dv-ink: oklch(0.235 0.018 162);
-  --dv-muted: oklch(0.455 0.016 162);
-  /* 0.52 et non 0.585 : la valeur d'origine tombait à 3.9-4.2:1 sur --dv-bg/--dv-card/
-     --dv-card-2, sous le seuil WCAG AA (4.5:1), alors qu'elle porte les petites légendes
-     (12-13px). 0.52 donne 4.9-5.5:1 tout en restant plus clair que --dv-muted, donc la
-     hiérarchie ink > muted > faint est préservée. Même correctif que --text-faint plus haut. */
-  --dv-faint: oklch(0.52 0.014 162);
-  --dv-accent: oklch(0.545 0.19 var(--dv-accent-h));
-  --dv-accent-2: oklch(0.545 0.19 calc(var(--dv-accent-h) + 35));
-  --dv-accent-ink: oklch(0.99 0.01 var(--dv-accent-h));
-  --dv-logo: oklch(0.60 0.15 158);
-  --dv-grid: oklch(0.80 0.02 162 / 0.6);
-  --dv-glass: oklch(1 0 0 / 0.75);
+  /* container-type : la maquette dimensionne tout en cqw (clamp(…, Ncqw, …)),
+     relatif à la largeur de la landing et non du viewport — c'est ce qui la rend
+     correcte à l'intérieur d'un conteneur plus étroit que l'écran. */
+  container-type: inline-size;
+  background: #fff;
+  color: #111;
+  font-family: var(--font-geist-sans), Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  min-width: 320px;
 }
 
-.dv-home a { color: inherit; text-decoration: none; }
-/* Équivalent de l'ancienne classe Tailwind font-['Plus_Jakarta_Sans'] : la police est
-   désormais auto-hébergée et exposée en variable par app/layout.tsx. */
-.dv-home .dv-display { font-family: var(--font-jakarta), system-ui, sans-serif; }
-.dv-home h1, .dv-home h2, .dv-home h3, .dv-home h4 { font-family: var(--font-jakarta), system-ui, sans-serif; letter-spacing: -0.025em; }
-.dv-home summary::-webkit-details-marker { display: none; }
-.dv-home summary { list-style: none; }
+.dv-home a { color: #111; text-decoration: none; }
+.dv-home a:hover { color: #7c3aed; }
+.dv-home .dv-mono { font-family: var(--font-geist-mono), ui-monospace, SFMono-Regular, monospace; }
 
-.dv-home [data-reveal] { opacity: 0; transform: translateY(30px) scale(.985); transition: opacity .75s cubic-bezier(.16,1,.3,1), transform .9s cubic-bezier(.16,1,.3,1); }
-.dv-home [data-reveal="in"] { opacity: 1; transform: none; }
-.dv-home [data-slide="left"] { transform: translateX(-34px); }
-.dv-home [data-slide="right"] { transform: translateX(34px); }
-.dv-home [data-reveal="in"][data-slide] { transform: none; }
+/* Scrollbar discrète des zones défilantes sombres (fenêtre de démo). */
+.dv-home [data-dv-scroll]::-webkit-scrollbar { width: 6px; }
+.dv-home [data-dv-scroll]::-webkit-scrollbar-track { background: transparent; }
+.dv-home [data-dv-scroll]::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.3); border-radius: 6px; }
 
-.dv-home .dv-icon-dark { display: block; }
-.dv-home .dv-icon-light { display: none; }
-:root[data-theme="light"] .dv-home .dv-icon-dark { display: none; }
-:root[data-theme="light"] .dv-home .dv-icon-light { display: block; }
+.dv-home textarea[data-dv-code]::placeholder,
+.dv-home input[data-dv-url]::placeholder { color: #b4b4be; opacity: 1; }
 
-/* Survols : déplacement léger + changement de bordure uniquement. Pas d'ombre teintée
-   à l'accent (halo lumineux) — seules des ombres neutres très discrètes subsistent. */
-.dv-home .dv-nav-link:hover { color: var(--dv-ink); }
-.dv-home .dv-theme-btn:hover { color: var(--dv-accent); border-color: var(--dv-accent); }
-.dv-home .dv-btn-primary:hover { transform: translateY(-2px); }
-.dv-home .dv-btn-secondary:hover { transform: translateY(-2px); border-color: var(--dv-accent); background: var(--dv-card-2); }
-.dv-home .dv-hero-card:hover { transform: translateY(-4px); }
-.dv-home .dv-step:hover { border-color: var(--dv-line); background: var(--dv-card); transform: translateX(6px); }
-.dv-home .dv-feature-card:hover { transform: translateY(-4px); border-color: var(--dv-accent); }
-.dv-home .dv-feature-card.is-accent-2:hover { border-color: var(--dv-accent-2); }
-.dv-home .dv-price-card:hover { transform: translateY(-4px); box-shadow: 0 12px 28px -22px oklch(0 0 0 / .4); }
-.dv-home .dv-price-card.is-featured:hover { transform: translateY(-5px); }
-.dv-home .dv-price-card.is-agency:hover { transform: translateY(-4px); border-color: var(--dv-accent-2); }
-.dv-home .dv-price-cta-outline:hover { border-color: var(--dv-accent); transform: translateY(-2px); }
-.dv-home .dv-price-cta-outline.is-agency:hover { border-color: var(--dv-accent-2); }
-.dv-home .dv-price-cta-solid:hover { transform: translateY(-2px); }
-.dv-home .dv-final-cta-primary:hover { transform: translateY(-2px); }
-.dv-home .dv-final-cta-secondary:hover { transform: translateY(-2px); border-color: var(--dv-accent); }
+/* ─── Animations d'entrée du mockup (hero) ───────────────────────────── */
+@keyframes dv-lid     { 0% { transform: rotateX(-90deg); } 78% { transform: rotateX(2deg); } 100% { transform: rotateX(0deg); } }
+@keyframes dv-shadow  { from { transform: scaleX(0.5); opacity: 0.35; } to { transform: none; opacity: 1; } }
+@keyframes dv-off     { from { opacity: 1; } to { opacity: 0; } }
+@keyframes dv-glare   { 0% { transform: translateY(-100%); opacity: 0; } 30% { opacity: 1; } 100% { transform: translateY(100%); opacity: 0; } }
+@keyframes dv-rise    { from { transform: translateY(var(--dv-rise-y, 60px)); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes dv-fade    { from { opacity: 0; } to { opacity: 1; } }
 
-@media (prefers-reduced-motion: reduce) {
-  .dv-home [data-reveal] { opacity: 1 !important; transform: none !important; transition: none !important; }
-  .dv-home * { animation-duration: .01ms !important; }
+/* ─── Démo d'audit ───────────────────────────────────────────────────── */
+@keyframes dv-scan    { 0% { top: -48px; } 100% { top: 100%; } }
+@keyframes dv-spin    { to { transform: rotate(360deg); } }
+@keyframes dv-pop     { from { opacity: 0; transform: scale(0.96); } to { opacity: 1; transform: none; } }
+@keyframes dv-sheet   { from { transform: translateY(100%); } to { transform: none; } }
+@keyframes dv-in      { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+/* ─── Reveal au scroll ───────────────────────────────────────────────────
+   Chaque variante ne règle que des variables ; une seule keyframe les consomme.
+   Les éléments ne sont masqués que si le JS a posé data-rv-on sur la racine :
+   sans JS (ou avant hydratation), la page s'affiche dans son état final. */
+.dv-home [data-rv] { --rx: 0px; --ry: 24px; --rs: 1; --rb: 4px; --rd: 700ms; }
+.dv-home [data-rv="hero"]  { --ry: 0px; --rb: 0px; --rd: 300ms; }
+.dv-home [data-rv="zoom"]  { --ry: 0px; --rs: 0.96; --rb: 0px; --rd: 800ms; }
+.dv-home [data-rv="left"]  { --rx: -32px; --ry: 0px; --rb: 0px; }
+.dv-home [data-rv="right"] { --rx: 32px; --ry: 0px; --rb: 0px; }
+.dv-home [data-rv="faq"]   { --ry: 16px; }
+.dv-home [data-rv="fade"]  { --ry: 0px; --rb: 0px; }
+
+/* Amplitudes réduites sur petite largeur : un déplacement de 24px sur mobile
+   déclenche un reflow visible plus qu'une apparition. */
+@container (max-width: 639px) {
+  .dv-home [data-rv] { --ry: 12px; --rb: 0px; }
+  .dv-home [data-rv="hero"],
+  .dv-home [data-rv="zoom"],
+  .dv-home [data-rv="fade"],
+  .dv-home [data-rv="left"],
+  .dv-home [data-rv="right"] { --ry: 0px; }
+  .dv-home [data-rv="left"]  { --rx: -16px; }
+  .dv-home [data-rv="right"] { --rx: 16px; }
+  .dv-home [data-rv="faq"]   { --ry: 8px; }
 }
 
-/* ─── Landing — section « La chaîne » ────────────────────────────────────
-   Palette propre à la section (encre + neutres chauds, violet réservé aux
-   chiffres clés), branchée sur le même data-theme que le reste de l'app :
-   valeurs sombres sur .dv-chain, claires sous :root[data-theme="light"] —
-   exactement le schéma de .dv-home ci-dessus. Pas de background posé sur la
-   section : elle s'appuie sur le fond de la landing pour éviter un rectangle
-   flottant dans le conteneur centré. */
-/* Hauteur de la nav sticky de la landing : padding vertical (2 × 14px) + la plus haute de
-   ses lignes (le CTA, ~39px) + la bordure basse. Sert de scroll-margin-top aux ancres. */
-.dv-home,
-.dv-chain {
-  --dv-nav-h: 68px;
+@keyframes dv-rv {
+  from { opacity: 0; transform: translate3d(var(--rx), var(--ry), 0) scale(var(--rs)); filter: blur(var(--rb)); }
+  to   { opacity: 1; transform: none; filter: none; }
+}
+@keyframes dv-pulse {
+  0%   { box-shadow: 0 0 0 0 rgba(124, 58, 237, 0.4); }
+  45%  { box-shadow: 0 0 0 6px rgba(124, 58, 237, 0.14); }
+  100% { box-shadow: 0 0 0 10px rgba(124, 58, 237, 0); }
 }
 
-/* Défilement fluide pour les ancres de la nav, désactivé si l'utilisateur préfère moins
-   d'animation. Porté par :root : c'est l'élément qui défile réellement. */
+.dv-home[data-rv-on] [data-rv]:not([data-rv-in]) { opacity: 0; }
+.dv-home[data-rv-on] [data-rv][data-rv-in] {
+  animation: dv-rv var(--rd) cubic-bezier(0.22, 1, 0.36, 1) var(--dl, 0ms) both;
+}
+/* La carte Pro reçoit en plus une pulsation unique, pour l'ancrer comme le choix par défaut. */
+.dv-home[data-rv-on] [data-rv-pulse][data-rv-in] {
+  animation: dv-rv var(--rd) cubic-bezier(0.22, 1, 0.36, 1) var(--dl, 0ms) both,
+             dv-pulse 1s ease-out calc(var(--dl, 0ms) + 650ms) 1;
+}
+
+/* Ancres de la nav : défilement fluide et décalage sous la nav sticky. */
+.dv-home { --dv-nav-h: 58px; }
 @media (prefers-reduced-motion: no-preference) {
-  :root {
-    scroll-behavior: smooth;
-  }
+  :root { scroll-behavior: smooth; }
 }
-
-.dv-chain {
-  --ch-ink: #EDEBF2;
-  --ch-muted: #A9A3B5;
-  --ch-faint: #8A8496;
-  --ch-rule: rgba(237, 235, 242, 0.10);
-  --ch-rule-strong: rgba(237, 235, 242, 0.22);
-  --ch-raised: #16141C;
-  color: var(--ch-ink);
-}
-:root[data-theme="light"] .dv-chain {
-  --ch-ink: #15131A;
-  --ch-muted: #56515F;
-  --ch-faint: #655F6E;
-  --ch-rule: rgba(21, 19, 26, 0.10);
-  --ch-rule-strong: rgba(21, 19, 26, 0.20);
-  --ch-raised: #EDEBE4;
-}
-
-.dv-chain .ch-display { font-family: var(--font-jakarta), system-ui, sans-serif; }
-.dv-chain .ch-mono { font-family: var(--font-geist-mono), ui-monospace, SFMono-Regular, monospace; }
-
-/* Les animations ne s'activent que si le JS a posé data-ch-anim="on" : sans JS,
-   aucun élément n'est masqué et la section s'affiche dans son état final. */
-.dv-chain[data-ch-anim="on"] [data-ch-reveal] {
-  opacity: 0;
-  transform: translateY(14px);
-  transition: opacity 0.6s cubic-bezier(.16, 1, .3, 1), transform 0.6s cubic-bezier(.16, 1, .3, 1);
-}
-.dv-chain[data-ch-anim="on"] [data-ch-reveal="in"] { opacity: 1; transform: none; }
-.dv-chain[data-ch-anim="on"] [data-ch-line] { opacity: 0; transition: opacity 0.4s ease; }
-.dv-chain[data-ch-anim="on"] [data-ch-line="in"] { opacity: 1; }
-.dv-chain[data-ch-anim="on"] .ch-idx { opacity: 0.4; transition: opacity 0.3s ease, color 0.3s ease; }
-.dv-chain[data-ch-anim="on"] .ch-idx[data-active="true"] { opacity: 1; color: var(--dv-accent); }
 
 @media (prefers-reduced-motion: reduce) {
-  .dv-chain[data-ch-anim="on"] [data-ch-reveal],
-  .dv-chain[data-ch-anim="on"] [data-ch-line] {
+  /* Les éléments restent visibles et rien ne bouge : un simple fondu remplace
+     l'ensemble des entrées, et aucune animation décorative ne tourne. */
+  .dv-home[data-rv-on] [data-rv] {
     opacity: 1 !important;
+    animation: none !important;
     transform: none !important;
-    transition: none !important;
+    filter: none !important;
   }
-  .dv-chain[data-ch-anim="on"] .ch-idx { opacity: 1 !important; }
-  /* Plus aucune transition dans la section : la barre de progression, l'étape active et
-     le rail de statuts se posent directement sur leur valeur courante. */
-  .dv-chain * { transition: none !important; animation: none !important; }
+  .dv-home * { animation: none !important; transition: none !important; }
+}
+
+/* ─── Hero : tout tient dans un écran, nav comprise ──────────────────────
+   Les tailles suivent la largeur ET la hauteur du viewport — min(Nvw, Nvh) à
+   l'intérieur du clamp. Sur un écran large mais bas (1280×720, 1920×1080), c'est
+   la composante vh qui gagne et réduit la typo, au lieu de pousser la ligne de
+   conditions sous la ligne de flottaison. Aucun JS : tout est résolu par le
+   moteur de style, donc correct dès le premier paint et au redimensionnement.
+
+   --dv-nav-h doit être exacte puisque la hauteur du hero s'en déduit : la nav
+   est donc contrainte à cette hauteur (box-border, bordure incluse) plutôt que
+   laissée à son contenu. */
+.dv-home { --dv-nav-h: 63px; }
+.dv-hero-nav { height: var(--dv-nav-h); }
+
+/* Mobile : c'est le bloc de texte qui occupe l'écran. Les appareils se placent
+   après et dépassent volontairement la ligne de flottaison. */
+.dv-hero-text { min-height: calc(100dvh - var(--dv-nav-h)); }
+
+.dv-hero-h1 {
+  font-size: clamp(30px, min(8.5vw, 5.2vh), 44px);
+  line-height: 1.02;
+  letter-spacing: -0.03em;
+  margin-top: clamp(12px, 2vh, 24px);
+}
+.dv-hero-sub {
+  font-size: 16px;
+  line-height: 1.45;
+  max-width: 34em;
+  margin-top: clamp(14px, 2.6vh, 32px);
+}
+.dv-hero-actions { margin-top: clamp(18px, 3.4vh, 40px); }
+.dv-hero-primary {
+  min-height: clamp(48px, 7vh, 64px);
+  font-size: clamp(16px, 2.2vh, 20px);
+}
+.dv-hero-terms {
+  margin-top: clamp(10px, 1.6vh, 18px);
+  font-size: 15px;
+}
+/* Les appareils ne prennent jamais plus de place que le bloc de texte. */
+.dv-hero-devices { height: min(62vh, 100%); }
+
+@media (min-width: 1024px) {
+  /* Desktop : la section entière fait un écran, les deux colonnes sont centrées. */
+  .dv-hero { height: calc(100dvh - var(--dv-nav-h)); }
+  .dv-hero-text { min-height: 0; }
+  /* 7vh et non 8.2vh : à 8.2vh le titre français prend 8 lignes (90 caractères contre 74
+     en anglais) dans la colonne de 44 %, ce qui poussait la ligne de conditions 15 à 47 px
+     sous la ligne de flottaison sur les cinq formats desktop. Mesuré dans Chromium sur
+     4 langues × 7 tailles : 7vh est la valeur la plus proche de la spec qui les fasse
+     toutes tenir.
+
+     Plafond à 72px et non 84px : au-delà de ~1360px de large la colonne cesse de s'élargir
+     (max-width du conteneur) alors que 7vh continue de croître, donc le titre repassait à
+     8 lignes sur un 1920×1080 et ne laissait plus que 18px de marge. À 72px la marge
+     minimale remonte à 49px, et le cas le plus serré redevient 1280×800, indépendant du
+     plafond. */
+  .dv-hero-h1 { font-size: clamp(36px, min(5.4vw, 7vh), 72px); }
+  .dv-hero-sub { font-size: clamp(16px, min(1.35vw, 2.3vh), 22px); }
+  .dv-hero-terms { white-space: nowrap; }
 }

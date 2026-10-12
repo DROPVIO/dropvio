@@ -1,552 +1,152 @@
 "use client";
 
-import { useEffect, useRef } from "react";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import Logo from "@/components/Logo";
-import { applyTheme, getStoredTheme } from "@/lib/theme";
 import ChaineSection from "@/components/landing/ChaineSection";
+import DemoAudit from "@/components/landing/DemoAudit";
+import FaqAccordion from "@/components/landing/FaqAccordion";
+import HeroDevices from "@/components/landing/HeroDevices";
+import { useReveal } from "@/components/landing/useReveal";
+import { SUPPORT_EMAIL } from "@/lib/contact";
 
-// ─── Static data ──────────────────────────────────────────────────────────────
-
-const RESULT_BARS = [
-  { label: "Sourcing\nproduit", before: 72, after: 18 },
-  { label: "Calcul de\nmarge", before: 58, after: 9 },
-  { label: "Création\ndu site", before: 86, after: 22 },
-  { label: "Suivi des\ncommandes", before: 64, after: 7 },
-] as const;
-
-const MINI_FAQ = [
-  { q: "Le calcul de marge est-il adapté au statut français ?", a: "Oui : le mode France intègre les cotisations URSSAF, la TVA, les taxes à l'import UE et les frais Stripe pour afficher une marge nette." },
-  { q: "Puis-je garder ma boutique Shopify existante ?", a: "Oui. Connectez votre boutique actuelle : les commandes remontent dans Dropvio et le numéro de suivi repart automatiquement vers Shopify." },
-  { q: "Sur quoi repose l'audit IA ?", a: "Sur des critères issus des travaux du Nielsen Norman Group, des benchmarks Unbounce et d'études McKinsey sur la conversion, traduits en un score sur 100." },
-] as const;
-
-// ─── Component ────────────────────────────────────────────────────────────────
+/* Landing publique, portée depuis l'export « Dropvio Landing-2 ».
+ *
+ * Palette fixe (fond blanc, une section sombre) : contrairement au reste de l'app, la landing
+ * ne suit pas data-theme — son contraste repose sur l'alternance clair → sombre → clair, et la
+ * maquette n'a pas de bascule de thème. Voir le scope .dv-home dans app/globals.css.
+ *
+ * La nav ne défile pas avec la page (non sticky), comme dans la maquette : nav + hero occupent
+ * exactement un écran, et une nav collante mangerait cette hauteur.
+ *
+ * Toute la copie passe par le namespace `landing` des 4 locales. Les chiffres annoncés
+ * viennent de lib/plan-limits.ts, et aucun texte ne promet d'essai ni de résiliation : il n'y
+ * a aujourd'hui ni abonnement Stripe ni parcours d'essai dans le code. */
 
 export default function LandingPage() {
-  const rootRef = useRef<HTMLDivElement>(null);
+  const t = useTranslations("landing");
+  const racineRef = useReveal<HTMLDivElement>();
 
-  function toggleTheme() {
-    applyTheme(getStoredTheme() === "light" ? "dark" : "light");
-  }
-
-  function handleFaqToggle(event: React.SyntheticEvent<HTMLDetailsElement>) {
-    const mark = event.currentTarget.querySelector<HTMLElement>("summary span:last-child");
-    if (!mark) return;
-    mark.style.transition = "transform .3s cubic-bezier(.16,1,.3,1)";
-    mark.style.transform = event.currentTarget.open ? "rotate(135deg)" : "none";
-  }
-
-  useEffect(() => {
-    const root = rootRef.current;
-    if (!root) return;
-
-    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const ease = (t: number) => 1 - Math.pow(1 - t, 4);
-
-    function fillBars(chart: Element) {
-      chart.querySelectorAll<HTMLElement>("[data-bar]").forEach((bar, i) => {
-        const value = (bar.getAttribute("data-val") ?? "0") + "%";
-        const prop = bar.getAttribute("data-axis") === "h" ? "height" : "width";
-        if (reduce) { bar.style[prop] = value; return; }
-        window.setTimeout(() => { bar.style[prop] = value; }, 90 * i);
-      });
-    }
-
-    function count(el: HTMLElement) {
-      const to = parseFloat(el.getAttribute("data-to") ?? "0");
-      if (reduce) { el.textContent = String(to); return; }
-      const t0 = performance.now();
-      const dur = 1300;
-      function tick(now: number) {
-        const p = Math.min(1, (now - t0) / dur);
-        el.textContent = String(Math.round(to * ease(p)));
-        if (p < 1) requestAnimationFrame(tick);
-      }
-      requestAnimationFrame(tick);
-    }
-
-    // Reveal / chart-fill / count-up / line-fill — un seul IntersectionObserver
-    // pour tous les éléments, même modèle (seuil, marge, désabonnement après
-    // déclenchement) que le script inline d'origine du design.
-    const io = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (!entry.isIntersecting) return;
-          const el = entry.target as HTMLElement;
-          io.unobserve(el);
-          if (el.hasAttribute("data-reveal")) {
-            const siblings = el.parentElement
-              ? Array.from(el.parentElement.children).filter((n) => n.hasAttribute("data-reveal"))
-              : [el];
-            const idx = Math.max(0, siblings.indexOf(el));
-            el.style.transitionDelay = reduce ? "0ms" : `${Math.min(idx * 80, 400)}ms`;
-            el.setAttribute("data-reveal", "in");
-          }
-          if (el.hasAttribute("data-chart")) fillBars(el);
-          if (el.hasAttribute("data-count")) count(el);
-        });
-      },
-      { threshold: 0.18, rootMargin: "0px 0px -8% 0px" }
-    );
-    root.querySelectorAll("[data-reveal],[data-chart],[data-count]").forEach((el) => io.observe(el));
-
-    return () => {
-      io.disconnect();
-    };
-  }, []);
+  const ctaNav =
+    "flex-none rounded-lg bg-[#7c3aed] px-[13px] py-[9px] text-sm font-semibold text-white no-underline transition-colors hover:bg-[#6d28d9] hover:text-white";
 
   return (
-    <div ref={rootRef} className="dv-home relative min-h-screen overflow-hidden bg-[var(--dv-bg)] font-[family-name:var(--font-inter)] text-[var(--dv-ink)] antialiased">
-
-      {/* Fond décoratif : fine grille, sans halo lumineux */}
-      <div
-        aria-hidden
-        className="pointer-events-none fixed inset-0 z-0 opacity-[0.16]"
-        style={{
-          backgroundImage:
-            "linear-gradient(var(--dv-grid) 1px,transparent 1px),linear-gradient(90deg,var(--dv-grid) 1px,transparent 1px)",
-          backgroundSize: "78px 78px",
-          maskImage: "radial-gradient(120% 90% at 50% 0%,#000 10%,transparent 72%)",
-        }}
-      />
-
-      {/* ── Nav ──────────────────────────────────────────────────── */}
-      <header className="sticky top-0 z-50 border-b border-[var(--dv-line)] bg-[var(--dv-glass)] backdrop-blur-[12px]">
-        <nav className="mx-auto flex max-w-[1200px] items-center gap-[22px] px-[22px] py-[14px]">
-          <a href="#top" className="flex items-center gap-2.5 text-[var(--dv-ink)]">
-            <Logo className="h-7 w-7 text-[var(--dv-logo)]" />
-            <span className="dv-display text-[19px] font-extrabold tracking-[-0.03em]">Dropvio</span>
-          </a>
-          <div className="ml-auto hidden items-center gap-[26px] text-[14.5px] font-medium sm:flex">
-            <a href="#fonctionnalites" className="dv-nav-link text-[var(--dv-muted)] transition-colors">Fonctionnalités</a>
-            <a href="#resultats" className="dv-nav-link text-[var(--dv-muted)] transition-colors">Résultats</a>
-            <a href="#pricing" className="dv-nav-link text-[var(--dv-muted)] transition-colors">Tarifs</a>
-          </div>
-          <button
-            type="button"
-            onClick={toggleTheme}
-            aria-label="Changer de thème"
-            className="dv-theme-btn grid h-[38px] w-[38px] flex-none place-items-center rounded-[11px] border border-[var(--dv-line)] bg-[var(--dv-card)] text-[var(--dv-muted)] transition-[transform,color,border-color] duration-200"
-          >
-            <span className="dv-icon-dark text-[15px] leading-none">☾</span>
-            <span className="dv-icon-light text-[15px] leading-none">☀</span>
-          </button>
-          <Link
-            href="/register"
-            className="dv-btn-primary flex-none rounded-xl bg-[var(--dv-accent)] px-5 py-[11px] dv-display text-[14.5px] font-bold text-[var(--dv-accent-ink)] transition-colors duration-200"
-          >
-            Commencer gratuitement
+    <div ref={racineRef} className="dv-home relative">
+      {/* ── Nav ──────────────────────────────────────────────────────── */}
+      <header className="dv-hero-nav box-border border-b border-[#eee] bg-white">
+        <nav className="mx-auto flex h-full max-w-[1200px] items-center gap-4 px-4 sm:px-6">
+          <Link href="#top" className="flex flex-none items-center gap-2 text-[#111] no-underline">
+            <Logo className="h-6 w-6 text-[#7c3aed]" />
+            {/* Le mot-logo tombe sous 640 px : la nav doit rester sur une ligne pour que
+                --dv-nav-h reste exacte. La marque reste identifiée par son signe. */}
+            <span className="hidden text-[18px] font-bold tracking-[-0.03em] sm:inline">Dropvio</span>
           </Link>
+          <div className="ml-auto flex items-center gap-3 text-sm font-medium sm:gap-[26px]">
+            <Link href="/login" className="whitespace-nowrap text-[#111] no-underline">
+              {t("nav.login")}
+            </Link>
+            <Link href="/register" className={ctaNav}>
+              <span className="whitespace-nowrap">{t("nav.cta")}</span>
+            </Link>
+          </div>
         </nav>
       </header>
 
-      <main id="top" className="relative z-[1] mx-auto max-w-[1200px] px-[22px]">
-        {/* ── Hero ─────────────────────────────────────────────────── */}
-        <section className="grid items-center gap-14 py-[clamp(48px,7vw,104px)] pb-[clamp(40px,5vw,72px)] lg:grid-cols-2">
-          <div data-reveal="" data-slide="left">
-            <div className="inline-flex items-center gap-[9px] rounded-full border border-[var(--dv-line)] bg-[var(--dv-card)] py-[7px] pl-[9px] pr-[14px] text-[13px] font-medium text-[var(--dv-muted)]">
-              <span className="h-[7px] w-[7px] rounded-full bg-[var(--dv-accent)]" />
-              Mode France : URSSAF, TVA, taxes UE, frais Stripe
-            </div>
-            <h1 className="mt-[22px] text-[clamp(40px,5.6vw,68px)] font-extrabold leading-[1.02]">
-              La nouvelle voix du <span className="text-[var(--dv-accent)]">dropshipping.</span>
-            </h1>
-            <p className="mt-5 max-w-[52ch] text-[clamp(16px,1.3vw,18.5px)] leading-[1.6] text-[var(--dv-muted)]">
-              Trouvez un produit gagnant, connaissez votre marge nette réelle, faites auditer votre page de vente par l&apos;IA et lancez la boutique — dans un seul outil, pensé pour la fiscalité française.
-            </p>
-            <div className="mt-[30px] flex flex-wrap gap-3">
-              <Link
-                href="/register"
-                className="dv-btn-primary rounded-2xl bg-[var(--dv-accent)] px-[26px] py-[15px] dv-display text-[16px] font-bold text-[var(--dv-accent-ink)] transition-colors duration-300"
-              >
-                Commencer gratuitement
-              </Link>
-              <a
-                href="#pricing"
-                className="dv-btn-secondary rounded-2xl border border-[var(--dv-line)] bg-[var(--dv-card)] px-6 py-[15px] dv-display text-[16px] font-semibold text-[var(--dv-ink)] transition-[transform,border-color,background] duration-300"
-              >
-                Voir les tarifs
-              </a>
-            </div>
-            <p className="mt-[18px] text-[13px] text-[var(--dv-faint)]">Aucune carte bancaire requise · Sans engagement</p>
-          </div>
-
-          {/* Mockup téléphone vu de trois quarts. Tout est construit en CSS (aucune image) :
-              le conteneur porte la perspective, le châssis la rotation. L'écran montre une
-              miniature stylisée du dashboard — palette sombre réelle de l'app
-              (#0d0d14 / #13131f / accent violet #7c3aed, cf. :root dans globals.css), fixe
-              et indépendante du thème de la landing puisqu'il s'agit d'une « capture ». */}
-          <div data-reveal="" data-slide="right" className="flex justify-center">
-            <div style={{ perspective: "1200px" }}>
-              <div
-                className="relative h-[520px] w-[256px]"
-                style={{
-                  transform: "rotateY(-19deg) rotateX(3deg)",
-                  transformStyle: "preserve-3d",
-                }}
-              >
-                {/* Tranche : plaque arrière décalée en Z. Avec rotateY négatif, c'est le côté
-                    DROIT qui s'avance vers l'utilisateur, donc cette plaque dépasse à droite et
-                    donne une vraie épaisseur (et non un bandeau peint). Titane plus sombre que
-                    la face, avec l'arête éclaircie. */}
-                <div
-                  aria-hidden
-                  className="absolute inset-0 rounded-[46px]"
-                  style={{
-                    transform: "translateZ(-12px)",
-                    background: "linear-gradient(90deg,#5f5f66 0%,#7c7c85 50%,#b6b6bf 100%)",
-                  }}
-                />
-
-                <div
-                  className="relative h-full w-full rounded-[46px] p-[11px]"
-                  style={{
-                    // Rail métal : arêtes plus sombres, méplat éclairci au centre.
-                    background:
-                      "linear-gradient(100deg,#7e7e87 0%,#c3c3cb 16%,#9a9aa3 38%,#8d8d96 62%,#c8c8d0 86%,#76767f 100%)",
-                    boxShadow:
-                      "0 0 0 1px rgba(20,20,30,0.14), 0 30px 50px -32px rgba(20,20,35,0.42), 0 2px 6px rgba(20,20,35,0.12)",
-                  }}
-                >
-                  {/* Reflet du châssis — placé avant l'écran dans le DOM, donc peint dessous :
-                      il n'apparaît que sur l'anneau du cadre, jamais sur l'écran. */}
-                  <div
-                    aria-hidden
-                    className="pointer-events-none absolute inset-0 rounded-[46px]"
-                    style={{
-                      background:
-                        "linear-gradient(135deg,rgba(255,255,255,0.55) 0%,rgba(255,255,255,0) 26%,rgba(255,255,255,0) 72%,rgba(255,255,255,0.32) 100%)",
-                    }}
-                  />
-
-                  {/* Écran bord à bord — le ring sombre sépare la dalle du rail clair */}
-                  <div
-                    className="relative flex h-full w-full flex-col overflow-hidden rounded-[38px] bg-[#0d0d14]"
-                    style={{ boxShadow: "0 0 0 1.5px rgba(10,10,16,0.55)" }}
-                  >
-                    <div className="flex min-h-0 flex-1">
-                      {/* Sidebar */}
-                      <div className="flex w-[38px] shrink-0 flex-col items-center gap-[7px] border-r border-white/[0.06] bg-[#13131f] py-3">
-                        <div className="h-[16px] w-[16px] rounded-[5px] bg-[#7c3aed]" />
-                        <div className="mt-1 h-[3px] w-[16px] rounded-full bg-white/[0.07]" />
-                        <div className="flex h-[19px] w-[19px] items-center justify-center rounded-[6px] bg-[#7c3aed]/25">
-                          <div className="h-[7px] w-[7px] rounded-[2px] bg-[#a78bfa]" />
-                        </div>
-                        {[0, 1, 2, 3, 4].map((i) => (
-                          <div key={i} className="flex h-[19px] w-[19px] items-center justify-center rounded-[6px]">
-                            <div className="h-[7px] w-[7px] rounded-[2px] bg-white/20" />
-                          </div>
-                        ))}
-                        <div className="mt-auto h-[17px] w-[17px] rounded-full bg-white/[0.09]" />
-                      </div>
-
-                      {/* Contenu */}
-                      <div className="flex min-w-0 flex-1 flex-col gap-[9px] p-[11px]">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <div className="text-[8px] font-bold leading-none text-white">Dashboard</div>
-                            <div className="mt-[3px] h-[3px] w-[52px] rounded-full bg-white/[0.12]" />
-                          </div>
-                          <div className="h-[15px] w-[15px] rounded-full bg-[#7c3aed]/40" />
-                        </div>
-
-                        {/* Cartes de stats */}
-                        <div className="grid grid-cols-2 gap-[7px]">
-                          {[
-                            { l: "Sites", v: "12", c: "#a78bfa" },
-                            { l: "Audits", v: "30", c: "#60a5fa" },
-                            { l: "Marge", v: "58%", c: "#34d399" },
-                            { l: "Produits", v: "1,2k", c: "#fbbf24" },
-                          ].map((s) => (
-                            <div key={s.l} className="rounded-[7px] border border-white/[0.07] bg-[#13131f] px-[7px] py-[6px]">
-                              <div className="text-[5.5px] font-semibold uppercase tracking-[0.1em] text-white/35">{s.l}</div>
-                              <div className="mt-[3px] text-[11px] font-bold leading-none" style={{ color: s.c }}>
-                                {s.v}
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-
-                        {/* Graphique */}
-                        <div className="rounded-[7px] border border-white/[0.07] bg-[#13131f] p-[8px]">
-                          <div className="mb-[6px] flex items-center justify-between">
-                            <div className="text-[5.5px] font-semibold uppercase tracking-[0.1em] text-white/35">Activité</div>
-                            <div className="h-[3px] w-[18px] rounded-full bg-white/[0.1]" />
-                          </div>
-                          <svg viewBox="0 0 150 46" className="h-[46px] w-full" aria-hidden>
-                            {[11, 23, 34].map((y) => (
-                              <line key={y} x1="0" y1={y} x2="150" y2={y} stroke="rgba(255,255,255,0.05)" strokeWidth="1" />
-                            ))}
-                            <path
-                              d="M0 38 L21 31 L42 34 L63 21 L84 25 L105 12 L126 16 L150 6 L150 46 L0 46 Z"
-                              fill="rgba(124,58,237,0.18)"
-                            />
-                            <path
-                              d="M0 38 L21 31 L42 34 L63 21 L84 25 L105 12 L126 16 L150 6"
-                              fill="none"
-                              stroke="#a78bfa"
-                              strokeWidth="1.8"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                            />
-                            <circle cx="150" cy="6" r="2.4" fill="#a78bfa" />
-                          </svg>
-                        </div>
-
-                        {/* Liste */}
-                        <div className="flex flex-col gap-[5px]">
-                          {[
-                            { w: "72%", c: "#34d399" },
-                            { w: "54%", c: "#a78bfa" },
-                            { w: "63%", c: "#60a5fa" },
-                          ].map((row, i) => (
-                            <div
-                              key={i}
-                              className="flex items-center gap-[6px] rounded-[6px] border border-white/[0.06] bg-[#13131f] px-[7px] py-[6px]"
-                            >
-                              <div className="h-[11px] w-[11px] shrink-0 rounded-[3px]" style={{ background: `${row.c}33` }} />
-                              <div className="min-w-0 flex-1">
-                                <div className="h-[3px] rounded-full bg-white/[0.16]" style={{ width: row.w }} />
-                                <div className="mt-[3px] h-[2.5px] w-[38%] rounded-full bg-white/[0.08]" />
-                              </div>
-                              <div className="h-[3px] w-[13px] shrink-0 rounded-full" style={{ background: row.c, opacity: 0.55 }} />
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Indicateur d'accueil */}
-                    <div className="flex justify-center pb-[7px] pt-[5px]">
-                      <div className="h-[3px] w-[78px] rounded-full bg-white/25" />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* ── La chaîne : les 6 étapes en 3 actes (remplace les anciennes sections
-            « Le flux » et « Produit », qui décrivaient les mêmes six capacités) ── */}
-        <ChaineSection />
-
-        {/* ── Résultats ────────────────────────────────────────────── */}
-        <section id="resultats" className="py-[clamp(56px,7vw,100px)]">
-          <div
-            data-reveal=""
-            className="grid grid-cols-1 items-center gap-10 rounded-[26px] border border-[var(--dv-line)] bg-[var(--dv-bg-soft)] p-[clamp(24px,3vw,40px)] lg:grid-cols-2"
-          >
-            <div>
-              <div className="text-xs font-bold tracking-[0.16em] text-[var(--dv-accent)]">RÉSULTATS</div>
-              <h2 className="mt-3.5 text-[clamp(27px,3.2vw,40px)] font-extrabold leading-[1.1]">
-                Le temps passe dans l&apos;analyse, plus dans les tableurs.
-              </h2>
-              <p className="mt-[15px] text-[15.8px] leading-[1.6] text-[var(--dv-muted)]">
-                Heures hebdomadaires par tâche, avant et après Dropvio. Données illustratives issues de nos scénarios d&apos;usage.
-              </p>
-              <div className="mt-6 flex flex-wrap gap-[18px]">
-                <div className="flex items-center gap-2 text-[13.5px] text-[var(--dv-muted)]">
-                  <span className="h-[11px] w-[11px] rounded-[3px] bg-[var(--dv-line)]" />Avant
-                </div>
-                <div className="flex items-center gap-2 text-[13.5px] text-[var(--dv-muted)]">
-                  <span className="h-[11px] w-[11px] rounded-[3px] bg-[var(--dv-accent)]" />Avec Dropvio
-                </div>
-              </div>
-              <div className="mt-[30px] grid grid-cols-3 gap-4">
-                <div>
-                  <div className="dv-display text-[34px] font-extrabold tracking-[-0.04em]">
-                    <span data-count="" data-to="82">0</span>%
-                  </div>
-                  <div className="mt-1 text-[13px] text-[var(--dv-faint)]">de temps de setup en moins</div>
-                </div>
-                <div>
-                  <div className="dv-display text-[34px] font-extrabold tracking-[-0.04em]">
-                    <span data-count="" data-to="4">0</span>
-                  </div>
-                  <div className="mt-1 text-[13px] text-[var(--dv-faint)]">templates prêts à vendre</div>
-                </div>
-                <div>
-                  <div className="dv-display text-[34px] font-extrabold tracking-[-0.04em]">
-                    <span data-count="" data-to="9">0</span>
-                  </div>
-                  <div className="mt-1 text-[13px] text-[var(--dv-faint)]">critères d&apos;audit IA analysés</div>
-                </div>
-              </div>
-            </div>
-
-            <div data-chart="" className="grid h-[290px] grid-cols-4 gap-3 border-b border-[var(--dv-line)] px-1 pt-[18px] sm:gap-[26px]">
-              {RESULT_BARS.map((bar) => (
-                <div key={bar.label} className="flex h-full flex-col items-center justify-end gap-2.5">
-                  <div className="flex h-full w-full items-end justify-center gap-1.5">
-                    <div
-                      data-bar=""
-                      data-val={bar.before}
-                      data-axis="h"
-                      className="w-[26px] rounded-t-lg bg-[var(--dv-line)] transition-[height] duration-[1.1s]"
-                      style={{ height: 0, transitionTimingFunction: "cubic-bezier(.16,1,.3,1)" }}
-                    />
-                    <div
-                      data-bar=""
-                      data-val={bar.after}
-                      data-axis="h"
-                      className="w-[26px] rounded-t-lg bg-[var(--dv-accent)] transition-[height] duration-[1.1s]"
-                      style={{ height: 0, transitionTimingFunction: "cubic-bezier(.16,1,.3,1)" }}
-                    />
-                  </div>
-                  <div className="whitespace-pre-line text-center text-[12.5px] leading-[1.3] text-[var(--dv-faint)]">{bar.label}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* ── Pricing ──────────────────────────────────────────────── */}
-        <section id="pricing" className="py-[clamp(56px,7vw,100px)]">
-          <div data-reveal="" className="mx-auto max-w-[620px] text-center">
-            <div className="text-xs font-bold tracking-[0.16em] text-[var(--dv-accent)]">TARIFS</div>
-            <h2 className="mt-3.5 text-[clamp(30px,3.8vw,46px)] font-extrabold leading-[1.08]">Simple, honnête, sans surprise.</h2>
-            <p className="mt-[15px] text-[16px] leading-[1.6] text-[var(--dv-muted)]">
-              Commencez gratuitement. Passez à l&apos;échelle quand votre boutique le justifie.
-            </p>
-          </div>
-
-          <div className="mt-11 grid grid-cols-1 items-start gap-5 md:grid-cols-3">
-            <div data-reveal="" className="dv-price-card rounded-[22px] border border-[var(--dv-line)] bg-[var(--dv-card)] p-[30px] transition-[transform,box-shadow] duration-[0.45s]">
-              <div className="dv-display text-[17px] font-bold">Free</div>
-              <div className="mt-3.5 flex items-baseline gap-1.5">
-                <span className="dv-display text-[46px] font-extrabold tracking-[-0.045em]">0€</span>
-                <span className="text-[15px] text-[var(--dv-faint)]">/ mois</span>
-              </div>
-              <p className="mt-3 text-[14.5px] leading-[1.6] text-[var(--dv-muted)]">Pour tester Dropvio sans limite de temps, à votre rythme.</p>
-              <div className="mt-[22px] grid gap-[11px] text-[14.5px] text-[var(--dv-muted)]">
-                <div className="flex gap-2.5"><span className="text-[var(--dv-accent)]">✓</span>Audit IA réservé à Pro et Agency</div>
-                <div className="flex gap-2.5"><span className="text-[var(--dv-accent)]">✓</span>2 simulations de calcul de marge sauvegardées</div>
-                <div className="flex gap-2.5"><span className="text-[var(--dv-accent)]">✓</span>5 pages générées avec le site builder par mois</div>
-              </div>
-              <Link
-                href="/register"
-                className="dv-price-cta-outline mt-[26px] block rounded-[13px] border border-[var(--dv-line)] bg-[var(--dv-card-2)] py-[13px] text-center dv-display text-[15px] font-bold text-[var(--dv-ink)] transition-[border-color,transform] duration-300"
-              >
-                Commencer
-              </Link>
-            </div>
-
-            <div
-              data-reveal=""
-              className="dv-price-card is-featured relative rounded-[22px] border border-[var(--dv-accent)] bg-[var(--dv-card)] p-[30px] pt-[34px] shadow-[0_10px_28px_-22px_oklch(0_0_0_/_0.45)] transition-[transform,box-shadow] duration-[0.45s]"
+      {/* ── Hero ─────────────────────────────────────────────────────── */}
+      <section
+        id="top"
+        className="dv-hero box-border flex items-center justify-center px-4 sm:px-8 lg:px-16"
+        style={{ scrollMarginTop: "var(--dv-nav-h)", paddingBlock: "clamp(8px, 2vh, 24px)" }}
+      >
+        <div className="grid w-full max-w-[1360px] items-center gap-5 lg:grid-cols-[minmax(0,44fr)_minmax(0,56fr)] lg:gap-12">
+          <div className="dv-hero-text flex min-w-0 flex-col justify-center">
+            <div className="dv-mono text-xs uppercase tracking-[0.1em] text-[#555]">{t("hero.eyebrow")}</div>
+            <h1
+              data-rv="hero"
+              style={{ "--dl": "0ms", textWrap: "balance" } as React.CSSProperties}
+              className="dv-hero-h1 font-[650]"
             >
-              <div className="absolute -top-[13px] left-[30px] rounded-full bg-[var(--dv-accent)] px-3 py-[5px] dv-display text-[11.5px] font-extrabold tracking-[0.05em] text-[var(--dv-accent-ink)]">
-                LE PLUS CHOISI
-              </div>
-              <div className="dv-display text-[17px] font-bold">Pro</div>
-              <div className="mt-3.5 flex items-baseline gap-1.5">
-                <span className="dv-display text-[50px] font-extrabold tracking-[-0.045em] text-[var(--dv-accent)]">29€</span>
-                <span className="text-[15px] text-[var(--dv-faint)]">/ mois</span>
-              </div>
-              <p className="mt-3 text-[14.5px] leading-[1.6] text-[var(--dv-muted)]">Pour l&apos;e-commerçant qui lance et fait tourner ses produits.</p>
-              <div className="mt-[22px] grid gap-[11px] text-[14.5px] text-[var(--dv-muted)]">
-                <div className="flex gap-2.5"><span className="text-[var(--dv-accent)]">✓</span>Recherche produit illimitée</div>
-                <div className="flex gap-2.5"><span className="text-[var(--dv-accent)]">✓</span>30 audits IA par mois</div>
-                <div className="flex gap-2.5"><span className="text-[var(--dv-accent)]">✓</span>Sites &amp; boutiques multi-produits</div>
-                <div className="flex gap-2.5"><span className="text-[var(--dv-accent)]">✓</span>Connexion Shopify + push tracking</div>
-                <div className="flex gap-2.5"><span className="text-[var(--dv-accent)]">✓</span>Export et téléchargement</div>
-              </div>
+              {t("hero.title")}
+            </h1>
+            <p data-rv="hero" style={{ "--dl": "60ms" } as React.CSSProperties} className="dv-hero-sub text-[#555]">
+              {t("hero.subtitle")}
+            </p>
+            <div
+              data-rv="hero"
+              style={{ "--dl": "120ms" } as React.CSSProperties}
+              className="dv-hero-actions flex flex-wrap items-center gap-x-[22px] gap-y-3.5"
+            >
               <Link
                 href="/register"
-                className="dv-price-cta-solid mt-[26px] block rounded-[13px] bg-[var(--dv-accent)] py-3.5 text-center dv-display text-[15.5px] font-extrabold text-[var(--dv-accent-ink)] transition-colors duration-300"
+                className="dv-hero-primary inline-flex items-center rounded-[10px] bg-[#7c3aed] px-[22px] font-semibold text-white no-underline transition-colors hover:bg-[#6d28d9] hover:text-white"
               >
-                Passer en Pro
+                {t("hero.ctaPrimary")}
               </Link>
             </div>
-
-            <div data-reveal="" className="dv-price-card is-agency rounded-[22px] border border-[var(--dv-line)] bg-[var(--dv-card)] p-[30px] transition-[transform,box-shadow,border-color] duration-[0.45s]">
-              <div className="dv-display text-[17px] font-bold">Agency</div>
-              <div className="mt-3.5 flex items-baseline gap-1.5">
-                <span className="dv-display text-[46px] font-extrabold tracking-[-0.045em] text-[var(--dv-accent-2)]">59€</span>
-                <span className="text-[15px] text-[var(--dv-faint)]">/ mois</span>
-              </div>
-              <p className="mt-3 text-[14.5px] leading-[1.6] text-[var(--dv-muted)]">Pour gérer plusieurs boutiques ou des comptes clients.</p>
-              <div className="mt-[22px] grid gap-[11px] text-[14.5px] text-[var(--dv-muted)]">
-                <div className="flex gap-2.5"><span className="text-[var(--dv-accent-2)]">✓</span>Tout le plan Pro</div>
-                <div className="flex gap-2.5"><span className="text-[var(--dv-accent-2)]">✓</span>Boutiques multiples</div>
-                <div className="flex gap-2.5"><span className="text-[var(--dv-accent-2)]">✓</span>Palettes &amp; templates par client</div>
-                <div className="flex gap-2.5"><span className="text-[var(--dv-accent-2)]">✓</span>Suivi des commandes consolidé</div>
-                <div className="flex gap-2.5"><span className="text-[var(--dv-accent-2)]">✓</span>Support prioritaire</div>
-              </div>
-              <Link
-                href="/register"
-                className="dv-price-cta-outline is-agency mt-[26px] block rounded-[13px] border border-[var(--dv-line)] bg-[var(--dv-card-2)] py-[13px] text-center dv-display text-[15px] font-bold text-[var(--dv-ink)] transition-[border-color,transform] duration-300"
-              >
-                Choisir Agency
-              </Link>
-            </div>
+            <p className="dv-hero-terms leading-[1.45] text-[#444]">{t("hero.note")}</p>
           </div>
-        </section>
 
-        {/* ── FAQ courte ───────────────────────────────────────────── */}
-        <section className="py-[clamp(40px,5vw,72px)]">
-          <div data-reveal="" className="grid grid-cols-1 gap-9 lg:grid-cols-[280px_1fr]">
-            <h2 className="text-[clamp(26px,3vw,36px)] font-extrabold leading-[1.12]">Questions fréquentes</h2>
-            <div className="grid gap-2.5">
-              {MINI_FAQ.map((item) => (
-                <details
-                  key={item.q}
-                  onToggle={handleFaqToggle}
-                  className="rounded-[14px] border border-[var(--dv-line)] bg-[var(--dv-card)] p-4 px-[18px]"
-                >
-                  <summary className="flex cursor-pointer list-none items-center justify-between gap-3 text-[15.5px] font-semibold">
-                    <span>{item.q}</span>
-                    <span className="text-[var(--dv-accent)]">+</span>
-                  </summary>
-                  <p className="mt-3 text-[14.8px] leading-[1.6] text-[var(--dv-muted)]">{item.a}</p>
-                </details>
-              ))}
-            </div>
+          <div className="dv-hero-devices min-h-[260px] min-w-0">
+            <HeroDevices />
           </div>
-        </section>
+        </div>
+      </section>
 
-        {/* ── CTA finale ───────────────────────────────────────────── */}
-        <section
-          data-reveal=""
-          className="relative my-[clamp(40px,5vw,72px)] overflow-hidden rounded-[28px] border border-[var(--dv-line)] bg-[var(--dv-bg-soft)] p-[clamp(34px,5vw,64px)] text-center"
+      <DemoAudit />
+      <ChaineSection />
+      <FaqAccordion />
+
+      {/* ── CTA final ────────────────────────────────────────────────── */}
+      <section className="mx-auto box-border flex max-w-[1200px] flex-col items-center border-t border-[#eee] px-4 py-[clamp(56px,6cqw,104px)] text-center sm:px-6">
+        <h2
+          data-rv="up"
+          style={{ "--dl": "0ms" } as React.CSSProperties}
+          className="m-0 max-w-[640px] text-[clamp(30px,3.2cqw,46px)] font-[650] leading-[1.06] tracking-[-0.035em]"
         >
-          <div className="relative">
-            <Logo className="mx-auto h-[34px] w-[34px] animate-[dv-bob_5s_ease-in-out_infinite] text-[var(--dv-logo)]" />
-            <h2 className="mx-auto mt-[22px] max-w-[18ch] text-[clamp(28px,3.8vw,46px)] font-extrabold leading-[1.06]">
-              Lancez le prochain produit avec les bons chiffres.
-            </h2>
-            <div className="mt-7 flex flex-wrap justify-center gap-3">
-              <Link
-                href="/register"
-                className="dv-final-cta-primary rounded-2xl bg-[var(--dv-accent)] px-7 py-[15px] dv-display text-[16px] font-extrabold text-[var(--dv-accent-ink)] transition-colors duration-300"
-              >
-                Créer mon compte
-              </Link>
-              <a
-                href="#pricing"
-                className="dv-final-cta-secondary rounded-2xl border border-[var(--dv-line)] bg-[var(--dv-card)] px-[26px] py-[15px] dv-display text-[16px] font-semibold text-[var(--dv-ink)] transition-[transform,border-color] duration-300"
-              >
-                Comparer les offres
-              </a>
-            </div>
-          </div>
-        </section>
+          {t("final.title")}
+        </h2>
+        <Link
+          href="/register"
+          data-rv="up"
+          style={{ "--dl": "80ms" } as React.CSSProperties}
+          className="mt-7 rounded-[10px] bg-[#7c3aed] px-[22px] py-[15px] text-base font-semibold text-white no-underline transition-colors hover:bg-[#6d28d9] hover:text-white"
+        >
+          {t("final.cta")}
+        </Link>
+        <p data-rv="up" style={{ "--dl": "160ms" } as React.CSSProperties} className="mt-3.5 text-sm leading-[1.45] text-[#444]">
+          {t("final.note")}
+        </p>
+      </section>
 
-        {/* ── Footer ───────────────────────────────────────────────── */}
-        <footer className="flex flex-wrap items-center justify-between gap-5 border-t border-[var(--dv-line)] py-[34px] pb-[46px]">
-          <div className="flex items-center gap-2.5">
-            <Logo className="h-[21px] w-[21px] text-[var(--dv-logo)]" />
-            <span className="text-[13.5px] text-[var(--dv-faint)]">© 2026 Dropvio — La nouvelle voix du dropshipping.</span>
-          </div>
-          <div className="flex gap-[22px] text-[13.5px]">
-            <a href="#pricing" className="text-[var(--dv-muted)]">Tarifs</a>
-            <Link href="/register" className="text-[var(--dv-muted)]">Créer un compte</Link>
-            <a href="#top" className="text-[var(--dv-muted)]">Haut de page</a>
-          </div>
-        </footer>
-      </main>
+      {/* ── Footer ───────────────────────────────────────────────────── */}
+      <footer data-rv="fade" style={{ "--dl": "0ms" } as React.CSSProperties} className="border-t border-[#eee]">
+        <div className="mx-auto flex max-w-[1200px] flex-wrap items-center justify-between gap-[18px] px-4 pb-10 pt-7 sm:px-6">
+          <Link href="#top" className="flex items-center gap-2 text-[#111] no-underline">
+            <Logo className="h-5 w-5 text-[#7c3aed]" />
+            <span className="text-base font-bold tracking-[-0.03em]">Dropvio</span>
+            <span className="ml-1 hidden text-[13px] font-normal text-[#777] sm:inline">
+              © {new Date().getFullYear()} — {t("footer.tagline")}
+            </span>
+          </Link>
+          <nav className="flex flex-wrap gap-x-6 gap-y-2.5 text-sm">
+            <Link href="/faq" className="text-[#444] no-underline">
+              {t("footer.faq")}
+            </Link>
+            <Link href="/cgv" className="text-[#444] no-underline">
+              {t("footer.terms")}
+            </Link>
+            <Link href="/confidentialite" className="text-[#444] no-underline">
+              {t("footer.privacy")}
+            </Link>
+            <Link href="/mentions-legales" className="text-[#444] no-underline">
+              {t("footer.legal")}
+            </Link>
+            <a href={`mailto:${SUPPORT_EMAIL}`} className="text-[#444] no-underline">
+              {t("footer.contact")}
+            </a>
+          </nav>
+        </div>
+      </footer>
     </div>
   );
 }

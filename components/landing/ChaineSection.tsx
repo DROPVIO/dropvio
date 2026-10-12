@@ -1,269 +1,500 @@
+"use client";
+
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 
-import ChaineIndex from "./ChaineIndex";
-import TicketMarge from "./TicketMarge";
-import FluxStatuts from "./FluxStatuts";
+/* Section « Comment ça marche » : six cartes blanches sur fond sombre, reliées par un câble
+ * qui se remplit au scroll.
+ *
+ * Le tracé ne peut pas être écrit en dur : les cartes ont des largeurs différentes et
+ * alternent gauche/droite, donc chaque segment part du bas d'une carte pour rejoindre le haut
+ * de la suivante avec un coude arrondi. On mesure donc les offsets (insensibles aux transform
+ * du reveal, contrairement à getBoundingClientRect) puis on génère les `d` des paths.
+ *
+ * Le remplissage est un stroke-dashoffset piloté par le scroll, pas une animation : la
+ * progression doit pouvoir repartir en arrière quand on remonte. */
 
-// Section « La chaîne » de la landing : les six capacités de Dropvio présentées comme les
-// six étapes d'un même flux, en trois actes de rythmes différents (c'est ce qui évite
-// l'effet grille). Aucune image : les visuels sont typographiques ou en CSS.
-//
-// Ce fichier ne porte pas "use client" — il ne contient que du balisage et du contenu.
-// Toute l'interactivité est isolée dans ChaineIndex / TicketMarge / FluxStatuts.
-// (Note : app/page.tsx est encore "use client", donc l'arbre est aujourd'hui rendu côté
-// client en pratique ; la découpe reste valable si la page passe en composant serveur.)
+const LARGEURS = [56, 64, 54, 58, 52, 58] as const;
+const RAYON = 24;
+/** Décalage vertical du point d'arrivée dans la carte suivante : la hauteur approximative de
+ *  son en-tête, pour que le câble arrive à côté du libellé « Étape N » et non sur son bord. */
+const ANCRE_Y = 72;
 
-export const CHAINE_STEPS = [
-  { verbe: "TROUVER", titre: "Recherche produit" },
-  { verbe: "CHIFFRER", titre: "Calcul de marge — mode France" },
-  { verbe: "VÉRIFIER", titre: "Audit IA de la page de vente" },
-  { verbe: "LANCER", titre: "Génération du site" },
-  { verbe: "COMMANDER", titre: "Commande AliExpress" },
-  { verbe: "LIVRER", titre: "Tracking poussé vers Shopify" },
-] as const;
-
-const ACTES = ["ACTE I — DÉCIDER", "ACTE II — VENDRE", "ACTE III — AUTOMATISER"] as const;
-
-/** Étape de l'index : l'ordre du DOM sert de référence à ChaineIndex (data-chain-step). */
-function StepHead({ index, verbe, titre }: { index: number; verbe: string; titre: string }) {
-  return (
-    <>
-      <p className="ch-mono text-[11.5px] font-medium tracking-[0.18em] text-[var(--dv-accent)]">{verbe}</p>
-      <h3 className="ch-display mt-2 text-[clamp(1.35rem,2.4vw,1.75rem)] font-semibold leading-[1.15] tracking-[-0.02em]">
-        {titre}
-      </h3>
-      <span className="sr-only">{`Étape ${index + 1} sur 6`}</span>
-    </>
-  );
-}
-
-/** Repère carré sur la ligne verticale (jamais un cercle). */
-function Marqueur() {
-  return (
-    <span
-      aria-hidden
-      className="absolute left-0 top-[9px] h-[7px] w-[7px] -translate-x-[3.5px] bg-[var(--dv-accent)]"
-    />
-  );
-}
+type Segment = { d: string; len: number; y1: number; y2: number };
+type Point = { x: number; y: number; seg: number; sortie: boolean };
+type Dispo = { segs: Segment[]; points: Point[]; mobile: boolean };
 
 export default function ChaineSection() {
+  const t = useTranslations("landing.chain");
+  // Le CTA de fin de section reprend mot pour mot celui du hero : une seule sortie, une
+  // seule promesse — d'où le second traducteur plutôt qu'une duplication des clés.
+  const tHero = useTranslations("landing.hero");
+  const chaineRef = useRef<HTMLDivElement>(null);
+
+  const [dispo, setDispo] = useState<Dispo | null>(null);
+  const [progres, setProgres] = useState<number[]>([]);
+  const [active, setActive] = useState(-1);
+
+  const calculeDispo = useCallback(() => {
+    const conteneur = chaineRef.current;
+    if (!conteneur) return;
+    // Les cartes sont lues dans le DOM plutôt que via un tableau de refs : la mesure a lieu
+    // dans un effet, donc après le commit, et ça évite douze refs pour six cartes.
+    const cartes = Array.from(conteneur.querySelectorAll<HTMLElement>("[data-chain-card]"));
+    const labels = Array.from(conteneur.querySelectorAll<HTMLElement>("[data-chain-label]"));
+    if (cartes.length < 6 || labels.length < 6) return;
+
+    const mobile = conteneur.offsetWidth < 768;
+    const segs: Segment[] = [];
+    const points: Point[] = [];
+
+    if (mobile) {
+      // Un seul rail vertical dans la gouttière, aligné sur le centre de chaque libellé.
+      const x = 12;
+      const ys = cartes.map((c, i) => c.offsetTop + labels[i].offsetTop + labels[i].offsetHeight / 2);
+      ys.forEach((y, i) => points.push({ x, y, seg: i === 0 ? 0 : i - 1, sortie: i === 0 }));
+      for (let i = 0; i < 5; i++) {
+        segs.push({ d: `M${x} ${ys[i]} V${ys[i + 1]}`, len: ys[i + 1] - ys[i], y1: ys[i], y2: ys[i + 1] });
+      }
+    } else {
+      for (let i = 0; i < 5; i++) {
+        const A = cartes[i];
+        const B = cartes[i + 1];
+        const aG = A.offsetLeft;
+        const aD = aG + A.offsetWidth;
+        const bG = B.offsetLeft;
+        const bD = bG + B.offsetWidth;
+        const y1 = A.offsetTop + A.offsetHeight;
+        const y2 = B.offsetTop + ANCRE_Y;
+
+        let x1: number;
+        let x2: number;
+        let d: string;
+        if (aG < bG) {
+          // La carte suivante est à droite : on descend puis on coude vers la droite.
+          x1 = Math.round(aG + (bG - aG) * 0.6);
+          x2 = bG;
+          d = `M${x1} ${y1} V${y2 - RAYON} A${RAYON} ${RAYON} 0 0 0 ${x1 + RAYON} ${y2} H${x2}`;
+        } else {
+          x1 = Math.round(bD + (aD - bD) * 0.4);
+          x2 = bD;
+          d = `M${x1} ${y1} V${y2 - RAYON} A${RAYON} ${RAYON} 0 0 1 ${x1 - RAYON} ${y2} H${x2}`;
+        }
+        const len = y2 - RAYON - y1 + (Math.PI * RAYON) / 2 + (Math.abs(x2 - x1) - RAYON);
+        segs.push({ d, len, y1, y2 });
+        points.push({ x: x1, y: y1, seg: i, sortie: true }, { x: x2, y: y2, seg: i, sortie: false });
+      }
+    }
+
+    setDispo((prev) => {
+      const cle = JSON.stringify(segs.map((s) => s.d));
+      const cleP = prev ? JSON.stringify(prev.segs.map((s) => s.d)) : "";
+      return cle === cleP && prev?.mobile === mobile ? prev : { segs, points, mobile };
+    });
+  }, []);
+
+  const calculeProgres = useCallback(() => {
+    const conteneur = chaineRef.current;
+    if (!conteneur || !dispo) return;
+
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      setProgres(dispo.segs.map(() => 1));
+      setActive(5);
+      return;
+    }
+
+    const haut = conteneur.getBoundingClientRect().top;
+    const ancre = window.innerHeight * 0.6;
+    const p = dispo.segs.map((s) =>
+      Math.max(0, Math.min(1, (ancre - (haut + s.y1)) / Math.max(1, s.y2 - s.y1)))
+    );
+
+    // Carte active = celle dont le centre est le plus proche du centre du viewport, et
+    // seulement si elle en est assez proche : sinon aucune n'est mise en avant.
+    let meilleure = -1;
+    let distMin = Infinity;
+    conteneur.querySelectorAll<HTMLElement>("[data-chain-card]").forEach((c, i) => {
+      const b = c.getBoundingClientRect();
+      const d = Math.abs(b.top + b.height / 2 - window.innerHeight / 2);
+      if (d < distMin) {
+        distMin = d;
+        meilleure = i;
+      }
+    });
+
+    setProgres(p);
+    setActive(distMin < window.innerHeight * 0.6 ? meilleure : -1);
+  }, [dispo]);
+
+  useEffect(() => {
+    // setState différé (microtask) plutôt qu'en synchrone dans le corps de l'effet pour
+    // éviter le re-render en cascade (react-hooks/set-state-in-effect) — même pattern que
+    // components/Sidebar.tsx. Une microtask passe avant le paint : rien n'est visible entre
+    // les deux, la mesure reste immédiate.
+    queueMicrotask(calculeDispo);
+    const conteneur = chaineRef.current;
+    const ro = new ResizeObserver(calculeDispo);
+    if (conteneur) ro.observe(conteneur);
+    window.addEventListener("resize", calculeDispo);
+    if (document.fonts?.ready) void document.fonts.ready.then(calculeDispo);
+    const t0 = window.setTimeout(calculeDispo, 120);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener("resize", calculeDispo);
+      window.clearTimeout(t0);
+    };
+  }, [calculeDispo]);
+
+  useEffect(() => {
+    queueMicrotask(calculeProgres);
+    let raf = 0;
+    const onScroll = () => {
+      if (raf) return;
+      raf = requestAnimationFrame(() => {
+        raf = 0;
+        calculeProgres();
+      });
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      if (raf) cancelAnimationFrame(raf);
+    };
+  }, [calculeProgres]);
+
+  const mobile = dispo?.mobile ?? false;
+  const segs = dispo?.segs ?? [];
+  const points = dispo?.points ?? [];
+
+  const carte = (i: number) => {
+    const estActive = active === i;
+    return {
+      "data-chain-card": "",
+      "data-rv": i % 2 === 0 ? "left" : "right",
+      className: `relative z-[2] box-border max-w-full overflow-hidden rounded-[20px] bg-white transition-[border-color,box-shadow] duration-[350ms] ${
+        i % 2 === 0 ? "self-start" : "self-end"
+      }`,
+      style: {
+        "--dl": "0ms",
+        width: mobile ? "100%" : `${LARGEURS[i]}%`,
+        marginTop: i === 0 ? 0 : mobile ? 20 : 56,
+        border: `1px solid ${estActive ? "#7C3AED" : "#E9E9EE"}`,
+        boxShadow: estActive
+          ? "0 0 0 1px #7C3AED, 0 0 0 6px rgba(139,92,246,0.22), 0 0 48px rgba(139,92,246,0.45), 0 30px 70px -24px rgba(124,58,237,0.3)"
+          : "0 30px 70px -24px rgba(124,58,237,0.15), 0 12px 32px -16px rgba(0,0,0,0.55)",
+      } as React.CSSProperties,
+    };
+  };
+
+  const label = (i: number) => (
+    <div data-chain-label="" className="text-xs font-semibold uppercase tracking-[0.16em] text-[#7C3AED]">
+      {t("step", { n: i + 1 })}
+    </div>
+  );
+
+  const titre = "mt-3 text-[clamp(24px,2.4cqw,34px)] font-normal leading-[1.15] tracking-[-0.02em] text-[#111]";
+  const corps = "mt-3 max-w-[520px] text-[16px] leading-[1.6] text-[#52525B]";
+  const pad = mobile ? "px-5 pb-6 pt-[22px]" : "px-9 pb-9 pt-8";
+
   return (
     <section
-      id="fonctionnalites"
-      aria-labelledby="chaine-titre"
-      data-dv-chain
-      className="dv-chain py-20 lg:py-32"
-      /* Décalage d'ancre = hauteur de la nav sticky (--dv-nav-h dans globals.css) pour que
-         le titre ne finisse pas masqué sous elle après un clic dans la nav. */
-      style={{ scrollMarginTop: "var(--dv-nav-h)" }}
+      id="how"
+      className="relative z-[1] -mt-px box-border text-[#F5F4F8]"
+      style={{
+        backgroundColor: "#0B0A0F",
+        backgroundImage:
+          "radial-gradient(ellipse 85% 75% at 50% 50%, rgba(0,0,0,0) 60%, rgba(0,0,0,0.5) 100%)",
+        padding: mobile ? "72px 16px" : "120px 64px",
+        scrollMarginTop: "var(--dv-nav-h)",
+      }}
     >
-      {/* ── En-tête ─────────────────────────────────────────────────── */}
-      <div data-ch-reveal="" className="max-w-[46ch]">
-        <p className="ch-mono text-[11.5px] font-medium uppercase tracking-[0.2em] text-[var(--ch-faint)]">
-          De l&apos;idée au colis livré
-        </p>
+      <div className="mx-auto max-w-[760px] text-center">
+        <div data-rv="up" style={{ "--dl": "0ms" } as React.CSSProperties} className="text-[13px] font-semibold uppercase tracking-[0.16em] text-[#8B5CF6]">
+          {t("eyebrow")}
+        </div>
         <h2
-          id="chaine-titre"
-          className="ch-display mt-5 text-[clamp(2.5rem,6vw,4.5rem)] font-semibold leading-[0.98] tracking-[-0.035em]"
+          data-rv="up"
+          style={{ "--dl": "80ms" } as React.CSSProperties}
+          className="mt-3.5 text-[clamp(34px,4cqw,58px)] font-normal leading-[1.06] tracking-[-0.035em] text-[#F5F4F8]"
         >
-          Six étapes.
-          <br />
-          Un seul outil.
+          {t("title")}
         </h2>
-        <p className="mt-6 max-w-[60ch] text-[16.5px] leading-[1.65] text-[var(--ch-muted)]">
-          Dropvio couvre toute la chaîne du dropshipping, de la recherche produit au suivi client.
+        <p data-rv="up" style={{ "--dl": "160ms" } as React.CSSProperties} className="mt-4 text-[18px] leading-[1.5] text-[#A1A1AA]">
+          {t("subtitle")}
         </p>
       </div>
 
-      <div className="mt-16 lg:mt-24 lg:grid lg:grid-cols-12 lg:gap-x-10">
-        {/* ── Index sticky (desktop uniquement) ─────────────────────── */}
-        <div className="hidden lg:col-span-4 lg:block">
-          <ChaineIndex actes={[...ACTES]} steps={CHAINE_STEPS.map((s) => ({ verbe: s.verbe, titre: s.titre }))} />
+      <div
+        ref={chaineRef}
+        className="relative mx-auto flex flex-col"
+        style={{ maxWidth: 1120, marginTop: mobile ? 40 : 72, paddingLeft: mobile ? 24 : 0 }}
+      >
+        {/* Le câble. aria-hidden : c'est une illustration de la continuité du parcours,
+            l'ordre des étapes est déjà porté par les libellés « Étape N ». */}
+        <svg aria-hidden className="pointer-events-none absolute left-0 top-0 z-[1] h-full w-full overflow-visible">
+          <defs>
+            <filter id="dv-chain-glow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="5" />
+            </filter>
+          </defs>
+          {segs.map((s, i) => {
+            const off = s.len * (1 - (progres[i] ?? 0));
+            return (
+              <g key={i}>
+                <path d={s.d} fill="none" stroke="rgba(255,255,255,0.07)" strokeWidth="2" />
+                <path
+                  d={s.d}
+                  fill="none"
+                  stroke="#7C3AED"
+                  strokeWidth="7"
+                  strokeLinecap="round"
+                  opacity="0.75"
+                  filter="url(#dv-chain-glow)"
+                  strokeDasharray={`${s.len} ${s.len}`}
+                  strokeDashoffset={off}
+                />
+                <path
+                  d={s.d}
+                  fill="none"
+                  stroke="#8B5CF6"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeDasharray={`${s.len} ${s.len}`}
+                  strokeDashoffset={off}
+                />
+              </g>
+            );
+          })}
+        </svg>
+
+        {points.map((pt, i) => {
+          const v = progres[pt.seg] ?? 0;
+          const allume = pt.sortie ? v > 0 : v >= 0.999;
+          return (
+            <span
+              key={i}
+              aria-hidden
+              className="absolute z-[3] h-2.5 w-2.5 rounded-full transition-[background,box-shadow] duration-[250ms]"
+              style={{
+                left: pt.x - 5,
+                top: pt.y - 5,
+                background: allume ? "#C4B5FD" : "#2E2B38",
+                boxShadow: allume
+                  ? "0 0 0 3px rgba(124,58,237,0.3), 0 0 14px rgba(139,92,246,0.95)"
+                  : "0 0 0 1px rgba(255,255,255,0.1)",
+              }}
+            />
+          );
+        })}
+
+        {/* ── Étape 1 — recherche produit ───────────────────────────────── */}
+        <div {...carte(0)}>
+          <div className="flex items-center gap-2 border-b border-[#EEEEF1] bg-[#F4F4F5] px-[18px] py-[14px]">
+            {["#FF5F57", "#FEBC2E", "#28C840"].map((c) => (
+              <span key={c} className="h-[11px] w-[11px] rounded-full" style={{ background: c }} />
+            ))}
+            <span className="ml-3 h-[22px] flex-1 rounded-[7px] bg-[#E4E4E7]" />
+          </div>
+          <div className={pad}>
+            {label(0)}
+            <h3 className={titre}>{t("s1Title")}</h3>
+            <p className={corps}>{t("s1Body")}</p>
+            <div className="mt-6 flex flex-wrap gap-2">
+              {(["s1F1", "s1F2", "s1F3", "s1F4"] as const).map((k) => (
+                <span key={k} className="whitespace-nowrap rounded-full border border-[#E1E1E6] px-3 py-1.5 text-[13px] text-[#333]">
+                  {t(k)}
+                </span>
+              ))}
+            </div>
+            <div className="dv-mono mt-4 border-t border-[#ECECF0] pt-4 text-sm leading-[1.5] tabular-nums text-[#333]">
+              {t("s1Result", { n: 47 })}
+            </div>
+          </div>
         </div>
 
-        {/* ── Colonne des étapes ────────────────────────────────────── */}
-        <div className="lg:col-span-8">
-          <ol className="list-none">
-            {/* ─────────── ACTE I ─────────── */}
-            <li data-chain-step="0" data-ch-acte="0" className="relative border-t border-[var(--ch-rule)] pl-4 pt-8 sm:pl-8 lg:pt-10">
-              <span aria-hidden className="absolute bottom-0 left-0 top-0 w-px bg-[var(--ch-rule)]" />
-              <Marqueur />
-              <div data-ch-reveal="">
-                <StepHead index={0} verbe={CHAINE_STEPS[0].verbe} titre={CHAINE_STEPS[0].titre} />
-                <p className="mt-4 max-w-[62ch] text-[15.5px] leading-[1.7] text-[var(--ch-muted)]">
-                  Interrogez le catalogue AliExpress par niche, prix, délai de livraison et vendeur. Les produits sans
-                  marge viable sont écartés avant même l&apos;analyse.
-                </p>
-
-                {/* Requête en mono, pas une carte UI */}
-                <p className="ch-mono mt-6 text-[12.5px] leading-[2] text-[var(--ch-faint)]">
-                  <span className="whitespace-nowrap">niche: maison</span>
-                  <span className="mx-2 text-[var(--ch-rule-strong)]">·</span>
-                  <span className="whitespace-nowrap">prix: 15–40 €</span>
-                  <span className="mx-2 text-[var(--ch-rule-strong)]">·</span>
-                  <span className="whitespace-nowrap">délai: &lt; 12 j</span>
-                  <span className="mx-2 text-[var(--ch-rule-strong)]">·</span>
-                  <span className="whitespace-nowrap">vendeur: ★ 4.7+</span>
-                </p>
-                <p className="ch-mono mt-3 text-[13px] tabular-nums text-[var(--ch-faint)]">
-                  312 produits <span className="mx-1">→</span>
-                  <span className="font-medium text-[var(--dv-accent)]">47 avec marge viable</span>
-                </p>
+        {/* ── Étape 2 — marge nette ─────────────────────────────────────── */}
+        <div {...carte(1)}>
+          <div className={pad}>
+            <div className="flex flex-wrap items-start gap-x-11 gap-y-7">
+              <div className="min-w-0 flex-[1_1_240px]">
+                {label(1)}
+                <h3 className={titre}>{t("s2Title")}</h3>
+                <p className={corps}>{t("s2Body")}</p>
               </div>
-            </li>
-
-            {/* CHIFFRER — feature héros, nettement plus haute */}
-            <li
-              data-chain-step="1"
-              data-ch-acte="0"
-              className="relative border-t border-[var(--ch-rule)] pl-4 pb-4 pt-8 sm:pl-8 lg:pb-10 lg:pt-14"
-            >
-              <span aria-hidden className="absolute bottom-0 left-0 top-0 w-px bg-[var(--ch-rule)]" />
-              <Marqueur />
-              <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] lg:gap-10">
-                <div data-ch-reveal="">
-                  <StepHead index={1} verbe={CHAINE_STEPS[1].verbe} titre={CHAINE_STEPS[1].titre} />
-                  <p className="mt-4 max-w-[62ch] text-[15.5px] leading-[1.7] text-[var(--ch-muted)]">
-                    Cotisations URSSAF, TVA, taxes à l&apos;import UE et commissions Stripe déduites automatiquement.
-                    Vous voyez la marge nette, pas la marge brute qui fait rêver.
-                  </p>
+              <div className="min-w-0 flex-[1.25_1_300px]">
+                {([["s2Sale", "39,90 €"], ["s2Cost", "−11,40 €"], ["s2Fees", "−1,46 €"]] as const).map(([k, v]) => (
+                  <div key={k} className="flex items-baseline gap-2.5 py-2.5 text-[15px] leading-[1.35]">
+                    <span className="min-w-0 text-[#333]">{t(k)}</span>
+                    <span className="min-w-[12px] flex-[1_1_12px] border-b border-dotted border-[#C9C9D1]" />
+                    <span className="flex-none text-right tabular-nums text-[#111]">{v}</span>
+                  </div>
+                ))}
+                <div className="flex items-baseline gap-2.5 py-2.5 text-[15px] leading-[1.35]">
+                  <span className="min-w-0 text-[#333]">{t("s2Tax")}</span>
+                  <span className="min-w-[12px] flex-[1_1_12px] border-b border-dotted border-[#C9C9D1]" />
+                  <span className="flex-none text-right text-[#52525B]">{t("s2TaxVal")}</span>
                 </div>
-                <div className="mt-10 lg:mt-0">
-                  <TicketMarge />
+                <div className="mt-1 flex items-baseline gap-2.5 border-t border-[#E1E1E6] pb-2.5 pt-3 text-[15px]">
+                  <span className="text-[#52525B]">{t("s2Gross")}</span>
+                  <span className="flex-1" />
+                  <span className="tabular-nums text-[#6B6B75] line-through">28,50 €</span>
                 </div>
+                <div className="flex items-baseline justify-between gap-3 pt-1.5">
+                  <span className="text-[16px] font-medium text-[#111]">{t("s2Net")}</span>
+                  <span className="text-[clamp(38px,3.6cqw,52px)] font-medium leading-none tracking-[-0.03em] tabular-nums text-[#7C3AED]">
+                    27,04 €
+                  </span>
+                </div>
+                <div className="mt-2.5 text-right text-[13px] text-[#52525B]">{t("s2Illustrative")}</div>
               </div>
-            </li>
+            </div>
+          </div>
+        </div>
 
-            {/* ─────────── ACTE II — deux étapes côte à côte, 7/5 ─────────── */}
-            <li data-chain-step="2" data-ch-acte="1" className="relative border-t border-[var(--ch-rule)] pl-4 pt-8 sm:pl-8 lg:pt-14">
-              <span aria-hidden className="absolute bottom-0 left-0 top-0 w-px bg-[var(--ch-rule)]" />
-              <Marqueur />
-              <div className="lg:grid lg:grid-cols-12 lg:gap-10">
-                {/* VÉRIFIER — score en typographie seule */}
-                <div data-ch-reveal="" className="lg:col-span-7">
-                  <StepHead index={2} verbe={CHAINE_STEPS[2].verbe} titre={CHAINE_STEPS[2].titre} />
-                  <p className="mt-4 max-w-[62ch] text-[15.5px] leading-[1.7] text-[var(--ch-muted)]">
-                    Un score sur 100 et des correctifs classés par impact, appuyés sur les référentiels Nielsen Norman
-                    Group, Unbounce et McKinsey.
-                  </p>
+        {/* ── Étape 3 — audit IA ────────────────────────────────────────── */}
+        <div {...carte(2)}>
+          <div className={pad}>
+            {label(2)}
+            <h3 className={titre}>{t("s3Title")}</h3>
+            <p className={corps}>{t("s3Body")}</p>
+            <div className="mt-6 flex items-baseline gap-1.5 tabular-nums">
+              <span className="text-[clamp(68px,7cqw,104px)] font-light leading-[0.9] tracking-[-0.05em] text-[#111]">64</span>
+              <span className="text-[26px] text-[#52525B]">/100</span>
+            </div>
+            <div className="mt-[18px] border-t border-[#ECECF0]">
+              {([["s3Fix1", "+12"], ["s3Fix2", "+7"], ["s3Fix3", "+4"]] as const).map(([k, v], i) => (
+                <div
+                  key={k}
+                  className={`flex items-baseline gap-4 py-3 text-[15px] leading-[1.4] ${i ? "border-t border-[#ECECF0]" : ""}`}
+                >
+                  <span className="min-w-0 flex-1 text-[#111]">{t(k)}</span>
+                  <span className="flex-none font-semibold tabular-nums text-[#7C3AED]">{v}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
 
-                  <div className="mt-8 flex items-end gap-3">
-                    <span className="ch-display text-[clamp(4.5rem,12vw,8rem)] font-semibold leading-[0.8] tracking-[-0.05em] tabular-nums">
-                      64
+        {/* ── Étape 4 — génération du site ──────────────────────────────── */}
+        <div {...carte(3)}>
+          <div className={pad}>
+            <div className="flex flex-wrap items-start gap-x-9 gap-y-6">
+              <div className="min-w-0 flex-[1_1_220px]">
+                {label(3)}
+                <h3 className={titre}>{t("s4Title")}</h3>
+                <p className={corps}>{t("s4Body")}</p>
+              </div>
+              <ul className="m-0 flex min-w-0 flex-[1_1_240px] list-none flex-col gap-2 p-0" aria-label={t("s4Legend")}>
+                {(
+                  [
+                    ["s4T1", ["#0F172A", "#38BDF8", "#E2E8F0"], true],
+                    ["s4T2", ["#8B6F4E", "#E9DFD3", "#2F3E36"], false],
+                    ["s4T3", ["#E8B4B8", "#F6EDEA", "#6B3E4A"], false],
+                    ["s4T4", ["#111111", "#F59E0B", "#F5F5F4"], false],
+                  ] as const
+                ).map(([k, couleurs, actif]) => (
+                  <li
+                    key={k}
+                    className="flex items-center gap-3 rounded-xl px-[14px] py-3"
+                    style={
+                      actif
+                        ? { border: "1px solid #8B5CF6", background: "rgba(124,58,237,0.06)", boxShadow: "0 0 18px rgba(124,58,237,0.28)" }
+                        : { border: "1px solid #E1E1E6" }
+                    }
+                  >
+                    <span
+                      aria-hidden
+                      className="grid h-[18px] w-[18px] flex-none place-items-center rounded-full border-[1.5px]"
+                      style={{ borderColor: actif ? "#7C3AED" : "#B5B5BE" }}
+                    >
+                      {actif && <span className="h-2 w-2 rounded-full bg-[#7C3AED]" />}
                     </span>
-                    <span className="ch-mono pb-2 text-[14px] text-[var(--ch-faint)]">/100</span>
-                  </div>
+                    <span className={`min-w-0 flex-1 text-[15px] ${actif ? "text-[#111]" : "text-[#52525B]"}`}>{t(k)}</span>
+                    <span aria-hidden className="flex gap-1">
+                      {couleurs.map((c) => (
+                        <span
+                          key={c}
+                          className="h-[14px] w-[14px] rounded-[3px]"
+                          style={{ background: c, boxShadow: "inset 0 0 0 1px rgba(17,17,17,0.12)" }}
+                        />
+                      ))}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </div>
 
-                  <ul className="mt-7 max-w-[46ch] list-none">
-                    {[
-                      { l: "Ajouter des avis clients vérifiés", g: "+12" },
-                      { l: "Remonter le prix au-dessus de la ligne de flottaison", g: "+7" },
-                      { l: "Raccourcir le formulaire de commande", g: "+4" },
-                    ].map((c) => (
-                      <li
-                        key={c.g}
-                        className="flex items-baseline gap-4 border-b border-[var(--ch-rule)] py-2.5 last:border-b-0"
-                      >
-                        <span className="ch-mono w-[2.6rem] shrink-0 text-[13px] font-medium tabular-nums text-[var(--dv-accent)]">
-                          {c.g}
-                        </span>
-                        <span className="text-[14.5px] leading-[1.5] text-[var(--ch-muted)]">{c.l}</span>
-                      </li>
-                    ))}
-                  </ul>
+        {/* ── Étape 5 — commandes ───────────────────────────────────────── */}
+        <div {...carte(4)}>
+          <div className={pad}>
+            {label(4)}
+            <h3 className={titre}>{t("s5Title")}</h3>
+            <p className={corps}>{t("s5Body")}</p>
+            <div className="mt-5 border-t border-[#ECECF0]">
+              {(
+                [
+                  ["#1042", "s5St1", "bg-[#F3EEFF] text-[#6D28D9]"],
+                  ["#1043", "s5St2", "bg-[#E7F7EF] text-[#047857]"],
+                  ["#1044", "s5St3", "border border-[#C9C9D1] text-[#111]"],
+                ] as const
+              ).map(([num, k, style], i) => (
+                <div key={num} className={`flex items-center justify-between gap-3 py-3 ${i ? "border-t border-[#ECECF0]" : ""}`}>
+                  <span className="dv-mono text-[15px] text-[#111]">{num}</span>
+                  <span className={`rounded-full px-2.5 py-1 text-[13px] font-medium ${style}`}>{t(k)}</span>
                 </div>
+              ))}
+            </div>
+          </div>
+        </div>
 
-                {/* LANCER — 4 bandes de templates avec leur palette */}
-                <div data-ch-reveal="" className="mt-12 lg:col-span-5 lg:mt-0">
-                  <StepHead index={3} verbe={CHAINE_STEPS[3].verbe} titre={CHAINE_STEPS[3].titre} />
-                  <p className="mt-4 max-w-[62ch] text-[15.5px] leading-[1.7] text-[var(--ch-muted)]">
-                    Mono-produit ou boutique multi-produits : 4 templates, palettes personnalisables, textes de vente
-                    pré-remplis. En quelques clics.
-                  </p>
+        {/* ── Étape 6 — suivi poussé vers Shopify + sortie ──────────────── */}
+        <div {...carte(5)}>
+          <div className={pad}>
+            {label(5)}
+            <h3 className={titre}>{t("s6Title")}</h3>
+            <p className={corps}>{t("s6Body")}</p>
 
-                  <ul className="mt-8 list-none">
-                    {[
-                      { nom: "Tech", couleurs: ["#16161d", "#22d3ee", "#7c3aed"] },
-                      { nom: "Maison", couleurs: ["#faf7f2", "#c2703d", "#7c8f6e"] },
-                      { nom: "Beauté", couleurs: ["#ffffff", "#ec4899", "#f5d0e3"] },
-                      { nom: "Générique", couleurs: ["#f9fafb", "#2563eb", "#e5e7eb"] },
-                    ].map((t) => (
-                      <li
-                        key={t.nom}
-                        className="flex items-center justify-between border-b border-[var(--ch-rule)] py-3.5 last:border-b-0"
-                      >
-                        <span className="ch-mono text-[12.5px] uppercase tracking-[0.12em] text-[var(--ch-muted)]">
-                          {t.nom}
-                        </span>
-                        <span className="flex gap-1.5" aria-hidden>
-                          {t.couleurs.map((c) => (
-                            <span
-                              key={c}
-                              className="h-[13px] w-[13px] border border-[var(--ch-rule-strong)]"
-                              style={{ background: c }}
-                            />
-                          ))}
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
-            </li>
+            <ol className="relative m-0 mt-7 grid list-none grid-cols-4 gap-1 p-0">
+              <span aria-hidden className="absolute left-[12.5%] right-[37.5%] top-[5.5px] h-px bg-[#E1E1E6]" />
+              <span
+                aria-hidden
+                className="absolute right-[12.5%] top-[5.5px] h-px"
+                style={{ left: "62.5%", background: "linear-gradient(90deg, #E1E1E6, #8B5CF6)" }}
+              />
+              {(["s6P1", "s6P2", "s6P3", "s6P4"] as const).map((k, i) => {
+                const dernier = i === 3;
+                return (
+                  <li key={k} className="flex min-w-0 flex-col items-center gap-2.5 text-center">
+                    <span
+                      aria-hidden
+                      className="relative z-[1] h-3 w-3 rounded-full"
+                      style={
+                        dernier
+                          ? { background: "#7C3AED", boxShadow: "0 0 0 4px rgba(124,58,237,0.22), 0 0 16px rgba(139,92,246,0.9)" }
+                          : { background: "#D4D4D8" }
+                      }
+                    />
+                    <span className={`text-[13px] leading-[1.3] ${dernier ? "font-medium text-[#111]" : "text-[#52525B]"}`}>
+                      {t(k)}
+                    </span>
+                  </li>
+                );
+              })}
+            </ol>
 
-            {/* ─────────── ACTE III — bande contrastée, un seul flux ─────────── */}
-            <li data-chain-step="4" data-ch-acte="2" className="relative border-t border-[var(--ch-rule)] pl-4 pt-8 sm:pl-8 lg:pt-14">
-              <span aria-hidden className="absolute bottom-0 left-0 top-0 w-px bg-[var(--ch-rule)]" />
-              <Marqueur />
-              <div data-ch-reveal="" className="bg-[var(--ch-raised)] p-6 sm:p-9">
-                <p className="ch-mono text-[11.5px] font-medium tracking-[0.18em] text-[var(--dv-accent)]">
-                  {CHAINE_STEPS[4].verbe} <span className="text-[var(--ch-faint)]">&amp;</span> {CHAINE_STEPS[5].verbe}
-                </p>
-
-                <FluxStatuts />
-
-                <div className="mt-10 grid gap-8 border-t border-[var(--ch-rule)] pt-8 sm:grid-cols-2 sm:gap-10">
-                  <div>
-                    <h3 className="ch-display text-[clamp(1.2rem,2vw,1.5rem)] font-semibold leading-[1.2] tracking-[-0.02em]">
-                      {CHAINE_STEPS[4].titre}
-                      <span className="sr-only"> — étape 5 sur 6</span>
-                    </h3>
-                    <p className="mt-3 text-[15px] leading-[1.7] text-[var(--ch-muted)]">
-                      Les commandes entrantes de votre boutique Shopify remontent dans Dropvio et sont préparées chez le
-                      fournisseur, avec leur statut au même endroit.
-                    </p>
-                  </div>
-                  <div data-chain-step="5" data-ch-acte="2">
-                    <h3 className="ch-display text-[clamp(1.2rem,2vw,1.5rem)] font-semibold leading-[1.2] tracking-[-0.02em]">
-                      {CHAINE_STEPS[5].titre}
-                      <span className="sr-only"> — étape 6 sur 6</span>
-                    </h3>
-                    <p className="mt-3 text-[15px] leading-[1.7] text-[var(--ch-muted)]">
-                      Dès que le numéro de suivi existe, il est envoyé automatiquement à Shopify. Le client est notifié,
-                      votre SAV se vide.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </li>
-          </ol>
-
-          {/* ── Fin de chaîne : une seule sortie ───────────────────────
-              Même destination et même style que le CTA d'inscription du hero
-              (app/page.tsx, /register). La ligne sous le bouton n'affirme que
-              ce que le flux fait vraiment aujourd'hui : l'inscription ne demande
-              aucune carte et il n'y a aucun engagement à résilier. */}
-          <div className="border-t border-[var(--ch-rule)] pl-4 pt-10 sm:pl-8">
-            <Link
-              href="/register"
-              className="dv-btn-primary inline-block rounded-2xl bg-[var(--dv-accent)] px-[26px] py-[15px] dv-display text-[16px] font-bold text-[var(--dv-accent-ink)] transition-colors duration-300"
-            >
-              Commencer gratuitement →
-            </Link>
-            <p className="ch-mono mt-4 text-[12px] tracking-[0.04em] text-[var(--ch-faint)]">
-              Sans engagement · aucune carte requise
-            </p>
+            <div className="mt-8 flex flex-col items-start gap-3">
+              <Link
+                href="/register"
+                className="rounded-[10px] bg-[#7c3aed] px-[22px] py-[15px] text-[16px] font-semibold text-white no-underline transition-colors hover:bg-[#8b5cf6] hover:text-white"
+                style={{ boxShadow: "0 0 24px rgba(124,58,237,0.35)" }}
+              >
+                {tHero("ctaPrimary")}
+              </Link>
+              <p className="m-0 text-sm leading-[1.45] text-[#52525B]">{tHero("note")}</p>
+            </div>
           </div>
         </div>
       </div>
