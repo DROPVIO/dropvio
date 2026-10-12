@@ -1483,7 +1483,8 @@
         "cartes": "Cartes :",
         "sections": "Sections :",
         "aucuneSection": "aucune reconnue",
-        "palette": "Palette extraite (non appliquée) :"
+        "palette": "Palette extraite (non appliquée) :",
+        "corrections": "{count, plural, one {# valeur de la fiche a été ajustée automatiquement.} other {# valeurs de la fiche ont été ajustées automatiquement.}}"
       },
       "fichiers": {
         "invalide": "fichier invalide.",
@@ -1494,7 +1495,14 @@
     },
     "apercu": {
       "pagesDuSite": "Pages du site",
-      "titreIframe": "Aperçu : {page}"
+      "titreIframe": "Aperçu : {page}",
+      "pages": {
+        "accueil": "Accueil",
+        "catalogue": "Catalogue",
+        "mentions-legales": "Mentions légales",
+        "cgv": "CGV",
+        "confidentialite": "Confidentialité"
+      }
     },
     "templates": {
       "nomParDefautBoutique": "Boutique",
@@ -1691,6 +1699,17 @@
         "sauvegardeReseau": "Cette page n'a pas pu être sauvegardée dans « Mes sites » (serveur injoignable).",
         "sauvegardeEnCours": "La sauvegarde initiale du site n'est pas encore terminée : réessaie dans un instant.",
         "couleurs": "Impossible d'enregistrer ces couleurs."
+      },
+      "langueSite": {
+        "titre": "Langue du site",
+        "aide": "Langue des textes de la page générée (panier, pied de page, contenu écrit par l'IA).",
+        "imposee": "Langue de la boutique : le site est généré dans cette langue.",
+        "options": {
+          "fr": "Français",
+          "en": "English",
+          "es": "Español",
+          "it": "Italiano"
+        }
       }
     }
   },
@@ -1796,6 +1815,107 @@
       "intro": "Découvre les boutiques créées par la communauté Dropvio.",
       "descriptionDefaut": "Découvre les produits de cette boutique.",
       "vide": "Aucune boutique publique pour le moment."
+    }
+  },
+  "siteContenu": {
+    "templates": {
+      "tech": {
+        "titre": "La technologie qui simplifie votre quotidien",
+        "sousTitre": "Innovation pensée pour un usage simple, au quotidien.",
+        "description": "Conçu pour allier performance et simplicité d'utilisation. Une solution moderne pour un besoin bien réel, sans complexité inutile.",
+        "b1": "Installation en quelques minutes",
+        "b2": "Compatible avec vos appareils du quotidien",
+        "b3": "Design compact et durable",
+        "b4": "Utilisation simple, sans réglage complexe",
+        "cta": "Je le veux"
+      },
+      "maison": {
+        "titre": "Un intérieur plus agréable, simplement",
+        "sousTitre": "Pensé pour s'intégrer naturellement chez vous.",
+        "description": "Un objet du quotidien qui allie fonctionnalité et esthétique, pour une maison plus agréable à vivre, jour après jour.",
+        "b1": "S'intègre facilement à votre décoration",
+        "b2": "Facile à nettoyer et à entretenir",
+        "b3": "Matériaux pensés pour durer",
+        "b4": "Un geste simple qui change le quotidien",
+        "cta": "Je commande"
+      },
+      "beaute": {
+        "titre": "Prenez soin de vous, simplement",
+        "sousTitre": "Une routine simple, pour un résultat visible.",
+        "description": "Formulé pour s'intégrer facilement à votre routine beauté, jour après jour, sans complexité.",
+        "b1": "S'utilise en quelques secondes",
+        "b2": "Convient à un usage régulier",
+        "b3": "Facile à emporter partout",
+        "b4": "Un geste simple à intégrer à votre routine",
+        "cta": "Je découvre"
+      },
+      "generique": {
+        "titre": "Le produit qu'il vous manquait",
+        "sousTitre": "Simple, pratique, pensé pour vous.",
+        "description": "Un produit pensé pour répondre à un besoin concret du quotidien, sans complication.",
+        "b1": "Facile à utiliser dès la réception",
+        "b2": "Pensé pour durer",
+        "b3": "Un rapport qualité-prix étudié",
+        "b4": "Simple, pratique, efficace",
+        "cta": "Commander maintenant"
+      }
+    },
+    "reassurance": {
+      "titreLivraison": "Livraison suivie",
+      "titrePaiement": "Paiement sécurisé",
+      "titreRetour": "Satisfait ou remboursé",
+      "livraison": "Suivi de commande à chaque étape",
+      "paiement": "Vos données bancaires sont chiffrées",
+      "retour": "Rétractation possible sous 14 jours"
+    },
+    "preuve": {
+      "avis": "{n} avis",
+      "ventes": "{n} ventes"
+    },
+    "checkout": {
+      "diminuer": "Diminuer la quantité",
+      "augmenter": "Augmenter la quantité",
+      "total": "Total :",
+      "titre": "Vos informations de livraison",
+      "nom": "Nom complet",
+      "nomPlaceholder": "Votre nom",
+      "adresse": "Adresse de livraison",
+      "adressePlaceholder": "Adresse, code postal, ville",
+      "email": "E-mail",
+      "emailPlaceholder": "vous@email.com",
+      "paiement": "🔒 Paiement sécurisé : bientôt disponible",
+      "paiementNote": "Le paiement en ligne n'est pas encore activé sur cette page. Aucune commande ne peut être finalisée pour le moment.",
+      "fermer": "Fermer"
+    },
+    "sections": {
+      "nouvelleGeneration": "Nouvelle génération",
+      "pourquoiCeProduit": "Pourquoi ce produit",
+      "description": "Description",
+      "galerie": "Galerie",
+      "quotidien": "Ce qui change au quotidien",
+      "enImages": "En images",
+      "benefices": "Les bénéfices",
+      "avantApres": "Avant / Après",
+      "avant": "Avant",
+      "apres": "Après",
+      "pourquoiChoisir": "Pourquoi choisir ce produit",
+      "photos": "Photos",
+      "droits": "© Tous droits réservés"
+    },
+    "boutique": {
+      "badge": "Boutique",
+      "nosProduits": "Nos produits",
+      "voirNosProduits": "Voir nos produits",
+      "voirLesProduits": "Voir les produits",
+      "commander": "Commander",
+      "photoAAjouter": "Photo à ajouter"
+    },
+    "pages": {
+      "accueil": "Accueil",
+      "catalogue": "Catalogue",
+      "mentionsLegales": "Mentions légales",
+      "cgv": "CGV",
+      "confidentialite": "Confidentialité"
     }
   }
 }

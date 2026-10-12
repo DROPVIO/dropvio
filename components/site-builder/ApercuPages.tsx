@@ -3,7 +3,7 @@
 import { useTranslations } from "next-intl";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { CLE_ACCUEIL, CLE_CATALOGUE, titrePageConnue } from "@/lib/site-builder-pages";
+import { CLE_ACCUEIL, CLE_CATALOGUE } from "@/lib/site-builder-pages";
 
 // Aperçu d'un site multi-pages (sites_generes.pages, clé → HTML standalone) : UNE page à la
 // fois dans une même iframe, et une barre de pages au-dessus. Les liens internes de la page
@@ -17,10 +17,10 @@ import { CLE_ACCUEIL, CLE_CATALOGUE, titrePageConnue } from "@/lib/site-builder-
 
 const SOURCE_MESSAGE = "dropvio-apercu-pages";
 
-// Libellé tiré de la clé : accueil → Accueil, catalogue → Catalogue, pages légales → leur
-// titre (Mentions légales, CGV, Confidentialité), collection-x-y → X y.
-export function libellePage(cle: string): string {
-  const connu = titrePageConnue(cle);
+// Libellé d'onglet tiré de la clé, dans la langue de l'interface : accueil, catalogue et pages
+// légales ont un libellé traduit ; collection-x-y → X y.
+function libellePage(cle: string, tPages: (cle: string) => string | undefined): string {
+  const connu = tPages(cle);
   if (connu) return connu;
   const brut = cle.replace(/^collection-/, "").replace(/-/g, " ").trim() || cle;
   return brut.charAt(0).toUpperCase() + brut.slice(1);
@@ -79,6 +79,7 @@ export default function ApercuPages({
   hauteur?: string;
 }) {
   const t = useTranslations("siteBuilder.apercu");
+  const tPages = (cle: string) => (t.has(`pages.${cle}`) ? t(`pages.${cle}`) : undefined);
   const cles = useMemo(() => ordonner(Object.keys(pages)), [pages]);
   const [active, setActive] = useState<string>(CLE_ACCUEIL);
   const iframeRef = useRef<HTMLIFrameElement>(null);
@@ -130,7 +131,7 @@ export default function ApercuPages({
                 : "text-[var(--text-muted)] hover:bg-[var(--surface)] hover:text-[var(--text-primary)]"
             }`}
           >
-            {libellePage(cle)}
+            {libellePage(cle, tPages)}
           </button>
         ))}
       </nav>
@@ -139,7 +140,7 @@ export default function ApercuPages({
         ref={iframeRef}
         key={cleAffichee}
         srcDoc={srcDoc}
-        title={t("titreIframe", { page: cleAffichee ? libellePage(cleAffichee) : "" })}
+        title={t("titreIframe", { page: cleAffichee ? libellePage(cleAffichee, tPages) : "" })}
         className="w-full"
         style={{ height: hauteur, border: "none", background: "#fff" }}
         sandbox="allow-scripts"

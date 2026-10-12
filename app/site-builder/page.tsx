@@ -18,7 +18,8 @@ import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
 import { slugFichier, telechargerTexte } from "@/lib/audit-download";
 import { ToastHost, useToast } from "@/components/Toast";
 import { LIEN_CHANGER_DE_PLAN } from "@/lib/plan-links";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
+import { SUPPORTED_LOCALES, isAppLocale, type AppLocale } from "@/lib/locale";
 import { useApiErrorMessage } from "@/lib/use-api-error";
 
 type Step = 1 | 2 | 3;
@@ -113,6 +114,14 @@ function SiteBuilderContent() {
   // Un brouillon resté dans l'onglet pour une autre boutique n'est jamais repris.
   const boutiqueDraft = brouillonLu && (!boutiqueId || brouillonLu.boutiqueId === boutiqueId) ? brouillonLu : null;
   const brouillonIntrouvable = modeBoutique && brouillonLu !== undefined && boutiqueDraft === null;
+
+  // Langue du contenu du site généré : celle de la boutique quand le site en vient (brouillon
+  // ou ?langue= posé par la page boutique), sinon au choix, celle de l'interface par défaut.
+  const localeInterface = useLocale() as AppLocale;
+  const langueParam = searchParams.get("langue");
+  const langueImposee: AppLocale | null = boutiqueDraft?.langue ?? (isAppLocale(langueParam) ? langueParam : null);
+  const [langueChoisie, setLangueChoisie] = useState<AppLocale>(localeInterface);
+  const langueSite: AppLocale = langueImposee ?? langueChoisie;
 
   // Style & palette
   const [selectedStyleId, setSelectedStyleId] = useState("premium");
@@ -430,6 +439,7 @@ function SiteBuilderContent() {
             style: selectedStyleId,
             prompt: promptSite.trim(),
             ficheStyle: ficheStyle ?? undefined,
+            langue: langueSite,
           }
         : {
             productName,
@@ -446,6 +456,7 @@ function SiteBuilderContent() {
             corrections: correctionsList(),
             ficheStyle: ficheStyle ?? undefined,
             prompt: promptSite.trim(),
+            langue: langueSite,
           };
       const res = await fetch("/api/generate-site", {
         method: "POST",
@@ -706,7 +717,33 @@ function SiteBuilderContent() {
           </div>
         )}
 
-        {mode === "template" && <TemplateEditor boutiqueDraft={boutiqueDraft} canExport={canExport} />}
+        {/* Langue du site généré — partagée par les deux modes. Imposée par la boutique quand
+            le site en vient (le contenu doit être dans la langue de la boutique). */}
+        <div className="mb-6 rounded-2xl bg-[var(--surface)] border border-[var(--border)] px-6 py-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-col gap-1">
+            <label htmlFor="langue-site" className="text-sm font-medium text-[var(--text-muted)]">
+              {t("langueSite.titre")}
+            </label>
+            <span className="text-xs text-[var(--text-faint)]">
+              {langueImposee ? t("langueSite.imposee") : t("langueSite.aide")}
+            </span>
+          </div>
+          <select
+            id="langue-site"
+            value={langueSite}
+            onChange={(e) => setLangueChoisie(e.target.value as AppLocale)}
+            disabled={langueImposee !== null}
+            className="rounded-xl border border-[var(--border-strong)] bg-[var(--bg)] px-3 py-2 text-sm text-[var(--text-primary)] disabled:opacity-60"
+          >
+            {SUPPORTED_LOCALES.map((l) => (
+              <option key={l} value={l}>
+                {t(`langueSite.options.${l}`)}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {mode === "template" && <TemplateEditor boutiqueDraft={boutiqueDraft} canExport={canExport} langueSite={langueSite} />}
 
         {mode === "ia" && (
         <>

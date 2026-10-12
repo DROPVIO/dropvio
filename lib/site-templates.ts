@@ -1,3 +1,6 @@
+import { prixSite, tx, type SiteCtx } from "@/lib/site-textes";
+import { toIntlTag } from "@/lib/locale";
+
 // Système de templates déterministes pour le Site Builder (mode "Éditeur de templates").
 // Contrairement au mode IA (génération Claude à la demande), ces templates sont du HTML
 // statique paramétré : rendu instantané, pas d'appel API, structure garantie et testable.
@@ -30,86 +33,39 @@ export type Reassurance = {
   retour: string;
 };
 
-export const CATEGORIES: { id: Categorie; label: string; emoji: string; desc: string }[] = [
-  { id: "tech",      label: "Tech",      emoji: "⚡", desc: "Sombre, néon, mise en page split-screen" },
-  { id: "maison",    label: "Maison",    emoji: "🏠", desc: "Chaleureux, crème/terracotta, centré" },
-  { id: "beaute",    label: "Beauté",    emoji: "💄", desc: "Pastel, élégant, avant/après mis en avant" },
-  { id: "generique", label: "Générique", emoji: "🛍️", desc: "Neutre, universel, structure classique" },
+// label : nom du template, volontairement non traduit ; sa description est dans
+// siteBuilder.templates.categories.<id>.
+export const CATEGORIES: { id: Categorie; label: string; emoji: string }[] = [
+  { id: "tech",      label: "Tech",      emoji: "⚡" },
+  { id: "maison",    label: "Maison",    emoji: "🏠" },
+  { id: "beaute",    label: "Beauté",    emoji: "💄" },
+  { id: "generique", label: "Générique", emoji: "🛍️" },
 ];
 
-export const TEXTES_DEFAUT: Record<Categorie, ContenuTexte> = {
-  tech: {
-    titre: "La technologie qui simplifie votre quotidien",
-    sousTitre: "Innovation pensée pour un usage simple, au quotidien.",
-    description:
-      "Conçu pour allier performance et simplicité d'utilisation. Une solution moderne pour un besoin bien réel, sans complexité inutile.",
-    bullets: [
-      "Installation en quelques minutes",
-      "Compatible avec vos appareils du quotidien",
-      "Design compact et durable",
-      "Utilisation simple, sans réglage complexe",
-    ],
-    cta: "Je le veux",
+// Textes par défaut d'un template et blocs de réassurance, dans la langue du site
+// (siteContenu.templates / siteContenu.reassurance, voir lib/site-textes.ts).
+export function textesDefaut(ctx: SiteCtx, categorie: Categorie): ContenuTexte {
+  const d = ctx.t.templates[categorie];
+  return {
+    titre: d.titre,
+    sousTitre: d.sousTitre,
+    description: d.description,
+    bullets: [d.b1, d.b2, d.b3, d.b4],
+    cta: d.cta,
     noteMoyenne: "",
     nombreAvis: "",
     nombreCommandes: "",
-  },
-  maison: {
-    titre: "Un intérieur plus agréable, simplement",
-    sousTitre: "Pensé pour s'intégrer naturellement chez vous.",
-    description:
-      "Un objet du quotidien qui allie fonctionnalité et esthétique, pour une maison plus agréable à vivre, jour après jour.",
-    bullets: [
-      "S'intègre facilement à votre décoration",
-      "Facile à nettoyer et à entretenir",
-      "Matériaux pensés pour durer",
-      "Un geste simple qui change le quotidien",
-    ],
-    cta: "Je commande",
-    noteMoyenne: "",
-    nombreAvis: "",
-    nombreCommandes: "",
-  },
-  beaute: {
-    titre: "Prenez soin de vous, simplement",
-    sousTitre: "Une routine simple, pour un résultat visible.",
-    description:
-      "Formulé pour s'intégrer facilement à votre routine beauté, jour après jour, sans complexité.",
-    bullets: [
-      "S'utilise en quelques secondes",
-      "Convient à un usage régulier",
-      "Facile à emporter partout",
-      "Un geste simple à intégrer à votre routine",
-    ],
-    cta: "Je découvre",
-    noteMoyenne: "",
-    nombreAvis: "",
-    nombreCommandes: "",
-  },
-  generique: {
-    titre: "Le produit qu'il vous manquait",
-    sousTitre: "Simple, pratique, pensé pour vous.",
-    description:
-      "Un produit pensé pour répondre à un besoin concret du quotidien, sans complication.",
-    bullets: [
-      "Facile à utiliser dès la réception",
-      "Pensé pour durer",
-      "Un rapport qualité-prix étudié",
-      "Simple, pratique, efficace",
-    ],
-    cta: "Commander maintenant",
-    noteMoyenne: "",
-    nombreAvis: "",
-    nombreCommandes: "",
-  },
-};
+  };
+}
 
-export const REASSURANCE_DEFAUT: Reassurance = {
-  actif: true,
-  livraison: "Suivi de commande à chaque étape",
-  paiement: "Vos données bancaires sont chiffrées",
-  retour: "Rétractation possible sous 14 jours",
-};
+export function reassuranceDefaut(ctx: SiteCtx): Reassurance {
+  return {
+    actif: true,
+    livraison: ctx.t.reassurance.livraison,
+    paiement: ctx.t.reassurance.paiement,
+    retour: ctx.t.reassurance.retour,
+  };
+}
 
 export function imagesVides(): ImagesSite {
   return { hero: null, galerie: [null, null, null], avant: null, apres: null };
@@ -131,17 +87,17 @@ function nl2list(bullets: string[]): string {
     .join("\n");
 }
 
-function prixBlock(prixVente: string, prixBarre: string, accent: string): string {
+function prixBlock(ctx: SiteCtx, prixVente: string, prixBarre: string, accent: string): string {
   if (!prixVente.trim()) return "";
   const barre = prixBarre.trim()
-    ? `<span style="text-decoration:line-through;opacity:.5;font-size:var(--fs-small);margin-right:10px">${escapeHtml(prixBarre)}€</span>`
+    ? `<span style="text-decoration:line-through;opacity:.5;font-size:var(--fs-small);margin-right:10px">${escapeHtml(prixSite(prixBarre, ctx.langue))}</span>`
     : "";
-  return `<div class="prix">${barre}<strong style="color:${accent}">${escapeHtml(prixVente)}€</strong></div>`;
+  return `<div class="prix">${barre}<strong style="color:${accent}">${escapeHtml(prixSite(prixVente, ctx.langue))}</strong></div>`;
 }
 
 // Preuve sociale réelle — ne s'affiche que si le vendeur a rempli au moins un vrai chiffre.
 // Jamais de valeur par défaut : pas de fausse note, pas de faux avis, pas de fausses ventes.
-function preuveSocialeBlock(c: ContenuTexte, accent: string): string {
+function preuveSocialeBlock(ctx: SiteCtx, c: ContenuTexte, accent: string): string {
   const note = c.noteMoyenne?.trim();
   const avis = c.nombreAvis?.trim();
   const commandes = c.nombreCommandes?.trim();
@@ -152,8 +108,8 @@ function preuveSocialeBlock(c: ContenuTexte, accent: string): string {
   const etoiles = note ? "★".repeat(pleines) + "☆".repeat(5 - pleines) : "";
 
   const details = [
-    avis && `${escapeHtml(avis)} avis`,
-    commandes && `${escapeHtml(commandes)} ventes`,
+    avis && escapeHtml(tx(ctx.t.preuve.avis, { n: avis })),
+    commandes && escapeHtml(tx(ctx.t.preuve.ventes, { n: commandes })),
   ].filter(Boolean).join(" · ");
 
   return `<div class="dv-social-proof" style="font-size:var(--fs-body);margin-bottom:14px;">${
@@ -161,12 +117,12 @@ function preuveSocialeBlock(c: ContenuTexte, accent: string): string {
   }${details ? `<span style="opacity:.65;margin-left:6px">${details}</span>` : ""}</div>`;
 }
 
-function reassuranceBlock(r: Reassurance, style: string): string {
+function reassuranceBlock(ctx: SiteCtx, r: Reassurance, style: string): string {
   if (!r.actif) return "";
   const items = [
-    { icon: "🚚", titre: "Livraison suivie", texte: r.livraison },
-    { icon: "🔒", titre: "Paiement sécurisé", texte: r.paiement },
-    { icon: "↩", titre: "Satisfait ou remboursé", texte: r.retour },
+    { icon: "🚚", titre: ctx.t.reassurance.titreLivraison, texte: r.livraison },
+    { icon: "🔒", titre: ctx.t.reassurance.titrePaiement, texte: r.paiement },
+    { icon: "↩", titre: ctx.t.reassurance.titreRetour, texte: r.retour },
   ];
   return `
   <section class="reassurance ${style}">
@@ -228,38 +184,39 @@ function checkoutStyles(t: CheckoutTheme): string {
 // une mini-commande indépendante par carte produit, voir productGridSection ci-dessous) ;
 // vide par défaut, donc les ids restent identiques à avant pour le mode produit unique
 // (une seule instance par page, aucun changement de sortie HTML).
-function checkoutHtml(prixVenteNum: number, cta: string, idSuffix = ""): string {
+function checkoutHtml(ctx: SiteCtx, prixVenteNum: number, cta: string, idSuffix = ""): string {
   return `
     <div class="dv-order">
       <div class="dv-qty-row">
-        <button type="button" id="dv-qty-minus${idSuffix}" class="dv-qty-btn" aria-label="Diminuer la quantité">−</button>
+        <button type="button" id="dv-qty-minus${idSuffix}" class="dv-qty-btn" aria-label="${escapeHtml(ctx.t.checkout.diminuer)}">−</button>
         <span id="dv-qty${idSuffix}" class="dv-qty-val">1</span>
-        <button type="button" id="dv-qty-plus${idSuffix}" class="dv-qty-btn" aria-label="Augmenter la quantité">+</button>
+        <button type="button" id="dv-qty-plus${idSuffix}" class="dv-qty-btn" aria-label="${escapeHtml(ctx.t.checkout.augmenter)}">+</button>
       </div>
-      <div class="dv-total">Total : <strong id="dv-total${idSuffix}">${prixVenteNum.toFixed(2)}€</strong></div>
+      <div class="dv-total">${escapeHtml(ctx.t.checkout.total)} <strong id="dv-total${idSuffix}">${escapeHtml(prixSite(prixVenteNum, ctx.langue))}</strong></div>
       <button type="button" id="dv-order-btn${idSuffix}" class="cta" style="border:none;cursor:pointer;font-family:inherit;">${escapeHtml(cta)}</button>
 
       <div id="dv-checkout-form${idSuffix}" class="dv-checkout" style="display:none">
-        <h3>Tes informations de livraison</h3>
-        <div class="dv-field"><label>Nom complet</label><input type="text" placeholder="Ton nom"></div>
-        <div class="dv-field"><label>Adresse de livraison</label><input type="text" placeholder="Adresse, code postal, ville"></div>
-        <div class="dv-field"><label>Email</label><input type="email" placeholder="ton@email.com"></div>
-        <button type="button" class="dv-pay-btn" disabled>🔒 Paiement sécurisé — bientôt disponible</button>
-        <p class="dv-pay-note">Le paiement en ligne n'est pas encore activé sur cette page. Aucune commande ne peut être finalisée pour le moment.</p>
+        <h3>${escapeHtml(ctx.t.checkout.titre)}</h3>
+        <div class="dv-field"><label>${escapeHtml(ctx.t.checkout.nom)}</label><input type="text" placeholder="${escapeHtml(ctx.t.checkout.nomPlaceholder)}"></div>
+        <div class="dv-field"><label>${escapeHtml(ctx.t.checkout.adresse)}</label><input type="text" placeholder="${escapeHtml(ctx.t.checkout.adressePlaceholder)}"></div>
+        <div class="dv-field"><label>${escapeHtml(ctx.t.checkout.email)}</label><input type="email" placeholder="${escapeHtml(ctx.t.checkout.emailPlaceholder)}"></div>
+        <button type="button" class="dv-pay-btn" disabled>${escapeHtml(ctx.t.checkout.paiement)}</button>
+        <p class="dv-pay-note">${escapeHtml(ctx.t.checkout.paiementNote)}</p>
       </div>
     </div>`;
 }
 
-function checkoutScript(prixVenteNum: number, idSuffix = ""): string {
+function checkoutScript(ctx: SiteCtx, prixVenteNum: number, idSuffix = ""): string {
   return `<script>
 (function(){
   var prixUnitaire = ${prixVenteNum};
+  var formatPrix = new Intl.NumberFormat(${JSON.stringify(toIntlTag(ctx.langue))}, { style: 'currency', currency: 'EUR' });
   var qty = 1;
   var qtyEl = document.getElementById('dv-qty${idSuffix}');
   var totalEl = document.getElementById('dv-total${idSuffix}');
   function updateTotal(){
     if (qtyEl) qtyEl.textContent = qty;
-    if (totalEl) totalEl.textContent = (prixUnitaire * qty).toFixed(2) + '€';
+    if (totalEl) totalEl.textContent = formatPrix.format(prixUnitaire * qty);
   }
   var minus = document.getElementById('dv-qty-minus${idSuffix}');
   var plus = document.getElementById('dv-qty-plus${idSuffix}');
@@ -288,16 +245,16 @@ function checkoutScript(prixVenteNum: number, idSuffix = ""): string {
 </script>`;
 }
 
-function footerLegalLink(): string {
-  return `<div class="dv-footer-links"><a id="dv-legal-link" href="#">Mentions légales</a></div>`;
+function footerLegalLink(ctx: SiteCtx): string {
+  return `<div class="dv-footer-links"><a id="dv-legal-link" href="#">${escapeHtml(ctx.t.pages.mentionsLegales)}</a></div>`;
 }
 
-function mentionsLegalesModal(): string {
+function mentionsLegalesModal(ctx: SiteCtx): string {
   return `
   <div id="dv-legal-modal" class="dv-legal-modal">
     <div class="dv-legal-box">
-      <button type="button" id="dv-legal-close" class="dv-legal-close" aria-label="Fermer">✕</button>
-      <h2>Mentions légales</h2>
+      <button type="button" id="dv-legal-close" class="dv-legal-close" aria-label="${escapeHtml(ctx.t.checkout.fermer)}">✕</button>
+      <h2>${escapeHtml(ctx.t.pages.mentionsLegales)}</h2>
     </div>
   </div>`;
 }
@@ -341,51 +298,51 @@ export function grilleStyles(accent: string, cardBg: string, cardBorder: string,
 // prefixe distingue les identifiants du formulaire de commande quand un même produit est
 // affiché dans plusieurs grilles de la page (catalogue + collection) : "" donne -p0, -p1…
 // comme avant ; "c0" donne -c0p0… Les scripts doivent utiliser le même préfixe.
-function produitCardHtml(p: ProduitBoutique, idx: number, accent: string, ctaLabel: string, prefixe = ""): string {
+function produitCardHtml(ctx: SiteCtx, p: ProduitBoutique, idx: number, accent: string, ctaLabel: string, prefixe = ""): string {
   const idSuffix = `-${prefixe}p${idx}`;
   const prixNum = parseFloat(p.prixVente) || 0;
   return `<div class="grille-carte">
-    <div class="grille-img">${p.image?.trim() ? `<img src="${escapeHtml(p.image.trim())}" alt="${escapeHtml(p.nom)}">` : `<div class="grille-img-placeholder" data-placeholder="image">Photo à ajouter</div>`}</div>
+    <div class="grille-img">${p.image?.trim() ? `<img src="${escapeHtml(p.image.trim())}" alt="${escapeHtml(p.nom)}">` : `<div class="grille-img-placeholder" data-placeholder="image">${escapeHtml(ctx.t.boutique.photoAAjouter)}</div>`}</div>
     <div class="grille-body">
       <h3>${escapeHtml(p.nom)}</h3>
       ${p.description.trim() ? `<p class="grille-desc">${escapeHtml(p.description)}</p>` : ""}
-      ${prixBlock(p.prixVente, p.prixOriginal, accent)}
-      ${p.prixVente.trim() ? checkoutHtml(prixNum, ctaLabel, idSuffix) : `<a href="#" class="cta">${escapeHtml(ctaLabel)}</a>`}
+      ${prixBlock(ctx, p.prixVente, p.prixOriginal, accent)}
+      ${p.prixVente.trim() ? checkoutHtml(ctx, prixNum, ctaLabel, idSuffix) : `<a href="#" class="cta">${escapeHtml(ctaLabel)}</a>`}
     </div>
   </div>`;
 }
 
-export function productGridSection(produits: ProduitBoutique[], accent: string, ctaLabel: string): string {
+export function productGridSection(ctx: SiteCtx, produits: ProduitBoutique[], accent: string, ctaLabel: string): string {
   return `<section id="produits"><div class="wrap">
-    <h2>Nos produits</h2>
+    <h2>${escapeHtml(ctx.t.boutique.nosProduits)}</h2>
     <div class="grille">
-      ${produits.map((p, i) => produitCardHtml(p, i, accent, ctaLabel)).join("\n")}
+      ${produits.map((p, i) => produitCardHtml(ctx, p, i, accent, ctaLabel)).join("\n")}
     </div>
   </div></section>`;
 }
 
-export function produitsCheckoutScripts(produits: ProduitBoutique[], prefixe = ""): string {
+export function produitsCheckoutScripts(ctx: SiteCtx, produits: ProduitBoutique[], prefixe = ""): string {
   return produits
-    .map((p, i) => (p.prixVente.trim() ? checkoutScript(parseFloat(p.prixVente) || 0, `-${prefixe}p${i}`) : ""))
+    .map((p, i) => (p.prixVente.trim() ? checkoutScript(ctx, parseFloat(p.prixVente) || 0, `-${prefixe}p${i}`) : ""))
     .join("\n");
 }
 
 // Grille seule (sans section ni titre), pour les pages qui placent plusieurs grilles — voir
 // injectProductGrid dans app/api/generate-site/route.ts. Même carte que productGridSection.
-export function grilleProduitsHtml(produits: ProduitBoutique[], accent: string, ctaLabel: string, prefixe = ""): string {
+export function grilleProduitsHtml(ctx: SiteCtx, produits: ProduitBoutique[], accent: string, ctaLabel: string, prefixe = ""): string {
   return `<div class="grille">
-      ${produits.map((p, i) => produitCardHtml(p, i, accent, ctaLabel, prefixe)).join("\n")}
+      ${produits.map((p, i) => produitCardHtml(ctx, p, i, accent, ctaLabel, prefixe)).join("\n")}
     </div>`;
 }
 
 // ─── Template TECH — sombre, néon, split-screen, bento grid ──────────────────
 
-function templateTech(c: ContenuTexte, images: ImagesSite, prixVente: string, prixBarre: string, reassurance: Reassurance): string {
+function templateTech(ctx: SiteCtx, c: ContenuTexte, images: ImagesSite, prixVente: string, prixBarre: string, reassurance: Reassurance): string {
   const accent = "var(--site-accent)";
   const accent2 = "var(--site-accent-2)";
   const galerie = galerieImgs(images);
   return `<!DOCTYPE html>
-<html lang="fr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<html lang="${ctx.langue}"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>${escapeHtml(c.titre)}</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
@@ -441,11 +398,11 @@ function templateTech(c: ContenuTexte, images: ImagesSite, prixVente: string, pr
 <body>
   <section class="hero"><div class="wrap">
     <div class="hero-text">
-      <span class="badge">Nouvelle génération</span>
+      <span class="badge">${escapeHtml(ctx.t.sections.nouvelleGeneration)}</span>
       <h1>${escapeHtml(c.titre)}</h1>
       <p class="sous">${escapeHtml(c.sousTitre)}</p>
-      ${preuveSocialeBlock(c, accent)}
-      ${prixBlock(prixVente, prixBarre, accent)}
+      ${preuveSocialeBlock(ctx, c, accent)}
+      ${prixBlock(ctx, prixVente, prixBarre, accent)}
       <a href="#commander" class="cta">${escapeHtml(c.cta)}</a>
     </div>
     <div class="hero-img">
@@ -454,42 +411,42 @@ function templateTech(c: ContenuTexte, images: ImagesSite, prixVente: string, pr
   </div></section>
 
   <section><div class="wrap">
-    <h2>Pourquoi ce produit</h2>
+    <h2>${escapeHtml(ctx.t.sections.pourquoiCeProduit)}</h2>
     <div class="bento">
       ${c.bullets.map((b) => `<div class="card"><b>${escapeHtml(b)}</b></div>`).join("\n")}
     </div>
   </div></section>
 
   <section><div class="wrap">
-    <h2>Description</h2>
+    <h2>${escapeHtml(ctx.t.sections.description)}</h2>
     <p style="color:rgba(240,240,248,.7);max-width:640px;margin-bottom:24px">${escapeHtml(c.description)}</p>
     <ul class="bullets">${nl2list(c.bullets)}</ul>
   </div></section>
 
-  ${galerie.length ? `<section><div class="wrap"><h2>Galerie</h2><div class="galerie">${galerie.map((g) => `<img src="${escapeHtml(g)}" alt="${escapeHtml(c.titre)}">`).join("")}</div></div></section>` : ""}
+  ${galerie.length ? `<section><div class="wrap"><h2>${escapeHtml(ctx.t.sections.galerie)}</h2><div class="galerie">${galerie.map((g) => `<img src="${escapeHtml(g)}" alt="${escapeHtml(c.titre)}">`).join("")}</div></div></section>` : ""}
 
-  ${reassuranceBlock(reassurance, "wrap")}
+  ${reassuranceBlock(ctx, reassurance, "wrap")}
 
   <section id="commander"><div class="cta-final">
     <h2 style="margin-bottom:16px">${escapeHtml(c.titre)}</h2>
     ${prixVente.trim()
-      ? checkoutHtml(parseFloat(prixVente) || 0, c.cta)
-      : `${prixBlock(prixVente, prixBarre, accent)}<a href="#" class="cta">${escapeHtml(c.cta)}</a>`}
+      ? checkoutHtml(ctx, parseFloat(prixVente) || 0, c.cta)
+      : `${prixBlock(ctx, prixVente, prixBarre, accent)}<a href="#" class="cta">${escapeHtml(c.cta)}</a>`}
   </div></section>
 
-  <footer>© Tous droits réservés${footerLegalLink()}</footer>
-  ${mentionsLegalesModal()}
-  ${prixVente.trim() ? checkoutScript(parseFloat(prixVente) || 0) : ""}
+  <footer>${escapeHtml(ctx.t.sections.droits)}${footerLegalLink(ctx)}</footer>
+  ${mentionsLegalesModal(ctx)}
+  ${prixVente.trim() ? checkoutScript(ctx, parseFloat(prixVente) || 0) : ""}
 </body></html>`;
 }
 
 // ─── Template MAISON — chaleureux, crème/terracotta, centré, zigzag ──────────
 
-function templateMaison(c: ContenuTexte, images: ImagesSite, prixVente: string, prixBarre: string, reassurance: Reassurance): string {
+function templateMaison(ctx: SiteCtx, c: ContenuTexte, images: ImagesSite, prixVente: string, prixBarre: string, reassurance: Reassurance): string {
   const accent = "var(--site-accent)";
   const galerie = galerieImgs(images);
   return `<!DOCTYPE html>
-<html lang="fr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<html lang="${ctx.langue}"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>${escapeHtml(c.titre)}</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
@@ -547,14 +504,14 @@ function templateMaison(c: ContenuTexte, images: ImagesSite, prixVente: string, 
   <section class="hero"><div class="wrap">
     <h1>${escapeHtml(c.titre)}</h1>
     <p class="sous">${escapeHtml(c.sousTitre)}</p>
-    ${preuveSocialeBlock(c, accent)}
-    ${prixBlock(prixVente, prixBarre, accent)}
+    ${preuveSocialeBlock(ctx, c, accent)}
+    ${prixBlock(ctx, prixVente, prixBarre, accent)}
     <a href="#commander" class="cta">${escapeHtml(c.cta)}</a>
     ${images.hero ? `<img src="${escapeHtml(images.hero)}" alt="${escapeHtml(c.titre)}">` : `<div class="placeholder"></div>`}
   </div></section>
 
   <section><div class="wrap">
-    <h2>Ce qui change au quotidien</h2>
+    <h2>${escapeHtml(ctx.t.sections.quotidien)}</h2>
     <div class="zigzag">
       ${c.bullets.map((b, i) => `<div class="zigzag-item"><span class="zigzag-num">0${i + 1}</span><p class="zigzag-text">${escapeHtml(b)}</p></div>`).join("\n")}
     </div>
@@ -565,31 +522,31 @@ function templateMaison(c: ContenuTexte, images: ImagesSite, prixVente: string, 
     <p>${escapeHtml(c.description)}</p>
   </div></div></section>
 
-  ${galerie.length ? `<section><div class="wrap"><h2>En images</h2><div class="galerie">${galerie.map((g) => `<img src="${escapeHtml(g)}" alt="${escapeHtml(c.titre)}">`).join("")}</div></div></section>` : ""}
+  ${galerie.length ? `<section><div class="wrap"><h2>${escapeHtml(ctx.t.sections.enImages)}</h2><div class="galerie">${galerie.map((g) => `<img src="${escapeHtml(g)}" alt="${escapeHtml(c.titre)}">`).join("")}</div></div></section>` : ""}
 
-  ${reassuranceBlock(reassurance, "wrap")}
+  ${reassuranceBlock(ctx, reassurance, "wrap")}
 
   <section id="commander"><div class="cta-final">
     <h2>${escapeHtml(c.titre)}</h2>
     ${prixVente.trim()
-      ? checkoutHtml(parseFloat(prixVente) || 0, c.cta)
-      : `${prixBlock(prixVente, prixBarre, "#fff")}<a href="#" class="cta">${escapeHtml(c.cta)}</a>`}
+      ? checkoutHtml(ctx, parseFloat(prixVente) || 0, c.cta)
+      : `${prixBlock(ctx, prixVente, prixBarre, "#fff")}<a href="#" class="cta">${escapeHtml(c.cta)}</a>`}
   </div></section>
 
-  <footer>© Tous droits réservés${footerLegalLink()}</footer>
-  ${mentionsLegalesModal()}
-  ${prixVente.trim() ? checkoutScript(parseFloat(prixVente) || 0) : ""}
+  <footer>${escapeHtml(ctx.t.sections.droits)}${footerLegalLink(ctx)}</footer>
+  ${mentionsLegalesModal(ctx)}
+  ${prixVente.trim() ? checkoutScript(ctx, parseFloat(prixVente) || 0) : ""}
 </body></html>`;
 }
 
 // ─── Template BEAUTÉ — pastel, élégant, avant/après ───────────────────────────
 
-function templateBeaute(c: ContenuTexte, images: ImagesSite, prixVente: string, prixBarre: string, reassurance: Reassurance): string {
+function templateBeaute(ctx: SiteCtx, c: ContenuTexte, images: ImagesSite, prixVente: string, prixBarre: string, reassurance: Reassurance): string {
   const accent = "var(--site-accent)";
   const galerie = galerieImgs(images);
   const hasAvantApres = images.avant && images.apres;
   return `<!DOCTYPE html>
-<html lang="fr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<html lang="${ctx.langue}"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>${escapeHtml(c.titre)}</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
@@ -641,8 +598,8 @@ function templateBeaute(c: ContenuTexte, images: ImagesSite, prixVente: string, 
   <section class="hero"><div class="wrap">
     <h1>${escapeHtml(c.titre)}</h1>
     <p class="sous">${escapeHtml(c.sousTitre)}</p>
-    ${preuveSocialeBlock(c, accent)}
-    ${prixBlock(prixVente, prixBarre, accent)}
+    ${preuveSocialeBlock(ctx, c, accent)}
+    ${prixBlock(ctx, prixVente, prixBarre, accent)}
     <a href="#commander" class="cta">${escapeHtml(c.cta)}</a>
     <div class="hero-img-wrap">
       ${images.hero ? `<img src="${escapeHtml(images.hero)}" alt="${escapeHtml(c.titre)}">` : `<div class="placeholder"></div>`}
@@ -650,7 +607,7 @@ function templateBeaute(c: ContenuTexte, images: ImagesSite, prixVente: string, 
   </div></section>
 
   <section><div class="wrap">
-    <h2>Les bénéfices</h2>
+    <h2>${escapeHtml(ctx.t.sections.benefices)}</h2>
     <div class="pills">${c.bullets.map((b) => `<div class="pill">${escapeHtml(b)}</div>`).join("")}</div>
   </div></section>
 
@@ -659,35 +616,35 @@ function templateBeaute(c: ContenuTexte, images: ImagesSite, prixVente: string, 
     <p>${escapeHtml(c.description)}</p>
   </div></section>
 
-  ${hasAvantApres ? `<section><div class="wrap"><h2>Avant / Après</h2><div class="avant-apres">
-    <figure><img src="${escapeHtml(images.avant!)}" alt="Avant"><figcaption>Avant</figcaption></figure>
-    <figure><img src="${escapeHtml(images.apres!)}" alt="Après"><figcaption>Après</figcaption></figure>
+  ${hasAvantApres ? `<section><div class="wrap"><h2>${escapeHtml(ctx.t.sections.avantApres)}</h2><div class="avant-apres">
+    <figure><img src="${escapeHtml(images.avant!)}" alt="${escapeHtml(ctx.t.sections.avant)}"><figcaption>${escapeHtml(ctx.t.sections.avant)}</figcaption></figure>
+    <figure><img src="${escapeHtml(images.apres!)}" alt="${escapeHtml(ctx.t.sections.apres)}"><figcaption>${escapeHtml(ctx.t.sections.apres)}</figcaption></figure>
   </div></div></section>` : ""}
 
-  ${galerie.length ? `<section><div class="wrap"><h2>En images</h2><div class="galerie">${galerie.map((g) => `<img src="${escapeHtml(g)}" alt="${escapeHtml(c.titre)}">`).join("")}</div></div></section>` : ""}
+  ${galerie.length ? `<section><div class="wrap"><h2>${escapeHtml(ctx.t.sections.enImages)}</h2><div class="galerie">${galerie.map((g) => `<img src="${escapeHtml(g)}" alt="${escapeHtml(c.titre)}">`).join("")}</div></div></section>` : ""}
 
-  ${reassuranceBlock(reassurance, "wrap")}
+  ${reassuranceBlock(ctx, reassurance, "wrap")}
 
   <section id="commander"><div class="cta-final">
     <h2>${escapeHtml(c.titre)}</h2>
     ${prixVente.trim()
-      ? checkoutHtml(parseFloat(prixVente) || 0, c.cta)
-      : `${prixBlock(prixVente, prixBarre, accent)}<a href="#" class="cta">${escapeHtml(c.cta)}</a>`}
+      ? checkoutHtml(ctx, parseFloat(prixVente) || 0, c.cta)
+      : `${prixBlock(ctx, prixVente, prixBarre, accent)}<a href="#" class="cta">${escapeHtml(c.cta)}</a>`}
   </div></section>
 
-  <footer>© Tous droits réservés${footerLegalLink()}</footer>
-  ${mentionsLegalesModal()}
-  ${prixVente.trim() ? checkoutScript(parseFloat(prixVente) || 0) : ""}
+  <footer>${escapeHtml(ctx.t.sections.droits)}${footerLegalLink(ctx)}</footer>
+  ${mentionsLegalesModal(ctx)}
+  ${prixVente.trim() ? checkoutScript(ctx, parseFloat(prixVente) || 0) : ""}
 </body></html>`;
 }
 
 // ─── Template GÉNÉRIQUE — neutre, universel, structure classique ─────────────
 
-function templateGenerique(c: ContenuTexte, images: ImagesSite, prixVente: string, prixBarre: string, reassurance: Reassurance): string {
+function templateGenerique(ctx: SiteCtx, c: ContenuTexte, images: ImagesSite, prixVente: string, prixBarre: string, reassurance: Reassurance): string {
   const accent = "var(--site-accent)";
   const galerie = galerieImgs(images);
   return `<!DOCTYPE html>
-<html lang="fr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<html lang="${ctx.langue}"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>${escapeHtml(c.titre)}</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
@@ -745,36 +702,36 @@ function templateGenerique(c: ContenuTexte, images: ImagesSite, prixVente: strin
     <section class="hero"><div class="wrap">
       <h1>${escapeHtml(c.titre)}</h1>
       <p class="sous">${escapeHtml(c.sousTitre)}</p>
-      ${preuveSocialeBlock(c, accent)}
-      ${prixBlock(prixVente, prixBarre, accent)}
+      ${preuveSocialeBlock(ctx, c, accent)}
+      ${prixBlock(ctx, prixVente, prixBarre, accent)}
       <a href="#commander" class="cta">${escapeHtml(c.cta)}</a>
     </div></section>
   </div>
 
   <section><div class="wrap">
-    <h2>Pourquoi choisir ce produit</h2>
+    <h2>${escapeHtml(ctx.t.sections.pourquoiChoisir)}</h2>
     <div class="grid3">${c.bullets.map((b) => `<div class="card"><p>${escapeHtml(b)}</p></div>`).join("")}</div>
   </div></section>
 
   <section><div class="wrap desc">
-    <h2>Description</h2>
+    <h2>${escapeHtml(ctx.t.sections.description)}</h2>
     <p>${escapeHtml(c.description)}</p>
   </div></section>
 
-  ${galerie.length ? `<section><div class="wrap"><h2>Photos</h2><div class="galerie">${galerie.map((g) => `<img src="${escapeHtml(g)}" alt="${escapeHtml(c.titre)}">`).join("")}</div></div></section>` : ""}
+  ${galerie.length ? `<section><div class="wrap"><h2>${escapeHtml(ctx.t.sections.photos)}</h2><div class="galerie">${galerie.map((g) => `<img src="${escapeHtml(g)}" alt="${escapeHtml(c.titre)}">`).join("")}</div></div></section>` : ""}
 
-  ${reassuranceBlock(reassurance, "wrap")}
+  ${reassuranceBlock(ctx, reassurance, "wrap")}
 
   <section id="commander"><div class="cta-final">
     <h2 style="color:#fff">${escapeHtml(c.titre)}</h2>
     ${prixVente.trim()
-      ? checkoutHtml(parseFloat(prixVente) || 0, c.cta)
-      : `${prixBlock(prixVente, prixBarre, "#fff")}<a href="#" class="cta">${escapeHtml(c.cta)}</a>`}
+      ? checkoutHtml(ctx, parseFloat(prixVente) || 0, c.cta)
+      : `${prixBlock(ctx, prixVente, prixBarre, "#fff")}<a href="#" class="cta">${escapeHtml(c.cta)}</a>`}
   </div></section>
 
-  <footer>© Tous droits réservés${footerLegalLink()}</footer>
-  ${mentionsLegalesModal()}
-  ${prixVente.trim() ? checkoutScript(parseFloat(prixVente) || 0) : ""}
+  <footer>${escapeHtml(ctx.t.sections.droits)}${footerLegalLink(ctx)}</footer>
+  ${mentionsLegalesModal(ctx)}
+  ${prixVente.trim() ? checkoutScript(ctx, parseFloat(prixVente) || 0) : ""}
 </body></html>`;
 }
 
@@ -784,11 +741,11 @@ function templateGenerique(c: ContenuTexte, images: ImagesSite, prixVente: strin
 // au lieu du bloc "bénéfices + description + galerie" d'un seul produit. Le hero pointe vers
 // #produits au lieu d'un unique bloc de commande ; chaque carte gère sa propre commande.
 
-function templateTechBoutique(nomBoutique: string, descriptionBoutique: string, produits: ProduitBoutique[], reassurance: Reassurance, ctaLabel: string): string {
+function templateTechBoutique(ctx: SiteCtx, nomBoutique: string, descriptionBoutique: string, produits: ProduitBoutique[], reassurance: Reassurance, ctaLabel: string): string {
   const accent = "var(--site-accent)";
   const accent2 = "var(--site-accent-2)";
   return `<!DOCTYPE html>
-<html lang="fr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<html lang="${ctx.langue}"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>${escapeHtml(nomBoutique)}</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
@@ -829,26 +786,26 @@ function templateTechBoutique(nomBoutique: string, descriptionBoutique: string, 
 </style></head>
 <body>
   <section class="hero"><div class="wrap">
-    <span class="badge">Boutique</span>
+    <span class="badge">${escapeHtml(ctx.t.boutique.badge)}</span>
     <h1>${escapeHtml(nomBoutique)}</h1>
     <p class="sous">${escapeHtml(descriptionBoutique)}</p>
-    <a href="#produits" class="cta">Voir nos produits</a>
+    <a href="#produits" class="cta">${escapeHtml(ctx.t.boutique.voirNosProduits)}</a>
   </div></section>
 
-  ${productGridSection(produits, accent, ctaLabel)}
+  ${productGridSection(ctx, produits, accent, ctaLabel)}
 
-  ${reassuranceBlock(reassurance, "wrap")}
+  ${reassuranceBlock(ctx, reassurance, "wrap")}
 
-  <footer>© Tous droits réservés${footerLegalLink()}</footer>
-  ${mentionsLegalesModal()}
-  ${produitsCheckoutScripts(produits)}
+  <footer>${escapeHtml(ctx.t.sections.droits)}${footerLegalLink(ctx)}</footer>
+  ${mentionsLegalesModal(ctx)}
+  ${produitsCheckoutScripts(ctx, produits)}
 </body></html>`;
 }
 
-function templateMaisonBoutique(nomBoutique: string, descriptionBoutique: string, produits: ProduitBoutique[], reassurance: Reassurance, ctaLabel: string): string {
+function templateMaisonBoutique(ctx: SiteCtx, nomBoutique: string, descriptionBoutique: string, produits: ProduitBoutique[], reassurance: Reassurance, ctaLabel: string): string {
   const accent = "var(--site-accent)";
   return `<!DOCTYPE html>
-<html lang="fr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<html lang="${ctx.langue}"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>${escapeHtml(nomBoutique)}</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
@@ -891,23 +848,23 @@ function templateMaisonBoutique(nomBoutique: string, descriptionBoutique: string
   <section class="hero"><div class="wrap">
     <h1>${escapeHtml(nomBoutique)}</h1>
     <p class="sous">${escapeHtml(descriptionBoutique)}</p>
-    <a href="#produits" class="cta">Voir nos produits</a>
+    <a href="#produits" class="cta">${escapeHtml(ctx.t.boutique.voirNosProduits)}</a>
   </div></section>
 
-  ${productGridSection(produits, accent, ctaLabel)}
+  ${productGridSection(ctx, produits, accent, ctaLabel)}
 
-  ${reassuranceBlock(reassurance, "wrap")}
+  ${reassuranceBlock(ctx, reassurance, "wrap")}
 
-  <footer>© Tous droits réservés${footerLegalLink()}</footer>
-  ${mentionsLegalesModal()}
-  ${produitsCheckoutScripts(produits)}
+  <footer>${escapeHtml(ctx.t.sections.droits)}${footerLegalLink(ctx)}</footer>
+  ${mentionsLegalesModal(ctx)}
+  ${produitsCheckoutScripts(ctx, produits)}
 </body></html>`;
 }
 
-function templateBeauteBoutique(nomBoutique: string, descriptionBoutique: string, produits: ProduitBoutique[], reassurance: Reassurance, ctaLabel: string): string {
+function templateBeauteBoutique(ctx: SiteCtx, nomBoutique: string, descriptionBoutique: string, produits: ProduitBoutique[], reassurance: Reassurance, ctaLabel: string): string {
   const accent = "var(--site-accent)";
   return `<!DOCTYPE html>
-<html lang="fr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<html lang="${ctx.langue}"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>${escapeHtml(nomBoutique)}</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
@@ -944,23 +901,23 @@ function templateBeauteBoutique(nomBoutique: string, descriptionBoutique: string
   <section class="hero"><div class="wrap">
     <h1>${escapeHtml(nomBoutique)}</h1>
     <p class="sous">${escapeHtml(descriptionBoutique)}</p>
-    <a href="#produits" class="cta">Voir nos produits</a>
+    <a href="#produits" class="cta">${escapeHtml(ctx.t.boutique.voirNosProduits)}</a>
   </div></section>
 
-  ${productGridSection(produits, accent, ctaLabel)}
+  ${productGridSection(ctx, produits, accent, ctaLabel)}
 
-  ${reassuranceBlock(reassurance, "wrap")}
+  ${reassuranceBlock(ctx, reassurance, "wrap")}
 
-  <footer>© Tous droits réservés${footerLegalLink()}</footer>
-  ${mentionsLegalesModal()}
-  ${produitsCheckoutScripts(produits)}
+  <footer>${escapeHtml(ctx.t.sections.droits)}${footerLegalLink(ctx)}</footer>
+  ${mentionsLegalesModal(ctx)}
+  ${produitsCheckoutScripts(ctx, produits)}
 </body></html>`;
 }
 
-function templateGeneriqueBoutique(nomBoutique: string, descriptionBoutique: string, produits: ProduitBoutique[], reassurance: Reassurance, ctaLabel: string): string {
+function templateGeneriqueBoutique(ctx: SiteCtx, nomBoutique: string, descriptionBoutique: string, produits: ProduitBoutique[], reassurance: Reassurance, ctaLabel: string): string {
   const accent = "var(--site-accent)";
   return `<!DOCTYPE html>
-<html lang="fr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<html lang="${ctx.langue}"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>${escapeHtml(nomBoutique)}</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
@@ -999,20 +956,21 @@ function templateGeneriqueBoutique(nomBoutique: string, descriptionBoutique: str
   <section class="hero"><div class="wrap">
     <h1>${escapeHtml(nomBoutique)}</h1>
     <p class="sous">${escapeHtml(descriptionBoutique)}</p>
-    <a href="#produits" class="cta">Voir nos produits</a>
+    <a href="#produits" class="cta">${escapeHtml(ctx.t.boutique.voirNosProduits)}</a>
   </div></section>
 
-  ${productGridSection(produits, accent, ctaLabel)}
+  ${productGridSection(ctx, produits, accent, ctaLabel)}
 
-  ${reassuranceBlock(reassurance, "wrap")}
+  ${reassuranceBlock(ctx, reassurance, "wrap")}
 
-  <footer>© Tous droits réservés${footerLegalLink()}</footer>
-  ${mentionsLegalesModal()}
-  ${produitsCheckoutScripts(produits)}
+  <footer>${escapeHtml(ctx.t.sections.droits)}${footerLegalLink(ctx)}</footer>
+  ${mentionsLegalesModal(ctx)}
+  ${produitsCheckoutScripts(ctx, produits)}
 </body></html>`;
 }
 
 export function buildTemplateHtmlBoutique(input: {
+  ctx: SiteCtx;
   categorie: Categorie;
   nomBoutique: string;
   descriptionBoutique: string;
@@ -1020,21 +978,22 @@ export function buildTemplateHtmlBoutique(input: {
   reassurance: Reassurance;
   ctaLabel?: string;
 }): string {
-  const { categorie, nomBoutique, descriptionBoutique, produits, reassurance } = input;
-  const ctaLabel = input.ctaLabel?.trim() || "Commander";
+  const { ctx, categorie, nomBoutique, descriptionBoutique, produits, reassurance } = input;
+  const ctaLabel = input.ctaLabel?.trim() || ctx.t.boutique.commander;
   switch (categorie) {
     case "tech":
-      return templateTechBoutique(nomBoutique, descriptionBoutique, produits, reassurance, ctaLabel);
+      return templateTechBoutique(ctx, nomBoutique, descriptionBoutique, produits, reassurance, ctaLabel);
     case "maison":
-      return templateMaisonBoutique(nomBoutique, descriptionBoutique, produits, reassurance, ctaLabel);
+      return templateMaisonBoutique(ctx, nomBoutique, descriptionBoutique, produits, reassurance, ctaLabel);
     case "beaute":
-      return templateBeauteBoutique(nomBoutique, descriptionBoutique, produits, reassurance, ctaLabel);
+      return templateBeauteBoutique(ctx, nomBoutique, descriptionBoutique, produits, reassurance, ctaLabel);
     default:
-      return templateGeneriqueBoutique(nomBoutique, descriptionBoutique, produits, reassurance, ctaLabel);
+      return templateGeneriqueBoutique(ctx, nomBoutique, descriptionBoutique, produits, reassurance, ctaLabel);
   }
 }
 
 export function buildTemplateHtml(input: {
+  ctx: SiteCtx;
   categorie: Categorie;
   contenu: ContenuTexte;
   images: ImagesSite;
@@ -1042,15 +1001,15 @@ export function buildTemplateHtml(input: {
   prixBarre: string;
   reassurance: Reassurance;
 }): string {
-  const { categorie, contenu, images, prixVente, prixBarre, reassurance } = input;
+  const { ctx, categorie, contenu, images, prixVente, prixBarre, reassurance } = input;
   switch (categorie) {
     case "tech":
-      return templateTech(contenu, images, prixVente, prixBarre, reassurance);
+      return templateTech(ctx, contenu, images, prixVente, prixBarre, reassurance);
     case "maison":
-      return templateMaison(contenu, images, prixVente, prixBarre, reassurance);
+      return templateMaison(ctx, contenu, images, prixVente, prixBarre, reassurance);
     case "beaute":
-      return templateBeaute(contenu, images, prixVente, prixBarre, reassurance);
+      return templateBeaute(ctx, contenu, images, prixVente, prixBarre, reassurance);
     default:
-      return templateGenerique(contenu, images, prixVente, prixBarre, reassurance);
+      return templateGenerique(ctx, contenu, images, prixVente, prixBarre, reassurance);
   }
 }

@@ -4,6 +4,9 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { getServerUserAndPlan } from "@/lib/supabase-server";
 import { PLAN_LIMITS, planLabel, currentMonthKey, logTokensUsage, type Plan } from "@/lib/plan-limits";
 import { apiError } from "@/lib/api-errors";
+import { contexteSite, langueSite, prixSite, type SiteCtx } from "@/lib/site-textes";
+import { avecRepliLangue, langueBoutique } from "@/lib/boutique-langue";
+import type { AppLocale } from "@/lib/locale";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { escapeHtml, grilleProduitsHtml, grilleStyles, produitsCheckoutScripts, type ProduitBoutique } from "@/lib/site-templates";
 import { blocConsignesStyle, validerFicheStyle } from "@/lib/style-fiche";
@@ -251,13 +254,14 @@ function nettoyerCoquilleAccueil(html: string): { html: string; retraits: string
 // catalogue (grille complète) et une page par collection — catalogue et collections sont
 // construits ici par le code, jamais par le modèle. null si la coquille ne se découpe pas.
 function pagesBoutique(
+  ctx: SiteCtx,
   coquille: string,
   produits: ProduitBoutique[],
   accent: string,
   categories: CategorieBoutique[],
   legales: ContenusLegaux = {}
 ): PagesSite | null {
-  const ctaLabel = "Commander";
+  const ctaLabel = ctx.t.boutique.commander;
   const css = `${grilleStyles(accent, "var(--site-surface)", "var(--site-border)", "var(--site-text)", "var(--site-text-muted)")}
   #catalogue, .collection { padding:80px 0; }
   #catalogue > .wrap, .collection > .wrap { max-width:1200px; margin:0 auto; padding:0 24px; }`;
@@ -268,23 +272,23 @@ function pagesBoutique(
   const collections = grouperCollections(produits, categories);
   return assemblerPagesBoutique(avecCss, {
     catalogue: `<div class="wrap">
-    <h2>Nos produits</h2>
-    ${grilleProduitsHtml(produits, accent, ctaLabel)}
+    <h2>${escapeHtml(ctx.t.boutique.nosProduits)}</h2>
+    ${grilleProduitsHtml(ctx, produits, accent, ctaLabel)}
   </div>`,
     collections: collections.map((c, k) => ({
       slug: c.slug,
       titre: c.titre,
       html: `<div class="wrap">
     <h2>${escapeHtml(c.titre)}</h2>
-    ${grilleProduitsHtml(c.produits, accent, ctaLabel, `c${k}`)}
+    ${grilleProduitsHtml(ctx, c.produits, accent, ctaLabel, `c${k}`)}
   </div>`,
     })),
     scripts: [
-      produitsCheckoutScripts(produits),
-      ...collections.map((c, k) => produitsCheckoutScripts(c.produits, `c${k}`)),
+      produitsCheckoutScripts(ctx, produits),
+      ...collections.map((c, k) => produitsCheckoutScripts(ctx, c.produits, `c${k}`)),
     ].join("\n"),
     legales,
-  });
+  }, ctx);
 }
 
 // Injecte le catalogue (construit déterministiquement, voir lib/site-templates.ts) dans la
@@ -298,12 +302,13 @@ function pagesBoutique(
 // catégories, seule la grille complète est injectée. Repli par simple insertion avant
 // </style>/</body> (ou après le lien #catalogue) si Claude n'a pas laissé les marqueurs.
 function injectProductGrid(
+  ctx: SiteCtx,
   html: string,
   produits: ProduitBoutique[],
   accent: string,
   categories: CategorieBoutique[] = []
 ): string {
-  const ctaLabel = "Commander";
+  const ctaLabel = ctx.t.boutique.commander;
   const gridCss = `${grilleStyles(accent, "var(--site-surface)", "var(--site-border)", "var(--site-text)", "var(--site-text-muted)")}
   .collection { margin-top:64px; scroll-margin-top:96px; }
   #catalogue { scroll-margin-top:96px; }`;
@@ -311,20 +316,20 @@ function injectProductGrid(
   const collections = grouperCollections(produits, categories).map((c) => ({ ...c, ancre: `collection-${c.slug}` }));
 
   const gridHtml = `<div class="wrap">
-    <h2>Nos produits</h2>
-    ${grilleProduitsHtml(produits, accent, ctaLabel)}
+    <h2>${escapeHtml(ctx.t.boutique.nosProduits)}</h2>
+    ${grilleProduitsHtml(ctx, produits, accent, ctaLabel)}
     ${collections
       .map(
         (col, k) => `<section id="${col.ancre}" class="collection">
       <h2>${escapeHtml(col.titre)}</h2>
-      ${grilleProduitsHtml(col.produits, accent, ctaLabel, `c${k}`)}
+      ${grilleProduitsHtml(ctx, col.produits, accent, ctaLabel, `c${k}`)}
     </section>`
       )
       .join("\n")}
   </div>`;
   const gridScripts = [
-    produitsCheckoutScripts(produits),
-    ...collections.map((col, k) => produitsCheckoutScripts(col.produits, `c${k}`)),
+    produitsCheckoutScripts(ctx, produits),
+    ...collections.map((col, k) => produitsCheckoutScripts(ctx, col.produits, `c${k}`)),
   ].join("\n");
 
   let result = html.includes("/* GRILLE_PRODUITS_CSS */")
@@ -387,6 +392,14 @@ Suis ce prompt fidèlement et entièrement : sections (ajout, retrait, ordre, co
 
 const RAPPEL_PRIORITES =
   "RAPPEL DES PRIORITÉS : 1) règles NON NÉGOCIABLES ; 2) PROMPT DE L'UTILISATEUR ; 3) tout le reste (structure de base, règles par défaut, consignes de style).";
+
+// Langue du contenu du site (celle de la boutique, ou choisie dans le Site Builder). Les
+// consignes restent en français ; c'est le texte de la page qui suit la langue du site.
+const NOMS_LANGUE: Record<AppLocale, string> = { fr: "français", en: "anglais", es: "espagnol", it: "italien" };
+
+function consigneLangue(langue: AppLocale): string {
+  return `LANGUE DU SITE (NON NÉGOCIABLE) : tous les textes visibles de la page (titres, paragraphes, boutons, libellés, bandeaux, pied de page, attributs alt et title) sont rédigés en ${NOMS_LANGUE[langue]}, y compris les exemples de libellés cités en français dans ces consignes, que tu traduis. Balise d'ouverture : <html lang="${langue}">.`;
+}
 
 export async function POST(request: NextRequest) {
   const { supabase, user, plan } = await getServerUserAndPlan();
@@ -455,6 +468,11 @@ export async function POST(request: NextRequest) {
   }
 
   const { productName, description, colorPrimary, colorSecondary, colorAccent, style, imageUrl, rating, orders, salePrice, originalPrice, corrections } = body;
+  const langue = langueSite(body.langue);
+  const ctx = await contexteSite(langue);
+  // Prix tels qu'affichés dans la langue du site (« 29,99 € », « €29.99 »).
+  const prixVenteTxt = salePrice ? prixSite(salePrice, langue) : "";
+  const prixBarreTxt = originalPrice ? prixSite(originalPrice, langue) : "";
   const consignesStyle = consignesStyleDepuis(body.ficheStyle);
   const promptUtilisateur = promptUtilisateurDe(body);
 
@@ -529,7 +547,8 @@ PRODUIT : ${productName}
 DESCRIPTION : ${description}
 COULEURS : ${style === "auto" ? "À déterminer par toi selon le produit (choisis une palette cohérente de 3 couleurs)" : `Principale: ${primaryColor} | Secondaire: ${secondaryColor} | Accent: ${accentColor}`}
 STYLE & TON : ${stylePrompt}
-PRIX (NON NÉGOCIABLE) : ${salePrice ? `Prix de vente affiché : ${salePrice}€${originalPrice ? ` — Prix barré : ${originalPrice}€` : ""}. Affiche EXACTEMENT ces prix dans le hero et le CTA final. Prix barré rendu en <span style="text-decoration:line-through;opacity:0.5">${originalPrice}€</span> suivi du prix de vente en gros et en couleur brand. NE PAS inventer d'autres prix.` : "Aucun prix fourni : n'affiche aucun prix dans le HTML."}
+${consigneLangue(langue)}
+PRIX (NON NÉGOCIABLE) : ${salePrice ? `Prix de vente affiché : ${prixVenteTxt}${originalPrice ? ` — Prix barré : ${prixBarreTxt}` : ""}. Affiche EXACTEMENT ces prix dans le hero et le CTA final. Prix barré rendu en <span style="text-decoration:line-through;opacity:0.5">${prixBarreTxt}</span> suivi du prix de vente en gros et en couleur brand. NE PAS inventer d'autres prix.` : "Aucun prix fourni : n'affiche aucun prix dans le HTML."}
 ${imageInstruction}
 
 ${blocPromptUtilisateur(promptUtilisateur)}
@@ -555,9 +574,9 @@ ${imageUrl ? `6. GALERIE PRODUIT — 3 cartes côte à côte présentant le mêm
    • Carte 3 : <img class="product-image-gallery-3" src="${imageUrl}" alt="${productName} — zoom détail" style="width:100%;aspect-ratio:1/1;object-fit:cover;border-radius:12px;object-position:center;transform:scale(1.08);overflow:hidden"> + légende "Détail"
    Chaque carte : fond var(--site-surface), bordure var(--site-border), overflow:hidden, hover scale(1.02). Sur mobile : grille 1 colonne.` : ""}
 
-${imageUrl ? "7." : "6."} CTA FINAL — section pleine largeur, fond dégradé linear-gradient(135deg, var(--site-accent), var(--site-bg-alt)).${imageUrl ? ` Image produit <img class="product-image-cta" src="${imageUrl}" alt="${productName}" style="max-width:320px;width:100%;border-radius:12px;box-shadow:0 16px 48px rgba(0,0,0,0.5);margin:0 auto 32px;display:block"> affichée au-dessus du titre.` : ""} Titre Playfair Display, bouton blanc, texte garantie 30 jours.${salePrice ? ` Affiche le prix : ${originalPrice ? `<span style="text-decoration:line-through;opacity:0.5">${originalPrice}€</span> ` : ""}<strong style="font-size:2rem">${salePrice}€</strong>.` : ""}
+${imageUrl ? "7." : "6."} CTA FINAL — section pleine largeur, fond dégradé linear-gradient(135deg, var(--site-accent), var(--site-bg-alt)).${imageUrl ? ` Image produit <img class="product-image-cta" src="${imageUrl}" alt="${productName}" style="max-width:320px;width:100%;border-radius:12px;box-shadow:0 16px 48px rgba(0,0,0,0.5);margin:0 auto 32px;display:block"> affichée au-dessus du titre.` : ""} Titre Playfair Display, bouton blanc, texte garantie 30 jours.${salePrice ? ` Affiche le prix : ${originalPrice ? `<span style="text-decoration:line-through;opacity:0.5">${prixBarreTxt}</span> ` : ""}<strong style="font-size:2rem">${prixVenteTxt}</strong>.` : ""}
 
-${imageUrl ? "8." : "7."} FOOTER — dans une balise <footer> : logo texte, copyright, et les liens légaux (NON NÉGOCIABLES) <a href="mentions-legales.html">Mentions légales</a>, <a href="cgv.html">CGV</a>, <a href="confidentialite.html">Confidentialité</a> — ces pages existent déjà à part : n'écris jamais leur contenu, ni dans cette page ni dans une fenêtre. 1 ligne simple.
+${imageUrl ? "8." : "7."} FOOTER — dans une balise <footer> : logo texte, copyright, et les liens légaux (NON NÉGOCIABLES) <a href="mentions-legales.html">${ctx.t.pages.mentionsLegales}</a>, <a href="cgv.html">${ctx.t.pages.cgv}</a>, <a href="confidentialite.html">${ctx.t.pages.confidentialite}</a> — ces pages existent déjà à part : n'écris jamais leur contenu, ni dans cette page ni dans une fenêtre. 1 ligne simple.
 
 TYPOGRAPHIE PAR DÉFAUT :
 - Google Fonts : Playfair Display (700) + Inter (400, 600)
@@ -588,7 +607,7 @@ TECHNIQUE (NON NÉGOCIABLE) :
 - Responsive : media query 768px
 - scroll-behavior: smooth
 - Boutons CTA pointent vers "#commander"
-- Textes en français, copywriting persuasif, aucun Lorem Ipsum
+- Textes en ${NOMS_LANGUE[langue]}, copywriting persuasif, aucun Lorem Ipsum
 - Code COMPLET de <!DOCTYPE html> à </html>
 
 RÈGLES PAR DÉFAUT — UX & CONVERSION (Nielsen Norman Group / Unbounce / McKinsey) :
@@ -600,9 +619,9 @@ RÈGLES PAR DÉFAUT — UX & CONVERSION (Nielsen Norman Group / Unbounce / McKin
 
 - TYPOGRAPHIE STRICTE : exactement 2 polices (Playfair Display + Inter), exactement 3 niveaux de taille utilisés (H1 clamp(2.5rem,5vw,4rem) · H2 clamp(1.6rem,3vw,2.4rem) · body 1rem/1.05rem). Aucune taille intermédiaire inventée.
 
-- CTA UNIQUE ET CONTRASTÉ : un seul bouton CTA principal par section, couleur var(--site-accent) très contrastée sur fond sombre, visible IMMÉDIATEMENT sans scroll dans le hero. Texte du CTA orienté bénéfice et action : exemples valides "Obtenir le mien", "Je veux ce produit", "Commander maintenant${salePrice ? ` — ${salePrice}€` : ""}". INTERDIT d'utiliser simplement "Acheter" ou "En savoir plus".
+- CTA UNIQUE ET CONTRASTÉ : un seul bouton CTA principal par section, couleur var(--site-accent) très contrastée sur fond sombre, visible IMMÉDIATEMENT sans scroll dans le hero. Texte du CTA orienté bénéfice et action : exemples valides "Obtenir le mien", "Je veux ce produit", "Commander maintenant${salePrice ? ` — ${prixVenteTxt}` : ""}". INTERDIT d'utiliser simplement "Acheter" ou "En savoir plus".
 
-- PRIX DANS LE HERO : ${salePrice ? `le prix ${salePrice}€ DOIT apparaître en GROS dans la section hero (font-size ≥ 2rem, couleur var(--site-accent-2) ou blanc, font-weight 800) ET sur le bouton CTA final. Ne pas enterrer le prix hors du viewport initial.` : "aucun prix fourni : n'invente aucun prix."}
+- PRIX DANS LE HERO : ${salePrice ? `le prix ${prixVenteTxt} DOIT apparaître en GROS dans la section hero (font-size ≥ 2rem, couleur var(--site-accent-2) ou blanc, font-weight 800) ET sur le bouton CTA final. Ne pas enterrer le prix hors du viewport initial.` : "aucun prix fourni : n'invente aucun prix."}
 
 - PHRASES COURTES (niveau CM1-CM2) : tout le copywriting utilise des phrases de MOINS DE 12 MOTS. Vocabulaire courant, mots de tous les jours. Préfère les listes à puces aux paragraphes denses. Les bénéfices sont formulés en résultats chiffrés concrets ("économise 2h par semaine", "résultats en 7 jours") et jamais en vagues qualités ("haute qualité", "excellent produit").
 
@@ -628,7 +647,7 @@ Réponds UNIQUEMENT avec le code HTML, sans explication ni balise markdown.`;
     const html = injectColorTokens(resultat.html, colorTokens);
     // Pages légales vierges (mentions légales, CGV, confidentialité) à côté de la page : le
     // site devient multi-pages ; html reste la page d'accueil. Page non découpable : seule.
-    const pages = assemblerPagesProduit(html);
+    const pages = assemblerPagesProduit(html, ctx);
     return NextResponse.json(pages ? { html: pages.accueil, pages } : { html });
   } catch (err) {
     // HTML incomplet : on ne renvoie PAS la page, donc le client n'a rien à sauvegarder
@@ -676,6 +695,7 @@ async function handleGenerateBoutique(
     ficheStyle?: unknown;
     boutiqueId?: unknown;
     categories?: unknown;
+    langue?: unknown;
   },
   // Passés par le POST appelant : la consommation de tokens du mode boutique doit être
   // comptée sur le même compteur que celle du mode produit unique.
@@ -707,6 +727,29 @@ async function handleGenerateBoutique(
     );
   }
 
+  // Boutique de l'utilisateur, relue en base (jamais prise du client) : mentions légales déjà
+  // renseignées (boutiques.mentions_legales) et langue (boutiques.langue, migration 042), qui
+  // fixe la langue du site. Sans boutique : langue envoyée par le Site Builder.
+  let mentionsLegales: string | null = null;
+  let langue = langueSite(body.langue);
+  if (typeof body.boutiqueId === "string" && body.boutiqueId) {
+    const boutiqueId = body.boutiqueId;
+    const { data: boutiqueRow } = await avecRepliLangue((avecLangue) =>
+      supabase
+        .from("boutiques")
+        .select(avecLangue ? "mentions_legales, langue" : "mentions_legales")
+        .eq("id", boutiqueId)
+        .eq("user_id", userId)
+        .maybeSingle()
+    );
+    const ligne = boutiqueRow as { mentions_legales?: string | null; langue?: unknown } | null;
+    if (ligne) {
+      mentionsLegales = ligne.mentions_legales ?? null;
+      if (ligne.langue !== undefined) langue = langueBoutique(ligne);
+    }
+  }
+  const ctx = await contexteSite(langue);
+
   const primaryColor   = colorPrimary   || "#7c3aed";
   const secondaryColor = colorSecondary || "#1a0533";
   const accentColor    = colorAccent    || "#f59e0b";
@@ -737,7 +780,7 @@ async function handleGenerateBoutique(
   // chaque produit — la grille réelle (avec les vrais prix/images) est injectée après coup.
   const apercuProduits = produits
     .slice(0, 10)
-    .map((p) => `- ${p.nom}${p.prixVente ? ` (${p.prixVente}€)` : ""}`)
+    .map((p) => `- ${p.nom}${p.prixVente ? ` (${prixSite(p.prixVente, langue)})` : ""}`)
     .join("\n");
 
   const prompt = `Tu es un développeur front-end expert. Génère la PAGE D'ACCUEIL HTML de la boutique en ligne suivante — les pages catalogue et collections, avec les vrais produits, sont produites par un système externe : tu ne dois JAMAIS écrire toi-même de fiche produit détaillée.
@@ -752,6 +795,7 @@ ${blocPromptUtilisateur(promptUtilisateur)}
 
 COULEURS (NON NÉGOCIABLE, fixes, ne pas dévier) : Principale ${primaryColor} | Secondaire ${secondaryColor} | Accent ${accentColor}
 STYLE & TON : ${stylePrompt}
+${consigneLangue(langue)}
 
 TOKENS CSS (NON NÉGOCIABLE) : --site-bg, --site-text, --site-text-muted, --site-accent (= couleur principale ci-dessus), --site-accent-2 (= accent), --site-bg-alt (= secondaire), --site-surface et --site-border sont DÉJÀ déclarées automatiquement dans un bloc :root — ne les redéclare surtout pas toi-même. Utilise-les SYSTÉMATIQUEMENT via var(--nom) partout où tu écrirais une des couleurs ci-dessus : jamais de valeur hex ou rgba() en dur pour un fond, un texte ou un accent.
 
@@ -759,13 +803,13 @@ NON NÉGOCIABLE : cette page est la seule page d'accueil. Ne produis aucun conte
 
 STRUCTURE DE BASE (à suivre seulement là où le prompt de l'utilisateur ne précise rien ; il peut ajouter, retirer, réordonner ou remplacer des sections — sauf les liens et le marqueur de la NAVBAR, NON NÉGOCIABLES) :
 
-1. NAVBAR sticky — logo texte "${nomBoutique}" à gauche ; à droite, des liens vers les pages du site (jamais d'ancre #…) : <a href="index.html">Accueil</a>, <a href="catalogue.html">Catalogue</a> (même classe CSS pour ces deux liens), puis, sur sa propre ligne juste après le lien Catalogue, EXACTEMENT ce commentaire HTML, sans l'expliquer ni le modifier : <!-- NAV_COLLECTIONS --> (un système externe le remplace par les liens des pages de collection) ; enfin un bouton CTA "Voir les produits" (href="catalogue.html"). Sur mobile, les liens tiennent sur une ligne qui défile horizontalement (overflow-x:auto), sans menu caché. Fond transparent → semi-transparent au scroll (JS scrollY).
+1. NAVBAR sticky — logo texte "${nomBoutique}" à gauche ; à droite, des liens vers les pages du site (jamais d'ancre #…) : <a href="index.html">${ctx.t.pages.accueil}</a>, <a href="catalogue.html">${ctx.t.pages.catalogue}</a> (même classe CSS pour ces deux liens), puis, sur sa propre ligne juste après le lien Catalogue, EXACTEMENT ce commentaire HTML, sans l'expliquer ni le modifier : <!-- NAV_COLLECTIONS --> (un système externe le remplace par les liens des pages de collection) ; enfin un bouton CTA "${ctx.t.boutique.voirLesProduits}" (href="catalogue.html"). Sur mobile, les liens tiennent sur une ligne qui défile horizontalement (overflow-x:auto), sans menu caché. Fond transparent → semi-transparent au scroll (JS scrollY).
 
-2. HERO (80vh), <section id="accueil"> — fond dégradé animé linear-gradient(135deg, var(--site-accent), var(--site-accent-2)). Titre H1 = accroche de la boutique dans son ensemble (jamais le nom d'un produit précis), sous-titre = reformulation persuasive de la description en 1-2 phrases. Bouton CTA "Voir les produits" vers catalogue.html (jamais une ancre).
+2. HERO (80vh), <section id="accueil"> — fond dégradé animé linear-gradient(135deg, var(--site-accent), var(--site-accent-2)). Titre H1 = accroche de la boutique dans son ensemble (jamais le nom d'un produit précis), sous-titre = reformulation persuasive de la description en 1-2 phrases. Bouton CTA "${ctx.t.boutique.voirLesProduits}" vers catalogue.html (jamais une ancre).
 
 3. BANDEAU DE CONFIANCE — juste après le HERO, une bannière défilante horizontale pleine largeur (une seule ligne) avec ces 4 libellés : "🚚 Livraison rapide & sécurisée", "🔒 Paiement 100% sécurisé", "↩ Satisfait ou remboursé 30 jours", "💬 Support client réactif". Animation CSS uniquement : la liste des 4 libellés est dupliquée une fois dans la même piste, qui défile en boucle avec @keyframes sur transform: translateX(0) → translateX(-50%) (linear, infinite), sans JavaScript ; animation-play-state: paused au survol ; dans @media (prefers-reduced-motion: reduce), aucune animation et les libellés restent visibles, centrés et retournés à la ligne si besoin. Fond var(--site-surface), bordures haute et basse var(--site-border).
 
-4. FOOTER — dans une balise <footer> : logo texte, copyright, et les liens légaux (NON NÉGOCIABLES) <a href="mentions-legales.html">Mentions légales</a>, <a href="cgv.html">CGV</a>, <a href="confidentialite.html">Confidentialité</a> — ces pages existent déjà à part : n'écris jamais leur contenu, ni dans cette page ni dans une fenêtre. 1 ligne simple.
+4. FOOTER — dans une balise <footer> : logo texte, copyright, et les liens légaux (NON NÉGOCIABLES) <a href="mentions-legales.html">${ctx.t.pages.mentionsLegales}</a>, <a href="cgv.html">${ctx.t.pages.cgv}</a>, <a href="confidentialite.html">${ctx.t.pages.confidentialite}</a> — ces pages existent déjà à part : n'écris jamais leur contenu, ni dans cette page ni dans une fenêtre. 1 ligne simple.
 
 TYPOGRAPHIE PAR DÉFAUT :
 - Google Fonts : Playfair Display (700) + Inter (400, 600)
@@ -783,7 +827,7 @@ TECHNIQUE (NON NÉGOCIABLE) :
 - Juste avant la fermeture </style>, sur sa propre ligne, EXACTEMENT ce commentaire CSS, sans rien avant ni après :
 /* GRILLE_PRODUITS_CSS */
 - Responsive (media query 768px), scroll-behavior: smooth.
-- Textes en français, copywriting persuasif, aucun Lorem Ipsum.
+- Textes en ${NOMS_LANGUE[langue]}, copywriting persuasif, aucun Lorem Ipsum.
 - Code COMPLET de <!DOCTYPE html> à </html>.
 
 INTERDIT (NON NÉGOCIABLE) : décrire, nommer, chiffrer ou lister un produit précis de la boutique (tu ne connais que l'aperçu ci-dessus, à titre de contexte uniquement) ; noms de marques, journaux, magazines, médias, célébrités, plateformes e-commerce (AliExpress, Amazon, etc.) ; avis client inventé, nom fictif, citation fabriquée.
@@ -805,26 +849,14 @@ Réponds UNIQUEMENT avec le code HTML, sans explication ni balise markdown.`;
     const avertissements = retraits.length > 0 ? { avertissements: retraits } : {};
 
     // html = l'accueil (sauvegardé dans html_content), pages = toutes les pages du site.
-    // Mentions légales déjà renseignées dans la page boutique (boutiques.mentions_legales),
-    // relues en base pour la boutique de l'utilisateur — jamais prises du client. Absentes ou
-    // illisibles : page vierge.
-    let mentionsLegales: string | null = null;
-    if (typeof body.boutiqueId === "string" && body.boutiqueId) {
-      const { data: boutiqueRow } = await supabase
-        .from("boutiques")
-        .select("mentions_legales")
-        .eq("id", body.boutiqueId)
-        .eq("user_id", userId)
-        .maybeSingle();
-      mentionsLegales = (boutiqueRow?.mentions_legales as string | null | undefined) ?? null;
-    }
-    const pages = pagesBoutique(accueilSeul, produits, "var(--site-accent)", categories, { mentionsLegales });
+    // Mentions légales absentes ou illisibles : page vierge.
+    const pages = pagesBoutique(ctx, accueilSeul, produits, "var(--site-accent)", categories, { mentionsLegales });
     if (pages) return NextResponse.json({ html: pages.accueil, pages, ...avertissements });
 
     // Repli : coquille sans <body> ou sans <nav>, impossible à découper — site d'une seule
     // page comme avant (grille et collections ajoutées dans la page).
     console.warn("[generate-site] (mode boutique) coquille non découpable : site d'une seule page.");
-    const html = injectProductGrid(accueilSeul, produits, "var(--site-accent)", categories);
+    const html = injectProductGrid(ctx, accueilSeul, produits, "var(--site-accent)", categories);
     return NextResponse.json({ html, ...avertissements });
   } catch (err) {
     if (err instanceof HtmlTronqueError) {

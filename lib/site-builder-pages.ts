@@ -1,3 +1,5 @@
+import type { SiteCtx, TextesSite } from "@/lib/site-textes";
+
 // Site boutique multi-pages : chaque page est un HTML standalone (même <head>, même navbar,
 // même footer), et la navigation pointe vers des fichiers, plus vers des ancres. Les pages
 // sont ASSEMBLÉES à partir de ce que le code connaît déjà au moment de l'injection (grille du
@@ -198,20 +200,35 @@ export type ContenusBoutique = {
 // Pages légales de tout site généré (boutique et produit unique), produites par le code et
 // jamais remplies par l'IA : vierges (navbar, titre, footer) sauf si un texte a déjà été
 // renseigné — aujourd'hui, seules les mentions légales d'une boutique (boutiques.mentions_legales).
-// motif : reconnaît le lien correspondant dans le footer écrit par Claude.
+// motif : reconnaît le lien correspondant dans le footer écrit par Claude, dans l'une des
+// langues de site (fr, en, es, it). titre : clé du titre dans siteContenu.pages.
 export const PAGES_LEGALES = [
-  { cle: "mentions-legales", titre: "Mentions légales", motif: /mentions?\s+l[ée]gales?/i },
-  { cle: "cgv", titre: "CGV", motif: /\bcgv\b|conditions\s+g[ée]n[ée]rales/i },
-  { cle: "confidentialite", titre: "Confidentialité", motif: /confidentialit[ée]|donn[ée]es\s+personnelles/i },
-] as const;
+  {
+    cle: "mentions-legales",
+    titre: "mentionsLegales",
+    motif: /mentions?\s+l[ée]gales?|legal\s+notice|imprint|aviso\s+legal|note\s+legali/i,
+  },
+  {
+    cle: "cgv",
+    titre: "cgv",
+    motif: /\bcgv\b|conditions\s+g[ée]n[ée]rales|terms|t[ée]rminos|condiciones|condizioni|termini/i,
+  },
+  {
+    cle: "confidentialite",
+    titre: "confidentialite",
+    motif: /confidentialit[ée]|donn[ée]es\s+personnelles|privacy|privacidad|riservatezza/i,
+  },
+] as const satisfies readonly { cle: string; titre: keyof TextesSite["pages"]; motif: RegExp }[];
 
 export type ContenusLegaux = { mentionsLegales?: string | null };
 
-// Titre lisible d'une page connue (accueil, catalogue, page légale) ; undefined sinon.
-export function titrePageConnue(cle: string): string | undefined {
-  if (cle === CLE_ACCUEIL) return "Accueil";
-  if (cle === CLE_CATALOGUE) return "Catalogue";
-  return PAGES_LEGALES.find((p) => p.cle === cle)?.titre;
+// Titre d'une page connue (accueil, catalogue, page légale) dans la langue du site ;
+// undefined sinon (collections : leur titre vient de la catégorie).
+export function titrePageConnue(cle: string, pages: TextesSite["pages"]): string | undefined {
+  if (cle === CLE_ACCUEIL) return pages.accueil;
+  if (cle === CLE_CATALOGUE) return pages.catalogue;
+  const legale = PAGES_LEGALES.find((p) => p.cle === cle);
+  return legale ? pages[legale.titre] : undefined;
 }
 
 function pageLegale(cle: string, titre: string, texte?: string | null): string {
@@ -225,7 +242,7 @@ function pageLegale(cle: string, titre: string, texte?: string | null): string {
 
 // Liens légaux du footer : chaque lien dont le texte désigne une page légale pointe vers son
 // fichier. Si le footer n'en contient aucun, une ligne de liens légaux y est ajoutée.
-export function footerAvecPagesLegales(footer: string): string {
+export function footerAvecPagesLegales(footer: string, pages: TextesSite["pages"]): string {
   if (!footer) return footer;
   const trouvees = new Set<string>();
   const result = footer.replace(LIEN, (lien) => {
@@ -239,7 +256,7 @@ export function footerAvecPagesLegales(footer: string): string {
       : lien.replace(/^<a\b/i, `<a href="${cible}"`);
   });
   if (trouvees.size > 0) return result;
-  const liens = PAGES_LEGALES.map((p) => `<a href="${fichierPage(p.cle)}">${echapper(p.titre)}</a>`).join(" · ");
+  const liens = PAGES_LEGALES.map((p) => `<a href="${fichierPage(p.cle)}">${echapper(pages[p.titre])}</a>`).join(" · ");
   return result.replace(/<\/footer>\s*$/i, `<div class="liens-legaux">${liens}</div>\n</footer>`);
 }
 
@@ -256,14 +273,14 @@ function ancresVersAccueil(html: string): string {
 // « collection-<slug> » par collection, et les trois pages légales (hors navbar, liées depuis
 // le footer). Sans collection : accueil + catalogue + pages légales. null si la coquille ne
 // peut pas être découpée (le site reste alors en une seule page).
-export function assemblerPagesBoutique(coquille: string, contenus: ContenusBoutique): PagesSite | null {
+export function assemblerPagesBoutique(coquille: string, contenus: ContenusBoutique, ctx: SiteCtx): PagesSite | null {
   const d = decouperCoquille(coquille);
   if (!d) return null;
 
   const prises = new Set<string>([CLE_ACCUEIL, CLE_CATALOGUE, ...PAGES_LEGALES.map((p) => p.cle)]);
   const corps: { cle: string; titre: string; contenu: string; legale?: boolean }[] = [
-    { cle: CLE_ACCUEIL, titre: "Accueil", contenu: `${d.accueil}${d.entre}` },
-    { cle: CLE_CATALOGUE, titre: "Catalogue", contenu: `<section id="${CLE_CATALOGUE}">${contenus.catalogue}</section>` },
+    { cle: CLE_ACCUEIL, titre: ctx.t.pages.accueil, contenu: `${d.accueil}${d.entre}` },
+    { cle: CLE_CATALOGUE, titre: ctx.t.pages.catalogue, contenu: `<section id="${CLE_CATALOGUE}">${contenus.catalogue}</section>` },
   ];
   for (const c of contenus.collections) {
     const cle = cleDePage(`collection-${c.slug}`, prises);
@@ -271,12 +288,13 @@ export function assemblerPagesBoutique(coquille: string, contenus: ContenusBouti
   }
   for (const p of PAGES_LEGALES) {
     const texte = p.cle === "mentions-legales" ? contenus.legales?.mentionsLegales : null;
-    corps.push({ cle: p.cle, titre: p.titre, contenu: pageLegale(p.cle, p.titre, texte), legale: true });
+    const titre = ctx.t.pages[p.titre];
+    corps.push({ cle: p.cle, titre, contenu: pageLegale(p.cle, titre, texte), legale: true });
   }
 
   const nav: EntreeNav[] = corps.filter((p) => !p.legale).map(({ cle, titre }) => ({ cle, titre }));
   const cles = new Set(corps.map((p) => p.cle));
-  const footer = footerAvecPagesLegales(d.footer);
+  const footer = footerAvecPagesLegales(d.footer, ctx.t.pages);
   const pages: Record<string, string> = {};
   for (const p of corps) {
     const html = `${d.tete}${d.avantNav}${navAvecPages(d.nav, nav, p.cle)}${p.contenu}${footer}${d.fin}${contenus.scripts}\n${d.fermeture}`;
@@ -290,16 +308,16 @@ export function assemblerPagesBoutique(coquille: string, contenus: ContenusBouti
 // pointés vers leurs pages), plus les trois pages légales vierges, avec la même navbar et le
 // même footer. null si la page ne se découpe pas (pas de <body> ou de <nav>) : elle reste
 // alors seule, comme avant.
-export function assemblerPagesProduit(html: string): PagesSite | null {
+export function assemblerPagesProduit(html: string, ctx: SiteCtx): PagesSite | null {
   const d = decouperCoquille(html);
   if (!d) return null;
-  const footer = footerAvecPagesLegales(d.footer);
+  const footer = footerAvecPagesLegales(d.footer, ctx.t.pages);
   const pages: Record<string, string> = {
     [CLE_ACCUEIL]: `${d.tete}${d.avantNav}${d.nav}${d.accueil}${d.entre}${footer}${d.fin}${d.fermeture}`,
   };
   for (const p of PAGES_LEGALES) {
     pages[p.cle] = ancresVersAccueil(
-      `${d.tete}${d.avantNav}${d.nav}${pageLegale(p.cle, p.titre)}${footer}${d.fin}${d.fermeture}`
+      `${d.tete}${d.avantNav}${d.nav}${pageLegale(p.cle, ctx.t.pages[p.titre])}${footer}${d.fin}${d.fermeture}`
     );
   }
   return pages as PagesSite;

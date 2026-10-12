@@ -1483,7 +1483,8 @@
         "cartes": "Tarjetas:",
         "sections": "Secciones:",
         "aucuneSection": "ninguna reconocida",
-        "palette": "Paleta extraída (no aplicada):"
+        "palette": "Paleta extraída (no aplicada):",
+        "corrections": "{count, plural, one {Se ha ajustado automáticamente # valor de la ficha.} other {Se han ajustado automáticamente # valores de la ficha.}}"
       },
       "fichiers": {
         "invalide": "archivo no válido.",
@@ -1494,7 +1495,14 @@
     },
     "apercu": {
       "pagesDuSite": "Páginas del sitio",
-      "titreIframe": "Vista previa: {page}"
+      "titreIframe": "Vista previa: {page}",
+      "pages": {
+        "accueil": "Inicio",
+        "catalogue": "Catálogo",
+        "mentions-legales": "Aviso legal",
+        "cgv": "Condiciones de venta",
+        "confidentialite": "Privacidad"
+      }
     },
     "templates": {
       "nomParDefautBoutique": "Tienda",
@@ -1691,6 +1699,17 @@
         "sauvegardeReseau": "Esta página no se ha podido guardar en «Mis sitios» (servidor inaccesible).",
         "sauvegardeEnCours": "El guardado inicial del sitio aún no ha terminado: vuelve a intentarlo en un momento.",
         "couleurs": "No se pueden guardar estos colores."
+      },
+      "langueSite": {
+        "titre": "Idioma del sitio",
+        "aide": "Idioma de los textos de la página generada (carrito, pie de página, contenido escrito por la IA).",
+        "imposee": "Idioma de la tienda: el sitio se genera en este idioma.",
+        "options": {
+          "fr": "Français",
+          "en": "English",
+          "es": "Español",
+          "it": "Italiano"
+        }
       }
     }
   },
@@ -1796,6 +1815,107 @@
       "intro": "Descubre las tiendas creadas por la comunidad Dropvio.",
       "descriptionDefaut": "Descubre los productos de esta tienda.",
       "vide": "Todavía no hay tiendas públicas."
+    }
+  },
+  "siteContenu": {
+    "templates": {
+      "tech": {
+        "titre": "La tecnología que simplifica tu día a día",
+        "sousTitre": "Innovación pensada para un uso sencillo, cada día.",
+        "description": "Diseñado para combinar rendimiento y facilidad de uso. Una solución moderna para una necesidad real, sin complicaciones innecesarias.",
+        "b1": "Instalación en pocos minutos",
+        "b2": "Compatible con tus dispositivos de cada día",
+        "b3": "Diseño compacto y duradero",
+        "b4": "Uso sencillo, sin ajustes complicados",
+        "cta": "Lo quiero"
+      },
+      "maison": {
+        "titre": "Un hogar más agradable, sin complicaciones",
+        "sousTitre": "Pensado para integrarse con naturalidad en tu casa.",
+        "description": "Un objeto cotidiano que combina funcionalidad y estética, para un hogar más agradable día tras día.",
+        "b1": "Se integra fácilmente en tu decoración",
+        "b2": "Fácil de limpiar y mantener",
+        "b3": "Materiales pensados para durar",
+        "b4": "Un gesto sencillo que cambia el día a día",
+        "cta": "Lo pido"
+      },
+      "beaute": {
+        "titre": "Cuídate, de forma sencilla",
+        "sousTitre": "Una rutina sencilla para un resultado visible.",
+        "description": "Formulado para integrarse fácilmente en tu rutina de belleza, día tras día, sin complicaciones.",
+        "b1": "Se usa en pocos segundos",
+        "b2": "Apto para un uso regular",
+        "b3": "Fácil de llevar a todas partes",
+        "b4": "Un gesto sencillo para tu rutina",
+        "cta": "Descúbrelo"
+      },
+      "generique": {
+        "titre": "El producto que te faltaba",
+        "sousTitre": "Sencillo, práctico, pensado para ti.",
+        "description": "Un producto pensado para responder a una necesidad concreta del día a día, sin complicaciones.",
+        "b1": "Fácil de usar desde que lo recibes",
+        "b2": "Pensado para durar",
+        "b3": "Una relación calidad-precio cuidada",
+        "b4": "Sencillo, práctico, eficaz",
+        "cta": "Pedir ahora"
+      }
+    },
+    "reassurance": {
+      "titreLivraison": "Envío con seguimiento",
+      "titrePaiement": "Pago seguro",
+      "titreRetour": "Satisfecho o reembolsado",
+      "livraison": "Seguimiento del pedido en cada etapa",
+      "paiement": "Tus datos bancarios están cifrados",
+      "retour": "Derecho de desistimiento de 14 días"
+    },
+    "preuve": {
+      "avis": "{n} opiniones",
+      "ventes": "{n} ventas"
+    },
+    "checkout": {
+      "diminuer": "Reducir la cantidad",
+      "augmenter": "Aumentar la cantidad",
+      "total": "Total:",
+      "titre": "Tus datos de envío",
+      "nom": "Nombre completo",
+      "nomPlaceholder": "Tu nombre",
+      "adresse": "Dirección de envío",
+      "adressePlaceholder": "Dirección, código postal, ciudad",
+      "email": "Correo electrónico",
+      "emailPlaceholder": "tu@email.com",
+      "paiement": "🔒 Pago seguro: disponible pronto",
+      "paiementNote": "El pago en línea aún no está activado en esta página. Por ahora no se puede finalizar ningún pedido.",
+      "fermer": "Cerrar"
+    },
+    "sections": {
+      "nouvelleGeneration": "Nueva generación",
+      "pourquoiCeProduit": "Por qué este producto",
+      "description": "Descripción",
+      "galerie": "Galería",
+      "quotidien": "Lo que cambia en el día a día",
+      "enImages": "En imágenes",
+      "benefices": "Los beneficios",
+      "avantApres": "Antes / Después",
+      "avant": "Antes",
+      "apres": "Después",
+      "pourquoiChoisir": "Por qué elegir este producto",
+      "photos": "Fotos",
+      "droits": "© Todos los derechos reservados"
+    },
+    "boutique": {
+      "badge": "Tienda",
+      "nosProduits": "Nuestros productos",
+      "voirNosProduits": "Ver nuestros productos",
+      "voirLesProduits": "Ver los productos",
+      "commander": "Pedir",
+      "photoAAjouter": "Foto pendiente"
+    },
+    "pages": {
+      "accueil": "Inicio",
+      "catalogue": "Catálogo",
+      "mentionsLegales": "Aviso legal",
+      "cgv": "Condiciones de venta",
+      "confidentialite": "Privacidad"
     }
   }
 }

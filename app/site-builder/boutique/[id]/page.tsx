@@ -181,6 +181,8 @@ export default function BoutiqueBuilderDetailPage() {
     const p = new URLSearchParams();
     p.set("mode", mode);
     if (typeof params?.id === "string") p.set("boutiqueId", params.id);
+    // Langue du contenu du site généré : celle de la boutique.
+    if (boutique?.langue) p.set("langue", boutique.langue);
     const boutiqueDescription = overrides?.description !== undefined ? overrides.description : boutique?.description;
     const produitVedette = products.find((prod) => prod.image_urls?.[0] && prod.prix_vente > 0);
     if (produitVedette) {
@@ -548,6 +550,7 @@ export default function BoutiqueBuilderDetailPage() {
         limiteProduits: limiteProduitsPlan,
         // Catégories déjà chargées par cette page (fetchCategories) — aucun appel en plus.
         categories: categories.map((c) => ({ id: c.id, nom: c.nom, slug: c.slug })),
+        langue: boutique.langue,
       });
       if (!brouillonEcrit) {
         setContenuError(t("erreurs.transmission"));

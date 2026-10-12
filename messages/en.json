@@ -1483,7 +1483,8 @@
         "cartes": "Cards:",
         "sections": "Sections:",
         "aucuneSection": "none recognized",
-        "palette": "Extracted palette (not applied):"
+        "palette": "Extracted palette (not applied):",
+        "corrections": "{count, plural, one {# value in the style sheet was adjusted automatically.} other {# values in the style sheet were adjusted automatically.}}"
       },
       "fichiers": {
         "invalide": "invalid file.",
@@ -1494,7 +1495,14 @@
     },
     "apercu": {
       "pagesDuSite": "Site pages",
-      "titreIframe": "Preview: {page}"
+      "titreIframe": "Preview: {page}",
+      "pages": {
+        "accueil": "Home",
+        "catalogue": "Catalog",
+        "mentions-legales": "Legal notice",
+        "cgv": "Terms of sale",
+        "confidentialite": "Privacy"
+      }
     },
     "templates": {
       "nomParDefautBoutique": "Store",
@@ -1691,6 +1699,17 @@
         "sauvegardeReseau": "This page couldn't be saved to “My sites” (server unreachable).",
         "sauvegardeEnCours": "The site's initial save isn't finished yet: try again in a moment.",
         "couleurs": "Unable to save these colors."
+      },
+      "langueSite": {
+        "titre": "Site language",
+        "aide": "Language of the generated page's text (cart, footer, AI-written content).",
+        "imposee": "Store language: the site is generated in this language.",
+        "options": {
+          "fr": "Français",
+          "en": "English",
+          "es": "Español",
+          "it": "Italiano"
+        }
       }
     }
   },
@@ -1796,6 +1815,107 @@
       "intro": "Discover the stores created by the Dropvio community.",
       "descriptionDefaut": "Discover this store's products.",
       "vide": "No public stores yet."
+    }
+  },
+  "siteContenu": {
+    "templates": {
+      "tech": {
+        "titre": "Technology that makes everyday life easier",
+        "sousTitre": "Innovation designed for simple, everyday use.",
+        "description": "Designed to combine performance and ease of use. A modern solution to a real need, with no needless complexity.",
+        "b1": "Set up in minutes",
+        "b2": "Works with your everyday devices",
+        "b3": "Compact, durable design",
+        "b4": "Simple to use, no complicated settings",
+        "cta": "I want it"
+      },
+      "maison": {
+        "titre": "A nicer home, simply",
+        "sousTitre": "Designed to fit naturally into your home.",
+        "description": "An everyday object that combines function and style, for a more pleasant home, day after day.",
+        "b1": "Blends easily with your decor",
+        "b2": "Easy to clean and maintain",
+        "b3": "Materials made to last",
+        "b4": "A simple touch that changes everyday life",
+        "cta": "Order now"
+      },
+      "beaute": {
+        "titre": "Take care of yourself, simply",
+        "sousTitre": "A simple routine for visible results.",
+        "description": "Formulated to fit easily into your beauty routine, day after day, without any fuss.",
+        "b1": "Takes just seconds to use",
+        "b2": "Suitable for regular use",
+        "b3": "Easy to take anywhere",
+        "b4": "A simple step to add to your routine",
+        "cta": "Discover it"
+      },
+      "generique": {
+        "titre": "The product you were missing",
+        "sousTitre": "Simple, practical, designed for you.",
+        "description": "A product designed to meet a real everyday need, without complication.",
+        "b1": "Easy to use right out of the box",
+        "b2": "Built to last",
+        "b3": "Carefully priced for its quality",
+        "b4": "Simple, practical, effective",
+        "cta": "Order now"
+      }
+    },
+    "reassurance": {
+      "titreLivraison": "Tracked delivery",
+      "titrePaiement": "Secure payment",
+      "titreRetour": "Money-back guarantee",
+      "livraison": "Order tracking at every step",
+      "paiement": "Your payment details are encrypted",
+      "retour": "14-day right of withdrawal"
+    },
+    "preuve": {
+      "avis": "{n} reviews",
+      "ventes": "{n} sales"
+    },
+    "checkout": {
+      "diminuer": "Decrease quantity",
+      "augmenter": "Increase quantity",
+      "total": "Total:",
+      "titre": "Your delivery details",
+      "nom": "Full name",
+      "nomPlaceholder": "Your name",
+      "adresse": "Delivery address",
+      "adressePlaceholder": "Address, postcode, city",
+      "email": "Email",
+      "emailPlaceholder": "you@email.com",
+      "paiement": "🔒 Secure payment: coming soon",
+      "paiementNote": "Online payment isn't enabled on this page yet. No order can be completed for now.",
+      "fermer": "Close"
+    },
+    "sections": {
+      "nouvelleGeneration": "New generation",
+      "pourquoiCeProduit": "Why this product",
+      "description": "Description",
+      "galerie": "Gallery",
+      "quotidien": "What changes day to day",
+      "enImages": "In pictures",
+      "benefices": "The benefits",
+      "avantApres": "Before / After",
+      "avant": "Before",
+      "apres": "After",
+      "pourquoiChoisir": "Why choose this product",
+      "photos": "Photos",
+      "droits": "© All rights reserved"
+    },
+    "boutique": {
+      "badge": "Store",
+      "nosProduits": "Our products",
+      "voirNosProduits": "See our products",
+      "voirLesProduits": "See the products",
+      "commander": "Order",
+      "photoAAjouter": "Photo to add"
+    },
+    "pages": {
+      "accueil": "Home",
+      "catalogue": "Catalog",
+      "mentionsLegales": "Legal notice",
+      "cgv": "Terms of sale",
+      "confidentialite": "Privacy"
     }
   }
 }

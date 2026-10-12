@@ -11,6 +11,7 @@
 
 import { useCallback, useMemo, useSyncExternalStore } from "react";
 import type { ProduitBoutique } from "./site-templates";
+import type { AppLocale } from "./locale";
 
 // Même forme que ProduitBoutique (lib/site-templates.ts, consommé par buildTemplateHtmlBoutique)
 // — réexporté sous ce nom ici pour ne pas coupler ce module de hand-off à la présence du
@@ -32,6 +33,9 @@ export type BoutiqueDraft = {
   // collection du site généré ; les produits y renvoient par categorieId. Absent : pas de
   // collections, une seule grille de catalogue.
   categories?: { id: string; nom: string; slug: string }[];
+  // Langue de la boutique (boutiques.langue) : langue du contenu du site généré. Absente
+  // (brouillon antérieur) : langue choisie dans le Site Builder.
+  langue?: AppLocale;
 };
 
 const STORAGE_KEY = "dropvio-site-builder-boutique-draft";

@@ -5,8 +5,8 @@ import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import {
   CATEGORIES,
-  TEXTES_DEFAUT,
-  REASSURANCE_DEFAUT,
+  textesDefaut,
+  reassuranceDefaut,
   imagesVides,
   buildTemplateHtml,
   buildTemplateHtmlBoutique,
@@ -22,6 +22,8 @@ import { slugFichier, telechargerTexte } from "@/lib/audit-download";
 import { ToastHost, useToast } from "@/components/Toast";
 import { LIEN_CHANGER_DE_PLAN } from "@/lib/plan-links";
 import { useTranslations } from "next-intl";
+import type { AppLocale } from "@/lib/locale";
+import { useSiteCtx } from "@/lib/use-site-textes";
 import { useApiErrorMessage } from "@/lib/use-api-error";
 
 type AuditLive = {
@@ -29,12 +31,27 @@ type AuditLive = {
   resume_executif: string;
 };
 
+// Contenu vide affiché le temps que les textes de la langue du site arrivent.
+const CONTENU_VIDE: ContenuTexte = {
+  titre: "",
+  sousTitre: "",
+  description: "",
+  bullets: ["", "", "", ""],
+  cta: "",
+  noteMoyenne: "",
+  nombreAvis: "",
+  nombreCommandes: "",
+};
+
 export default function TemplateEditor({
   boutiqueDraft,
   canExport,
+  langueSite,
 }: {
   boutiqueDraft?: BoutiqueDraft | null;
   canExport: boolean;
+  // Langue du contenu de la page générée (textes par défaut, panier, pied de page).
+  langueSite: AppLocale;
 }) {
   const { toast, succes, fermer } = useToast();
   const t = useTranslations("siteBuilder.templates");
@@ -51,15 +68,25 @@ export default function TemplateEditor({
   const boutiqueId = searchParams.get("boutiqueId") ?? undefined;
 
   const [categorie, setCategorie] = useState<Categorie>("generique");
-  const [contenu, setContenu] = useState<ContenuTexte>(() =>
-    prefillName || prefillDescription
-      ? {
-          ...TEXTES_DEFAUT.generique,
-          titre: prefillName || TEXTES_DEFAUT.generique.titre,
-          description: prefillDescription || TEXTES_DEFAUT.generique.description,
-        }
-      : TEXTES_DEFAUT.generique
-  );
+  // Textes de la page dans la langue du site. Tant que l'utilisateur n'a rien modifié dans
+  // cette langue, ce sont les textes par défaut du template (préremplis par le nom et la
+  // description de la boutique quand ils sont fournis) ; changer de langue repart des textes
+  // par défaut de la nouvelle langue.
+  const ctx = useSiteCtx(langueSite);
+  const [contenuEdite, setContenuEdite] = useState<{ langue: AppLocale; valeur: ContenuTexte } | null>(null);
+  const contenuParDefaut = useMemo<ContenuTexte>(() => {
+    if (!ctx) return CONTENU_VIDE;
+    const defaut = textesDefaut(ctx, categorie);
+    return {
+      ...defaut,
+      titre: prefillName || defaut.titre,
+      description: prefillDescription || defaut.description,
+    };
+  }, [ctx, categorie, prefillName, prefillDescription]);
+  const contenu = contenuEdite?.langue === langueSite ? contenuEdite.valeur : contenuParDefaut;
+  function setContenu(maj: ContenuTexte | ((c: ContenuTexte) => ContenuTexte)) {
+    setContenuEdite({ langue: langueSite, valeur: typeof maj === "function" ? maj(contenu) : maj });
+  }
   const [images, setImages] = useState<ImagesSite>(() =>
     prefillImage ? { ...imagesVides(), hero: prefillImage } : imagesVides()
   );
@@ -71,12 +98,27 @@ export default function TemplateEditor({
   const [avantApresActif, setAvantApresActif] = useState(false);
   const [uploadEnCours, setUploadEnCours] = useState<string | null>(null);
   const [uploadErreur, setUploadErreur] = useState<string | null>(null);
-  const [reassurance, setReassurance] = useState<Reassurance>(REASSURANCE_DEFAUT);
+  const [reassuranceEditee, setReassuranceEditee] = useState<{ langue: AppLocale; valeur: Reassurance } | null>(null);
+  const reassurance = useMemo<Reassurance>(
+    () =>
+      reassuranceEditee?.langue === langueSite
+        ? reassuranceEditee.valeur
+        : ctx
+          ? reassuranceDefaut(ctx)
+          : { actif: true, livraison: "", paiement: "", retour: "" },
+    [reassuranceEditee, langueSite, ctx]
+  );
+  function setReassurance(maj: (r: Reassurance) => Reassurance) {
+    setReassuranceEditee({ langue: langueSite, valeur: maj(reassurance) });
+  }
 
   const html = useMemo(
     () =>
-      boutiqueDraft
+      !ctx
+        ? ""
+        : boutiqueDraft
         ? buildTemplateHtmlBoutique({
+            ctx,
             categorie,
             nomBoutique: boutiqueDraft.nomBoutique,
             descriptionBoutique: boutiqueDraft.descriptionBoutique,
@@ -84,6 +126,7 @@ export default function TemplateEditor({
             reassurance,
           })
         : buildTemplateHtml({
+            ctx,
             categorie,
             contenu,
             images,
@@ -91,7 +134,7 @@ export default function TemplateEditor({
             prixBarre,
             reassurance,
           }),
-    [categorie, contenu, images, prixVente, prixBarre, reassurance, boutiqueDraft]
+    [ctx, categorie, contenu, images, prixVente, prixBarre, reassurance, boutiqueDraft]
   );
 
   // Personnalisation post-génération (couleurs, voir ColorTokenPanel) — html ci-dessus est
@@ -110,7 +153,7 @@ export default function TemplateEditor({
     const pretAAuditer = isBoutiqueMode
       ? Boolean(boutiqueDraft?.nomBoutique.trim() && boutiqueDraft?.produits.length)
       : Boolean(contenu.titre.trim() && contenu.description.trim());
-    if (!pretAAuditer) return;
+    if (!pretAAuditer || !html) return;
     if (html === dernierHtmlAudite.current) return;
 
     const timeout = setTimeout(async () => {
@@ -138,14 +181,14 @@ export default function TemplateEditor({
 
   function changerCategorie(id: Categorie) {
     setCategorie(id);
-    setContenu(TEXTES_DEFAUT[id]);
+    if (ctx) setContenu(textesDefaut(ctx, id));
     // Chaque catégorie a sa propre palette par défaut (lib/site-templates.ts) — un override
     // choisi pour "tech" n'a pas de sens réappliqué tel quel sur "maison".
     setColorOverrides({});
   }
 
   function reinitialiserTextes() {
-    setContenu(TEXTES_DEFAUT[categorie]);
+    if (ctx) setContenu(textesDefaut(ctx, categorie));
   }
 
   function updateBullet(i: number, value: string) {

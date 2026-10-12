@@ -1483,7 +1483,8 @@
         "cartes": "Schede:",
         "sections": "Sezioni:",
         "aucuneSection": "nessuna riconosciuta",
-        "palette": "Palette estratta (non applicata):"
+        "palette": "Palette estratta (non applicata):",
+        "corrections": "{count, plural, one {# valore della scheda è stato regolato automaticamente.} other {# valori della scheda sono stati regolati automaticamente.}}"
       },
       "fichiers": {
         "invalide": "file non valido.",
@@ -1494,7 +1495,14 @@
     },
     "apercu": {
       "pagesDuSite": "Pagine del sito",
-      "titreIframe": "Anteprima: {page}"
+      "titreIframe": "Anteprima: {page}",
+      "pages": {
+        "accueil": "Home",
+        "catalogue": "Catalogo",
+        "mentions-legales": "Note legali",
+        "cgv": "Condizioni di vendita",
+        "confidentialite": "Privacy"
+      }
     },
     "templates": {
       "nomParDefautBoutique": "Negozio",
@@ -1691,6 +1699,17 @@
         "sauvegardeReseau": "Questa pagina non è stata salvata in «I miei siti» (server non raggiungibile).",
         "sauvegardeEnCours": "Il salvataggio iniziale del sito non è ancora terminato: riprova tra un attimo.",
         "couleurs": "Impossibile salvare questi colori."
+      },
+      "langueSite": {
+        "titre": "Lingua del sito",
+        "aide": "Lingua dei testi della pagina generata (carrello, piè di pagina, contenuti scritti dall'IA).",
+        "imposee": "Lingua del negozio: il sito viene generato in questa lingua.",
+        "options": {
+          "fr": "Français",
+          "en": "English",
+          "es": "Español",
+          "it": "Italiano"
+        }
       }
     }
   },
@@ -1796,6 +1815,107 @@
       "intro": "Scopri i negozi creati dalla community di Dropvio.",
       "descriptionDefaut": "Scopri i prodotti di questo negozio.",
       "vide": "Ancora nessun negozio pubblico."
+    }
+  },
+  "siteContenu": {
+    "templates": {
+      "tech": {
+        "titre": "La tecnologia che semplifica la tua quotidianità",
+        "sousTitre": "Innovazione pensata per un uso semplice, ogni giorno.",
+        "description": "Progettato per unire prestazioni e facilità d'uso. Una soluzione moderna per un'esigenza reale, senza complicazioni inutili.",
+        "b1": "Installazione in pochi minuti",
+        "b2": "Compatibile con i tuoi dispositivi di tutti i giorni",
+        "b3": "Design compatto e resistente",
+        "b4": "Uso semplice, senza regolazioni complicate",
+        "cta": "Lo voglio"
+      },
+      "maison": {
+        "titre": "Una casa più piacevole, semplicemente",
+        "sousTitre": "Pensato per inserirsi con naturalezza in casa tua.",
+        "description": "Un oggetto di tutti i giorni che unisce funzionalità ed estetica, per una casa più piacevole giorno dopo giorno.",
+        "b1": "Si abbina facilmente al tuo arredamento",
+        "b2": "Facile da pulire e da mantenere",
+        "b3": "Materiali pensati per durare",
+        "b4": "Un gesto semplice che cambia la quotidianità",
+        "cta": "Ordino"
+      },
+      "beaute": {
+        "titre": "Prenditi cura di te, semplicemente",
+        "sousTitre": "Una routine semplice per un risultato visibile.",
+        "description": "Formulato per inserirsi facilmente nella tua routine di bellezza, giorno dopo giorno, senza complicazioni.",
+        "b1": "Si usa in pochi secondi",
+        "b2": "Adatto a un uso regolare",
+        "b3": "Facile da portare ovunque",
+        "b4": "Un gesto semplice da aggiungere alla tua routine",
+        "cta": "Scopri"
+      },
+      "generique": {
+        "titre": "Il prodotto che ti mancava",
+        "sousTitre": "Semplice, pratico, pensato per te.",
+        "description": "Un prodotto pensato per rispondere a un'esigenza concreta di tutti i giorni, senza complicazioni.",
+        "b1": "Facile da usare appena arriva",
+        "b2": "Pensato per durare",
+        "b3": "Un rapporto qualità-prezzo studiato",
+        "b4": "Semplice, pratico, efficace",
+        "cta": "Ordina ora"
+      }
+    },
+    "reassurance": {
+      "titreLivraison": "Spedizione tracciata",
+      "titrePaiement": "Pagamento sicuro",
+      "titreRetour": "Soddisfatti o rimborsati",
+      "livraison": "Tracciamento dell'ordine a ogni fase",
+      "paiement": "I tuoi dati di pagamento sono crittografati",
+      "retour": "Diritto di recesso entro 14 giorni"
+    },
+    "preuve": {
+      "avis": "{n} recensioni",
+      "ventes": "{n} vendite"
+    },
+    "checkout": {
+      "diminuer": "Diminuisci la quantità",
+      "augmenter": "Aumenta la quantità",
+      "total": "Totale:",
+      "titre": "I tuoi dati di consegna",
+      "nom": "Nome e cognome",
+      "nomPlaceholder": "Il tuo nome",
+      "adresse": "Indirizzo di consegna",
+      "adressePlaceholder": "Indirizzo, CAP, città",
+      "email": "E-mail",
+      "emailPlaceholder": "tu@email.com",
+      "paiement": "🔒 Pagamento sicuro: presto disponibile",
+      "paiementNote": "Il pagamento online non è ancora attivo su questa pagina. Per ora non è possibile completare alcun ordine.",
+      "fermer": "Chiudi"
+    },
+    "sections": {
+      "nouvelleGeneration": "Nuova generazione",
+      "pourquoiCeProduit": "Perché questo prodotto",
+      "description": "Descrizione",
+      "galerie": "Galleria",
+      "quotidien": "Cosa cambia ogni giorno",
+      "enImages": "In immagini",
+      "benefices": "I vantaggi",
+      "avantApres": "Prima / Dopo",
+      "avant": "Prima",
+      "apres": "Dopo",
+      "pourquoiChoisir": "Perché scegliere questo prodotto",
+      "photos": "Foto",
+      "droits": "© Tutti i diritti riservati"
+    },
+    "boutique": {
+      "badge": "Negozio",
+      "nosProduits": "I nostri prodotti",
+      "voirNosProduits": "Vedi i nostri prodotti",
+      "voirLesProduits": "Vedi i prodotti",
+      "commander": "Ordina",
+      "photoAAjouter": "Foto da aggiungere"
+    },
+    "pages": {
+      "accueil": "Home",
+      "catalogue": "Catalogo",
+      "mentionsLegales": "Note legali",
+      "cgv": "Condizioni di vendita",
+      "confidentialite": "Privacy"
     }
   }
 }

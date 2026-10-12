@@ -11,6 +11,7 @@ import {
 } from "@/lib/shopify";
 import { htmlToLiquidSection, slugifyForShopify } from "@/lib/html-to-liquid";
 import { CLE_ACCUEIL, fichierPage, titrePageConnue } from "@/lib/site-builder-pages";
+import { chargerTextesSite, langueDuHtml, type TextesSite } from "@/lib/site-textes";
 
 type ShopifyPage = { id: number; handle: string };
 type ShopifyTheme = { id: number; role: string };
@@ -27,9 +28,9 @@ function pagesMultiples(pages: unknown): Record<string, string> | null {
 }
 
 // Titre Shopify d'une page secondaire : « Nom du site — Catalogue », « — Mentions légales »,
-// « — Lampes »…
-function titrePage(nomSite: string, cle: string): string {
-  const libelle = titrePageConnue(cle) ?? cle.replace(/^collection-/, "").replace(/-/g, " ");
+// « — Lampes »…, dans la langue du site.
+function titrePage(nomSite: string, cle: string, titres: TextesSite["pages"]): string {
+  const libelle = titrePageConnue(cle, titres) ?? cle.replace(/^collection-/, "").replace(/-/g, " ");
   return `${nomSite} — ${libelle.charAt(0).toUpperCase()}${libelle.slice(1)}`;
 }
 
@@ -95,7 +96,8 @@ async function publierMultiPages(params: {
     );
   }
   const handleDe = (cle: string) => (cle === CLE_ACCUEIL ? handleAccueil : `${handleAccueil}-${cle}`);
-  const titreDe = (cle: string) => (cle === CLE_ACCUEIL ? site.nom_produit : titrePage(site.nom_produit, cle));
+  const titres = (await chargerTextesSite(langueDuHtml(pages[CLE_ACCUEIL]))).pages;
+  const titreDe = (cle: string) => (cle === CLE_ACCUEIL ? site.nom_produit : titrePage(site.nom_produit, cle, titres));
 
   // Passe 1 : chaque page existe (mise à jour si son ID est connu, création sinon).
   const publiees = new Map<string, ShopifyPage>();

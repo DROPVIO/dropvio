@@ -154,12 +154,10 @@ export default function InspirationStyle({
               ) : null
             )}
           </div>
+          {/* Le détail des ajustements (lib/style-fiche.ts) est une note technique en
+              français, gardée pour les logs ; l'interface n'en affiche que le nombre. */}
           {corrections.length > 0 && (
-            <ul className="list-disc pl-4 text-[var(--text-faint)]">
-              {corrections.map((c) => (
-                <li key={c}>{c}</li>
-              ))}
-            </ul>
+            <p className="text-[var(--text-faint)]">{t("fiche.corrections", { count: corrections.length })}</p>
           )}
           <button
             type="button"
