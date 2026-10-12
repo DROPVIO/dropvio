@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { useLocale, useTranslations } from "next-intl";
 import { slugify } from "@/lib/slugify";
 import ProduitsSuggeres from "@/components/ProduitsSuggeres";
 import { NICHES } from "@/lib/niches";
@@ -15,6 +16,7 @@ import BoutiqueShopifyPush from "@/components/site-builder/BoutiqueShopifyPush";
 import { AlerteLimiteProduits, BandeauDepassementProduits, CompteurProduits, limiteProduitsAtteinte } from "@/components/site-builder/LimiteProduitsBoutique";
 import { useApiErrorMessage } from "@/lib/use-api-error";
 import type { AppLocale } from "@/lib/locale";
+import { formatPrix } from "@/lib/boutique-format";
 
 type Boutique = {
   id: string;
@@ -53,8 +55,8 @@ const DEFAULT_PAGE_SIZE = 20;
 // Taille de page du chargement complet (loadAllProduits) — sans rapport avec la liste affichée.
 const CHARGEMENT_COMPLET_PAGE_SIZE = 100;
 
-function formatPrice(value: number | null | undefined) {
-  return value == null ? "" : `${value.toFixed(2)}€`;
+function formatPrice(value: number | null | undefined, langue: AppLocale) {
+  return value == null ? "" : formatPrix(value, langue);
 }
 
 // Produit de la boutique → format du brouillon Site Builder (ProduitBoutique). Prix en
@@ -78,6 +80,9 @@ export default function BoutiqueBuilderDetailPage() {
   const params = useParams();
   const router = useRouter();
   const apiErrorMessage = useApiErrorMessage();
+  const t = useTranslations("siteBuilder.boutique.gestion");
+  const tNiches = useTranslations("niches");
+  const locale = useLocale() as AppLocale;
   const [boutique, setBoutique] = useState<Boutique | null>(null);
   // Compteurs non filtrés renvoyés par GET /api/boutiques/[id] (réglages, limite du plan).
   const [produitsCount, setProduitsCount] = useState(0);
@@ -157,8 +162,8 @@ export default function BoutiqueBuilderDetailPage() {
 
 
   const categoryOptions = useMemo(
-    () => [{ id: "", nom: "Aucune catégorie", slug: "" }, ...categories],
-    [categories]
+    () => [{ id: "", nom: t("aucuneCategorie"), slug: "" }, ...categories],
+    [categories, t]
   );
 
   // Préremplit le Site Builder avec UN même produit : le premier qui a une image ET un prix
@@ -182,7 +187,7 @@ export default function BoutiqueBuilderDetailPage() {
       p.set("name", produitVedette.nom);
       p.set(
         "description",
-        produitVedette.description || boutiqueDescription || `Découvrez les produits de la boutique ${boutique?.nom ?? ""}.`
+        produitVedette.description || boutiqueDescription || t("descriptionParDefaut", { nom: boutique?.nom ?? "" })
       );
       p.set("image", produitVedette.image_urls[0]);
       p.set("prixVente", String(produitVedette.prix_vente));
@@ -191,7 +196,7 @@ export default function BoutiqueBuilderDetailPage() {
       }
     } else {
       if (boutique?.nom) p.set("name", boutique.nom);
-      p.set("description", boutiqueDescription || `Découvrez les produits de la boutique ${boutique?.nom ?? ""}.`);
+      p.set("description", boutiqueDescription || t("descriptionParDefaut", { nom: boutique?.nom ?? "" }));
     }
     if (overrides?.palette) {
       p.set("colorPrimary", overrides.palette.primary);
@@ -238,7 +243,7 @@ export default function BoutiqueBuilderDetailPage() {
       const response = await fetch(`/api/boutiques/${params?.id}`);
       const json = await response.json();
       if (!response.ok) {
-        setGlobalError(json.error || "Impossible de charger la boutique.");
+        setGlobalError(apiErrorMessage(json, t("erreurs.chargementBoutique")));
         setBoutique(null);
         return;
       }
@@ -250,7 +255,7 @@ export default function BoutiqueBuilderDetailPage() {
       setBandeauTexte(json.boutique?.settings?.bandeauTexte ?? "");
       setBandeauVideos(json.boutique?.settings?.bandeauVideos ?? []);
     } catch {
-      setGlobalError("Impossible de contacter le serveur.");
+      setGlobalError(apiErrorMessage({ code: "network" }));
       setBoutique(null);
     }
   }
@@ -280,14 +285,14 @@ export default function BoutiqueBuilderDetailPage() {
       });
       const json = await response.json();
       if (!response.ok) {
-        setMentionsError(json.error || "Impossible d'enregistrer les mentions légales.");
+        setMentionsError(apiErrorMessage(json, t("erreurs.mentions")));
         return;
       }
       setBoutique((prev) => (prev ? { ...prev, mentions_legales: mentionsLegales } : prev));
       setMentionsSuccess(true);
       window.setTimeout(() => setMentionsSuccess(false), 2500);
     } catch {
-      setMentionsError("Impossible de contacter le serveur.");
+      setMentionsError(apiErrorMessage({ code: "network" }));
     } finally {
       setSavingMentions(false);
     }
@@ -308,14 +313,14 @@ export default function BoutiqueBuilderDetailPage() {
       });
       const json = await response.json();
       if (!response.ok) {
-        setBandeauError(json.error || "Impossible d'enregistrer le bandeau.");
+        setBandeauError(apiErrorMessage(json, t("erreurs.bandeau")));
         return;
       }
       setBoutique({ ...boutique, settings: nextSettings });
       setBandeauSuccess(true);
       window.setTimeout(() => setBandeauSuccess(false), 2500);
     } catch {
-      setBandeauError("Impossible de contacter le serveur.");
+      setBandeauError(apiErrorMessage({ code: "network" }));
     } finally {
       setSavingBandeau(false);
     }
@@ -334,12 +339,12 @@ export default function BoutiqueBuilderDetailPage() {
       });
       const json = await response.json();
       if (!response.ok) {
-        setGlobalError(json.error || "Impossible de changer le thème de la boutique.");
+        setGlobalError(apiErrorMessage(json, t("erreurs.theme")));
         return;
       }
       setBoutique({ ...boutique, settings: nextSettings });
     } catch {
-      setGlobalError("Impossible de contacter le serveur.");
+      setGlobalError(apiErrorMessage({ code: "network" }));
     } finally {
       setSavingColorMode(false);
     }
@@ -360,12 +365,12 @@ export default function BoutiqueBuilderDetailPage() {
       });
       const json = await response.json();
       if (!response.ok) {
-        setGlobalError(json.error || "Impossible de changer la niche de la boutique.");
+        setGlobalError(apiErrorMessage(json, t("erreurs.niche")));
         return;
       }
       setBoutique({ ...boutique, settings: nextSettings });
     } catch {
-      setGlobalError("Impossible de contacter le serveur.");
+      setGlobalError(apiErrorMessage({ code: "network" }));
     } finally {
       setSavingNiche(false);
     }
@@ -378,13 +383,13 @@ export default function BoutiqueBuilderDetailPage() {
       const response = await fetch(`/api/boutiques/${params?.id}/categories`);
       const json = await response.json();
       if (!response.ok) {
-        setCategoriesError(json.error || "Impossible de charger les catégories.");
+        setCategoriesError(apiErrorMessage(json, t("erreurs.chargementCategories")));
         setCategories([]);
         return;
       }
       setCategories(json.categories ?? []);
     } catch {
-      setCategoriesError("Impossible de contacter le serveur.");
+      setCategoriesError(apiErrorMessage({ code: "network" }));
       setCategories([]);
     } finally {
       setCategoriesLoading(false);
@@ -403,7 +408,7 @@ export default function BoutiqueBuilderDetailPage() {
       const response = await fetch(`/api/boutiques/${params?.id}/produits?${paramsList.toString()}`);
       const json = await response.json();
       if (!response.ok) {
-        setProductsError(json.error || "Impossible de charger les produits.");
+        setProductsError(apiErrorMessage(json, t("erreurs.chargementProduits")));
         setProducts([]);
         setTotalPages(1);
         return;
@@ -413,7 +418,7 @@ export default function BoutiqueBuilderDetailPage() {
       setTotalProduits(json.total ?? 0);
       setProductPage(page);
     } catch {
-      setProductsError("Impossible de contacter le serveur.");
+      setProductsError(apiErrorMessage({ code: "network" }));
       setProducts([]);
       setTotalPages(1);
     } finally {
@@ -435,13 +440,13 @@ export default function BoutiqueBuilderDetailPage() {
       const res = await fetch(`/api/boutiques/${params.id}/generer-contenu`, { method: "POST" });
       const json = await res.json();
       if (!res.ok) {
-        setContenuError(json.error ?? "Impossible de générer le contenu de la boutique.");
+        setContenuError(apiErrorMessage(json, t("erreurs.genererContenu")));
         return;
       }
       setReviewDescription(json.description ?? boutique?.description ?? "");
       setReviewPalette(json.palette);
     } catch {
-      setContenuError("Impossible de contacter le serveur.");
+      setContenuError(apiErrorMessage({ code: "network" }));
     } finally {
       setGeneratingContenu(false);
     }
@@ -462,7 +467,7 @@ export default function BoutiqueBuilderDetailPage() {
     });
     const json = await res.json();
     if (!res.ok) {
-      setContenuError(json.error ?? "Impossible d'enregistrer les changements.");
+      setContenuError(apiErrorMessage(json, t("erreurs.enregistrerContenu")));
       return false;
     }
     setBoutique((prev) =>
@@ -486,7 +491,7 @@ export default function BoutiqueBuilderDetailPage() {
     do {
       const response = await fetch(`/api/boutiques/${params?.id}/produits?page=${page}&limit=${CHARGEMENT_COMPLET_PAGE_SIZE}`);
       const json = await response.json();
-      if (!response.ok) throw new Error(json.error || "Impossible de charger les produits.");
+      if (!response.ok) throw new Error(apiErrorMessage(json, t("erreurs.chargementProduits")));
       const recus = (json.products ?? []) as BoutiqueProduct[];
       if (page === 1) total = json.total ?? 0;
       totalPagesApi = json.totalPages ?? 1;
@@ -526,11 +531,8 @@ export default function BoutiqueBuilderDetailPage() {
       try {
         ({ produits, total: totalReel } = await loadAllProduits());
       } catch (err) {
-        setContenuError(
-          `Description et palette enregistrées, mais impossible de charger tous les produits : ${
-            err instanceof Error ? err.message : "erreur inconnue"
-          }`
-        );
+        console.warn("[boutique] Chargement complet des produits échoué :", err);
+        setContenuError(t("erreurs.chargementComplet"));
         return;
       }
       if (totalReel <= 1) {
@@ -548,7 +550,7 @@ export default function BoutiqueBuilderDetailPage() {
         categories: categories.map((c) => ({ id: c.id, nom: c.nom, slug: c.slug })),
       });
       if (!brouillonEcrit) {
-        setContenuError("Impossible de transmettre les produits au Site Builder (stockage du navigateur plein ou désactivé).");
+        setContenuError(t("erreurs.transmission"));
         return;
       }
       const p = new URLSearchParams();
@@ -560,7 +562,7 @@ export default function BoutiqueBuilderDetailPage() {
       p.set("colorAccent", palette.accent);
       router.push(`/site-builder?${p.toString()}`);
     } catch {
-      setContenuError("Impossible de contacter le serveur.");
+      setContenuError(apiErrorMessage({ code: "network" }));
     } finally {
       setConfirmingContenu(false);
     }
@@ -588,7 +590,7 @@ export default function BoutiqueBuilderDetailPage() {
       // côté serveur (/api/boutiques/[id]/export-html) — on évite l'appel inutile et on
       // l'explique directement plutôt que de laisser passer un 403 générique.
       if (!canExport) {
-        setContenuError("Boutique mise à jour. L'export HTML et l'ajout automatique à « Mes sites » sont réservés au plan Pro — passe au plan Pro pour les activer.");
+        setContenuError(t("erreurs.exportReservePro"));
       } else {
         try {
           const exportRes = await fetch(`/api/boutiques/${params.id}/export-html`, { method: "POST" });
@@ -605,19 +607,19 @@ export default function BoutiqueBuilderDetailPage() {
             });
             if (!saveRes.ok) {
               const saveJson = await saveRes.json().catch(() => ({}));
-              setContenuError(saveJson.error ?? "Boutique mise à jour, mais l'export HTML n'a pas pu être sauvegardé dans « Mes sites ».");
+              setContenuError(apiErrorMessage(saveJson, t("erreurs.exportSauvegarde")));
             }
           } else {
-            setContenuError(exportJson.error ?? "Boutique mise à jour, mais l'export HTML a échoué.");
+            setContenuError(apiErrorMessage(exportJson, t("erreurs.exportEchec")));
           }
         } catch {
-          setContenuError("Boutique mise à jour, mais l'export HTML n'a pas pu être sauvegardé (serveur injoignable).");
+          setContenuError(t("erreurs.exportReseau"));
         }
       }
 
       window.open(getBoutiquePublicUrl(boutique.slug), "_blank", "noopener,noreferrer");
     } catch {
-      setContenuError("Impossible de contacter le serveur.");
+      setContenuError(apiErrorMessage({ code: "network" }));
     } finally {
       setConfirmingContenu(false);
     }
@@ -662,7 +664,7 @@ export default function BoutiqueBuilderDetailPage() {
       });
       const json = await response.json();
       if (!response.ok) {
-        setImportError(json.error || "Impossible de récupérer le produit.");
+        setImportError(apiErrorMessage(json, t("erreurs.importProduit")));
         return;
       }
       setProductName(json.nom ?? "");
@@ -677,7 +679,7 @@ export default function BoutiqueBuilderDetailPage() {
       setImportUrl("");
       setProductFormError(null);
     } catch {
-      setImportError("Impossible de contacter le serveur.");
+      setImportError(apiErrorMessage({ code: "network" }));
     } finally {
       setImportLoading(false);
     }
@@ -695,12 +697,12 @@ export default function BoutiqueBuilderDetailPage() {
       });
       const json = await response.json();
       if (!response.ok) {
-        setProductFormError(json.error || "Impossible de reformuler le nom.");
+        setProductFormError(apiErrorMessage(json, t("erreurs.reformuler")));
         return;
       }
       setProductName(json.texte);
     } catch {
-      setProductFormError("Impossible de contacter le serveur.");
+      setProductFormError(apiErrorMessage({ code: "network" }));
     } finally {
       setReformulatingNom(false);
     }
@@ -718,12 +720,12 @@ export default function BoutiqueBuilderDetailPage() {
       });
       const json = await response.json();
       if (!response.ok) {
-        setProductFormError(json.error || "Impossible de générer la description.");
+        setProductFormError(apiErrorMessage(json, t("erreurs.genererDescription")));
         return;
       }
       setProductDescription(json.texte);
     } catch {
-      setProductFormError("Impossible de contacter le serveur.");
+      setProductFormError(apiErrorMessage({ code: "network" }));
     } finally {
       setGeneratingDescription(false);
     }
@@ -734,14 +736,14 @@ export default function BoutiqueBuilderDetailPage() {
     setProductFormError(null);
     setProductFormSuccess(null);
     if (!productName.trim() || !productSlug.trim() || !productPrixVente.trim()) {
-      setProductFormError("Nom, slug et prix de vente sont requis.");
+      setProductFormError(t("erreurs.champsRequis"));
       return;
     }
 
     const prixVente = Number(productPrixVente);
     const prixOriginal = productPrixOriginal.trim() ? Number(productPrixOriginal) : null;
     if (Number.isNaN(prixVente) || prixVente <= 0) {
-      setProductFormError("Le prix de vente doit être un nombre valide.");
+      setProductFormError(t("erreurs.prixInvalide"));
       return;
     }
 
@@ -775,17 +777,17 @@ export default function BoutiqueBuilderDetailPage() {
       });
       const json = await response.json();
       if (!response.ok) {
-        setProductFormError(json.code ? apiErrorMessage(json) : json.error || "Impossible d'enregistrer le produit.");
+        setProductFormError(apiErrorMessage(json, t("erreurs.enregistrerProduit")));
         if (json.code?.startsWith("boutique_product_limit")) void rafraichirCompteurs();
         return;
       }
-      setProductFormSuccess(editingProductId ? "Produit mis à jour." : "Produit ajouté avec succès.");
+      setProductFormSuccess(editingProductId ? t("produitMisAJour") : t("produitAjoute"));
       resetProductForm();
       await fetchProducts(1);
       void rafraichirCompteurs();
       setSuggestionsRefreshKey((k) => k + 1);
     } catch {
-      setProductFormError("Impossible de contacter le serveur.");
+      setProductFormError(apiErrorMessage({ code: "network" }));
     } finally {
       setSavingProduct(false);
     }
@@ -793,7 +795,7 @@ export default function BoutiqueBuilderDetailPage() {
 
   async function handleDeleteProduct(productId: string) {
     if (deletingProductId) return;
-    if (!confirm("Supprimer ce produit ? Cette action est irréversible.")) return;
+    if (!confirm(t("confirmerSupprimerProduit"))) return;
     setDeletingProductId(productId);
     try {
       const response = await fetch(`/api/boutiques/${params?.id}/produits/${productId}`, {
@@ -801,13 +803,13 @@ export default function BoutiqueBuilderDetailPage() {
       });
       const json = await response.json();
       if (!response.ok) {
-        setProductsError(json.error || "Impossible de supprimer le produit.");
+        setProductsError(apiErrorMessage(json, t("erreurs.supprimerProduit")));
         return;
       }
       await fetchProducts(productPage);
       void rafraichirCompteurs();
     } catch {
-      setProductsError("Impossible de contacter le serveur.");
+      setProductsError(apiErrorMessage({ code: "network" }));
     } finally {
       setDeletingProductId(null);
     }
@@ -834,12 +836,12 @@ export default function BoutiqueBuilderDetailPage() {
       });
       const [resOne, resTwo] = await Promise.all([updateOne, updateTwo]);
       if (!resOne.ok || !resTwo.ok) {
-        setProductsError("Impossible de réordonner les produits.");
+        setProductsError(t("erreurs.reordonner"));
       } else {
         await fetchProducts(productPage);
       }
     } catch {
-      setProductsError("Impossible de contacter le serveur.");
+      setProductsError(apiErrorMessage({ code: "network" }));
     } finally {
       setReorderLoading(false);
     }
@@ -850,12 +852,12 @@ export default function BoutiqueBuilderDetailPage() {
     if (creatingCategory) return;
     setCategoriesError(null);
     if (!categoryName.trim()) {
-      setCategoriesError("Le nom de catégorie est requis.");
+      setCategoriesError(t("erreurs.nomCategorieRequis"));
       return;
     }
     const slug = slugify(categorySlug.trim() || categoryName);
     if (!slug) {
-      setCategoriesError("Le slug de catégorie est invalide.");
+      setCategoriesError(t("erreurs.slugCategorieInvalide"));
       return;
     }
     setCreatingCategory(true);
@@ -867,14 +869,14 @@ export default function BoutiqueBuilderDetailPage() {
       });
       const json = await response.json();
       if (!response.ok) {
-        setCategoriesError(json.error || "Impossible de créer la catégorie.");
+        setCategoriesError(apiErrorMessage(json, t("erreurs.creerCategorie")));
         return;
       }
       setCategoryName("");
       setCategorySlug("");
       await fetchCategories();
     } catch {
-      setCategoriesError("Impossible de contacter le serveur.");
+      setCategoriesError(apiErrorMessage({ code: "network" }));
     } finally {
       setCreatingCategory(false);
     }
@@ -892,14 +894,14 @@ export default function BoutiqueBuilderDetailPage() {
       });
       const json = await response.json();
       if (!response.ok) {
-        setCategoriesError(json.error || "Impossible de renommer la catégorie.");
+        setCategoriesError(apiErrorMessage(json, t("erreurs.renommerCategorie")));
         return;
       }
       setEditingCategoryId(null);
       setEditingCategoryName("");
       await fetchCategories();
     } catch {
-      setCategoriesError("Impossible de contacter le serveur.");
+      setCategoriesError(apiErrorMessage({ code: "network" }));
     } finally {
       setCategoryActionId(null);
     }
@@ -907,7 +909,7 @@ export default function BoutiqueBuilderDetailPage() {
 
   async function handleDeleteCategory(categoryId: string) {
     if (categoryActionId) return;
-    if (!confirm("Supprimer cette catégorie ? Les produits resteront sans catégorie.")) return;
+    if (!confirm(t("confirmerSupprimerCategorie"))) return;
     setCategoryActionId(categoryId);
     try {
       const response = await fetch(`/api/boutiques/${params?.id}/categories/${categoryId}`, {
@@ -915,13 +917,13 @@ export default function BoutiqueBuilderDetailPage() {
       });
       const json = await response.json();
       if (!response.ok) {
-        setCategoriesError(json.error || "Impossible de supprimer la catégorie.");
+        setCategoriesError(apiErrorMessage(json, t("erreurs.supprimerCategorie")));
         return;
       }
       if (productCategoryFilter === categoryId) setProductCategoryFilter("");
       await fetchCategories();
     } catch {
-      setCategoriesError("Impossible de contacter le serveur.");
+      setCategoriesError(apiErrorMessage({ code: "network" }));
     } finally {
       setCategoryActionId(null);
     }
@@ -932,10 +934,10 @@ export default function BoutiqueBuilderDetailPage() {
       <div className="mx-auto max-w-7xl space-y-8">
         <div className="mb-4 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <p className="text-sm uppercase tracking-[0.2em] text-violet-400">Mode Boutique</p>
-            <h1 className="mt-3 text-3xl font-bold">Gestion de la boutique</h1>
+            <p className="text-sm uppercase tracking-[0.2em] text-violet-400">{t("surtitre")}</p>
+            <h1 className="mt-3 text-3xl font-bold">{t("titre")}</h1>
             <p className="mt-2 max-w-2xl text-sm text-[var(--text-muted)]">
-              Ajoute des produits, organise des catégories et prépare ta boutique publique.
+              {t("intro")}
             </p>
           </div>
           <div className="flex flex-wrap gap-3">
@@ -944,17 +946,17 @@ export default function BoutiqueBuilderDetailPage() {
                 href={getBoutiquePublicUrl(boutique.slug)}
                 target="_blank"
                 rel="noopener noreferrer"
-                title={boutique.est_publique ? "Ouvrir la boutique publique" : "Aperçu réservé au propriétaire — la boutique reste privée pour les visiteurs"}
+                title={boutique.est_publique ? t("apercuPublique") : t("apercuPrivee")}
                 className="rounded-2xl border border-[var(--border)] bg-[var(--surface-2)] px-4 py-3 text-sm font-semibold text-[var(--text-primary)] transition hover:border-violet-500/40 hover:bg-violet-500/10"
               >
-                👁 Aperçu
+                {t("apercu")}
               </a>
             ) : null}
             <Link
               href="/site-builder/boutique"
               className="rounded-2xl border border-[var(--border)] bg-[var(--surface-2)] px-4 py-3 text-sm font-semibold text-[var(--text-primary)] transition hover:border-violet-500/40 hover:bg-violet-500/10"
             >
-              Retour aux boutiques
+              {t("retourBoutiques")}
             </Link>
           </div>
         </div>
@@ -971,8 +973,8 @@ export default function BoutiqueBuilderDetailPage() {
           <section className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-6">
             <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <p className="text-xs uppercase tracking-[0.3em] text-violet-400">Boutique</p>
-                <h2 className="mt-2 text-2xl font-semibold text-[var(--text-primary)]">{boutique?.nom || "Chargement..."}</h2>
+                <p className="text-xs uppercase tracking-[0.3em] text-violet-400">{t("boutique")}</p>
+                <h2 className="mt-2 text-2xl font-semibold text-[var(--text-primary)]">{boutique?.nom || t("chargement")}</h2>
               </div>
             </div>
 
@@ -989,15 +991,15 @@ export default function BoutiqueBuilderDetailPage() {
             ) : null}
 
             <div className="mt-6 rounded-3xl border border-[var(--border)] bg-[var(--surface-2)] p-4">
-              <h3 className="text-sm font-semibold text-[var(--text-primary)]">Mentions légales</h3>
+              <h3 className="text-sm font-semibold text-[var(--text-primary)]">{t("mentions.titre")}</h3>
               <p className="mt-1 text-xs text-[var(--text-muted)]">
-                Affichées sur la page publique /mentions-legales de cette boutique.
+                {t("mentions.aide")}
               </p>
               <textarea
                 value={mentionsLegales}
                 onChange={(e) => setMentionsLegales(e.target.value)}
                 rows={5}
-                placeholder="Raison sociale, adresse, SIRET, hébergeur..."
+                placeholder={t("mentions.placeholder")}
                 className="mt-3 w-full rounded-2xl border border-[var(--border)] bg-[var(--bg-sunken)] px-4 py-3 text-sm text-[var(--text-primary)] outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
               />
               <div className="mt-3 flex items-center gap-3">
@@ -1007,25 +1009,23 @@ export default function BoutiqueBuilderDetailPage() {
                   disabled={!boutique || savingMentions}
                   className="rounded-2xl bg-violet-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-violet-400 disabled:opacity-50"
                 >
-                  {savingMentions ? "Enregistrement..." : "Enregistrer"}
+                  {savingMentions ? t("enregistrement") : t("enregistrer")}
                 </button>
-                {mentionsSuccess ? <span className="text-sm text-[var(--success)]">Enregistré.</span> : null}
+                {mentionsSuccess ? <span className="text-sm text-[var(--success)]">{t("enregistre")}</span> : null}
                 {mentionsError ? <span className="text-sm text-[var(--danger)]">{mentionsError}</span> : null}
               </div>
             </div>
 
             <div className="mt-6 rounded-3xl border border-[var(--border)] bg-[var(--surface-2)] p-4">
-              <h3 className="text-sm font-semibold text-[var(--text-primary)]">Bandeau secondaire</h3>
+              <h3 className="text-sm font-semibold text-[var(--text-primary)]">{t("bandeau.titre")}</h3>
               <p className="mt-1 text-xs text-[var(--text-muted)]">
-                Affiché en haut de toutes les pages publiques de cette boutique, juste sous l&apos;en-tête. Laisse
-                vide (texte et vidéos) pour ne rien afficher — pas de synchronisation Shopify, à saisir ici
-                directement.
+                {t("bandeau.aide")}
               </p>
               <textarea
                 value={bandeauTexte}
                 onChange={(e) => setBandeauTexte(e.target.value)}
                 rows={2}
-                placeholder="Ex : Livraison offerte dès 50€ d'achat"
+                placeholder={t("bandeau.placeholder")}
                 className="mt-3 w-full rounded-2xl border border-[var(--border)] bg-[var(--bg-sunken)] px-4 py-3 text-sm text-[var(--text-primary)] outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
               />
               <div className="mt-3 space-y-2">
@@ -1036,13 +1036,13 @@ export default function BoutiqueBuilderDetailPage() {
                       onChange={(e) =>
                         setBandeauVideos((prev) => prev.map((v, i) => (i === index ? e.target.value : v)))
                       }
-                      placeholder="URL YouTube, Vimeo ou fichier vidéo direct"
+                      placeholder={t("bandeau.videoPlaceholder")}
                       className="w-full rounded-2xl border border-[var(--border)] bg-[var(--bg-sunken)] px-4 py-2.5 text-sm text-[var(--text-primary)] outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
                     />
                     <button
                       type="button"
                       onClick={() => setBandeauVideos((prev) => prev.filter((_, i) => i !== index))}
-                      aria-label="Retirer cette vidéo"
+                      aria-label={t("bandeau.retirerVideo")}
                       className="shrink-0 rounded-full border border-[var(--border)] px-3 py-2 text-sm text-[var(--text-faint)] transition hover:border-[var(--danger)]/40 hover:text-[var(--danger)]"
                     >
                       ×
@@ -1054,7 +1054,7 @@ export default function BoutiqueBuilderDetailPage() {
                   onClick={() => setBandeauVideos((prev) => [...prev, ""])}
                   className="rounded-2xl border border-dashed border-[var(--border)] px-4 py-2 text-sm text-[var(--text-muted)] transition hover:border-violet-400/60 hover:text-[var(--text-primary)]"
                 >
-                  + Ajouter une vidéo
+                  {t("bandeau.ajouterVideo")}
                 </button>
               </div>
               <div className="mt-3 flex items-center gap-3">
@@ -1064,17 +1064,17 @@ export default function BoutiqueBuilderDetailPage() {
                   disabled={!boutique || savingBandeau}
                   className="rounded-2xl bg-violet-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-violet-400 disabled:opacity-50"
                 >
-                  {savingBandeau ? "Enregistrement..." : "Enregistrer"}
+                  {savingBandeau ? t("enregistrement") : t("enregistrer")}
                 </button>
-                {bandeauSuccess ? <span className="text-sm text-[var(--success)]">Enregistré.</span> : null}
+                {bandeauSuccess ? <span className="text-sm text-[var(--success)]">{t("enregistre")}</span> : null}
                 {bandeauError ? <span className="text-sm text-[var(--danger)]">{bandeauError}</span> : null}
               </div>
             </div>
 
             <div className="mt-6 rounded-3xl border border-[var(--border)] bg-[var(--surface-2)] p-4">
-              <h3 className="text-sm font-semibold text-[var(--text-primary)]">Paramètres</h3>
+              <h3 className="text-sm font-semibold text-[var(--text-primary)]">{t("parametres.titre")}</h3>
               <p className="mt-1 text-xs text-[var(--text-muted)]">
-                Mode d&apos;affichage par défaut de la boutique publique pour tes visiteurs.
+                {t("parametres.modeAide")}
               </p>
               <div className="mt-3 inline-flex rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-1">
                 {(["light", "dark"] as const).map((mode) => {
@@ -1092,14 +1092,14 @@ export default function BoutiqueBuilderDetailPage() {
                           : "text-[var(--text-muted)] hover:bg-[var(--surface-2)] hover:text-[var(--text-primary)]"
                       }`}
                     >
-                      {mode === "light" ? "☀️ Clair" : "🌙 Sombre"}
+                      {mode === "light" ? t("parametres.clair") : t("parametres.sombre")}
                     </button>
                   );
                 })}
               </div>
 
               <p className="mt-4 text-xs text-[var(--text-muted)]">
-                Niche de la boutique — filtre les suggestions de produits et applique le thème visuel associé (quand il existe) sur la boutique publique.
+                {t("parametres.nicheAide")}
               </p>
               <select
                 value={(boutique?.settings?.niche as string | undefined) ?? ""}
@@ -1107,30 +1107,30 @@ export default function BoutiqueBuilderDetailPage() {
                 disabled={!boutique || savingNiche}
                 className="mt-3 w-full max-w-xs rounded-2xl border border-[var(--border)] bg-[var(--surface)] px-4 py-2 text-sm text-[var(--text-primary)] outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 disabled:opacity-50"
               >
-                <option value="">Aucune niche définie</option>
+                <option value="">{t("parametres.aucuneNiche")}</option>
                 {NICHES.map((n) => (
-                  <option key={n.id} value={n.id}>{n.emoji} {n.label}</option>
+                  <option key={n.id} value={n.id}>{n.emoji} {tNiches.has(`${n.id}.label`) ? tNiches(`${n.id}.label`) : n.label}</option>
                 ))}
               </select>
             </div>
 
             <div className="mt-6 grid gap-4 sm:grid-cols-2">
               <div className="rounded-3xl border border-[var(--border)] bg-[var(--surface-2)] p-4">
-                <p className="text-xs uppercase tracking-[0.2em] text-[var(--text-muted)]">Produits affichés</p>
-                <p className="mt-2 text-sm text-[var(--text-primary)]">{products.length} / {DEFAULT_PAGE_SIZE} par page</p>
+                <p className="text-xs uppercase tracking-[0.2em] text-[var(--text-muted)]">{t("stats.produitsAffiches")}</p>
+                <p className="mt-2 text-sm text-[var(--text-primary)]">{t("stats.parPage", { count: products.length, max: DEFAULT_PAGE_SIZE })}</p>
               </div>
               <div className="rounded-3xl border border-[var(--border)] bg-[var(--surface-2)] p-4">
-                <p className="text-xs uppercase tracking-[0.2em] text-[var(--text-muted)]">Catégories</p>
+                <p className="text-xs uppercase tracking-[0.2em] text-[var(--text-muted)]">{t("categories.titre")}</p>
                 <p className="mt-2 text-sm text-[var(--text-primary)]">{categories.length}</p>
               </div>
             </div>
           </section>
 
           <section className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-6">
-            <h3 className="text-lg font-semibold text-[var(--text-primary)]">Filtrer les produits</h3>
+            <h3 className="text-lg font-semibold text-[var(--text-primary)]">{t("filtres.titre")}</h3>
             <div className="mt-4 space-y-4">
               <div>
-                <label className="text-sm text-[var(--text-muted)]">Recherche</label>
+                <label className="text-sm text-[var(--text-muted)]">{t("filtres.recherche")}</label>
                 <input
                   type="search"
                   value={productSearch}
@@ -1138,12 +1138,12 @@ export default function BoutiqueBuilderDetailPage() {
                   onKeyDown={(event) => {
                     if (event.key === "Enter") void fetchProducts(1);
                   }}
-                  placeholder="Rechercher par nom ou description"
+                  placeholder={t("filtres.recherchePlaceholder")}
                   className="mt-2 w-full rounded-2xl border border-[var(--border)] bg-[var(--bg-sunken)] px-4 py-3 text-sm text-[var(--text-primary)] outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
                 />
               </div>
               <div>
-                <label className="text-sm text-[var(--text-muted)]">Catégorie</label>
+                <label className="text-sm text-[var(--text-muted)]">{t("formulaire.categorie")}</label>
                 <select
                   value={productCategoryFilter}
                   onChange={(event) => {
@@ -1152,7 +1152,7 @@ export default function BoutiqueBuilderDetailPage() {
                   }}
                   className="mt-2 w-full rounded-2xl border border-[var(--border)] bg-[var(--bg-sunken)] px-4 py-3 text-sm text-[var(--text-primary)] outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
                 >
-                  <option value="">Toutes les catégories</option>
+                  <option value="">{t("filtres.toutesCategories")}</option>
                   {categories.map((category) => (
                     <option key={category.id} value={category.id}>{category.nom}</option>
                   ))}
@@ -1163,7 +1163,7 @@ export default function BoutiqueBuilderDetailPage() {
                 onClick={() => void fetchProducts(1)}
                 className="w-full rounded-2xl bg-violet-500 px-4 py-3 text-sm font-semibold text-white transition hover:bg-violet-400"
               >
-                Appliquer
+                {t("filtres.appliquer")}
               </button>
             </div>
           </section>
@@ -1174,10 +1174,9 @@ export default function BoutiqueBuilderDetailPage() {
           <p className="text-xs uppercase tracking-[0.3em] text-violet-400">Site Builder</p>
           {totalProduits > 1 ? (
             <>
-              <h3 className="mt-2 text-lg font-semibold text-[var(--text-primary)]">Préparer ta boutique</h3>
+              <h3 className="mt-2 text-lg font-semibold text-[var(--text-primary)]">{t("site.preparerTitre")}</h3>
               <p className="mt-1 text-sm text-[var(--text-faint)]">
-                Ta boutique a une description et une palette. Crée ensuite une landing page prérempli dans le Site
-                Builder.
+                {t("site.preparerAide")}
               </p>
               {contenuError && (
                 <p className="mt-2 text-sm text-[var(--danger)]">{contenuError}</p>
@@ -1190,13 +1189,13 @@ export default function BoutiqueBuilderDetailPage() {
                     disabled={generatingContenu}
                     className="rounded-2xl bg-gradient-to-r from-violet-600 to-blue-600 px-5 py-3 text-sm font-semibold text-white transition hover:from-violet-500 hover:to-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    {generatingContenu ? "Génération…" : "✨ Préparer ma boutique"}
+                    {generatingContenu ? t("site.generation") : t("site.preparer")}
                   </button>
                 </div>
               ) : (
                 <div className="mt-4 space-y-4">
                   <div>
-                    <label className="text-sm font-medium text-[var(--text-muted)]">Description de la boutique</label>
+                    <label className="text-sm font-medium text-[var(--text-muted)]">{t("site.description")}</label>
                     <textarea
                       value={reviewDescription ?? ""}
                       onChange={(e) => setReviewDescription(e.target.value)}
@@ -1205,7 +1204,7 @@ export default function BoutiqueBuilderDetailPage() {
                     />
                   </div>
                   <div>
-                    <p className="mb-2 text-sm font-medium text-[var(--text-muted)]">Palette de couleurs</p>
+                    <p className="mb-2 text-sm font-medium text-[var(--text-muted)]">{t("site.palette")}</p>
                     <PaletteEditor palette={reviewPalette} onChange={setReviewPalette} />
                   </div>
                   <div className="flex flex-wrap gap-3">
@@ -1215,7 +1214,7 @@ export default function BoutiqueBuilderDetailPage() {
                       disabled={!planCharge || confirmingContenu}
                       className="rounded-2xl bg-gradient-to-r from-violet-600 to-blue-600 px-5 py-3 text-sm font-semibold text-white transition hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      {!planCharge ? "Chargement…" : confirmingContenu ? "Enregistrement…" : "🤖 Créer mon site"}
+                      {!planCharge ? t("chargement") : confirmingContenu ? t("enregistrement") : t("site.creerMonSite")}
                     </button>
                     <button
                       type="button"
@@ -1226,7 +1225,7 @@ export default function BoutiqueBuilderDetailPage() {
                       disabled={confirmingContenu}
                       className="rounded-2xl border border-[var(--border)] bg-[var(--surface-2)] px-5 py-3 text-sm font-semibold text-[var(--text-primary)] transition hover:border-violet-500/40 hover:bg-violet-500/10 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      Annuler
+                      {t("annuler")}
                     </button>
                   </div>
                 </div>
@@ -1234,10 +1233,9 @@ export default function BoutiqueBuilderDetailPage() {
             </>
           ) : (
             <>
-              <h3 className="mt-2 text-lg font-semibold text-[var(--text-primary)]">Créer un site pour cette boutique</h3>
+              <h3 className="mt-2 text-lg font-semibold text-[var(--text-primary)]">{t("site.creerTitre")}</h3>
               <p className="mt-1 text-sm text-[var(--text-faint)]">
-                Génère une landing page prérempli avec le nom et la description de la boutique — au choix, avec
-                l&apos;IA ou l&apos;éditeur de templates.
+                {t("site.creerAide")}
               </p>
               <div className="mt-4 flex flex-wrap gap-3">
                 {/* Le lien préremplit le Site Builder (mode produit unique) avec le nom, la description et l'image du premier produit de la boutique. */}
@@ -1245,13 +1243,13 @@ export default function BoutiqueBuilderDetailPage() {
                   href={buildSiteBuilderPrefillUrl("ia")}
                   className="rounded-2xl bg-gradient-to-r from-violet-600 to-blue-600 px-5 py-3 text-sm font-semibold text-white transition hover:opacity-90"
                 >
-                  🤖 Génération IA
+                  {t("site.generationIa")}
                 </Link>
                 <Link
                   href={buildSiteBuilderPrefillUrl("template")}
                   className="rounded-2xl border border-[var(--border)] bg-[var(--surface-2)] px-5 py-3 text-sm font-semibold text-[var(--text-primary)] transition hover:border-violet-500/40 hover:bg-violet-500/10"
                 >
-                  🎨 Éditeur de templates
+                  {t("site.editeurTemplates")}
                 </Link>
               </div>
             </>
@@ -1276,10 +1274,10 @@ export default function BoutiqueBuilderDetailPage() {
           <section className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-6">
             <div className="mb-6 flex items-center justify-between gap-4">
               <div>
-                <h3 className="text-xl font-semibold text-[var(--text-primary)]">Produits</h3>
-                <p className="mt-2 text-sm text-[var(--text-muted)]">Liste des produits et gestion rapide.</p>
+                <h3 className="text-xl font-semibold text-[var(--text-primary)]">{t("produits.titre")}</h3>
+                <p className="mt-2 text-sm text-[var(--text-muted)]">{t("produits.aide")}</p>
                 <p className="mt-1 text-sm font-medium text-[var(--text-primary)]">
-                  {totalProduits} produit{totalProduits > 1 ? "s" : ""} dans la boutique
+                  {t("produits.total", { count: totalProduits })}
                 </p>
               </div>
               {plan !== null ? <CompteurProduits plan={plan} count={produitsCount} /> : null}
@@ -1287,20 +1285,20 @@ export default function BoutiqueBuilderDetailPage() {
 
             <div className="rounded-3xl border border-[var(--border)] bg-[var(--surface-2)] p-4">
               {productsLoading ? (
-                <p className="text-sm text-[var(--text-muted)]">Chargement des produits...</p>
+                <p className="text-sm text-[var(--text-muted)]">{t("produits.chargement")}</p>
               ) : productsError ? (
                 <p className="text-sm text-[var(--danger)]">{productsError}</p>
               ) : products.length === 0 ? (
-                <p className="text-sm text-[var(--text-muted)]">Aucun produit trouvé pour le moment.</p>
+                <p className="text-sm text-[var(--text-muted)]">{t("produits.vide")}</p>
               ) : (
                 <div className="overflow-x-auto">
                   <table className="min-w-full border-separate border-spacing-0 text-left text-sm">
                     <thead>
                       <tr className="border-b border-[var(--border)] text-[var(--text-muted)]">
-                        <th className="px-4 py-3">Produit</th>
-                        <th className="px-4 py-3">Catégorie</th>
-                        <th className="px-4 py-3">Prix</th>
-                        <th className="px-4 py-3">Actions</th>
+                        <th className="px-4 py-3">{t("produits.colProduit")}</th>
+                        <th className="px-4 py-3">{t("formulaire.categorie")}</th>
+                        <th className="px-4 py-3">{t("produits.colPrix")}</th>
+                        <th className="px-4 py-3">{t("produits.colActions")}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -1311,10 +1309,10 @@ export default function BoutiqueBuilderDetailPage() {
                             <div className="text-xs text-[var(--text-faint)]">{product.slug}</div>
                           </td>
                           <td className="px-4 py-3 align-top text-sm text-[var(--text-muted)]">
-                            {product.boutique_categories?.nom || "Aucune"}
+                            {product.boutique_categories?.nom || t("produits.sansCategorie")}
                           </td>
                           <td className="px-4 py-3 align-top text-sm text-[var(--text-primary)]">
-                            {formatPrice(product.prix_vente)}{product.prix_original ? ` · ${formatPrice(product.prix_original)}` : ""}
+                            {formatPrice(product.prix_vente, locale)}{product.prix_original ? ` · ${formatPrice(product.prix_original, locale)}` : ""}
                           </td>
                           <td className="px-4 py-3 align-top space-y-2">
                             <button
@@ -1322,7 +1320,7 @@ export default function BoutiqueBuilderDetailPage() {
                               onClick={() => populateProductForm(product)}
                               className="w-full rounded-xl bg-violet-500 px-3 py-2.5 text-sm font-semibold text-white transition hover:bg-violet-400"
                             >
-                              Éditer
+                              {t("produits.editer")}
                             </button>
                             <button
                               type="button"
@@ -1330,7 +1328,7 @@ export default function BoutiqueBuilderDetailPage() {
                               disabled={deletingProductId === product.id}
                               className="rounded-xl bg-[var(--danger)]/10 px-3 py-2 text-xs font-semibold text-[var(--danger)] transition hover:bg-[var(--danger)]/20 disabled:opacity-50 disabled:cursor-not-allowed"
                             >
-                              {deletingProductId === product.id ? "…" : "Supprimer"}
+                              {deletingProductId === product.id ? "…" : t("supprimer")}
                             </button>
                             <div className="flex gap-2">
                               <button
@@ -1360,7 +1358,7 @@ export default function BoutiqueBuilderDetailPage() {
             </div>
 
             <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-sm text-[var(--text-muted)]">
-              <span>Page {productPage} / {totalPages}</span>
+              <span>{t("pagination.page", { page: productPage, total: totalPages })}</span>
               <div className="flex gap-2">
                 <button
                   type="button"
@@ -1368,7 +1366,7 @@ export default function BoutiqueBuilderDetailPage() {
                   onClick={() => void fetchProducts(productPage - 1)}
                   className="rounded-2xl border border-[var(--border)] bg-[var(--surface-2)] px-4 py-2 text-xs transition hover:border-violet-500/40 disabled:opacity-40"
                 >
-                  Précédent
+                  {t("pagination.precedent")}
                 </button>
                 <button
                   type="button"
@@ -1376,16 +1374,16 @@ export default function BoutiqueBuilderDetailPage() {
                   onClick={() => void fetchProducts(productPage + 1)}
                   className="rounded-2xl border border-[var(--border)] bg-[var(--surface-2)] px-4 py-2 text-xs transition hover:border-violet-500/40 disabled:opacity-40"
                 >
-                  Suivant
+                  {t("pagination.suivant")}
                 </button>
               </div>
             </div>
           </section>
 
           <section className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-6">
-            <h3 className="text-xl font-semibold text-[var(--text-primary)]">Ajouter / éditer un produit</h3>
+            <h3 className="text-xl font-semibold text-[var(--text-primary)]">{t("formulaire.titre")}</h3>
             <p className="mt-2 text-sm text-[var(--text-muted)]">
-              Utilise l&apos;import AliExpress ou remplis le formulaire manuellement.
+              {t("formulaire.aide")}
             </p>
             {plan !== null ? (
               <div className="mt-4 flex flex-col items-start gap-3">
@@ -1395,7 +1393,7 @@ export default function BoutiqueBuilderDetailPage() {
             ) : null}
             <form onSubmit={handleSubmitProduct} className="mt-6 space-y-4">
               <div className="space-y-3 rounded-3xl border border-[var(--border)] bg-[var(--surface-2)] p-4">
-                <label className="text-sm font-medium text-[var(--text-muted)]">Importer depuis AliExpress</label>
+                <label className="text-sm font-medium text-[var(--text-muted)]">{t("formulaire.importer")}</label>
                 <div className="flex gap-2">
                   <input
                     type="url"
@@ -1410,7 +1408,7 @@ export default function BoutiqueBuilderDetailPage() {
                     disabled={importLoading || !importUrl.trim()}
                     className="rounded-2xl bg-violet-500 px-4 py-3 text-sm font-semibold text-white transition hover:bg-violet-400 disabled:opacity-50"
                   >
-                    {importLoading ? "Importation..." : "Importer"}
+                    {importLoading ? t("formulaire.importation") : t("formulaire.importerBouton")}
                   </button>
                 </div>
                 {importError ? <p className="text-xs text-[var(--danger)]">{importError}</p> : null}
@@ -1419,14 +1417,14 @@ export default function BoutiqueBuilderDetailPage() {
               <div className="grid gap-4 sm:grid-cols-2">
                 <label className="block text-sm text-[var(--text-muted)]">
                   <div className="flex items-center justify-between gap-2">
-                    <span>Nom du produit</span>
+                    <span>{t("formulaire.nom")}</span>
                     <button
                       type="button"
                       onClick={handleReformulerNom}
                       disabled={!productName.trim() || reformulatingNom}
                       className="shrink-0 rounded-xl border border-[var(--border)] bg-[var(--surface-2)] px-2.5 py-1 text-xs font-semibold text-[var(--text-primary)] transition hover:border-violet-500/40 hover:bg-violet-500/10 disabled:opacity-50"
                     >
-                      {reformulatingNom ? "…" : "✨ Reformuler"}
+                      {reformulatingNom ? "…" : t("formulaire.reformuler")}
                     </button>
                   </div>
                   <input
@@ -1434,32 +1432,32 @@ export default function BoutiqueBuilderDetailPage() {
                     value={productName}
                     onChange={(event) => setProductName(event.target.value)}
                     className="mt-2 w-full rounded-2xl border border-[var(--border)] bg-[var(--bg-sunken)] px-4 py-3 text-sm text-[var(--text-primary)] outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
-                    placeholder="Titre du produit"
+                    placeholder={t("formulaire.nomPlaceholder")}
                   />
                 </label>
                 <label className="block text-sm text-[var(--text-muted)]">
-                  Slug du produit
+                  {t("formulaire.slug")}
                   <input
                     type="text"
                     value={productSlug}
                     onChange={(event) => setProductSlug(event.target.value)}
                     className="mt-2 w-full rounded-2xl border border-[var(--border)] bg-[var(--bg-sunken)] px-4 py-3 text-sm text-[var(--text-primary)] outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
-                    placeholder="nom-du-produit"
+                    placeholder={t("formulaire.slugPlaceholder")}
                   />
                 </label>
               </div>
 
               <label className="block text-sm text-[var(--text-muted)]">
                 <div className="flex items-center justify-between gap-2">
-                  <span>Description</span>
+                  <span>{t("formulaire.description")}</span>
                   <button
                     type="button"
                     onClick={handleGenererDescription}
                     disabled={!productName.trim() || generatingDescription}
                     className="shrink-0 rounded-xl border border-[var(--border)] bg-[var(--surface-2)] px-2.5 py-1 text-xs font-semibold text-[var(--text-primary)] transition hover:border-violet-500/40 hover:bg-violet-500/10 disabled:opacity-50"
-                    title={!productName.trim() ? "Renseigne d'abord un nom de produit" : undefined}
+                    title={!productName.trim() ? t("formulaire.nomDabord") : undefined}
                   >
-                    {generatingDescription ? "…" : "✨ Générer une description"}
+                    {generatingDescription ? "…" : t("formulaire.genererDescription")}
                   </button>
                 </div>
                 <textarea
@@ -1467,12 +1465,12 @@ export default function BoutiqueBuilderDetailPage() {
                   onChange={(event) => setProductDescription(event.target.value)}
                   rows={4}
                   className="mt-2 w-full rounded-2xl border border-[var(--border)] bg-[var(--bg-sunken)] px-4 py-3 text-sm text-[var(--text-primary)] outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 resize-none"
-                  placeholder="Description du produit"
+                  placeholder={t("formulaire.descriptionPlaceholder")}
                 />
               </label>
 
               <label className="block text-sm text-[var(--text-muted)]">
-                Image principale (URL)
+                {t("formulaire.image")}
                 <input
                   type="url"
                   value={productImageUrl}
@@ -1484,7 +1482,7 @@ export default function BoutiqueBuilderDetailPage() {
 
               <div className="grid gap-4 sm:grid-cols-2">
                 <label className="block text-sm text-[var(--text-muted)]">
-                  Prix de vente
+                  {t("formulaire.prixVente")}
                   <input
                     type="number"
                     min="0"
@@ -1496,7 +1494,7 @@ export default function BoutiqueBuilderDetailPage() {
                   />
                 </label>
                 <label className="block text-sm text-[var(--text-muted)]">
-                  Prix original
+                  {t("formulaire.prixOriginal")}
                   <input
                     type="number"
                     min="0"
@@ -1510,7 +1508,7 @@ export default function BoutiqueBuilderDetailPage() {
               </div>
 
               <label className="block text-sm text-[var(--text-muted)]">
-                Catégorie
+                {t("formulaire.categorie")}
                 <select
                   value={productCategoryId}
                   onChange={(event) => setProductCategoryId(event.target.value)}
@@ -1534,14 +1532,14 @@ export default function BoutiqueBuilderDetailPage() {
                   disabled={savingProduct || (!editingProductId && ajoutBloque)}
                   className="rounded-2xl bg-violet-500 px-4 py-3 text-sm font-semibold text-white transition hover:bg-violet-400 disabled:opacity-50"
                 >
-                  {editingProductId ? "Mettre à jour" : "Ajouter le produit"}
+                  {editingProductId ? t("formulaire.mettreAJour") : t("formulaire.ajouter")}
                 </button>
                 <button
                   type="button"
                   onClick={resetProductForm}
                   className="rounded-2xl border border-[var(--border)] bg-[var(--surface-2)] px-4 py-3 text-sm font-semibold text-[var(--text-primary)] transition hover:border-violet-500/40"
                 >
-                  Réinitialiser
+                  {t("formulaire.reinitialiser")}
                 </button>
               </div>
             </form>
@@ -1550,24 +1548,24 @@ export default function BoutiqueBuilderDetailPage() {
           <section className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-6">
             <div className="flex items-center justify-between gap-4">
               <div>
-                <h3 className="text-xl font-semibold text-[var(--text-primary)]">Catégories</h3>
-                <p className="mt-2 text-sm text-[var(--text-muted)]">Crée, renomme ou supprime des catégories.</p>
+                <h3 className="text-xl font-semibold text-[var(--text-primary)]">{t("categories.titre")}</h3>
+                <p className="mt-2 text-sm text-[var(--text-muted)]">{t("categories.aide")}</p>
               </div>
             </div>
 
             <form onSubmit={handleCreateCategory} className="mt-6 space-y-4 rounded-3xl border border-[var(--border)] bg-[var(--surface-2)] p-4">
               <label className="block text-sm text-[var(--text-muted)]">
-                Nom de la catégorie
+                {t("categories.nom")}
                 <input
                   type="text"
                   value={categoryName}
                   onChange={(event) => setCategoryName(event.target.value)}
                   className="mt-2 w-full rounded-2xl border border-[var(--border)] bg-[var(--bg-sunken)] px-4 py-3 text-sm text-[var(--text-primary)] outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
-                  placeholder="Ex: Fitness"
+                  placeholder={t("categories.nomPlaceholder")}
                 />
               </label>
               <label className="block text-sm text-[var(--text-muted)]">
-                Slug de la catégorie
+                {t("categories.slug")}
                 <input
                   type="text"
                   value={categorySlug}
@@ -1581,16 +1579,16 @@ export default function BoutiqueBuilderDetailPage() {
                 disabled={creatingCategory}
                 className="w-full rounded-2xl bg-violet-500 px-4 py-3 text-sm font-semibold text-white transition hover:bg-violet-400 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {creatingCategory ? "Création…" : "Créer la catégorie"}
+                {creatingCategory ? t("categories.creation") : t("categories.creer")}
               </button>
             </form>
 
             {categoriesLoading ? (
-              <p className="mt-6 text-sm text-[var(--text-muted)]">Chargement des catégories...</p>
+              <p className="mt-6 text-sm text-[var(--text-muted)]">{t("categories.chargement")}</p>
             ) : categoriesError ? (
               <p className="mt-6 text-sm text-[var(--danger)]">{categoriesError}</p>
             ) : categories.length === 0 ? (
-              <p className="mt-6 text-sm text-[var(--text-muted)]">Aucune catégorie créée.</p>
+              <p className="mt-6 text-sm text-[var(--text-muted)]">{t("categories.vide")}</p>
             ) : (
               <div className="mt-6 space-y-3">
                 {categories.map((category) => (
@@ -1610,7 +1608,7 @@ export default function BoutiqueBuilderDetailPage() {
                           disabled={categoryActionId === category.id}
                           className="rounded-2xl bg-[var(--surface-3)] px-3 py-2 text-xs font-semibold text-[var(--text-primary)] transition hover:bg-[var(--surface-3)] disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                          Renommer
+                          {t("categories.renommer")}
                         </button>
                         <button
                           type="button"
@@ -1618,7 +1616,7 @@ export default function BoutiqueBuilderDetailPage() {
                           disabled={categoryActionId === category.id}
                           className="rounded-2xl bg-[var(--danger)]/10 px-3 py-2 text-xs font-semibold text-[var(--danger)] transition hover:bg-[var(--danger)]/20 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                          {categoryActionId === category.id ? "…" : "Supprimer"}
+                          {categoryActionId === category.id ? "…" : t("supprimer")}
                         </button>
                       </div>
                     </div>
@@ -1637,7 +1635,7 @@ export default function BoutiqueBuilderDetailPage() {
                             disabled={categoryActionId === category.id}
                             className="rounded-2xl bg-violet-500 px-3 py-2 text-xs font-semibold text-white transition hover:bg-violet-400 disabled:opacity-50 disabled:cursor-not-allowed"
                           >
-                            {categoryActionId === category.id ? "Enregistrement…" : "Enregistrer"}
+                            {categoryActionId === category.id ? t("enregistrement") : t("enregistrer")}
                           </button>
                           <button
                             type="button"
@@ -1645,7 +1643,7 @@ export default function BoutiqueBuilderDetailPage() {
                             disabled={categoryActionId === category.id}
                             className="rounded-2xl border border-[var(--border)] bg-[var(--surface-2)] px-3 py-2 text-xs font-semibold text-[var(--text-primary)] transition hover:border-violet-500/40 disabled:opacity-50 disabled:cursor-not-allowed"
                           >
-                            Annuler
+                            {t("annuler")}
                           </button>
                         </div>
                       </div>

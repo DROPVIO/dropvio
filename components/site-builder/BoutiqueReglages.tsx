@@ -64,7 +64,7 @@ export default function BoutiqueReglages({
       if (!res.ok) return { ok: false, message: apiErrorMessage(json) };
       return { ok: true };
     } catch {
-      return { ok: false, message: apiErrorMessage(null, "network") };
+      return { ok: false, message: apiErrorMessage({ code: "network" }) };
     }
   }
 
@@ -161,7 +161,7 @@ export default function BoutiqueReglages({
       }
       onDeleted();
     } catch {
-      setSuppressionErreur(apiErrorMessage(null, "network"));
+      setSuppressionErreur(apiErrorMessage({ code: "network" }));
     } finally {
       setSuppressionEnCours(false);
     }

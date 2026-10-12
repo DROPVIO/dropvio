@@ -77,7 +77,7 @@ export default function BoutiqueShopifyPush({ boutiqueId, canExport }: { boutiqu
         });
         const json = await res.json().catch(() => ({}));
         if (!res.ok) {
-          setErreur(apiErrorMessage(json, "shopify_push_failed"));
+          setErreur(apiErrorMessage(json, t("echec")));
           // Erreur d'authentification : inutile de reprendre, il faut reconnecter Shopify.
           if (json.code !== "shopify_auth_expired" && curseur) {
             const r = { curseur, bilan };
@@ -104,7 +104,7 @@ export default function BoutiqueShopifyPush({ boutiqueId, canExport }: { boutiqu
         setReprise(r);
       }
     } catch {
-      setErreur(apiErrorMessage(null, "network"));
+      setErreur(apiErrorMessage({ code: "network" }));
       if (curseur) {
         const r = { curseur, bilan };
         ecrireReprise(boutiqueId, r);
