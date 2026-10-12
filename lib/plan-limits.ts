@@ -73,3 +73,69 @@ export async function incrementMonthlyUsage(
       .eq("mois", mois);
   }
 }
+
+// Code PostgreSQL « undefined_column » — remonté par PostgREST tant que la migration 037a
+// (tokens_entree / tokens_sortie sur usage_mensuel) n'est pas appliquée. Même traitement que
+// dans app/api/sites-generes/[id]/route.ts pour la migration 035.
+const UNDEFINED_COLUMN = "42703";
+
+/** Ajoute la consommation de tokens d'un appel modèle au cumul du mois en cours.
+ *
+ *  Volontairement séparé de incrementMonthlyUsage : le quota métier (nombre de sites) et le
+ *  coût en tokens n'évoluent pas au même rythme — une génération qui relance consomme deux
+ *  fois des tokens pour un seul site. Les deux vivent sur la même ligne
+ *  (user_id, feature, mois), donc sur le même mois glissant que le compteur.
+ *
+ *  Best-effort et jamais bloquant : une génération réussie ne doit pas être transformée en
+ *  erreur parce que la comptabilité a échoué. En particulier, tant que 037a n'est pas
+ *  appliquée, les deux colonnes n'existent pas (42703) et on se contente d'un avertissement
+ *  dans les logs — sinon l'ajout de ce compteur casserait toute la génération, exactement
+ *  comme la migration 032 non appliquée casse aujourd'hui la sauvegarde des sites. */
+export async function logTokensUsage(
+  supabase: SupabaseClient,
+  userId: string,
+  feature: UsageFeature,
+  tokensEntree: number,
+  tokensSortie: number
+): Promise<void> {
+  if (tokensEntree <= 0 && tokensSortie <= 0) return;
+
+  const mois = currentMonthKey();
+
+  const { data, error } = await supabase
+    .from("usage_mensuel")
+    .select("tokens_entree, tokens_sortie")
+    .eq("user_id", userId)
+    .eq("feature", feature)
+    .eq("mois", mois)
+    .maybeSingle();
+
+  if (error) {
+    if (error.code === UNDEFINED_COLUMN) {
+      console.warn(
+        "[plan-limits] Tokens non enregistrés : applique la migration 037a_usage_mensuel_tokens.sql."
+      );
+    } else {
+      console.warn("[plan-limits] Lecture des tokens échouée :", error.message);
+    }
+    return;
+  }
+
+  // upsert en merge-duplicates : seules les colonnes envoyées sont écrites, donc `compteur`
+  // garde sa valeur si la ligne existe déjà (et prend son défaut 0 à la création).
+  const { error: ecritureErr } = await supabase.from("usage_mensuel").upsert(
+    {
+      user_id: userId,
+      feature,
+      mois,
+      tokens_entree: (data?.tokens_entree ?? 0) + tokensEntree,
+      tokens_sortie: (data?.tokens_sortie ?? 0) + tokensSortie,
+      updated_at: new Date().toISOString(),
+    },
+    { onConflict: "user_id,feature,mois" }
+  );
+
+  if (ecritureErr) {
+    console.warn("[plan-limits] Écriture des tokens échouée :", ecritureErr.message);
+  }
+}

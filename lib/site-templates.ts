@@ -298,12 +298,6 @@ function mentionsLegalesModal(): string {
     <div class="dv-legal-box">
       <button type="button" id="dv-legal-close" class="dv-legal-close" aria-label="Fermer">✕</button>
       <h2>Mentions légales</h2>
-      <h3>Éditeur du site</h3>
-      <p>[À compléter : nom ou raison sociale, forme juridique, adresse du siège, numéro SIRET, email de contact, nom du directeur de la publication.]</p>
-      <h3>Hébergement</h3>
-      <p>[À compléter : nom de l'hébergeur, adresse, numéro de téléphone.]</p>
-      <h3>Données personnelles</h3>
-      <p>[À compléter : finalité de la collecte des données, base légale, durée de conservation, coordonnées du responsable de traitement, modalités d'exercice des droits d'accès, de rectification et de suppression conformément au RGPD.]</p>
     </div>
   </div>`;
 }
@@ -320,6 +314,9 @@ export type ProduitBoutique = {
   image: string | null;
   prixVente: string;
   prixOriginal: string;
+  // Catégorie de la boutique (boutique_produits.category_id), transmise par le brouillon du
+  // Site Builder pour regrouper les produits en collections — absente ou null : sans catégorie.
+  categorieId?: string | null;
 };
 
 // Styles de carte partagés entre les 4 déclinaisons boutique — seule la couleur d'accent
@@ -331,7 +328,7 @@ export function grilleStyles(accent: string, cardBg: string, cardBorder: string,
   .grille-carte { background:${cardBg}; border:1px solid ${cardBorder}; border-radius:16px; overflow:hidden; display:flex; flex-direction:column; }
   .grille-img { aspect-ratio:1; overflow:hidden; background:${cardBorder}; }
   .grille-img img { width:100%; height:100%; object-fit:cover; }
-  .grille-img-placeholder { width:100%; height:100%; background:linear-gradient(135deg,color-mix(in srgb, ${accent} 20%, transparent),color-mix(in srgb, ${accent} 7%, transparent)); }
+  .grille-img-placeholder { width:100%; height:100%; box-sizing:border-box; background:${cardBg}; border:2px dashed ${cardBorder}; display:flex; align-items:center; justify-content:center; text-align:center; padding:12px; color:${mutedColor}; font-size:var(--fs-small); }
   .grille-body { padding:18px; display:flex; flex-direction:column; gap:10px; flex:1; }
   .grille-body h3 { font-size:1.05rem; color:${textColor}; }
   .grille-desc { font-size:var(--fs-small); color:${mutedColor}; line-height:1.5; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
@@ -341,11 +338,14 @@ export function grilleStyles(accent: string, cardBg: string, cardBorder: string,
   @media(max-width:500px){ .grille{grid-template-columns:1fr 1fr} }`;
 }
 
-function produitCardHtml(p: ProduitBoutique, idx: number, accent: string, ctaLabel: string): string {
-  const idSuffix = `-p${idx}`;
+// prefixe distingue les identifiants du formulaire de commande quand un même produit est
+// affiché dans plusieurs grilles de la page (catalogue + collection) : "" donne -p0, -p1…
+// comme avant ; "c0" donne -c0p0… Les scripts doivent utiliser le même préfixe.
+function produitCardHtml(p: ProduitBoutique, idx: number, accent: string, ctaLabel: string, prefixe = ""): string {
+  const idSuffix = `-${prefixe}p${idx}`;
   const prixNum = parseFloat(p.prixVente) || 0;
   return `<div class="grille-carte">
-    <div class="grille-img">${p.image ? `<img src="${escapeHtml(p.image)}" alt="${escapeHtml(p.nom)}">` : `<div class="grille-img-placeholder"></div>`}</div>
+    <div class="grille-img">${p.image?.trim() ? `<img src="${escapeHtml(p.image.trim())}" alt="${escapeHtml(p.nom)}">` : `<div class="grille-img-placeholder" data-placeholder="image">Photo à ajouter</div>`}</div>
     <div class="grille-body">
       <h3>${escapeHtml(p.nom)}</h3>
       ${p.description.trim() ? `<p class="grille-desc">${escapeHtml(p.description)}</p>` : ""}
@@ -364,10 +364,18 @@ export function productGridSection(produits: ProduitBoutique[], accent: string, 
   </div></section>`;
 }
 
-export function produitsCheckoutScripts(produits: ProduitBoutique[]): string {
+export function produitsCheckoutScripts(produits: ProduitBoutique[], prefixe = ""): string {
   return produits
-    .map((p, i) => (p.prixVente.trim() ? checkoutScript(parseFloat(p.prixVente) || 0, `-p${i}`) : ""))
+    .map((p, i) => (p.prixVente.trim() ? checkoutScript(parseFloat(p.prixVente) || 0, `-${prefixe}p${i}`) : ""))
     .join("\n");
+}
+
+// Grille seule (sans section ni titre), pour les pages qui placent plusieurs grilles — voir
+// injectProductGrid dans app/api/generate-site/route.ts. Même carte que productGridSection.
+export function grilleProduitsHtml(produits: ProduitBoutique[], accent: string, ctaLabel: string, prefixe = ""): string {
+  return `<div class="grille">
+      ${produits.map((p, i) => produitCardHtml(p, i, accent, ctaLabel, prefixe)).join("\n")}
+    </div>`;
 }
 
 // ─── Template TECH — sombre, néon, split-screen, bento grid ──────────────────
