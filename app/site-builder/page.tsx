@@ -31,12 +31,12 @@ const STYLES: Array<{
   id: string; icon: string; label: string;
   from: string; to: string; defaultPalette: Palette;
 }> = [
-  { id: "premium",    icon: "✨", label: "Luxueux / Premium",                 from: "#7c3aed", to: "#ec4899", defaultPalette: { primary: "#7c3aed", secondary: "#1a0533", accent: "#f59e0b" } },
-  { id: "nature",     icon: "🌿", label: "Éco-responsable / Nature",                 from: "#16a34a", to: "#0891b2", defaultPalette: { primary: "#16a34a", secondary: "#052e16", accent: "#0891b2" } },
-  { id: "mainstream", icon: "🛒", label: "Mainstream / Accessible",             from: "#2563eb", to: "#7c3aed", defaultPalette: { primary: "#2563eb", secondary: "#0f172a", accent: "#06b6d4" } },
-  { id: "retro",      icon: "🎞️", label: "Rétro / Vintage",               from: "#ea580c", to: "#ca8a04", defaultPalette: { primary: "#ea580c", secondary: "#1c0a00", accent: "#ca8a04" } },
-  { id: "minimal",    icon: "◻",  label: "Minimaliste / Épuré",                          from: "#09090b", to: "#312e81", defaultPalette: { primary: "#a78bfa", secondary: "#09090b", accent: "#e4e4e7" } },
-  { id: "tech",       icon: "⚡", label: "Tech / Futuriste",                      from: "#0ea5e9", to: "#7c3aed", defaultPalette: { primary: "#0ea5e9", secondary: "#0c1a2e", accent: "#7c3aed" } },
+  { id: "premium",    icon: "✨", label: "Luxueux / Premium",         from: "#7c3aed", to: "#ec4899", defaultPalette: { primary: "#7c3aed", secondary: "#1a0533", accent: "#f59e0b" } },
+  { id: "nature",     icon: "🌿", label: "Éco-responsable / Nature",  from: "#16a34a", to: "#0891b2", defaultPalette: { primary: "#16a34a", secondary: "#052e16", accent: "#0891b2" } },
+  { id: "mainstream", icon: "🛒", label: "Mainstream / Accessible",   from: "#2563eb", to: "#7c3aed", defaultPalette: { primary: "#2563eb", secondary: "#0f172a", accent: "#06b6d4" } },
+  { id: "retro",      icon: "🎞️", label: "Rétro / Vintage",           from: "#ea580c", to: "#ca8a04", defaultPalette: { primary: "#ea580c", secondary: "#1c0a00", accent: "#ca8a04" } },
+  { id: "minimal",    icon: "◻",  label: "Minimaliste / Épuré",       from: "#09090b", to: "#312e81", defaultPalette: { primary: "#a78bfa", secondary: "#09090b", accent: "#e4e4e7" } },
+  { id: "tech",       icon: "⚡", label: "Tech / Futuriste",          from: "#0ea5e9", to: "#7c3aed", defaultPalette: { primary: "#0ea5e9", secondary: "#0c1a2e", accent: "#7c3aed" } },
 ];
 
 
