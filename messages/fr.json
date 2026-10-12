@@ -1382,6 +1382,82 @@
           "renommerCategorie": "Impossible de renommer la catégorie.",
           "supprimerCategorie": "Impossible de supprimer la catégorie."
         }
+      },
+      "liste": {
+        "surtitre": "Boutiques Dropvio",
+        "titre": "Créer et gérer tes boutiques",
+        "intro": "Gère plusieurs produits, des catégories et ta boutique publique depuis Dropvio.",
+        "retourGenerateur": "Retour au Site Builder",
+        "tesBoutiques": "Tes boutiques",
+        "tesBoutiquesAide": "Crée une nouvelle boutique ou ouvre une boutique existante pour y ajouter des produits.",
+        "chargement": "Chargement…",
+        "vide": "Aucune boutique créée pour le moment.",
+        "publique": "Publique",
+        "privee": "Privée",
+        "ouvrir": "Ouvrir",
+        "sansDescription": "Pas de description",
+        "creerTitre": "Créer une boutique",
+        "creerAide": "Nom, slug et description de la boutique.",
+        "nom": "Nom de la boutique",
+        "nomPlaceholder": "Ex. : Boutique Fitness",
+        "slug": "Slug public",
+        "slugPlaceholder": "Ex. : boutique-fitness",
+        "slugAide": "Laisse vide pour le générer à partir du nom.",
+        "description": "Description",
+        "descriptionPlaceholder": "Description courte de la boutique",
+        "creation": "Création…",
+        "creer": "Créer ma boutique",
+        "nomRequis": "Le nom de la boutique est requis.",
+        "erreurChargement": "Impossible de charger tes boutiques.",
+        "erreurCreation": "Impossible de créer la boutique."
+      }
+    },
+    "brouillon": {
+      "nomBoutique": "Nom de la boutique",
+      "description": "Description",
+      "produits": "Produits ({count} sur {total})",
+      "ajouter": "+ Ajouter un produit",
+      "ajouterMax": "+ Ajouter un produit (max {max})",
+      "produitNumero": "Produit {numero}",
+      "supprimer": "Supprimer",
+      "nomProduit": "Nom du produit",
+      "descriptionCourte": "Description courte",
+      "prixVente": "Prix de vente",
+      "prixBarre": "Prix barré",
+      "image": "URL de l'image (facultatif)",
+      "apercuImage": "Aperçu de l'image",
+      "vide": "Aucun produit : ajoutes-en au moins un pour générer un site."
+    },
+    "palette": {
+      "primary": {
+        "label": "Couleur principale",
+        "hint": "Boutons d'action, accents forts"
+      },
+      "secondary": {
+        "label": "Couleur secondaire",
+        "hint": "Fonds des sections alternées"
+      },
+      "accent": {
+        "label": "Couleur d'accent",
+        "hint": "Badges, icônes, survol"
+      }
+    },
+    "couleurs": {
+      "titre": "🎨 Personnaliser les couleurs",
+      "aide": "Modifie les couleurs de la page générée : l'aperçu se met à jour immédiatement.",
+      "nonEditable": "non modifiable (dégradé)",
+      "enregistrer": "Enregistrer ces couleurs",
+      "enregistrement": "Enregistrement…",
+      "enregistre": "Enregistré.",
+      "tokens": {
+        "siteBg": "Fond de page",
+        "siteText": "Texte principal",
+        "siteTextMuted": "Texte secondaire",
+        "siteAccent": "Couleur principale (boutons)",
+        "siteAccent2": "Accent secondaire",
+        "siteBgAlt": "Fond des sections alternées",
+        "siteSurface": "Fond des cartes",
+        "siteBorder": "Bordures"
       }
     }
   },

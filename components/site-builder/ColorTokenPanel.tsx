@@ -1,7 +1,8 @@
 "use client";
 
 import { useMemo } from "react";
-import { TOKEN_LABELS, extractRootTokens, parseColorValue } from "@/lib/color-tokens";
+import { useTranslations } from "next-intl";
+import { TOKEN_CLES, extractRootTokens, parseColorValue } from "@/lib/color-tokens";
 
 export default function ColorTokenPanel({
   html,
@@ -18,15 +19,17 @@ export default function ColorTokenPanel({
   saveError?: string | null;
   saveSuccess?: boolean;
 }) {
+  const t = useTranslations("siteBuilder.couleurs");
   const tokens = useMemo(() => extractRootTokens(html), [html]);
+  const libelle = (name: string) => (TOKEN_CLES[name] ? t(`tokens.${TOKEN_CLES[name]}`) : name);
 
   if (tokens.length === 0) return null;
 
   return (
     <div className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-6">
-      <h3 className="text-lg font-semibold text-[var(--text-primary)]">🎨 Personnaliser les couleurs</h3>
+      <h3 className="text-lg font-semibold text-[var(--text-primary)]">{t("titre")}</h3>
       <p className="mt-1 text-sm text-[var(--text-muted)]">
-        Modifie les couleurs de la page générée — l&apos;aperçu se met à jour immédiatement.
+        {t("aide")}
       </p>
       <div className="mt-5 grid gap-3 sm:grid-cols-2">
         {tokens.map(({ name, value }) => {
@@ -36,18 +39,18 @@ export default function ColorTokenPanel({
               key={name}
               className="flex items-center justify-between gap-3 rounded-2xl border border-[var(--border)] bg-[var(--surface-2)] px-4 py-3"
             >
-              <span className="text-sm text-[var(--text-primary)]">{TOKEN_LABELS[name] ?? name}</span>
+              <span className="text-sm text-[var(--text-primary)]">{libelle(name)}</span>
               {parsed ? (
                 <input
                   type="color"
                   value={parsed.hex}
                   onChange={(e) => onTokenChange(name, parsed.write(e.target.value))}
                   className="h-9 w-14 cursor-pointer rounded-lg border border-[var(--border)] bg-transparent"
-                  aria-label={TOKEN_LABELS[name] ?? name}
+                  aria-label={libelle(name)}
                 />
               ) : (
                 <span className="text-xs text-[var(--text-faint)]" title={value}>
-                  non éditable (dégradé)
+                  {t("nonEditable")}
                 </span>
               )}
             </div>
@@ -62,9 +65,9 @@ export default function ColorTokenPanel({
             disabled={saving}
             className="rounded-2xl bg-violet-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-violet-400 disabled:opacity-50"
           >
-            {saving ? "Enregistrement..." : "Enregistrer ces couleurs"}
+            {saving ? t("enregistrement") : t("enregistrer")}
           </button>
-          {saveSuccess ? <span className="text-sm text-[var(--success)]">Enregistré.</span> : null}
+          {saveSuccess ? <span className="text-sm text-[var(--success)]">{t("enregistre")}</span> : null}
           {saveError ? <span className="text-sm text-[var(--danger)]">{saveError}</span> : null}
         </div>
       ) : null}

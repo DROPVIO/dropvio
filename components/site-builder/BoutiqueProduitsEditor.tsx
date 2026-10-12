@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { type BoutiqueDraft, type ProduitBoutiqueDraft } from "@/lib/site-builder-handoff";
 
 // Édition du brouillon multi-produits (mode boutique) — rendu une seule fois dans
@@ -26,6 +27,7 @@ export default function BoutiqueProduitsEditor({
   }
 
   // Limite d'ajout du plan (draft.limiteProduits) — null ou absente : pas de limite.
+  const t = useTranslations("siteBuilder.brouillon");
   const limite = draft.limiteProduits ?? null;
   const limiteAtteinte = limite !== null && draft.produits.length >= limite;
 
@@ -37,7 +39,7 @@ export default function BoutiqueProduitsEditor({
   return (
     <div className="rounded-2xl bg-[var(--surface)] border border-[var(--border)] p-6 flex flex-col gap-5 mb-8">
       <div className="flex flex-col gap-2">
-        <label className="text-sm font-medium text-[var(--text-muted)]">Nom de la boutique</label>
+        <label className="text-sm font-medium text-[var(--text-muted)]">{t("nomBoutique")}</label>
         <input
           type="text"
           value={draft.nomBoutique}
@@ -46,7 +48,7 @@ export default function BoutiqueProduitsEditor({
         />
       </div>
       <div className="flex flex-col gap-2">
-        <label className="text-sm font-medium text-[var(--text-muted)]">Description</label>
+        <label className="text-sm font-medium text-[var(--text-muted)]">{t("description")}</label>
         <textarea
           value={draft.descriptionBoutique}
           onChange={(e) => onChange({ ...draft, descriptionBoutique: e.target.value })}
@@ -57,7 +59,7 @@ export default function BoutiqueProduitsEditor({
 
       <div className="flex items-center justify-between">
         <p className="text-sm font-medium text-[var(--text-muted)]">
-          Produits ({draft.produits.length} sur {draft.totalProduitsBoutique})
+          {t("produits", { count: draft.produits.length, total: draft.totalProduitsBoutique })}
         </p>
         <button
           type="button"
@@ -65,7 +67,7 @@ export default function BoutiqueProduitsEditor({
           disabled={limiteAtteinte}
           className="text-[11px] text-[var(--accent)] hover:opacity-80 transition disabled:opacity-40 disabled:cursor-not-allowed"
         >
-          + Ajouter un produit{limite !== null ? ` (max ${limite})` : ""}
+          {limite !== null ? t("ajouterMax", { max: limite }) : t("ajouter")}
         </button>
       </div>
 
@@ -74,26 +76,26 @@ export default function BoutiqueProduitsEditor({
           <div key={i} className="rounded-xl border border-[var(--border)] bg-[var(--surface-2)] p-4 flex flex-col gap-3">
             <div className="flex items-center justify-between gap-2">
               <span className="text-xs font-semibold text-[var(--text-faint)] uppercase tracking-widest">
-                Produit {i + 1}
+                {t("produitNumero", { numero: i + 1 })}
               </span>
               <button
                 type="button"
                 onClick={() => removeProduit(i)}
                 className="text-xs text-[var(--danger)] hover:opacity-80 transition"
               >
-                Supprimer
+                {t("supprimer")}
               </button>
             </div>
 
             <input
               type="text"
-              placeholder="Nom du produit"
+              placeholder={t("nomProduit")}
               value={p.nom}
               onChange={(e) => updateProduit(i, { nom: e.target.value })}
               className="bg-[var(--bg)] border border-[var(--border-strong)] rounded-lg px-3 py-2 text-sm text-[var(--text-primary)] placeholder-[var(--text-faint)] focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition"
             />
             <textarea
-              placeholder="Description courte"
+              placeholder={t("descriptionCourte")}
               value={p.description}
               onChange={(e) => updateProduit(i, { description: e.target.value })}
               rows={2}
@@ -103,7 +105,7 @@ export default function BoutiqueProduitsEditor({
               <div className="relative">
                 <input
                   type="number" min="0" step="0.01"
-                  placeholder="Prix de vente"
+                  placeholder={t("prixVente")}
                   value={p.prixVente}
                   onChange={(e) => updateProduit(i, { prixVente: e.target.value })}
                   className="w-full bg-[var(--bg)] border border-[var(--border-strong)] rounded-lg pl-3 pr-8 py-2 text-sm text-[var(--text-primary)] placeholder-[var(--text-faint)] focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition"
@@ -113,7 +115,7 @@ export default function BoutiqueProduitsEditor({
               <div className="relative">
                 <input
                   type="number" min="0" step="0.01"
-                  placeholder="Prix barré"
+                  placeholder={t("prixBarre")}
                   value={p.prixOriginal}
                   onChange={(e) => updateProduit(i, { prixOriginal: e.target.value })}
                   className="w-full bg-[var(--bg)] border border-[var(--border-strong)] rounded-lg pl-3 pr-8 py-2 text-sm text-[var(--text-primary)] placeholder-[var(--text-faint)] focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition"
@@ -123,7 +125,7 @@ export default function BoutiqueProduitsEditor({
             </div>
             <input
               type="url"
-              placeholder="URL de l'image (optionnel)"
+              placeholder={t("image")}
               value={p.image ?? ""}
               onChange={(e) => updateProduit(i, { image: e.target.value.trim() || null })}
               className="bg-[var(--bg)] border border-[var(--border-strong)] rounded-lg px-3 py-2 text-sm text-[var(--text-primary)] placeholder-[var(--text-faint)] focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition"
@@ -133,7 +135,7 @@ export default function BoutiqueProduitsEditor({
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={p.image}
-                  alt="Aperçu"
+                  alt={t("apercuImage")}
                   className="max-h-full max-w-full object-contain"
                   onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
                 />
@@ -143,7 +145,7 @@ export default function BoutiqueProduitsEditor({
         ))}
         {draft.produits.length === 0 && (
           <p className="text-sm text-[var(--text-faint)] text-center py-6">
-            Aucun produit — ajoute-en au moins un pour générer un site.
+            {t("vide")}
           </p>
         )}
       </div>

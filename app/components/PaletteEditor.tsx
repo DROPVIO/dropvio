@@ -1,10 +1,8 @@
+import { useTranslations } from "next-intl";
+
 export type Palette = { primary: string; secondary: string; accent: string };
 
-const COLOR_FIELDS: Array<{ key: keyof Palette; label: string; hint: string }> = [
-  { key: "primary", label: "Couleur principale", hint: "CTA, boutons, accents forts" },
-  { key: "secondary", label: "Couleur secondaire", hint: "Fonds de sections alternées" },
-  { key: "accent", label: "Couleur accent", hint: "Badges, icônes, hover" },
-];
+const COLOR_FIELDS: Array<keyof Palette> = ["primary", "secondary", "accent"];
 
 // Éditeur de palette à 3 couleurs — extrait de app/site-builder/page.tsx (sélecteur de
 // style mono-page) pour être réutilisé tel quel par le flux de contenu boutique
@@ -16,9 +14,10 @@ export default function PaletteEditor({
   palette: Palette;
   onChange: (palette: Palette) => void;
 }) {
+  const t = useTranslations("siteBuilder.palette");
   return (
     <div className="flex flex-col gap-4">
-      {COLOR_FIELDS.map(({ key, label, hint }) => (
+      {COLOR_FIELDS.map((key) => (
         <div key={key} className="flex items-center gap-3">
           <div className="relative shrink-0">
             <input
@@ -34,9 +33,9 @@ export default function PaletteEditor({
             />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-[var(--text-primary)]">{label}</p>
+            <p className="text-sm font-medium text-[var(--text-primary)]">{t(`${key}.label`)}</p>
             <p className="text-[10px] text-[var(--text-faint)] mt-0.5">
-              {hint} · <span className="font-mono">{palette[key]}</span>
+              {t(`${key}.hint`)} · <span className="font-mono">{palette[key]}</span>
             </p>
           </div>
         </div>

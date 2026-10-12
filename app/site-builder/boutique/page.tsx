@@ -3,6 +3,9 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
+import { isValidSlug, slugify } from "@/lib/slugify";
+import { useApiErrorMessage } from "@/lib/use-api-error";
 
 type Boutique = {
   id: string;
@@ -12,16 +15,11 @@ type Boutique = {
   est_publique: boolean;
 };
 
-function slugify(value: string) {
-  return value
-    .toLowerCase()
-    .trim()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/(^-|-$)/g, "");
-}
 
 export default function BoutiqueBuilderListPage() {
   const router = useRouter();
+  const t = useTranslations("siteBuilder.boutique.liste");
+  const apiErrorMessage = useApiErrorMessage();
   const [boutiques, setBoutiques] = useState<Boutique[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -41,12 +39,12 @@ export default function BoutiqueBuilderListPage() {
       const res = await fetch("/api/boutiques");
       const data = await res.json();
       if (!res.ok) {
-        setError(data.error || "Impossible de charger tes boutiques.");
+        setError(apiErrorMessage(data, t("erreurChargement")));
         return;
       }
       setBoutiques(data.boutiques || []);
     } catch {
-      setError("Impossible de contacter le serveur.");
+      setError(apiErrorMessage({ code: "network" }));
     } finally {
       setLoading(false);
     }
@@ -56,12 +54,12 @@ export default function BoutiqueBuilderListPage() {
     e.preventDefault();
     setError(null);
     if (!nom.trim()) {
-      setError("Le nom de la boutique est requis.");
+      setError(t("nomRequis"));
       return;
     }
     const computedSlug = slug.trim() || slugify(nom);
-    if (!computedSlug) {
-      setError("Le slug de la boutique est invalide.");
+    if (!isValidSlug(computedSlug)) {
+      setError(apiErrorMessage({ code: "slug_invalid" }));
       return;
     }
 
@@ -74,7 +72,7 @@ export default function BoutiqueBuilderListPage() {
       });
       const json = await res.json();
       if (!res.ok) {
-        setError(json.error || "Impossible de créer la boutique.");
+        setError(apiErrorMessage(json, t("erreurCreation")));
         return;
       }
       setNom("");
@@ -84,7 +82,7 @@ export default function BoutiqueBuilderListPage() {
       await fetchBoutiques();
       router.push(`/site-builder/boutique/${json.id}`);
     } catch {
-      setError("Impossible de contacter le serveur.");
+      setError(apiErrorMessage({ code: "network" }));
     } finally {
       setCreating(false);
     }
@@ -95,35 +93,35 @@ export default function BoutiqueBuilderListPage() {
       <div className="mx-auto max-w-5xl">
         <div className="mb-10 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <p className="text-sm uppercase tracking-[0.2em] text-violet-400">Boutique Dropvio</p>
-            <h1 className="mt-3 text-3xl font-bold">Créer et gérer tes boutiques</h1>
+            <p className="text-sm uppercase tracking-[0.2em] text-violet-400">{t("surtitre")}</p>
+            <h1 className="mt-3 text-3xl font-bold">{t("titre")}</h1>
             <p className="mt-2 max-w-2xl text-sm text-[var(--text-muted)]">
-              Gère plusieurs produits, catégories et ta boutique publique depuis Dropvio.
+              {t("intro")}
             </p>
           </div>
           <Link
             href="/site-builder"
             className="inline-flex items-center justify-center rounded-2xl border border-[var(--border)] bg-[var(--surface-2)] px-5 py-3 text-sm font-semibold text-[var(--text-primary)] transition hover:border-violet-500/40 hover:bg-violet-500/10"
           >
-            Retour au générateur actuel
+            {t("retourGenerateur")}
           </Link>
         </div>
 
         <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
           <section className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-6">
-            <h2 className="text-lg font-semibold text-[var(--text-primary)]">Tes boutiques</h2>
+            <h2 className="text-lg font-semibold text-[var(--text-primary)]">{t("tesBoutiques")}</h2>
             <p className="mt-2 text-sm text-[var(--text-faint)]">
-              Crée une nouvelle boutique ou ouvre une boutique existante pour y ajouter des produits.
+              {t("tesBoutiquesAide")}
             </p>
 
             {loading ? (
-              <div className="mt-6 text-sm text-[var(--text-muted)]">Chargement...</div>
+              <div className="mt-6 text-sm text-[var(--text-muted)]">{t("chargement")}</div>
             ) : error ? (
               <div className="mt-6 rounded-2xl border border-[var(--danger)]/20 bg-[var(--danger)]/10 p-4 text-sm text-[var(--danger)]">
                 {error}
               </div>
             ) : boutiques.length === 0 ? (
-              <div className="mt-6 text-sm text-[var(--text-muted)]">Aucune boutique créée pour le moment.</div>
+              <div className="mt-6 text-sm text-[var(--text-muted)]">{t("vide")}</div>
             ) : (
               <div className="mt-6 space-y-4">
                 {boutiques.map((boutique) => (
@@ -145,14 +143,14 @@ export default function BoutiqueBuilderListPage() {
                               : "bg-[var(--surface-3)] text-[var(--text-muted)]"
                           }`}
                         >
-                          {boutique.est_publique ? "Publique" : "Privée"}
+                          {boutique.est_publique ? t("publique") : t("privee")}
                         </span>
                         <span className="rounded-full bg-violet-500/10 px-3 py-1 text-xs uppercase tracking-[0.2em] text-[var(--accent)]">
-                          Ouvrir
+                          {t("ouvrir")}
                         </span>
                       </div>
                     </div>
-                    <p className="mt-3 text-sm text-[var(--text-muted)]">{boutique.description || "Pas de description"}</p>
+                    <p className="mt-3 text-sm text-[var(--text-muted)]">{boutique.description || t("sansDescription")}</p>
                   </Link>
                 ))}
               </div>
@@ -162,41 +160,41 @@ export default function BoutiqueBuilderListPage() {
           <section className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-6">
             <div className="flex items-center justify-between gap-3">
               <div>
-                <h2 className="text-lg font-semibold text-[var(--text-primary)]">Créer une boutique</h2>
-                <p className="mt-1 text-sm text-[var(--text-faint)]">Nom, slug, et thème de la boutique.</p>
+                <h2 className="text-lg font-semibold text-[var(--text-primary)]">{t("creerTitre")}</h2>
+                <p className="mt-1 text-sm text-[var(--text-faint)]">{t("creerAide")}</p>
               </div>
             </div>
 
             <form className="mt-6 space-y-4" onSubmit={handleCreate}>
               <div>
-                <label className="text-sm font-medium text-[var(--text-muted)]">Nom de la boutique</label>
+                <label className="text-sm font-medium text-[var(--text-muted)]">{t("nom")}</label>
                 <input
                   value={nom}
                   onChange={(e) => setNom(e.target.value)}
                   className="mt-2 w-full rounded-2xl border border-[var(--border)] bg-[var(--bg-sunken)] px-4 py-3 text-sm text-[var(--text-primary)] outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
-                  placeholder="Ex: Boutique Fitness"
+                  placeholder={t("nomPlaceholder")}
                 />
               </div>
 
               <div>
-                <label className="text-sm font-medium text-[var(--text-muted)]">Slug public</label>
+                <label className="text-sm font-medium text-[var(--text-muted)]">{t("slug")}</label>
                 <input
                   value={slug}
                   onChange={(e) => setSlug(e.target.value)}
                   className="mt-2 w-full rounded-2xl border border-[var(--border)] bg-[var(--bg-sunken)] px-4 py-3 text-sm text-[var(--text-primary)] outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
-                  placeholder="Ex: boutique-fitness"
+                  placeholder={t("slugPlaceholder")}
                 />
-                <p className="mt-2 text-xs text-[var(--text-faint)]">Laisse vide pour générer automatiquement à partir du nom.</p>
+                <p className="mt-2 text-xs text-[var(--text-faint)]">{t("slugAide")}</p>
               </div>
 
               <div>
-                <label className="text-sm font-medium text-[var(--text-muted)]">Description</label>
+                <label className="text-sm font-medium text-[var(--text-muted)]">{t("description")}</label>
                 <textarea
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   rows={3}
                   className="mt-2 w-full rounded-2xl border border-[var(--border)] bg-[var(--bg-sunken)] px-4 py-3 text-sm text-[var(--text-primary)] outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 resize-none"
-                  placeholder="Description courte de la boutique"
+                  placeholder={t("descriptionPlaceholder")}
                 />
               </div>
 
@@ -205,7 +203,7 @@ export default function BoutiqueBuilderListPage() {
                 disabled={creating}
                 className="inline-flex items-center justify-center rounded-2xl bg-violet-500 px-5 py-3 text-sm font-semibold text-white transition hover:bg-violet-400 disabled:opacity-50"
               >
-                {creating ? "Création..." : "Créer ma boutique"}
+                {creating ? t("creation") : t("creer")}
               </button>
             </form>
           </section>

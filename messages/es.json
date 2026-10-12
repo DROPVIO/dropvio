@@ -1382,6 +1382,82 @@
           "renommerCategorie": "No se puede renombrar la categoría.",
           "supprimerCategorie": "No se puede eliminar la categoría."
         }
+      },
+      "liste": {
+        "surtitre": "Tiendas Dropvio",
+        "titre": "Crea y gestiona tus tiendas",
+        "intro": "Gestiona varios productos, categorías y tu tienda pública desde Dropvio.",
+        "retourGenerateur": "Volver al Site Builder",
+        "tesBoutiques": "Tus tiendas",
+        "tesBoutiquesAide": "Crea una tienda nueva o abre una existente para añadir productos.",
+        "chargement": "Cargando…",
+        "vide": "Todavía no hay tiendas.",
+        "publique": "Pública",
+        "privee": "Privada",
+        "ouvrir": "Abrir",
+        "sansDescription": "Sin descripción",
+        "creerTitre": "Crear una tienda",
+        "creerAide": "Nombre, slug y descripción de la tienda.",
+        "nom": "Nombre de la tienda",
+        "nomPlaceholder": "Ej.: Tienda Fitness",
+        "slug": "Slug público",
+        "slugPlaceholder": "Ej.: tienda-fitness",
+        "slugAide": "Déjalo vacío para generarlo a partir del nombre.",
+        "description": "Descripción",
+        "descriptionPlaceholder": "Descripción breve de la tienda",
+        "creation": "Creando…",
+        "creer": "Crear mi tienda",
+        "nomRequis": "El nombre de la tienda es obligatorio.",
+        "erreurChargement": "No se pueden cargar tus tiendas.",
+        "erreurCreation": "No se puede crear la tienda."
+      }
+    },
+    "brouillon": {
+      "nomBoutique": "Nombre de la tienda",
+      "description": "Descripción",
+      "produits": "Productos ({count} de {total})",
+      "ajouter": "+ Añadir un producto",
+      "ajouterMax": "+ Añadir un producto (máx. {max})",
+      "produitNumero": "Producto {numero}",
+      "supprimer": "Eliminar",
+      "nomProduit": "Nombre del producto",
+      "descriptionCourte": "Descripción breve",
+      "prixVente": "Precio de venta",
+      "prixBarre": "Precio tachado",
+      "image": "URL de la imagen (opcional)",
+      "apercuImage": "Vista previa de la imagen",
+      "vide": "Ningún producto: añade al menos uno para generar un sitio."
+    },
+    "palette": {
+      "primary": {
+        "label": "Color principal",
+        "hint": "Botones de acción, acentos fuertes"
+      },
+      "secondary": {
+        "label": "Color secundario",
+        "hint": "Fondos de las secciones alternas"
+      },
+      "accent": {
+        "label": "Color de acento",
+        "hint": "Insignias, iconos, hover"
+      }
+    },
+    "couleurs": {
+      "titre": "🎨 Personalizar los colores",
+      "aide": "Cambia los colores de la página generada: la vista previa se actualiza al instante.",
+      "nonEditable": "no editable (degradado)",
+      "enregistrer": "Guardar estos colores",
+      "enregistrement": "Guardando…",
+      "enregistre": "Guardado.",
+      "tokens": {
+        "siteBg": "Fondo de página",
+        "siteText": "Texto principal",
+        "siteTextMuted": "Texto secundario",
+        "siteAccent": "Color principal (botones)",
+        "siteAccent2": "Acento secundario",
+        "siteBgAlt": "Fondo de las secciones alternas",
+        "siteSurface": "Fondo de las tarjetas",
+        "siteBorder": "Bordes"
       }
     }
   },

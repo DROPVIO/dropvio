@@ -3,18 +3,19 @@
 // IA, état figé après génération) et app/site-builder/TemplateEditor.tsx (mode Éditeur de
 // templates, HTML recalculé en continu via useMemo — voir colorOverrides dans ce fichier).
 
-// Libellés lisibles pour les tokens standards émis par lib/site-templates.ts et
+// Tokens standards émis par lib/site-templates.ts et
 // app/api/generate-site/route.ts (voir injectColorTokens) — un token hors de cette liste
 // s'affiche quand même dans le panneau, avec son nom brut comme libellé.
-export const TOKEN_LABELS: Record<string, string> = {
-  "--site-bg": "Fond de page",
-  "--site-text": "Texte principal",
-  "--site-text-muted": "Texte secondaire",
-  "--site-accent": "Couleur principale (CTA)",
-  "--site-accent-2": "Accent secondaire",
-  "--site-bg-alt": "Fond des sections alternées",
-  "--site-surface": "Fond des cartes",
-  "--site-border": "Bordures",
+// Clé de traduction (siteBuilder.couleurs.tokens.*) du libellé de chaque token éditable.
+export const TOKEN_CLES: Record<string, string> = {
+  "--site-bg": "siteBg",
+  "--site-text": "siteText",
+  "--site-text-muted": "siteTextMuted",
+  "--site-accent": "siteAccent",
+  "--site-accent-2": "siteAccent2",
+  "--site-bg-alt": "siteBgAlt",
+  "--site-surface": "siteSurface",
+  "--site-border": "siteBorder",
 };
 
 export type ParsedColor = { hex: string; write: (newHex: string) => string };

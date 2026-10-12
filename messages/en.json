@@ -1382,6 +1382,82 @@
           "renommerCategorie": "Unable to rename the category.",
           "supprimerCategorie": "Unable to delete the category."
         }
+      },
+      "liste": {
+        "surtitre": "Dropvio stores",
+        "titre": "Create and manage your stores",
+        "intro": "Manage several products, categories and your public store from Dropvio.",
+        "retourGenerateur": "Back to the Site Builder",
+        "tesBoutiques": "Your stores",
+        "tesBoutiquesAide": "Create a new store or open an existing one to add products.",
+        "chargement": "Loading…",
+        "vide": "No stores yet.",
+        "publique": "Public",
+        "privee": "Private",
+        "ouvrir": "Open",
+        "sansDescription": "No description",
+        "creerTitre": "Create a store",
+        "creerAide": "Store name, slug and description.",
+        "nom": "Store name",
+        "nomPlaceholder": "E.g. Fitness Store",
+        "slug": "Public slug",
+        "slugPlaceholder": "E.g. fitness-store",
+        "slugAide": "Leave empty to generate it from the name.",
+        "description": "Description",
+        "descriptionPlaceholder": "Short store description",
+        "creation": "Creating…",
+        "creer": "Create my store",
+        "nomRequis": "The store name is required.",
+        "erreurChargement": "Unable to load your stores.",
+        "erreurCreation": "Unable to create the store."
+      }
+    },
+    "brouillon": {
+      "nomBoutique": "Store name",
+      "description": "Description",
+      "produits": "Products ({count} of {total})",
+      "ajouter": "+ Add a product",
+      "ajouterMax": "+ Add a product (max {max})",
+      "produitNumero": "Product {numero}",
+      "supprimer": "Delete",
+      "nomProduit": "Product name",
+      "descriptionCourte": "Short description",
+      "prixVente": "Selling price",
+      "prixBarre": "Compare-at price",
+      "image": "Image URL (optional)",
+      "apercuImage": "Image preview",
+      "vide": "No products: add at least one to generate a site."
+    },
+    "palette": {
+      "primary": {
+        "label": "Primary color",
+        "hint": "Call-to-action buttons, strong accents"
+      },
+      "secondary": {
+        "label": "Secondary color",
+        "hint": "Alternating section backgrounds"
+      },
+      "accent": {
+        "label": "Accent color",
+        "hint": "Badges, icons, hover"
+      }
+    },
+    "couleurs": {
+      "titre": "🎨 Customize the colors",
+      "aide": "Change the colors of the generated page: the preview updates immediately.",
+      "nonEditable": "not editable (gradient)",
+      "enregistrer": "Save these colors",
+      "enregistrement": "Saving…",
+      "enregistre": "Saved.",
+      "tokens": {
+        "siteBg": "Page background",
+        "siteText": "Main text",
+        "siteTextMuted": "Secondary text",
+        "siteAccent": "Primary color (buttons)",
+        "siteAccent2": "Secondary accent",
+        "siteBgAlt": "Alternating section background",
+        "siteSurface": "Card background",
+        "siteBorder": "Borders"
       }
     }
   },
