@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { slugify } from "@/lib/slugify";
+import { useApiErrorMessage } from "@/lib/use-api-error";
 
 type Suggestion = {
   id: string;
@@ -30,6 +31,7 @@ export default function ProduitsSuggeres({
   onAdded?: () => void;
 }) {
   const t = useTranslations("dashboard.produitsSuggeres");
+  const apiErrorMessage = useApiErrorMessage();
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -53,7 +55,7 @@ export default function ProduitsSuggeres({
         const json = await res.json();
         if (cancelled) return;
         if (!res.ok) {
-          setError(json.error ?? t("errorLoad"));
+          setError(apiErrorMessage(json, t("errorLoad")));
           return;
         }
         setSuggestions(json.suggestions ?? []);
@@ -89,7 +91,7 @@ export default function ProduitsSuggeres({
       });
       const json = await response.json();
       if (!response.ok) {
-        setAddErrors((prev) => ({ ...prev, [suggestion.id]: json.error ?? t("errorAdd") }));
+        setAddErrors((prev) => ({ ...prev, [suggestion.id]: apiErrorMessage(json, t("errorAdd")) }));
         return;
       }
       setAddedIds((prev) => new Set(prev).add(suggestion.id));

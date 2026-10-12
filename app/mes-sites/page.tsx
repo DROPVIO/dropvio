@@ -9,6 +9,7 @@ import { htmlToLiquidSection } from "@/lib/html-to-liquid";
 import { FORMATS_EXPORT, LABEL_FORMAT, type FormatExport } from "@/lib/format-export";
 import { ToastHost, useToast } from "@/components/Toast";
 import { LIEN_CHANGER_DE_PLAN } from "@/lib/plan-links";
+import { useApiErrorMessage } from "@/lib/use-api-error";
 
 type Site = {
   id: string;
@@ -31,6 +32,7 @@ function sortSites(list: Site[]): Site[] {
 
 export default function MesSitesPage() {
   const t = useTranslations("dashboard.mesSites");
+  const apiErrorMessage = useApiErrorMessage();
   const tCommon = useTranslations("dashboard.common");
   const intlTag = toIntlTag(useLocale() as AppLocale);
   const { toast, succes, echec, fermer } = useToast();
@@ -68,7 +70,7 @@ export default function MesSitesPage() {
     fetch("/api/sites-generes")
       .then((r) => r.json())
       .then((json) => {
-        if (json.error) setError(json.error);
+        if (json.error) setError(apiErrorMessage(json, t("errorLoad")));
         else {
           setSites(json.sites ?? []);
           setIdsAnnulables(new Set<string>(json.idsAnnulables ?? []));
@@ -111,7 +113,7 @@ export default function MesSitesPage() {
       });
       const json = await res.json();
       if (!res.ok) {
-        setPushErrors((prev) => ({ ...prev, [site.id]: json.error || t("errorPublish") }));
+        setPushErrors((prev) => ({ ...prev, [site.id]: apiErrorMessage(json, t("errorPublish")) }));
         return;
       }
       setPushResults((prev) => ({ ...prev, [site.id]: { url: json.url, admin_url: json.admin_url } }));
@@ -173,7 +175,7 @@ export default function MesSitesPage() {
       const json = await res.json().catch(() => ({}));
       if (!res.ok) {
         setFormats((prev) => ({ ...prev, [site.id]: precedent }));
-        echec(json.error || t("errorFormat"));
+        echec(apiErrorMessage(json, t("errorFormat")));
         return;
       }
       succes(t("formatChanged", { format: LABEL_FORMAT[format] }));
@@ -197,7 +199,7 @@ export default function MesSitesPage() {
       });
       const json = await res.json().catch(() => ({}));
       if (!res.ok) {
-        echec(json.error || t("errorUndoAiFix"));
+        echec(apiErrorMessage(json, t("errorUndoAiFix")));
         return;
       }
       setIdsAnnulables((prev) => {
