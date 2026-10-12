@@ -1263,7 +1263,7 @@
         "mentions": {
           "titre": "Legal notice",
           "aide": "Shown on this store's public “Legal notice” page, exactly as you type them.",
-          "placeholder": "Company name, address, registration number, host…"
+          "placeholder": "Company name, address, SIRET or registration number, host…"
         },
         "bandeau": {
           "titre": "Secondary banner",

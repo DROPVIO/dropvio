@@ -1263,7 +1263,7 @@
         "mentions": {
           "titre": "Aviso legal",
           "aide": "Se muestran en la página pública «Aviso legal» de esta tienda, tal como las escribes.",
-          "placeholder": "Razón social, dirección, número de registro, alojamiento…"
+          "placeholder": "Razón social, dirección, SIRET o NIF, alojamiento…"
         },
         "bandeau": {
           "titre": "Banner secundario",

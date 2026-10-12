@@ -1263,7 +1263,7 @@
         "mentions": {
           "titre": "Note legali",
           "aide": "Mostrate nella pagina pubblica «Note legali» di questo negozio, così come le scrivi.",
-          "placeholder": "Ragione sociale, indirizzo, partita IVA, hosting…"
+          "placeholder": "Ragione sociale, indirizzo, SIRET o partita IVA, hosting…"
         },
         "bandeau": {
           "titre": "Banner secondario",
