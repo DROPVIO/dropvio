@@ -1272,6 +1272,72 @@
       "erreurStockage": "Unable to save the cart on this device (storage unavailable or private browsing).",
       "passerCommande": "Place order",
       "paiementIndisponible": "Online payment isn't available in this store yet. To order, contact the seller (details in the legal notice)."
+    },
+    "produitsVide": "No products found in this store.",
+    "nombreProduits": "{count, plural, =0 {No products} one {# product} other {# products}}",
+    "layout": {
+      "recherche": "Search for a product…",
+      "favorisBientot": "Wishlist: coming soon",
+      "compteBientot": "Customer account: coming soon",
+      "accueil": "Home",
+      "catalogue": "Catalog",
+      "aPropos": "About",
+      "mentions": "Legal notice",
+      "collections": "Our collections"
+    },
+    "accueil": {
+      "accroche": "A carefully chosen selection of products, delivered to your door.",
+      "voirProduits": "See the products",
+      "reassuranceLivraison": "🚚 Tracked delivery",
+      "reassuranceRetour": "↩ 14-day returns",
+      "reassuranceVerifiee": "🔒 Verified store",
+      "aProposDefaut": "Welcome to {nom}. Discover our selection of products.",
+      "bestsellers": "🔥 Our bestsellers",
+      "produitPhare": "✨ Our featured product",
+      "voirProduit": "See the product",
+      "voirCatalogue": "See the full catalog →",
+      "avis": "Customer reviews",
+      "titreVideo": "Video {numero}"
+    },
+    "catalogue": {
+      "resultats": "Results for “{recherche}”",
+      "tousLesProduits": "All products from {nom}",
+      "effacerRecherche": "✕ Clear search",
+      "rechercher": "Search by name or description",
+      "filtrer": "Filter",
+      "toutesCategories": "All categories"
+    },
+    "pagination": {
+      "precedent": "← Previous",
+      "suivant": "Next →",
+      "page": "Page {page} of {total}"
+    },
+    "collection": {
+      "surtitre": "Collection",
+      "retour": "← Back to the store home page",
+      "vide": "No products in this collection yet.",
+      "voirTout": "See all {count} products in the collection →"
+    },
+    "produit": {
+      "surtitre": "Product",
+      "sansCategorie": "Uncategorized",
+      "description": "Description",
+      "sansDescription": "No description available.",
+      "prix": "Price",
+      "commander": "Order",
+      "commanderAide": "Add this product to your cart."
+    },
+    "mentions": {
+      "vide": "No legal notice has been provided for this store yet."
+    },
+    "annuaire": {
+      "metaTitre": "Public stores | Dropvio",
+      "metaDescription": "Stores created by the Dropvio community.",
+      "surtitre": "Directory",
+      "titre": "Public stores",
+      "intro": "Discover the stores created by the Dropvio community.",
+      "descriptionDefaut": "Discover this store's products.",
+      "vide": "No public stores yet."
     }
   }
 }

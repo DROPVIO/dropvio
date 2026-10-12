@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages } from "next-intl/server";
 import { getBoutiqueBasePath } from "@/lib/boutique-links";
-import { chargerBoutiquePublique } from "@/lib/boutique-public";
+import { chargerBoutiquePublique, traductionsBoutique } from "@/lib/boutique-public";
 import BoutiqueHeaderCart from "@/app/components/boutique/BoutiqueHeaderCart";
 import SecondaryBanner from "@/app/components/boutique/SecondaryBanner";
 
@@ -33,6 +33,7 @@ export default async function BoutiquePublicLayout({
   // Les composants client des pages boutique (panier, ajout au panier) parlent la langue de
   // la boutique, pas celle du visiteur : provider dédié, limité au namespace `boutique`.
   const messages = await getMessages({ locale: boutique.langue });
+  const t = await traductionsBoutique(boutique.langue);
 
   const basePath = await getBoutiqueBasePath(slug);
   const home = basePath || "/";
@@ -76,7 +77,8 @@ export default async function BoutiquePublicLayout({
             <input
               type="search"
               name="search"
-              placeholder="Rechercher un produit…"
+              placeholder={t("layout.recherche")}
+              aria-label={t("layout.recherche")}
               className="w-full rounded-full border border-[var(--border)] bg-[var(--bg-sunken)] px-4 py-2 text-sm text-[var(--text-primary)] outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
             />
           </form>
@@ -84,14 +86,14 @@ export default async function BoutiquePublicLayout({
           <div className="order-2 ml-auto flex items-center gap-3 sm:order-3 sm:ml-0">
             <span
               aria-hidden="true"
-              title="Liste de favoris — bientôt disponible"
+              title={t("layout.favorisBientot")}
               className="flex h-9 w-9 cursor-default items-center justify-center rounded-full border border-[var(--border)] bg-[var(--surface-2)] text-[var(--text-faint)]"
             >
               ♡
             </span>
             <span
               aria-hidden="true"
-              title="Compte client — bientôt disponible"
+              title={t("layout.compteBientot")}
               className="flex h-9 w-9 cursor-default items-center justify-center rounded-full border border-[var(--border)] bg-[var(--surface-2)] text-[var(--text-faint)]"
             >
               👤
@@ -107,7 +109,7 @@ export default async function BoutiquePublicLayout({
         <nav className="border-t border-[var(--border)]">
           <div className="mx-auto flex max-w-7xl items-center gap-6 overflow-x-auto whitespace-nowrap px-4 py-3 text-sm font-medium text-[var(--text-muted)] sm:px-6 lg:px-8">
             <Link href={home} className="shrink-0 transition hover:text-[var(--text-primary)]">
-              Accueil
+              {t("layout.accueil")}
             </Link>
             {categories?.map((category) => (
               <Link
@@ -119,19 +121,19 @@ export default async function BoutiquePublicLayout({
               </Link>
             ))}
             <Link href={`${basePath}/produits`} className="shrink-0 transition hover:text-[var(--text-primary)]">
-              Catalogue
+              {t("layout.catalogue")}
             </Link>
             <Link
               href={`${home}#a-propos`}
               className="shrink-0 transition hover:text-[var(--text-primary)] ml-auto"
             >
-              À propos
+              {t("layout.aPropos")}
             </Link>
             <Link
               href={`${basePath}/mentions-legales`}
               className="shrink-0 transition hover:text-[var(--text-primary)]"
             >
-              Mentions légales
+              {t("layout.mentions")}
             </Link>
           </div>
         </nav>
@@ -150,17 +152,17 @@ export default async function BoutiquePublicLayout({
           <span className="font-semibold text-[var(--text-primary)]">{boutique.nom}</span>
           <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2">
             <Link href={`${basePath}/mentions-legales`} className="transition hover:text-[var(--text-primary)]">
-              Mentions légales
+              {t("layout.mentions")}
             </Link>
             <Link href={`${home}#a-propos`} className="transition hover:text-[var(--text-primary)]">
-              À propos
+              {t("layout.aPropos")}
             </Link>
             <Link href={`${basePath}/produits`} className="transition hover:text-[var(--text-primary)]">
-              Catalogue
+              {t("layout.catalogue")}
             </Link>
             {categories && categories.length > 0 ? (
               <Link href={`${basePath}/produits`} className="transition hover:text-[var(--text-primary)]">
-                Nos collections
+                {t("layout.collections")}
               </Link>
             ) : null}
           </div>

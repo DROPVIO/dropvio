@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
 import { canViewBoutique } from "@/lib/boutique-access";
+import { motifRecherche } from "@/lib/recherche";
 
 const DEFAULT_LIMIT = 20;
 
@@ -8,7 +9,7 @@ export async function GET(request: NextRequest, context: { params: Promise<{ slu
   const { slug } = await context.params;
   const { searchParams } = new URL(request.url);
   const page = Math.max(1, parseInt(searchParams.get("page") ?? "1", 10) || 1);
-  const limit = Math.max(1, parseInt(searchParams.get("limit") ?? String(DEFAULT_LIMIT), 10) || DEFAULT_LIMIT);
+  const limit = Math.min(100, Math.max(1, parseInt(searchParams.get("limit") ?? String(DEFAULT_LIMIT), 10) || DEFAULT_LIMIT));
   const from = (page - 1) * limit;
   const to = from + limit - 1;
   const categoryId = searchParams.get("categoryId");
@@ -68,7 +69,8 @@ export async function GET(request: NextRequest, context: { params: Promise<{ slu
   }
 
   if (search) {
-    query = query.or(`nom.ilike.%${search}%,description.ilike.%${search}%`);
+    const motif = motifRecherche(search);
+    query = query.or(`nom.ilike.${motif},description.ilike.${motif}`);
   }
 
   const { data, error, count } = await query.range(from, to);

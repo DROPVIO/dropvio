@@ -65,14 +65,12 @@ export default async function CataloguePage({
 
   const baseUrl = await getBaseUrl();
 
-  const boutiqueRes = await fetchBoutiqueApi(`${baseUrl}/api/boutiques/slug/${slug}`);
-  if (!boutiqueRes.ok) {
+  const donnees = await chargerBoutiquePublique(slug);
+  if (!donnees) {
     notFound();
   }
-  const { boutique, categories } = (await boutiqueRes.json()) as {
-    boutique: { id: string; nom: string };
-    categories: { id: string; nom: string; slug: string }[];
-  };
+  const { boutique, categories } = donnees;
+  const t = await traductionsBoutique(boutique.langue);
 
   const productsParams = new URLSearchParams({ limit: String(PAGE_SIZE), page: String(currentPage) });
   if (categoryId) productsParams.set("categoryId", categoryId);
@@ -99,27 +97,28 @@ export default async function CataloguePage({
       <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
-            <p className="text-sm uppercase tracking-[0.3em] text-violet-300">Catalogue</p>
+            <p className="text-sm uppercase tracking-[0.3em] text-violet-300">{t("layout.catalogue")}</p>
             <h1 className="mt-2 text-3xl font-bold text-[var(--text-primary)]">
-              {searchTerm ? `Résultats pour « ${searchTerm} »` : `Tous les produits de ${boutique.nom}`}
+              {searchTerm ? t("catalogue.resultats", { recherche: searchTerm }) : t("catalogue.tousLesProduits", { nom: boutique.nom })}
             </h1>
             {searchTerm ? (
               <Link
                 href={`${basePath}/produits${categoryId ? `?categoryId=${categoryId}` : ""}`}
                 className="mt-1 inline-block text-sm text-[var(--text-muted)] underline underline-offset-2 hover:text-[var(--text-primary)]"
               >
-                ✕ Effacer la recherche
+                {t("catalogue.effacerRecherche")}
               </Link>
             ) : null}
           </div>
-          <span className="rounded-full bg-violet-500/10 px-4 py-2 text-sm text-[var(--accent)]">{total} produit(s)</span>
+          <span className="rounded-full bg-violet-500/10 px-4 py-2 text-sm text-[var(--accent)]">{t("nombreProduits", { count: total })}</span>
         </div>
 
         <form method="get" className="mt-6 grid gap-4 sm:grid-cols-[1fr_auto]">
           <input
             name="search"
             defaultValue={searchTerm}
-            placeholder="Recherche nom ou description"
+            placeholder={t("catalogue.rechercher")}
+            aria-label={t("catalogue.rechercher")}
             className="w-full rounded-2xl border border-[var(--border)] bg-[var(--bg-sunken)] px-4 py-3 text-sm text-[var(--text-primary)] outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
           />
           <input type="hidden" name="categoryId" value={categoryId} />
@@ -127,7 +126,7 @@ export default async function CataloguePage({
             type="submit"
             className="rounded-2xl bg-violet-500 px-4 py-3 text-sm font-semibold text-white transition hover:bg-violet-400"
           >
-            Filtrer
+            {t("catalogue.filtrer")}
           </button>
         </form>
 
@@ -140,7 +139,7 @@ export default async function CataloguePage({
                 : "border-[var(--border)] bg-[var(--surface-2)] text-[var(--text-primary)] hover:border-violet-400/60 hover:bg-violet-500/10"
             }`}
           >
-            Toutes les catégories
+            {t("catalogue.toutesCategories")}
           </Link>
           {categories?.map((category) => {
             const active = category.id === categoryId;
@@ -162,7 +161,7 @@ export default async function CataloguePage({
         </div>
 
         <div className="mt-8">
-          <ProductGrid produits={produits} basePath={basePath} />
+          <ProductGrid produits={produits} basePath={basePath} langue={boutique.langue} emptyMessage={t("produitsVide")} />
         </div>
 
         {totalPages > 1 ? (
@@ -172,18 +171,18 @@ export default async function CataloguePage({
                 href={pageHref(currentPage - 1)}
                 className="rounded-full border border-[var(--border)] bg-[var(--surface-2)] px-4 py-2 text-sm text-[var(--text-primary)] transition hover:border-violet-400/60 hover:bg-violet-500/10"
               >
-                ← Précédent
+                {t("pagination.precedent")}
               </Link>
             ) : null}
             <span className="text-sm text-[var(--text-muted)]">
-              Page {currentPage} / {totalPages}
+              {t("pagination.page", { page: currentPage, total: totalPages })}
             </span>
             {currentPage < totalPages ? (
               <Link
                 href={pageHref(currentPage + 1)}
                 className="rounded-full border border-[var(--border)] bg-[var(--surface-2)] px-4 py-2 text-sm text-[var(--text-primary)] transition hover:border-violet-400/60 hover:bg-violet-500/10"
               >
-                Suivant →
+                {t("pagination.suivant")}
               </Link>
             ) : null}
           </div>

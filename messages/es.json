@@ -1272,6 +1272,72 @@
       "erreurStockage": "No se puede guardar el carrito en este dispositivo (almacenamiento no disponible o navegación privada).",
       "passerCommande": "Realizar pedido",
       "paiementIndisponible": "El pago en línea aún no está disponible en esta tienda. Para hacer un pedido, contacta con el vendedor (datos en el aviso legal)."
+    },
+    "produitsVide": "No se han encontrado productos en esta tienda.",
+    "nombreProduits": "{count, plural, =0 {Ningún producto} one {# producto} other {# productos}}",
+    "layout": {
+      "recherche": "Buscar un producto…",
+      "favorisBientot": "Lista de favoritos: disponible pronto",
+      "compteBientot": "Cuenta de cliente: disponible pronto",
+      "accueil": "Inicio",
+      "catalogue": "Catálogo",
+      "aPropos": "Quiénes somos",
+      "mentions": "Aviso legal",
+      "collections": "Nuestras colecciones"
+    },
+    "accueil": {
+      "accroche": "Una selección de productos elegidos con cuidado, entregados en tu casa.",
+      "voirProduits": "Ver los productos",
+      "reassuranceLivraison": "🚚 Envío con seguimiento",
+      "reassuranceRetour": "↩ Devolución en 14 días",
+      "reassuranceVerifiee": "🔒 Tienda verificada",
+      "aProposDefaut": "Bienvenido a {nom}. Descubre nuestra selección de productos.",
+      "bestsellers": "🔥 Los más vendidos",
+      "produitPhare": "✨ Nuestro producto estrella",
+      "voirProduit": "Ver el producto",
+      "voirCatalogue": "Ver todo el catálogo →",
+      "avis": "Opiniones de clientes",
+      "titreVideo": "Vídeo {numero}"
+    },
+    "catalogue": {
+      "resultats": "Resultados para «{recherche}»",
+      "tousLesProduits": "Todos los productos de {nom}",
+      "effacerRecherche": "✕ Borrar la búsqueda",
+      "rechercher": "Buscar por nombre o descripción",
+      "filtrer": "Filtrar",
+      "toutesCategories": "Todas las categorías"
+    },
+    "pagination": {
+      "precedent": "← Anterior",
+      "suivant": "Siguiente →",
+      "page": "Página {page} de {total}"
+    },
+    "collection": {
+      "surtitre": "Colección",
+      "retour": "← Volver al inicio de la tienda",
+      "vide": "Todavía no hay productos en esta colección.",
+      "voirTout": "Ver los {count} productos de la colección →"
+    },
+    "produit": {
+      "surtitre": "Producto",
+      "sansCategorie": "Sin categoría",
+      "description": "Descripción",
+      "sansDescription": "No hay descripción disponible.",
+      "prix": "Precio",
+      "commander": "Pedir",
+      "commanderAide": "Añade este producto a tu carrito."
+    },
+    "mentions": {
+      "vide": "Esta tienda todavía no ha indicado su aviso legal."
+    },
+    "annuaire": {
+      "metaTitre": "Tiendas públicas | Dropvio",
+      "metaDescription": "Las tiendas creadas por la comunidad Dropvio.",
+      "surtitre": "Directorio",
+      "titre": "Tiendas públicas",
+      "intro": "Descubre las tiendas creadas por la comunidad Dropvio.",
+      "descriptionDefaut": "Descubre los productos de esta tienda.",
+      "vide": "Todavía no hay tiendas públicas."
     }
   }
 }

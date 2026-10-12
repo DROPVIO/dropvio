@@ -67,6 +67,7 @@ export default async function ProduitPage({
   const { boutique } = donnees;
   const urlBoutique = await urlAbsolueBoutique(slug);
   const urlProduit = `${urlBoutique}/produits/${produit.id}`;
+  const t = await traductionsBoutique(boutique.langue);
   const images = (produit.image_urls ?? []).filter(Boolean);
 
   return (
@@ -95,9 +96,9 @@ export default async function ProduitPage({
         <div className="grid gap-10 xl:grid-cols-[0.65fr_0.35fr]">
           <div className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-8 shadow-xl shadow-violet-500/10">
             <div className="mb-8">
-              <p className="text-xs uppercase tracking-[0.3em] text-violet-300">Produit</p>
+              <p className="text-xs uppercase tracking-[0.3em] text-violet-300">{t("produit.surtitre")}</p>
               <h1 className="mt-2 text-4xl font-bold text-[var(--text-primary)]">{produit.nom}</h1>
-              <p className="mt-2 text-sm text-[var(--text-muted)]">{produit.boutique_categories?.nom ?? "Sans catégorie"}</p>
+              <p className="mt-2 text-sm text-[var(--text-muted)]">{produit.boutique_categories?.nom ?? t("produit.sansCategorie")}</p>
             </div>
             <div className="grid gap-6 lg:grid-cols-[0.8fr_0.4fr]">
               <div>
@@ -115,21 +116,21 @@ export default async function ProduitPage({
                   )}
                 </div>
                 <div className="mt-6 rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-6">
-                  <h2 className="text-xl font-semibold text-[var(--text-primary)]">Description</h2>
-                  <p className="mt-4 text-sm leading-7 text-[var(--text-muted)]">{produit.description || "Aucune description disponible."}</p>
+                  <h2 className="text-xl font-semibold text-[var(--text-primary)]">{t("produit.description")}</h2>
+                  <p className="mt-4 text-sm leading-7 text-[var(--text-muted)]">{produit.description || t("produit.sansDescription")}</p>
                 </div>
               </div>
               <aside className="space-y-6">
                 <div className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-6">
-                  <h2 className="text-xl font-semibold text-[var(--text-primary)]">Prix</h2>
+                  <h2 className="text-xl font-semibold text-[var(--text-primary)]">{t("produit.prix")}</h2>
                   <div className="mt-4 flex items-center gap-3">
                     <span className="price-tag text-3xl font-bold text-[var(--text-primary)]">{formatPrix(produit.prix_vente, boutique.langue)}</span>
                     {produit.prix_original ? <span className="text-sm text-[var(--text-faint)] line-through">{formatPrix(produit.prix_original, boutique.langue)}</span> : null}
                   </div>
                 </div>
                 <div className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-6">
-                  <h2 className="text-xl font-semibold text-[var(--text-primary)]">Commander</h2>
-                  <p className="mt-4 text-sm text-[var(--text-muted)]">Ajoute ce produit au panier puis passe à la caisse.</p>
+                  <h2 className="text-xl font-semibold text-[var(--text-primary)]">{t("produit.commander")}</h2>
+                  <p className="mt-4 text-sm text-[var(--text-muted)]">{t("produit.commanderAide")}</p>
                   <AddToCartButton
                     boutiqueSlug={slug}
                     produitId={produit.id}

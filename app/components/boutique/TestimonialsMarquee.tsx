@@ -11,7 +11,7 @@ export type Temoignage = {
 // tant que `avis` est vide — jamais de titre ou de section orpheline, même logique que
 // les bestsellers/le spotlight sur cette page : pas de contenu sans donnée réelle
 // derrière, pas de faux avis.
-export default function TestimonialsMarquee({ avis }: { avis: Temoignage[] }) {
+export default function TestimonialsMarquee({ avis, titre }: { avis: Temoignage[]; titre: string }) {
   if (!avis || avis.length === 0) return null;
 
   // Liste dupliquée pour une boucle de défilement continue et sans à-coup (translateY de
@@ -20,7 +20,7 @@ export default function TestimonialsMarquee({ avis }: { avis: Temoignage[] }) {
 
   return (
     <section className="mx-auto max-w-5xl px-4 pb-16 sm:px-6 lg:px-8">
-      <p className="text-center text-sm uppercase tracking-[0.3em] text-violet-300">Avis clients</p>
+      <p className="text-center text-sm uppercase tracking-[0.3em] text-violet-300">{titre}</p>
       <div className="boutique-testimonials-marquee mt-6">
         <div className="boutique-testimonials-track">
           {track.map((item, index) => (

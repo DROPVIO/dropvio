@@ -43,14 +43,12 @@ export default async function CollectionPage({
   const { slug, categorieSlug } = await params;
   const baseUrl = await getBaseUrl();
 
-  const boutiqueRes = await fetchBoutiqueApi(`${baseUrl}/api/boutiques/slug/${slug}`);
-  if (!boutiqueRes.ok) {
+  const donnees = await chargerBoutiquePublique(slug);
+  if (!donnees) {
     notFound();
   }
-  const { categories } = (await boutiqueRes.json()) as {
-    boutique: { id: string; nom: string };
-    categories: { id: string; nom: string; slug: string }[];
-  };
+  const { boutique, categories } = donnees;
+  const t = await traductionsBoutique(boutique.langue);
 
   const categorie = categories.find((c) => c.slug === categorieSlug);
   if (!categorie) {
@@ -59,8 +57,9 @@ export default async function CollectionPage({
 
   const productsParams = new URLSearchParams({ limit: String(PAGE_SIZE), categoryId: categorie.id });
   const productsRes = await fetchBoutiqueApi(`${baseUrl}/api/boutiques/slug/${slug}/produits?${productsParams.toString()}`);
-  const { products: produits } = productsRes.ok
+  const { products: produits, total } = productsRes.ok
     ? ((await productsRes.json()) as {
+        total: number;
         products: {
           id: string;
           nom: string;
@@ -71,7 +70,7 @@ export default async function CollectionPage({
           boutique_categories: { nom: string; slug: string } | null;
         }[];
       })
-    : { products: [] };
+    : { products: [], total: 0 };
 
   const basePath = await getBoutiqueBasePath(slug);
 
@@ -80,19 +79,30 @@ export default async function CollectionPage({
       <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
         <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <p className="text-sm uppercase tracking-[0.3em] text-violet-300">Collection</p>
+            <p className="text-sm uppercase tracking-[0.3em] text-violet-300">{t("collection.surtitre")}</p>
             <h1 className="mt-2 text-3xl font-bold text-[var(--text-primary)]">{categorie.nom}</h1>
             <Link href={`${basePath || "/"}`} className="mt-2 inline-block text-sm text-[var(--text-muted)] hover:text-[var(--text-primary)]">
-              ← Retour à toutes les catégories
+              {t("collection.retour")}
             </Link>
           </div>
-          <div className="rounded-full bg-violet-500/10 px-4 py-2 text-sm text-[var(--accent)]">{produits?.length ?? 0} produit(s)</div>
+          <div className="rounded-full bg-violet-500/10 px-4 py-2 text-sm text-[var(--accent)]">{t("nombreProduits", { count: total })}</div>
         </div>
         <ProductGrid
           produits={produits}
           basePath={basePath}
-          emptyMessage="Aucun produit dans cette collection pour l'instant."
+          langue={boutique.langue}
+          emptyMessage={t("collection.vide")}
         />
+        {total > produits.length ? (
+          <div className="mt-10 text-center">
+            <Link
+              href={`${basePath}/produits?categoryId=${categorie.id}`}
+              className="inline-block rounded-full border border-[var(--border)] bg-[var(--surface-2)] px-6 py-3 text-sm font-semibold text-[var(--text-primary)] transition hover:border-violet-400/60 hover:bg-violet-500/10"
+            >
+              {t("collection.voirTout", { count: total })}
+            </Link>
+          </div>
+        ) : null}
       </section>
     </main>
   );

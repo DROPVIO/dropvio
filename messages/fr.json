@@ -1272,6 +1272,72 @@
       "erreurStockage": "Impossible d'enregistrer le panier sur cet appareil (stockage indisponible ou navigation privée).",
       "passerCommande": "Passer commande",
       "paiementIndisponible": "Le paiement en ligne n'est pas encore disponible dans cette boutique. Pour commander, contacte le vendeur (coordonnées dans les mentions légales)."
+    },
+    "produitsVide": "Aucun produit trouvé dans cette boutique.",
+    "nombreProduits": "{count, plural, =0 {Aucun produit} one {# produit} other {# produits}}",
+    "layout": {
+      "recherche": "Rechercher un produit…",
+      "favorisBientot": "Liste de favoris : bientôt disponible",
+      "compteBientot": "Compte client : bientôt disponible",
+      "accueil": "Accueil",
+      "catalogue": "Catalogue",
+      "aPropos": "À propos",
+      "mentions": "Mentions légales",
+      "collections": "Nos collections"
+    },
+    "accueil": {
+      "accroche": "Une sélection de produits choisis avec soin, livrés chez vous.",
+      "voirProduits": "Voir les produits",
+      "reassuranceLivraison": "🚚 Livraison suivie",
+      "reassuranceRetour": "↩ Retour sous 14 jours",
+      "reassuranceVerifiee": "🔒 Boutique vérifiée",
+      "aProposDefaut": "Bienvenue chez {nom}. Découvrez notre sélection de produits.",
+      "bestsellers": "🔥 Nos bestsellers",
+      "produitPhare": "✨ Notre produit phare",
+      "voirProduit": "Voir le produit",
+      "voirCatalogue": "Voir tout le catalogue →",
+      "avis": "Avis clients",
+      "titreVideo": "Vidéo {numero}"
+    },
+    "catalogue": {
+      "resultats": "Résultats pour « {recherche} »",
+      "tousLesProduits": "Tous les produits de {nom}",
+      "effacerRecherche": "✕ Effacer la recherche",
+      "rechercher": "Rechercher par nom ou description",
+      "filtrer": "Filtrer",
+      "toutesCategories": "Toutes les catégories"
+    },
+    "pagination": {
+      "precedent": "← Précédent",
+      "suivant": "Suivant →",
+      "page": "Page {page} / {total}"
+    },
+    "collection": {
+      "surtitre": "Collection",
+      "retour": "← Retour à l'accueil de la boutique",
+      "vide": "Aucun produit dans cette collection pour l'instant.",
+      "voirTout": "Voir les {count} produits de la collection →"
+    },
+    "produit": {
+      "surtitre": "Produit",
+      "sansCategorie": "Sans catégorie",
+      "description": "Description",
+      "sansDescription": "Aucune description disponible.",
+      "prix": "Prix",
+      "commander": "Commander",
+      "commanderAide": "Ajoute ce produit à ton panier."
+    },
+    "mentions": {
+      "vide": "Aucune mention légale n'a encore été renseignée pour cette boutique."
+    },
+    "annuaire": {
+      "metaTitre": "Boutiques publiques | Dropvio",
+      "metaDescription": "Les boutiques créées par la communauté Dropvio.",
+      "surtitre": "Annuaire",
+      "titre": "Boutiques publiques",
+      "intro": "Découvre les boutiques créées par la communauté Dropvio.",
+      "descriptionDefaut": "Découvre les produits de cette boutique.",
+      "vide": "Aucune boutique publique pour le moment."
     }
   }
 }

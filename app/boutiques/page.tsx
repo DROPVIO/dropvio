@@ -1,4 +1,6 @@
+import type { Metadata } from "next";
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 import { getBaseUrl } from "@/lib/get-base-url";
 import { getBoutiquePublicUrl } from "@/lib/boutique-subdomains";
 
@@ -13,11 +15,19 @@ type PublicBoutique = {
   created_at: string;
 };
 
+// Annuaire des boutiques publiques : page de Dropvio, donc dans la langue du visiteur (les
+// boutiques listées ont chacune leur propre langue).
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("boutique.annuaire");
+  return { title: t("metaTitre"), description: t("metaDescription") };
+}
+
 export default async function BoutiquesIndexPage({
   searchParams,
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
+  const t = await getTranslations("boutique");
   const resolvedSearchParams = await searchParams;
   const rawPage = Array.isArray(resolvedSearchParams.page) ? resolvedSearchParams.page[0] : resolvedSearchParams.page;
   const page = Math.max(1, parseInt(rawPage ?? "1", 10) || 1);
@@ -34,10 +44,10 @@ export default async function BoutiquesIndexPage({
   return (
     <main className="min-h-screen bg-[var(--bg)] text-[var(--text-primary)]">
       <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6 lg:px-8">
-        <p className="text-sm uppercase tracking-[0.3em] text-violet-300">Annuaire</p>
-        <h1 className="mt-4 text-4xl font-bold text-[var(--text-primary)]">Boutiques publiques</h1>
+        <p className="text-sm uppercase tracking-[0.3em] text-violet-300">{t("annuaire.surtitre")}</p>
+        <h1 className="mt-4 text-4xl font-bold text-[var(--text-primary)]">{t("annuaire.titre")}</h1>
         <p className="mt-4 max-w-2xl text-sm leading-7 text-[var(--text-muted)]">
-          Découvre les boutiques créées par la communauté dropvio.
+          {t("annuaire.intro")}
         </p>
 
         {boutiques.length > 0 ? (
@@ -50,14 +60,14 @@ export default async function BoutiquesIndexPage({
               >
                 <h2 className="text-lg font-semibold text-[var(--text-primary)]">{boutique.nom}</h2>
                 <p className="mt-2 text-sm text-[var(--text-muted)] line-clamp-3">
-                  {boutique.description || "Découvre les produits de cette boutique."}
+                  {boutique.description || t("annuaire.descriptionDefaut")}
                 </p>
               </Link>
             ))}
           </div>
         ) : (
           <div className="mt-10 rounded-3xl border border-dashed border-[var(--border)] bg-[var(--surface-2)] p-10 text-center text-sm text-[var(--text-muted)]">
-            Aucune boutique publique pour le moment.
+            {t("annuaire.vide")}
           </div>
         )}
 
@@ -68,16 +78,16 @@ export default async function BoutiquesIndexPage({
                 href={`/boutiques?page=${page - 1}`}
                 className="rounded-2xl border border-[var(--border)] bg-[var(--surface-2)] px-4 py-2 text-sm text-[var(--text-primary)] transition hover:border-violet-400/60 hover:bg-violet-500/10"
               >
-                ← Précédent
+                {t("pagination.precedent")}
               </Link>
             )}
-            <span className="text-sm text-[var(--text-muted)]">Page {page} / {totalPages}</span>
+            <span className="text-sm text-[var(--text-muted)]">{t("pagination.page", { page, total: totalPages })}</span>
             {page < totalPages && (
               <Link
                 href={`/boutiques?page=${page + 1}`}
                 className="rounded-2xl border border-[var(--border)] bg-[var(--surface-2)] px-4 py-2 text-sm text-[var(--text-primary)] transition hover:border-violet-400/60 hover:bg-violet-500/10"
               >
-                Suivant →
+                {t("pagination.suivant")}
               </Link>
             )}
           </div>

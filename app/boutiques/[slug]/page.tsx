@@ -2,10 +2,9 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import ProductGrid, { formatPrice } from "@/app/components/boutique/ProductGrid";
+import ProductGrid from "@/app/components/boutique/ProductGrid";
 import TestimonialsMarquee, { type Temoignage } from "@/app/components/boutique/TestimonialsMarquee";
 import VideoCarousel from "@/app/components/boutique/VideoCarousel";
-import { TEXTES_DEFAUT } from "@/lib/site-templates";
 import { getBaseUrl } from "@/lib/get-base-url";
 import { getBoutiqueBasePath } from "@/lib/boutique-links";
 import { fetchBoutiqueApi } from "@/lib/boutique-internal-fetch";
@@ -18,6 +17,7 @@ import {
   urlAbsolueBoutique,
 } from "@/lib/boutique-public";
 import JsonLd from "@/app/components/boutique/JsonLd";
+import { formatPrix } from "@/lib/boutique-format";
 
 // Titre, description et données structurées dans la langue de la boutique (jamais celle du
 // visiteur) ; une boutique privée (aperçu du propriétaire) n'est pas indexée.
@@ -62,6 +62,7 @@ export default async function BoutiquePage({ params }: { params: Promise<{ slug:
   }
   const { boutique } = donnees;
   const urlBoutique = await urlAbsolueBoutique(slug);
+  const t = await traductionsBoutique(boutique.langue);
 
   // La page d'accueil ne montre plus qu'un aperçu (bestsellers + spotlight) — le catalogue
   // complet avec filtres/recherche/pagination vit désormais sur /produits (voir ce fichier
@@ -87,7 +88,6 @@ export default async function BoutiquePage({ params }: { params: Promise<{ slug:
   // TestimonialsMarquee ne rend rien dans ce cas, jamais de faux avis affiché.
   const avis: Temoignage[] = [];
 
-  const template = TEXTES_DEFAUT.generique;
   const basePath = await getBoutiqueBasePath(slug);
 
   return (
@@ -118,12 +118,12 @@ export default async function BoutiquePage({ params }: { params: Promise<{ slug:
       >
         <div className="mx-auto max-w-5xl px-4 py-20 text-center sm:px-6 lg:px-8">
           <h1 className="text-4xl font-bold text-white sm:text-5xl">{boutique.nom}</h1>
-          <p className="mx-auto mt-4 max-w-2xl text-base leading-7 text-white/90">{template.sousTitre}</p>
+          <p className="mx-auto mt-4 max-w-2xl text-base leading-7 text-white/90">{t("accueil.accroche")}</p>
           <Link
             href={`${basePath}/produits`}
             className="mt-8 inline-block rounded-full bg-white px-6 py-3 text-sm font-semibold text-[var(--bg)] transition hover:scale-[1.03] hover:bg-white/90"
           >
-            Voir les produits
+            {t("accueil.voirProduits")}
           </Link>
         </div>
       </section>
@@ -133,9 +133,9 @@ export default async function BoutiquePage({ params }: { params: Promise<{ slug:
           personnalisée s'applique (voir app/globals.css). */}
       <section className="boutique-reassurance border-b border-[var(--border)] bg-[var(--surface)]">
         <div className="mx-auto grid max-w-7xl grid-cols-1 gap-3 px-4 py-6 text-center text-sm text-[var(--text-muted)] sm:grid-cols-3 sm:px-6 lg:px-8">
-          <div>🚚 Livraison suivie</div>
-          <div>↩ Retour sous 14 jours</div>
-          <div>🔒 Boutique vérifiée</div>
+          <div>{t("accueil.reassuranceLivraison")}</div>
+          <div>{t("accueil.reassuranceRetour")}</div>
+          <div>{t("accueil.reassuranceVerifiee")}</div>
         </div>
       </section>
 
@@ -144,8 +144,8 @@ export default async function BoutiquePage({ params }: { params: Promise<{ slug:
           accroche fixe dans le hero pour éviter de recréer ce doublon). Bloc texte centré,
           sans bordure ni carte, même traitement visuel que le hero. */}
       <section id="a-propos" className="mx-auto max-w-3xl scroll-mt-24 px-4 py-16 text-center sm:px-6 lg:px-8">
-        <p className="text-sm uppercase tracking-[0.3em] text-violet-300">À propos</p>
-        <p className="mt-4 text-base leading-7 text-[var(--text-muted)]">{boutique.description || template.description}</p>
+        <p className="text-sm uppercase tracking-[0.3em] text-violet-300">{t("layout.aPropos")}</p>
+        <p className="mt-4 text-base leading-7 text-[var(--text-muted)]">{boutique.description || t("accueil.aProposDefaut", { nom: boutique.nom })}</p>
       </section>
 
       {/* BESTSELLERS — rangs 2 à 4 par commandes réelles (le rang 1 est le spotlight
@@ -154,9 +154,9 @@ export default async function BoutiquePage({ params }: { params: Promise<{ slug:
           catalogue) — pas de "bestseller" arbitraire sans donnée réelle derrière. */}
       {bestsellers.length > 0 ? (
         <section id="bestsellers" className="mx-auto max-w-7xl scroll-mt-24 px-4 pt-4 sm:px-6 lg:px-8">
-          <h2 className="text-2xl font-semibold text-[var(--text-primary)]">🔥 Nos bestsellers</h2>
+          <h2 className="text-2xl font-semibold text-[var(--text-primary)]">{t("accueil.bestsellers")}</h2>
           <div className="mt-6">
-            <ProductGrid produits={bestsellers} basePath={basePath} />
+            <ProductGrid produits={bestsellers} basePath={basePath} langue={boutique.langue} emptyMessage={t("produitsVide")} />
           </div>
         </section>
       ) : null}
@@ -165,7 +165,7 @@ export default async function BoutiquePage({ params }: { params: Promise<{ slug:
           une grille. Pleine largeur, sans carte bordée — même esprit que le hero/à propos. */}
       {spotlight ? (
         <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6 lg:px-8">
-          <p className="text-sm uppercase tracking-[0.3em] text-violet-300">✨ Notre produit phare</p>
+          <p className="text-sm uppercase tracking-[0.3em] text-violet-300">{t("accueil.produitPhare")}</p>
           <div className="mt-6 grid gap-8 md:grid-cols-2 md:items-center">
             <div className="relative aspect-square overflow-hidden rounded-2xl bg-[var(--surface-2)]">
               {spotlight.image_urls?.[0] ? (
@@ -183,19 +183,19 @@ export default async function BoutiquePage({ params }: { params: Promise<{ slug:
             <div>
               <h2 className="text-3xl font-bold text-[var(--text-primary)]">{spotlight.nom}</h2>
               <p className="mt-4 text-base leading-7 text-[var(--text-muted)]">
-                {spotlight.description || "Aucune description disponible."}
+                {spotlight.description || t("produit.sansDescription")}
               </p>
               <div className="mt-6 flex items-center gap-3">
-                <span className="price-tag text-2xl font-bold">{formatPrice(spotlight.prix_vente)}</span>
+                <span className="price-tag text-2xl font-bold">{formatPrix(spotlight.prix_vente, boutique.langue)}</span>
                 {spotlight.prix_original ? (
-                  <span className="text-[var(--text-faint)] line-through">{formatPrice(spotlight.prix_original)}</span>
+                  <span className="text-[var(--text-faint)] line-through">{formatPrix(spotlight.prix_original, boutique.langue)}</span>
                 ) : null}
               </div>
               <Link
                 href={`${basePath}/produits/${spotlight.id}`}
                 className="mt-6 inline-block rounded-full bg-violet-500 px-6 py-3 text-sm font-semibold text-white transition hover:scale-[1.03] hover:bg-violet-400"
               >
-                Voir le produit
+                {t("accueil.voirProduit")}
               </Link>
             </div>
           </div>
@@ -205,7 +205,10 @@ export default async function BoutiquePage({ params }: { params: Promise<{ slug:
       {/* VIDÉOS — juste après le spotlight (voir la vidéo du produit qu'on vient de
           présenter en détail), avant le renvoi vers le catalogue complet. Indépendant du
           bandeau texte défilant (SecondaryBanner, sous le header) depuis ce soir. */}
-      <VideoCarousel videos={(boutique.settings as Record<string, unknown> | null)?.bandeauVideos as string[] | undefined} />
+      <VideoCarousel
+        videos={(boutique.settings as Record<string, unknown> | null)?.bandeauVideos as string[] | undefined}
+        titreVideo={(numero) => t("accueil.titreVideo", { numero })}
+      />
 
       {/* Le catalogue complet (filtres, recherche, pagination) vit sur /produits — la page
           d'accueil ne montre plus qu'un aperçu (bestsellers + spotlight ci-dessus). */}
@@ -214,14 +217,14 @@ export default async function BoutiquePage({ params }: { params: Promise<{ slug:
           href={`${basePath}/produits`}
           className="inline-block rounded-full border border-[var(--border)] bg-[var(--surface-2)] px-6 py-3 text-sm font-semibold text-[var(--text-primary)] transition hover:border-violet-400/60 hover:bg-violet-500/10"
         >
-          Voir tout le catalogue →
+          {t("accueil.voirCatalogue")}
         </Link>
       </section>
 
       {/* AVIS CLIENTS — tout en bas de la page. Ne rend rien tant que `avis` est vide (voir
           plus haut) : pas de titre "Avis clients" ni de section orpheline sans donnée
           réelle derrière. */}
-      <TestimonialsMarquee avis={avis} />
+      <TestimonialsMarquee avis={avis} titre={t("accueil.avis")} />
     </main>
   );
 }

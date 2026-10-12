@@ -2,16 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerUserPlanOnly } from "@/lib/supabase-server";
 import { PLAN_LIMITS, planLabel, planSuperieurProduitsBoutique } from "@/lib/plan-limits";
 import { apiError } from "@/lib/api-errors";
+import { motifRecherche } from "@/lib/recherche";
 
 const DEFAULT_LIMIT = 20;
 const MAX_LIMIT = 100;
-
-// Motif ILIKE sûr pour un filtre PostgREST `or=(...)` : virgules, parenthèses et guillemets
-// casseraient la syntaxe du filtre, et % _ \ seraient interprétés comme jokers.
-function motifRecherche(search: string): string {
-  const nettoye = search.replace(/[,()"]/g, " ").replace(/[\\%_]/g, (c) => `\\${c}`);
-  return `%${nettoye}%`;
-}
 
 export async function GET(request: NextRequest, context: { params: Promise<{ id: string }> }) {
   const params = await context.params;

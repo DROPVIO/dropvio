@@ -3,7 +3,14 @@ import { resolveVideoEmbed } from "@/lib/video-embed";
 // Carrousel vidéo, saisi par le marchand dans les Paramètres (settings.bandeauVideos) —
 // indépendant du texte défilant (voir SecondaryBanner.tsx, settings.bandeauTexte). Ne rend
 // rien tant qu'aucune vidéo n'a été renseignée — pas de section vide.
-export default function VideoCarousel({ videos }: { videos: string[] | null | undefined }) {
+// titreVideo : titre accessible de chaque vidéo intégrée, déjà traduit (reçoit le numéro).
+export default function VideoCarousel({
+  videos,
+  titreVideo,
+}: {
+  videos: string[] | null | undefined;
+  titreVideo: (numero: number) => string;
+}) {
   const cleaned = (videos ?? []).map((v) => v.trim()).filter(Boolean);
   if (cleaned.length === 0) return null;
 
@@ -22,7 +29,7 @@ export default function VideoCarousel({ videos }: { videos: string[] | null | un
               ) : (
                 <iframe
                   src={embed.embedUrl}
-                  title={`Vidéo ${index + 1}`}
+                  title={titreVideo(index + 1)}
                   className="h-full w-full"
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                   allowFullScreen

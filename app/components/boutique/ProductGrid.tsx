@@ -1,5 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
+import { formatPrix } from "@/lib/boutique-format";
+import type { AppLocale } from "@/lib/locale";
 
 export type BoutiqueProduitCarte = {
   id: string;
@@ -11,20 +13,19 @@ export type BoutiqueProduitCarte = {
   boutique_categories: { nom: string; slug: string } | null;
 };
 
-export function formatPrice(value: number) {
-  return `${value.toFixed(2)}€`;
-}
-
 // Grille de cartes produit partagée entre l'accueil boutique et les pages collection —
-// avant cette extraction, le même JSX était dupliqué entre les deux.
+// avant cette extraction, le même JSX était dupliqué entre les deux. Prix au format de la
+// langue de la boutique ; message vide fourni par l'appelant, déjà traduit.
 export default function ProductGrid({
   produits,
   basePath,
-  emptyMessage = "Aucun produit trouvé dans cette boutique.",
+  langue,
+  emptyMessage,
 }: {
   produits: BoutiqueProduitCarte[];
   basePath: string;
-  emptyMessage?: string;
+  langue: AppLocale;
+  emptyMessage: string;
 }) {
   if (!produits || produits.length === 0) {
     return (
@@ -64,8 +65,8 @@ export default function ProductGrid({
           <div className="space-y-1.5 p-4">
             <h3 className="text-base font-semibold text-[var(--text-primary)] line-clamp-1">{produit.nom}</h3>
             <div className="flex items-center gap-2 text-sm">
-              <span className="price-tag font-semibold">{formatPrice(produit.prix_vente)}</span>
-              {produit.prix_original ? <span className="text-[var(--text-faint)] line-through">{formatPrice(produit.prix_original)}</span> : null}
+              <span className="price-tag font-semibold">{formatPrix(produit.prix_vente, langue)}</span>
+              {produit.prix_original ? <span className="text-[var(--text-faint)] line-through">{formatPrix(produit.prix_original, langue)}</span> : null}
             </div>
           </div>
         </Link>
