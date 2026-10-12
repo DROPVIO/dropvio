@@ -17,7 +17,7 @@ export async function GET() {
 
   const { data, error } = await supabase
     .from("sites_generes")
-    .select("id, nom_produit, created_at, est_favori")
+    .select("id, nom_produit, created_at, est_favori, boutique_id")
     .eq("user_id", user.id)
     // Favoris en premier, ordre chronologique conservé à l'intérieur de chaque groupe
     // (app/mes-sites/page.tsx).

@@ -515,7 +515,8 @@
       "formatLabel": "Formato de exportación",
       "downloadLiquid": "Descargar el .liquid",
       "formatChanged": "Formato de exportación: {format}",
-      "errorFormat": "No se ha podido cambiar el formato de exportación."
+      "errorFormat": "No se ha podido cambiar el formato de exportación.",
+      "regenerateBoutiqueIndisponible": "La regeneración aún no está disponible para los sitios de tienda: vuelve a usar «Crear mi sitio» desde la tienda."
     },
     "spy": {
       "badge": "Inteligencia competitiva",

@@ -515,7 +515,8 @@
       "formatLabel": "Format d'export",
       "downloadLiquid": "Télécharger le .liquid",
       "formatChanged": "Format d'export : {format}",
-      "errorFormat": "Impossible de changer le format d'export."
+      "errorFormat": "Impossible de changer le format d'export.",
+      "regenerateBoutiqueIndisponible": "Régénération pas encore disponible pour les sites boutique : relance « Créer mon site » depuis la boutique."
     },
     "spy": {
       "badge": "Intelligence concurrentielle",

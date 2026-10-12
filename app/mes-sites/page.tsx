@@ -15,6 +15,8 @@ type Site = {
   nom_produit: string;
   created_at: string;
   est_favori: boolean;
+  // Site généré depuis une boutique (mode multi-produits) : pas de champs de régénération.
+  boutique_id: string | null;
 };
 
 // Favoris en premier, ordre chronologique conservé à l'intérieur de chaque groupe — même
@@ -339,13 +341,30 @@ export default function MesSitesPage() {
                     </button>
                   </div>
 
+                  {site.boutique_id ? (
+                    <p className="text-[11px] text-[var(--text-faint)]">{t("regenerateBoutiqueIndisponible")}</p>
+                  ) : null}
                   <div className="flex gap-2">
-                    <a
-                      href={`/site-builder?regenerate=${site.id}`}
-                      className="flex-1 py-2 rounded-xl border border-[var(--border-strong)] text-[var(--text-muted)] text-xs font-medium text-center hover:border-[var(--accent)]/40 hover:text-[var(--text-primary)] transition"
-                    >
-                      {t("regenerate")}
-                    </a>
+                    {site.boutique_id ? (
+                      // La régénération ne sait pas encore reconstruire un site boutique : le
+                      // bouton reste visible mais désactivé, avec l'explication en infobulle.
+                      <button
+                        type="button"
+                        disabled
+                        title={t("regenerateBoutiqueIndisponible")}
+                        aria-label={`${t("regenerate")} : ${t("regenerateBoutiqueIndisponible")}`}
+                        className="flex-1 py-2 rounded-xl border border-[var(--border)] text-[var(--text-faint)] text-xs font-medium text-center cursor-not-allowed opacity-60"
+                      >
+                        {t("regenerate")}
+                      </button>
+                    ) : (
+                      <a
+                        href={`/site-builder?regenerate=${site.id}`}
+                        className="flex-1 py-2 rounded-xl border border-[var(--border-strong)] text-[var(--text-muted)] text-xs font-medium text-center hover:border-[var(--accent)]/40 hover:text-[var(--text-primary)] transition"
+                      >
+                        {t("regenerate")}
+                      </a>
+                    )}
                     {canExport ? (
                       <button
                         onClick={() => handleDownload(site)}
