@@ -1,9 +1,10 @@
 import type { CSSProperties } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { getBaseUrl } from "@/lib/get-base-url";
+import { NextIntlClientProvider } from "next-intl";
+import { getMessages } from "next-intl/server";
 import { getBoutiqueBasePath } from "@/lib/boutique-links";
-import { fetchBoutiqueApi } from "@/lib/boutique-internal-fetch";
+import { chargerBoutiquePublique } from "@/lib/boutique-public";
 import BoutiqueHeaderCart from "@/app/components/boutique/BoutiqueHeaderCart";
 import SecondaryBanner from "@/app/components/boutique/SecondaryBanner";
 
@@ -22,16 +23,16 @@ export default async function BoutiquePublicLayout({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const baseUrl = await getBaseUrl();
 
-  const boutiqueRes = await fetchBoutiqueApi(`${baseUrl}/api/boutiques/slug/${slug}`);
-  if (!boutiqueRes.ok) {
+  const donnees = await chargerBoutiquePublique(slug);
+  if (!donnees) {
     notFound();
   }
-  const { boutique, categories } = (await boutiqueRes.json()) as {
-    boutique: { nom: string; settings: Record<string, unknown> | null };
-    categories: { id: string; nom: string; slug: string }[];
-  };
+  const { boutique, categories } = donnees;
+
+  // Les composants client des pages boutique (panier, ajout au panier) parlent la langue de
+  // la boutique, pas celle du visiteur : provider dédié, limité au namespace `boutique`.
+  const messages = await getMessages({ locale: boutique.langue });
 
   const basePath = await getBoutiqueBasePath(slug);
   const home = basePath || "/";
@@ -52,7 +53,9 @@ export default async function BoutiquePublicLayout({
     : undefined;
 
   return (
+    <NextIntlClientProvider locale={boutique.langue} messages={{ boutique: messages.boutique }}>
     <div
+      lang={boutique.langue}
       className="min-h-screen bg-[var(--bg)]"
       data-boutique-theme={colorMode}
       data-boutique-niche={niche}
@@ -97,7 +100,7 @@ export default async function BoutiquePublicLayout({
                 tiroir, retiré lors de la refonte de la page d'accueil) — "Voir mon panier"
                 mène vers /panier (checkout transitoire, pas de paiement réel branché pour
                 l'instant — voir app/boutiques/[slug]/panier/page.tsx). */}
-            <BoutiqueHeaderCart fullCartHref={`${basePath}/panier`} />
+            <BoutiqueHeaderCart boutiqueSlug={slug} fullCartHref={`${basePath}/panier`} />
           </div>
         </div>
 
@@ -164,5 +167,6 @@ export default async function BoutiquePublicLayout({
         </div>
       </footer>
     </div>
+    </NextIntlClientProvider>
   );
 }

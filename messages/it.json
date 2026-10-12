@@ -1249,6 +1249,29 @@
       "mentionsTitre": "Note legali | {nom}",
       "mentionsDescription": "Note legali del negozio {nom}.",
       "panierTitre": "Carrello | {nom}"
+    },
+    "panier": {
+      "surtitre": "Carrello",
+      "titre": "Il mio carrello",
+      "vide": "Il tuo carrello è vuoto.",
+      "videTiroir": "Il tuo carrello è vuoto. Aggiungi un prodotto dalla sua scheda.",
+      "voirProduits": "Vedi i prodotti →",
+      "voirPanier": "Vedi il mio carrello",
+      "continuer": "← Continua lo shopping",
+      "prixUnitaire": "{prix} / unità",
+      "total": "Totale",
+      "totalArticles": "Totale ({count, plural, one {# articolo} other {# articoli}})",
+      "articles": "{count, plural, one {# articolo} other {# articoli}}",
+      "boutonAria": "Carrello{count, plural, =0 {} one {, # articolo} other {, # articoli}}",
+      "retirer": "Rimuovi",
+      "retirerAria": "Rimuovi {nom} dal carrello",
+      "diminuer": "Diminuisci la quantità di {nom}",
+      "augmenter": "Aumenta la quantità di {nom}",
+      "ajouter": "Aggiungi al carrello",
+      "ajoute": "Prodotto aggiunto al carrello.",
+      "erreurStockage": "Impossibile salvare il carrello su questo dispositivo (archiviazione non disponibile o navigazione privata).",
+      "passerCommande": "Effettua l'ordine",
+      "paiementIndisponible": "Il pagamento online non è ancora disponibile in questo negozio. Per ordinare, contatta il venditore (recapiti nelle note legali)."
     }
   }
 }

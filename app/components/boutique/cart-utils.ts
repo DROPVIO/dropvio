@@ -1,3 +1,7 @@
+"use client";
+
+import { useCallback, useMemo, useState, useSyncExternalStore } from "react";
+
 export type BoutiqueCartItem = {
   boutiqueSlug: string;
   produitId: string;
@@ -8,9 +12,14 @@ export type BoutiqueCartItem = {
   quantity: number;
 };
 
+// Un seul emplacement localStorage pour tous les paniers, chaque article portant le slug de
+// sa boutique : chaque boutique n'affiche, ne compte et ne modifie que ses propres articles
+// (un visiteur peut avoir un panier ouvert dans plusieurs boutiques).
 const CART_STORAGE_KEY = "dropvio_boutique_cart";
+const CART_EVENT = "cart:update";
+export const QUANTITE_MAX = 99;
 
-export function getCartItems(): BoutiqueCartItem[] {
+function lireTout(): BoutiqueCartItem[] {
   if (typeof window === "undefined") return [];
   try {
     const raw = window.localStorage.getItem(CART_STORAGE_KEY);
@@ -22,43 +31,95 @@ export function getCartItems(): BoutiqueCartItem[] {
   }
 }
 
-// ok=false signale une écriture localStorage qui a réellement échoué (quota dépassé,
-// navigation privée stricte...) — les appelants qui affichent un message de succès doivent
-// le vérifier plutôt que de supposer que l'écriture a toujours lieu.
-export type CartWriteResult = { items: BoutiqueCartItem[]; ok: boolean };
-
-export function setCartItems(items: BoutiqueCartItem[]): CartWriteResult {
-  if (typeof window === "undefined") return { items, ok: false };
+// false = l'écriture localStorage a réellement échoué (quota, navigation privée stricte) :
+// l'appelant ne doit jamais afficher un succès dans ce cas.
+function ecrireTout(items: BoutiqueCartItem[]): boolean {
   try {
     window.localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(items));
-    return { items, ok: true };
+    window.dispatchEvent(new Event(CART_EVENT));
+    return true;
   } catch {
-    return { items, ok: false };
+    return false;
   }
 }
 
-export function updateCartItems(items: BoutiqueCartItem[]): CartWriteResult {
-  const result = setCartItems(items);
-  if (typeof window !== "undefined") {
-    window.dispatchEvent(new Event("cart:update"));
-  }
-  return result;
+const memeArticle = (a: { boutiqueSlug: string; produitId: string }, boutiqueSlug: string, produitId: string) =>
+  a.boutiqueSlug === boutiqueSlug && a.produitId === produitId;
+
+export function addCartItem(item: Omit<BoutiqueCartItem, "quantity">): boolean {
+  const current = lireTout();
+  const existing = current.find((e) => memeArticle(e, item.boutiqueSlug, item.produitId));
+  const nextItems = existing
+    ? current.map((e) =>
+        memeArticle(e, item.boutiqueSlug, item.produitId) ? { ...e, quantity: Math.min(QUANTITE_MAX, e.quantity + 1) } : e
+      )
+    : [...current, { ...item, quantity: 1 }];
+  return ecrireTout(nextItems);
 }
 
-export function addCartItem(item: Omit<BoutiqueCartItem, "quantity">): CartWriteResult {
-  const current = getCartItems();
-  const existing = current.find(
-    (entry) => entry.produitId === item.produitId && entry.boutiqueSlug === item.boutiqueSlug
+function subscribe(onChange: () => void): () => void {
+  window.addEventListener(CART_EVENT, onChange);
+  window.addEventListener("storage", onChange);
+  return () => {
+    window.removeEventListener(CART_EVENT, onChange);
+    window.removeEventListener("storage", onChange);
+  };
+}
+
+function lireBrut(): string | null {
+  try {
+    return window.localStorage.getItem(CART_STORAGE_KEY);
+  } catch {
+    return null;
+  }
+}
+
+// Panier d'une boutique : articles, nombre d'articles, total, et opérations limitées à cette
+// boutique. Synchronisé entre les composants (événement cart:update) et entre les onglets
+// (événement storage). Vide au rendu serveur.
+export function useBoutiqueCart(boutiqueSlug: string) {
+  const brut = useSyncExternalStore(subscribe, lireBrut, () => null);
+  const [erreurEcriture, setErreurEcriture] = useState(false);
+
+  const items = useMemo(() => {
+    if (!brut) return [];
+    try {
+      const parsed = JSON.parse(brut) as BoutiqueCartItem[];
+      return Array.isArray(parsed) ? parsed.filter((i) => i.boutiqueSlug === boutiqueSlug) : [];
+    } catch {
+      return [];
+    }
+  }, [brut, boutiqueSlug]);
+
+  const count = useMemo(() => items.reduce((sum, i) => sum + i.quantity, 0), [items]);
+  const total = useMemo(() => items.reduce((sum, i) => sum + i.prix * i.quantity, 0), [items]);
+
+  const appliquer = useCallback((nextItems: BoutiqueCartItem[]) => {
+    const ok = ecrireTout(nextItems);
+    setErreurEcriture(!ok);
+    if (!ok) window.setTimeout(() => setErreurEcriture(false), 3000);
+  }, []);
+
+  const retirer = useCallback(
+    (produitId: string) => appliquer(lireTout().filter((e) => !memeArticle(e, boutiqueSlug, produitId))),
+    [appliquer, boutiqueSlug]
   );
-  let nextItems: BoutiqueCartItem[];
-  if (existing) {
-    nextItems = current.map((entry) =>
-      entry.produitId === item.produitId && entry.boutiqueSlug === item.boutiqueSlug
-        ? { ...entry, quantity: entry.quantity + 1 }
-        : entry
-    );
-  } else {
-    nextItems = [...current, { ...item, quantity: 1 }];
-  }
-  return updateCartItems(nextItems);
+
+  // Décrémenter depuis 1 retire l'article.
+  const changerQuantite = useCallback(
+    (produitId: string, delta: number) => {
+      const tous = lireTout();
+      const article = tous.find((e) => memeArticle(e, boutiqueSlug, produitId));
+      if (!article) return;
+      const quantite = article.quantity + delta;
+      appliquer(
+        quantite < 1
+          ? tous.filter((e) => !memeArticle(e, boutiqueSlug, produitId))
+          : tous.map((e) => (memeArticle(e, boutiqueSlug, produitId) ? { ...e, quantity: Math.min(QUANTITE_MAX, quantite) } : e))
+      );
+    },
+    [appliquer, boutiqueSlug]
+  );
+
+  return { items, count, total, retirer, changerQuantite, erreurEcriture };
 }

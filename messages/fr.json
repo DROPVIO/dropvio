@@ -1249,6 +1249,29 @@
       "mentionsTitre": "Mentions légales | {nom}",
       "mentionsDescription": "Mentions légales de la boutique {nom}.",
       "panierTitre": "Panier | {nom}"
+    },
+    "panier": {
+      "surtitre": "Panier",
+      "titre": "Mon panier",
+      "vide": "Ton panier est vide.",
+      "videTiroir": "Ton panier est vide. Ajoute un produit depuis sa fiche.",
+      "voirProduits": "Voir les produits →",
+      "voirPanier": "Voir mon panier",
+      "continuer": "← Continuer mes achats",
+      "prixUnitaire": "{prix} / unité",
+      "total": "Total",
+      "totalArticles": "Total ({count, plural, one {# article} other {# articles}})",
+      "articles": "{count, plural, one {# article} other {# articles}}",
+      "boutonAria": "Panier{count, plural, =0 {} one {, # article} other {, # articles}}",
+      "retirer": "Retirer",
+      "retirerAria": "Retirer {nom} du panier",
+      "diminuer": "Diminuer la quantité de {nom}",
+      "augmenter": "Augmenter la quantité de {nom}",
+      "ajouter": "Ajouter au panier",
+      "ajoute": "Produit ajouté au panier.",
+      "erreurStockage": "Impossible d'enregistrer le panier sur cet appareil (stockage indisponible ou navigation privée).",
+      "passerCommande": "Passer commande",
+      "paiementIndisponible": "Le paiement en ligne n'est pas encore disponible dans cette boutique. Pour commander, contacte le vendeur (coordonnées dans les mentions légales)."
     }
   }
 }

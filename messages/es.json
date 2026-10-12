@@ -1249,6 +1249,29 @@
       "mentionsTitre": "Aviso legal | {nom}",
       "mentionsDescription": "Aviso legal de la tienda {nom}.",
       "panierTitre": "Carrito | {nom}"
+    },
+    "panier": {
+      "surtitre": "Carrito",
+      "titre": "Mi carrito",
+      "vide": "Tu carrito está vacío.",
+      "videTiroir": "Tu carrito está vacío. Añade un producto desde su ficha.",
+      "voirProduits": "Ver los productos →",
+      "voirPanier": "Ver mi carrito",
+      "continuer": "← Seguir comprando",
+      "prixUnitaire": "{prix} / unidad",
+      "total": "Total",
+      "totalArticles": "Total ({count, plural, one {# artículo} other {# artículos}})",
+      "articles": "{count, plural, one {# artículo} other {# artículos}}",
+      "boutonAria": "Carrito{count, plural, =0 {} one {, # artículo} other {, # artículos}}",
+      "retirer": "Quitar",
+      "retirerAria": "Quitar {nom} del carrito",
+      "diminuer": "Reducir la cantidad de {nom}",
+      "augmenter": "Aumentar la cantidad de {nom}",
+      "ajouter": "Añadir al carrito",
+      "ajoute": "Producto añadido al carrito.",
+      "erreurStockage": "No se puede guardar el carrito en este dispositivo (almacenamiento no disponible o navegación privada).",
+      "passerCommande": "Realizar pedido",
+      "paiementIndisponible": "El pago en línea aún no está disponible en esta tienda. Para hacer un pedido, contacta con el vendedor (datos en el aviso legal)."
     }
   }
 }

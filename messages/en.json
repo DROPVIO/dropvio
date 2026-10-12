@@ -1249,6 +1249,29 @@
       "mentionsTitre": "Legal notice | {nom}",
       "mentionsDescription": "Legal notice of the {nom} store.",
       "panierTitre": "Cart | {nom}"
+    },
+    "panier": {
+      "surtitre": "Cart",
+      "titre": "My cart",
+      "vide": "Your cart is empty.",
+      "videTiroir": "Your cart is empty. Add a product from its page.",
+      "voirProduits": "See products →",
+      "voirPanier": "View my cart",
+      "continuer": "← Continue shopping",
+      "prixUnitaire": "{prix} each",
+      "total": "Total",
+      "totalArticles": "Total ({count, plural, one {# item} other {# items}})",
+      "articles": "{count, plural, one {# item} other {# items}}",
+      "boutonAria": "Cart{count, plural, =0 {} one {, # item} other {, # items}}",
+      "retirer": "Remove",
+      "retirerAria": "Remove {nom} from the cart",
+      "diminuer": "Decrease the quantity of {nom}",
+      "augmenter": "Increase the quantity of {nom}",
+      "ajouter": "Add to cart",
+      "ajoute": "Product added to the cart.",
+      "erreurStockage": "Unable to save the cart on this device (storage unavailable or private browsing).",
+      "passerCommande": "Place order",
+      "paiementIndisponible": "Online payment isn't available in this store yet. To order, contact the seller (details in the legal notice)."
     }
   }
 }
