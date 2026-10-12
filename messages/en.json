@@ -1146,7 +1146,9 @@
     "slug_reserved": "This slug is reserved. Please choose another one.",
     "slug_taken": "This slug is already used by another store. Please choose another one.",
     "publish_slug_invalid": "Fix the store slug before making it public.",
-    "publish_requires_product": "Add at least one product before making the store public."
+    "publish_requires_product": "Add at least one product before making the store public.",
+    "category_slug_taken": "Another category in this store already uses this slug.",
+    "category_not_found": "Category not found."
   },
   "siteBuilder": {
     "boutique": {

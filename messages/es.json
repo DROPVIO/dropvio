@@ -1146,7 +1146,9 @@
     "slug_reserved": "Este slug está reservado. Elige otro.",
     "slug_taken": "Este slug ya lo usa otra tienda. Elige otro.",
     "publish_slug_invalid": "Corrige el slug de la tienda antes de hacerla pública.",
-    "publish_requires_product": "Añade al menos un producto antes de hacer pública la tienda."
+    "publish_requires_product": "Añade al menos un producto antes de hacer pública la tienda.",
+    "category_slug_taken": "Otra categoría de esta tienda ya usa este slug.",
+    "category_not_found": "Categoría no encontrada."
   },
   "siteBuilder": {
     "boutique": {

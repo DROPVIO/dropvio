@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerUserAndPlan } from "@/lib/supabase-server";
+import { apiError, UNIQUE_VIOLATION } from "@/lib/api-errors";
 
 export async function GET(request: NextRequest, context: { params: Promise<{ id: string }> }) {
   const params = await context.params;
@@ -40,6 +41,9 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
     .single();
 
   if (error) {
+    if (error.code === UNIQUE_VIOLATION) {
+      return apiError("category_slug_taken", 409, "Une autre catégorie de cette boutique utilise déjà ce slug.");
+    }
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
