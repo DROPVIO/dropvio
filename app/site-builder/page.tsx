@@ -13,7 +13,7 @@ import type { FicheStyle } from "@/lib/style-fiche";
 import { applyTokenValue } from "@/lib/color-tokens";
 import { htmlToLiquidSection } from "@/lib/html-to-liquid";
 import { SHOW_LEGACY_TEMPLATES } from "@/lib/flags";
-import { readAndClearBoutiqueDraft, type BoutiqueDraft } from "@/lib/site-builder-handoff";
+import { useBoutiqueDraft } from "@/lib/site-builder-handoff";
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
 import { slugFichier, telechargerTexte } from "@/lib/audit-download";
 import { ToastHost, useToast } from "@/components/Toast";
@@ -98,22 +98,12 @@ function SiteBuilderContent() {
 
   // Mode boutique (plusieurs produits) — le brouillon est déposé en sessionStorage par
   // app/site-builder/boutique/[id]/page.tsx juste avant la navigation (voir
-  // lib/site-builder-handoff.ts). Lu une seule fois au montage, jamais rechargé ensuite :
-  // un refresh de cette page retombe proprement sur le mode produit unique vide.
-  const [boutiqueDraft, setBoutiqueDraft] = useState<BoutiqueDraft | null>(null);
-  // handoffLu protège contre le double-appel de cet effet en StrictMode (dev) : React
-  // monte → nettoie → remonte le même composant pour détecter les effets non idempotents.
-  // readAndClearBoutiqueDraft() ne l'est pas (elle vide sessionStorage) — sans cette garde,
-  // le 2e appel retrouve la valeur déjà effacée par le 1er et écrase l'état avec null.
-  const handoffLu = useRef(false);
-  useEffect(() => {
-    if (handoffLu.current) return;
-    handoffLu.current = true;
-    if (searchParams.get("multi") === "1") {
-      setBoutiqueDraft(readAndClearBoutiqueDraft());
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  // lib/site-builder-handoff.ts). Il survit au rechargement de l'onglet, modifications
+  // comprises. multi=1 sans brouillon (nouvel onglet, session expirée) : brouillonIntrouvable.
+  const modeBoutique = searchParams.get("multi") === "1";
+  const [brouillonLu, setBoutiqueDraft] = useBoutiqueDraft(modeBoutique);
+  const boutiqueDraft = brouillonLu ?? null;
+  const brouillonIntrouvable = modeBoutique && brouillonLu === null;
 
   // Style & palette
   const [selectedStyleId, setSelectedStyleId] = useState("premium");
@@ -155,7 +145,7 @@ function SiteBuilderContent() {
   // (react-hooks/set-state-in-effect) pour un état qu'on connaît déjà au premier rendu.
   const [regenerating, setRegenerating] = useState(() => Boolean(regenerateId));
   const [regenerateError, setRegenerateError] = useState<string | null>(null);
-  // Même garde anti-double-appel StrictMode que handoffLu ci-dessus.
+  // Garde anti-double-appel en StrictMode (dev), qui monte, nettoie puis remonte le composant.
   const regenerateLu = useRef(false);
   useEffect(() => {
     if (regenerateLu.current) return;
@@ -647,6 +637,11 @@ function SiteBuilderContent() {
         {/* Bannière + édition mode boutique — rendues une seule fois, partagées entre les
             modes IA et Éditeur de templates ci-dessous (tous deux consomment le même
             boutiqueDraft en lecture pour leur génération respective). */}
+        {brouillonIntrouvable && (
+          <div className="mb-4 rounded-2xl border border-amber-500/30 bg-amber-500/10 px-5 py-4 text-sm text-[var(--warning)]">
+            Le brouillon de la boutique est introuvable dans cet onglet. Retourne sur la page de ta boutique et relance « Créer mon site ».
+          </div>
+        )}
         {boutiqueDraft && (
           <>
             <div className="mb-4 rounded-2xl border border-violet-500/30 bg-violet-500/10 px-5 py-4 text-sm text-[var(--text-primary)]">
@@ -1271,7 +1266,7 @@ function SiteBuilderContent() {
 
               {colorsDirty ? (
                 <div className="mb-4 rounded-xl bg-amber-500/10 border border-amber-500/20 px-4 py-3 text-[var(--warning)] text-xs">
-                  ⚠️ Couleurs modifiées non enregistrées — clique "Enregistrer ces couleurs" ci-dessus avant de publier, sinon Shopify recevra l&apos;ancienne version.
+                  ⚠️ Couleurs modifiées non enregistrées — clique « Enregistrer ces couleurs » ci-dessus avant de publier, sinon Shopify recevra l&apos;ancienne version.
                 </div>
               ) : null}
 

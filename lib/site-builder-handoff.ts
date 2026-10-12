@@ -7,11 +7,9 @@
 
 // La limite d'ajout manuel de produits dans le builder suit le plan de l'utilisateur
 // (BoutiqueDraft.limiteProduits, tiré de PLAN_LIMITS[plan].produitsBoutiqueMax par la page
-// boutique) ; le serveur reste la référence pour le nombre de produits d'une boutique
-// (POST /api/boutiques/[id]/produits). Aucun produit transmis n'est retiré.
-// Plus utilisé par le builder — gardé exporté pour compatibilité, à supprimer après vérification.
-export const BOUTIQUE_PRODUITS_CAP = 30;
+// boutique) ; app/api/generate-site/route.ts applique la même limite côté serveur.
 
+import { useCallback, useMemo, useSyncExternalStore } from "react";
 import type { ProduitBoutique } from "./site-templates";
 
 // Même forme que ProduitBoutique (lib/site-templates.ts, consommé par buildTemplateHtmlBoutique)
@@ -37,6 +35,7 @@ export type BoutiqueDraft = {
 };
 
 const STORAGE_KEY = "dropvio-site-builder-boutique-draft";
+const CHANGE_EVENT = "dropvio-boutique-draft-change";
 
 // Renvoie false si l'écriture échoue (sessionStorage indisponible : navigation privée
 // stricte, quota dépassé...) — l'appelant doit alors prévenir l'utilisateur plutôt que
@@ -44,23 +43,64 @@ const STORAGE_KEY = "dropvio-site-builder-boutique-draft";
 export function writeBoutiqueDraft(draft: BoutiqueDraft): boolean {
   try {
     sessionStorage.setItem(STORAGE_KEY, JSON.stringify(draft));
+    window.dispatchEvent(new Event(CHANGE_EVENT));
     return true;
   } catch {
     return false;
   }
 }
 
-// Lecture à usage unique : supprime immédiatement l'entrée pour qu'un rechargement de la
-// page ou un retour arrière ne rejoue pas un brouillon périmé.
-export function readAndClearBoutiqueDraft(): BoutiqueDraft | null {
+export function clearBoutiqueDraft(): void {
   try {
-    const raw = sessionStorage.getItem(STORAGE_KEY);
-    if (!raw) return null;
     sessionStorage.removeItem(STORAGE_KEY);
+    window.dispatchEvent(new Event(CHANGE_EVENT));
+  } catch {
+    // sessionStorage indisponible : rien à effacer
+  }
+}
+
+function parseBoutiqueDraft(raw: string | null): BoutiqueDraft | null {
+  if (!raw) return null;
+  try {
     const parsed = JSON.parse(raw) as BoutiqueDraft;
-    if (!Array.isArray(parsed?.produits)) return null;
-    return parsed;
+    return Array.isArray(parsed?.produits) ? parsed : null;
   } catch {
     return null;
   }
+}
+
+function subscribe(onChange: () => void): () => void {
+  window.addEventListener(CHANGE_EVENT, onChange);
+  window.addEventListener("storage", onChange);
+  return () => {
+    window.removeEventListener(CHANGE_EVENT, onChange);
+    window.removeEventListener("storage", onChange);
+  };
+}
+
+function readRaw(): string | null {
+  try {
+    return sessionStorage.getItem(STORAGE_KEY);
+  } catch {
+    return null;
+  }
+}
+
+// Brouillon boutique du builder. sessionStorage reste la source de vérité : la lecture n'efface
+// plus rien, donc un rechargement de l'onglet retrouve le brouillon et les modifications faites
+// dans le builder (chaque modification est réécrite). Côté serveur, aucun brouillon.
+// enabled = false (pas de multi=1 dans l'URL) : mode produit unique, le brouillon est ignoré.
+// undefined = pas encore lu (rendu serveur et hydratation), null = aucun brouillon.
+export function useBoutiqueDraft(
+  enabled: boolean
+): [BoutiqueDraft | null | undefined, (draft: BoutiqueDraft) => void] {
+  const raw = useSyncExternalStore<string | null | undefined>(subscribe, readRaw, () => undefined);
+  const draft = useMemo(() => {
+    if (!enabled) return null;
+    return raw === undefined ? undefined : parseBoutiqueDraft(raw);
+  }, [enabled, raw]);
+  const setDraft = useCallback((next: BoutiqueDraft) => {
+    writeBoutiqueDraft(next);
+  }, []);
+  return [draft, setDraft];
 }
