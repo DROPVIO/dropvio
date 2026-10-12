@@ -10,6 +10,7 @@ import { getBoutiquePublicUrl } from "@/lib/boutique-subdomains";
 import PaletteEditor, { type Palette } from "@/app/components/PaletteEditor";
 import { writeBoutiqueDraft, type ProduitBoutiqueDraft } from "@/lib/site-builder-handoff";
 import { PLAN_LIMITS } from "@/lib/plan-limits";
+import BoutiqueReglages from "@/components/site-builder/BoutiqueReglages";
 
 type Boutique = {
   id: string;
@@ -72,6 +73,8 @@ export default function BoutiqueBuilderDetailPage() {
   const params = useParams();
   const router = useRouter();
   const [boutique, setBoutique] = useState<Boutique | null>(null);
+  // Compteurs non filtrés renvoyés par GET /api/boutiques/[id] (réglages, limite du plan).
+  const [produitsCount, setProduitsCount] = useState(0);
   const [globalError, setGlobalError] = useState<string | null>(null);
 
   const [products, setProducts] = useState<BoutiqueProduct[]>([]);
@@ -268,12 +271,25 @@ export default function BoutiqueBuilderDetailPage() {
         return;
       }
       setBoutique(json.boutique ?? null);
+      setProduitsCount(json.produitsCount ?? 0);
       setMentionsLegales(json.boutique?.mentions_legales ?? "");
       setBandeauTexte(json.boutique?.settings?.bandeauTexte ?? "");
       setBandeauVideos(json.boutique?.settings?.bandeauVideos ?? []);
     } catch {
       setGlobalError("Impossible de contacter le serveur.");
       setBoutique(null);
+    }
+  }
+
+  // Recharge seulement les compteurs, sans écraser les champs en cours d'édition.
+  async function rafraichirCompteurs() {
+    try {
+      const response = await fetch(`/api/boutiques/${params?.id}`);
+      if (!response.ok) return;
+      const json = await response.json();
+      setProduitsCount(json.produitsCount ?? 0);
+    } catch {
+      // compteur indicatif : le serveur reste la référence
     }
   }
 
@@ -790,6 +806,7 @@ export default function BoutiqueBuilderDetailPage() {
       setProductFormSuccess(editingProductId ? "Produit mis à jour." : "Produit ajouté avec succès.");
       resetProductForm();
       await fetchProducts(1);
+      void rafraichirCompteurs();
       setSuggestionsRefreshKey((k) => k + 1);
     } catch {
       setProductFormError("Impossible de contacter le serveur.");
@@ -812,6 +829,7 @@ export default function BoutiqueBuilderDetailPage() {
         return;
       }
       await fetchProducts(productPage);
+      void rafraichirCompteurs();
     } catch {
       setProductsError("Impossible de contacter le serveur.");
     } finally {
@@ -979,6 +997,14 @@ export default function BoutiqueBuilderDetailPage() {
                 <h2 className="mt-2 text-2xl font-semibold text-[var(--text-primary)]">{boutique?.nom || "Chargement..."}</h2>
               </div>
             </div>
+
+            {boutique ? (
+              <BoutiqueReglages
+                boutique={boutique}
+                produitsCount={produitsCount}
+                onUpdated={(patch) => setBoutique((prev) => (prev ? { ...prev, ...patch } : prev))}
+              />
+            ) : null}
 
             <div className="mt-6 rounded-3xl border border-[var(--border)] bg-[var(--surface-2)] p-4">
               <h3 className="text-sm font-semibold text-[var(--text-primary)]">Mentions légales</h3>
@@ -1325,6 +1351,7 @@ export default function BoutiqueBuilderDetailPage() {
             refreshKey={suggestionsRefreshKey}
             onAdded={() => {
               void fetchProducts(productPage);
+              void rafraichirCompteurs();
               setSuggestionsRefreshKey((k) => k + 1);
             }}
           />

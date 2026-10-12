@@ -1147,5 +1147,21 @@
     "slug_taken": "This slug is already used by another store. Please choose another one.",
     "publish_slug_invalid": "Fix the store slug before making it public.",
     "publish_requires_product": "Add at least one product before making the store public."
+  },
+  "siteBuilder": {
+    "boutique": {
+      "reglages": {
+        "visibilite": {
+          "titre": "Store visibility",
+          "publique": "Public store",
+          "privee": "Private store",
+          "aidePublique": "Anyone can see the store, and it can appear on Google.",
+          "aidePrivee": "Only you can see the store (preview). Visitors get a page-not-found error.",
+          "produitRequis": "Add at least one product before making the store public.",
+          "confirmerPublier": "Make the store public? Anyone will be able to see it at “{slug}”, and Google may index it.",
+          "confirmerMasquer": "Make the store private? Visitors will no longer be able to access it, and it will be removed from the sitemap."
+        }
+      }
+    }
   }
 }

@@ -1147,5 +1147,21 @@
     "slug_taken": "Ce slug est déjà utilisé par une autre boutique. Choisis-en un autre.",
     "publish_slug_invalid": "Corrige le slug de la boutique avant de la rendre publique.",
     "publish_requires_product": "Ajoute au moins un produit avant de rendre la boutique publique."
+  },
+  "siteBuilder": {
+    "boutique": {
+      "reglages": {
+        "visibilite": {
+          "titre": "Visibilité de la boutique",
+          "publique": "Boutique publique",
+          "privee": "Boutique privée",
+          "aidePublique": "Tout le monde peut voir la boutique et elle peut apparaître sur Google.",
+          "aidePrivee": "Toi seul peux voir la boutique (aperçu). Les visiteurs voient une page introuvable.",
+          "produitRequis": "Ajoute au moins un produit avant de rendre la boutique publique.",
+          "confirmerPublier": "Rendre la boutique publique ? Elle sera visible par tout le monde à l'adresse « {slug} » et pourra être indexée par Google.",
+          "confirmerMasquer": "Rendre la boutique privée ? Les visiteurs ne pourront plus y accéder et elle sortira du sitemap."
+        }
+      }
+    }
   }
 }

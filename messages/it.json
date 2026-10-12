@@ -1147,5 +1147,21 @@
     "slug_taken": "Questo slug è già usato da un altro negozio. Scegline un altro.",
     "publish_slug_invalid": "Correggi lo slug del negozio prima di renderlo pubblico.",
     "publish_requires_product": "Aggiungi almeno un prodotto prima di rendere pubblico il negozio."
+  },
+  "siteBuilder": {
+    "boutique": {
+      "reglages": {
+        "visibilite": {
+          "titre": "Visibilità del negozio",
+          "publique": "Negozio pubblico",
+          "privee": "Negozio privato",
+          "aidePublique": "Chiunque può vedere il negozio, che può comparire su Google.",
+          "aidePrivee": "Solo tu puoi vedere il negozio (anteprima). I visitatori vedono una pagina non trovata.",
+          "produitRequis": "Aggiungi almeno un prodotto prima di rendere pubblico il negozio.",
+          "confirmerPublier": "Rendere pubblico il negozio? Sarà visibile a tutti all'indirizzo «{slug}» e potrà essere indicizzato da Google.",
+          "confirmerMasquer": "Rendere privato il negozio? I visitatori non potranno più accedervi e verrà rimosso dalla sitemap."
+        }
+      }
+    }
   }
 }

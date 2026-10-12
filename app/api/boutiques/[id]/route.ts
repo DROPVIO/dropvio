@@ -24,7 +24,14 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
     return NextResponse.json({ error: "Boutique introuvable." }, { status: 404 });
   }
 
-  return NextResponse.json({ boutique: data });
+  // Compteurs non filtrés pour les réglages : publication (au moins un produit), limite du
+  // plan, et confirmation de suppression (sites générés conservés).
+  const [{ count: produitsCount }, { count: sitesCount }] = await Promise.all([
+    supabase.from("boutique_produits").select("id", { count: "exact", head: true }).eq("boutique_id", params.id),
+    supabase.from("sites_generes").select("id", { count: "exact", head: true }).eq("boutique_id", params.id),
+  ]);
+
+  return NextResponse.json({ boutique: data, produitsCount: produitsCount ?? 0, sitesCount: sitesCount ?? 0 });
 }
 
 const CHAMPS_MODIFIABLES = ["nom", "slug", "description", "theme", "settings", "mentions_legales", "est_publique"] as const;
