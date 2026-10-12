@@ -3,12 +3,23 @@ import { getServerUserPlanOnly } from "@/lib/supabase-server";
 import { PLAN_LIMITS, planLabel } from "@/lib/plan-limits";
 
 const DEFAULT_LIMIT = 20;
+const MAX_LIMIT = 100;
+
+// Motif ILIKE sûr pour un filtre PostgREST `or=(...)` : virgules, parenthèses et guillemets
+// casseraient la syntaxe du filtre, et % _ \ seraient interprétés comme jokers.
+function motifRecherche(search: string): string {
+  const nettoye = search.replace(/[,()"]/g, " ").replace(/[\\%_]/g, (c) => `\\${c}`);
+  return `%${nettoye}%`;
+}
 
 export async function GET(request: NextRequest, context: { params: Promise<{ id: string }> }) {
   const params = await context.params;
   const { searchParams } = new URL(request.url);
   const page = Math.max(1, parseInt(searchParams.get("page") ?? "1", 10) || 1);
-  const limit = Math.max(1, parseInt(searchParams.get("limit") ?? String(DEFAULT_LIMIT), 10) || DEFAULT_LIMIT);
+  const limit = Math.min(
+    MAX_LIMIT,
+    Math.max(1, parseInt(searchParams.get("limit") ?? String(DEFAULT_LIMIT), 10) || DEFAULT_LIMIT)
+  );
   const from = (page - 1) * limit;
   const to = from + limit - 1;
 
@@ -18,38 +29,40 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
   }
 
   const categorieId = searchParams.get("categoryId");
-  const search = searchParams.get("search");
+  const search = searchParams.get("search")?.trim();
 
+  // Filtres appliqués dans la requête, avant range() : total et pages portent sur les
+  // résultats filtrés, pas sur la seule page courante.
   let query = supabase
     .from("boutique_produits")
     .select("*, boutique_categories(nom, slug)", { count: "exact" })
-    .eq("boutique_id", params.id)
-    .order("position", { ascending: true })
-    .order("created_at", { ascending: false });
+    .eq("boutique_id", params.id);
 
   if (categorieId) {
     query = query.eq("category_id", categorieId);
   }
+  if (search) {
+    const motif = motifRecherche(search);
+    query = query.or(`nom.ilike.${motif},description.ilike.${motif}`);
+  }
 
-  const { data, error, count } = await query.range(from, to);
+  const { data, error, count } = await query
+    .order("position", { ascending: true })
+    .order("created_at", { ascending: false })
+    .range(from, to);
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 
-  let products = data ?? [];
-  if (search) {
-    const normalized = search.toLowerCase();
-    products = products.filter((product) =>
-      product.nom.toLowerCase().includes(normalized) ||
-      (product.description ?? "").toLowerCase().includes(normalized)
-    );
-  }
-
-  const actualTotal = search ? products.length : count ?? 0;
-  return NextResponse.json({ products, total: actualTotal, page, limit, totalPages: Math.max(1, Math.ceil(actualTotal / limit)) });
-
-  return NextResponse.json({ products: data ?? [], total: count ?? 0, page, limit, totalPages: Math.max(1, Math.ceil((count ?? 0) / limit)) });
+  const total = count ?? 0;
+  return NextResponse.json({
+    products: data ?? [],
+    total,
+    page,
+    limit,
+    totalPages: Math.max(1, Math.ceil(total / limit)),
+  });
 }
 
 export async function POST(request: NextRequest, context: { params: Promise<{ id: string }> }) {
