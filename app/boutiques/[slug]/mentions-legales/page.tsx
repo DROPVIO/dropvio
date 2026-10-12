@@ -2,6 +2,13 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getBaseUrl } from "@/lib/get-base-url";
 import { fetchBoutiqueApi } from "@/lib/boutique-internal-fetch";
+import {
+  chargerBoutiquePublique,
+  metadonneesBoutique,
+  metadonneesIntrouvable,
+  traductionsBoutique,
+  urlAbsolueBoutique,
+} from "@/lib/boutique-public";
 
 export async function generateMetadata({
   params,
@@ -9,15 +16,17 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const baseUrl = await getBaseUrl();
+  const donnees = await chargerBoutiquePublique(slug);
+  if (!donnees) return metadonneesIntrouvable();
+  const { boutique } = donnees;
+  const t = await traductionsBoutique(boutique.langue);
 
-  const boutiqueRes = await fetchBoutiqueApi(`${baseUrl}/api/boutiques/slug/${slug}`);
-  if (!boutiqueRes.ok) {
-    return { title: "Mentions légales" };
-  }
-  const { boutique } = (await boutiqueRes.json()) as { boutique: { nom: string } };
-
-  return { title: `Mentions légales — ${boutique.nom}` };
+  return metadonneesBoutique({
+    boutique,
+    titre: t("meta.mentionsTitre", { nom: boutique.nom }),
+    description: t("meta.mentionsDescription", { nom: boutique.nom }),
+    canonical: `${await urlAbsolueBoutique(slug)}/mentions-legales`,
+  });
 }
 
 export default async function MentionsLegalesPage({

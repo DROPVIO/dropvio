@@ -3,61 +3,55 @@ import Image from "next/image";
 import AddToCartButton from "@/app/components/AddToCartButton";
 import { notFound } from "next/navigation";
 import { getBaseUrl } from "@/lib/get-base-url";
-import { getBoutiquePublicUrl } from "@/lib/boutique-subdomains";
 import { fetchBoutiqueApi } from "@/lib/boutique-internal-fetch";
+import {
+  chargerBoutiquePublique,
+  metadonneesBoutique,
+  metadonneesIntrouvable,
+  traductionsBoutique,
+  tronquer,
+  urlAbsolueBoutique,
+} from "@/lib/boutique-public";
+import { DEVISE_BOUTIQUE, formatPrix } from "@/lib/boutique-format";
+import JsonLd from "@/app/components/boutique/JsonLd";
 
-function formatPrice(value: number) {
-  return `${value.toFixed(2)}€`;
+type Produit = {
+  id: string;
+  nom: string;
+  slug: string;
+  description: string | null;
+  prix_vente: number;
+  prix_original: number | null;
+  image_urls: string[] | null;
+  boutique_categories: { nom: string; slug: string } | null;
+};
+
+async function chargerProduit(slug: string, produitId: string): Promise<Produit | null> {
+  const baseUrl = await getBaseUrl();
+  const res = await fetchBoutiqueApi(`${baseUrl}/api/boutiques/slug/${slug}/produits/${produitId}`);
+  if (!res.ok) return null;
+  return ((await res.json()) as { produit: Produit }).produit;
 }
 
-function truncate(text: string, max: number): string {
-  return text.length > max ? `${text.slice(0, max - 1).trimEnd()}…` : text;
-}
-
-// Le fetch produit ci-dessous est identique (même URL/options) à celui du composant de
-// page : Next.js le dédoublonne automatiquement pendant le rendu d'une même requête.
-// Le fetch boutique n'est en revanche fait que pour le titre — la page elle-même n'a pas
-// besoin du nom de la boutique, donc pas de dédoublonnage possible pour celui-là.
 export async function generateMetadata({
   params,
 }: {
   params: Promise<{ slug: string; produitId: string }>;
 }): Promise<Metadata> {
   const { slug, produitId } = await params;
-  const baseUrl = await getBaseUrl();
+  const [donnees, produit] = await Promise.all([chargerBoutiquePublique(slug), chargerProduit(slug, produitId)]);
+  if (!donnees || !produit) return metadonneesIntrouvable();
+  const { boutique } = donnees;
+  const t = await traductionsBoutique(boutique.langue);
 
-  const [boutiqueRes, produitRes] = await Promise.all([
-    fetchBoutiqueApi(`${baseUrl}/api/boutiques/slug/${slug}`),
-    fetchBoutiqueApi(`${baseUrl}/api/boutiques/slug/${slug}/produits/${produitId}`),
-  ]);
-
-  if (!produitRes.ok) {
-    return { title: "Produit introuvable" };
-  }
-
-  const { produit } = (await produitRes.json()) as {
-    produit: { nom: string; description: string | null; prix_vente: number };
-  };
-  const boutiqueNom = boutiqueRes.ok
-    ? ((await boutiqueRes.json()) as { boutique: { nom: string } }).boutique.nom
-    : null;
-
-  const title = boutiqueNom ? `${produit.nom} — ${boutiqueNom}` : produit.nom;
-  const description = produit.description?.trim()
-    ? truncate(produit.description.trim(), 155)
-    : `${produit.nom} à ${produit.prix_vente.toFixed(2)}€.`;
-
-  const boutiqueUrl = getBoutiquePublicUrl(slug);
-  const absoluteBoutiqueUrl = boutiqueUrl.startsWith("http") ? boutiqueUrl : `${baseUrl}${boutiqueUrl}`;
-  const canonical = `${absoluteBoutiqueUrl}/produits/${produitId}`;
-
-  return {
-    title,
-    description,
-    alternates: { canonical },
-    openGraph: { title, description, url: canonical, type: "website" },
-    twitter: { card: "summary_large_image", title, description },
-  };
+  return metadonneesBoutique({
+    boutique,
+    titre: t("meta.produitTitre", { produit: produit.nom, nom: boutique.nom }),
+    description: produit.description?.trim()
+      ? tronquer(produit.description.trim(), 155)
+      : t("meta.produitDescription", { produit: produit.nom, prix: formatPrix(produit.prix_vente, boutique.langue), nom: boutique.nom }),
+    canonical: `${await urlAbsolueBoutique(slug)}/produits/${produitId}`,
+  });
 }
 
 export default async function ProduitPage({
@@ -66,29 +60,37 @@ export default async function ProduitPage({
   params: Promise<{ slug: string; produitId: string }>;
 }) {
   const { slug, produitId } = await params;
-  const baseUrl = await getBaseUrl();
-
-  const produitRes = await fetchBoutiqueApi(`${baseUrl}/api/boutiques/slug/${slug}/produits/${produitId}`);
-
-  if (!produitRes.ok) {
+  const [donnees, produit] = await Promise.all([chargerBoutiquePublique(slug), chargerProduit(slug, produitId)]);
+  if (!donnees || !produit) {
     notFound();
   }
-
-  const { produit } = (await produitRes.json()) as {
-    produit: {
-      id: string;
-      nom: string;
-      slug: string;
-      description: string | null;
-      prix_vente: number;
-      prix_original: number | null;
-      image_urls: string[] | null;
-      boutique_categories: { nom: string; slug: string } | null;
-    };
-  };
+  const { boutique } = donnees;
+  const urlBoutique = await urlAbsolueBoutique(slug);
+  const urlProduit = `${urlBoutique}/produits/${produit.id}`;
+  const images = (produit.image_urls ?? []).filter(Boolean);
 
   return (
     <main className="min-h-screen bg-[var(--bg)] text-[var(--text-primary)]">
+      <JsonLd
+        data={{
+          "@context": "https://schema.org",
+          "@type": "Product",
+          name: produit.nom,
+          ...(produit.description?.trim() && { description: produit.description.trim() }),
+          ...(images.length > 0 && { image: images }),
+          sku: produit.id,
+          url: urlProduit,
+          ...(produit.boutique_categories?.nom && { category: produit.boutique_categories.nom }),
+          offers: {
+            "@type": "Offer",
+            price: Number(produit.prix_vente).toFixed(2),
+            priceCurrency: DEVISE_BOUTIQUE,
+            availability: "https://schema.org/InStock",
+            url: urlProduit,
+            seller: { "@type": "Store", name: boutique.nom, url: urlBoutique },
+          },
+        }}
+      />
       <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6 lg:px-8">
         <div className="grid gap-10 xl:grid-cols-[0.65fr_0.35fr]">
           <div className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-8 shadow-xl shadow-violet-500/10">
@@ -121,8 +123,8 @@ export default async function ProduitPage({
                 <div className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-6">
                   <h2 className="text-xl font-semibold text-[var(--text-primary)]">Prix</h2>
                   <div className="mt-4 flex items-center gap-3">
-                    <span className="price-tag text-3xl font-bold text-[var(--text-primary)]">{formatPrice(produit.prix_vente)}</span>
-                    {produit.prix_original ? <span className="text-sm text-[var(--text-faint)] line-through">{formatPrice(produit.prix_original)}</span> : null}
+                    <span className="price-tag text-3xl font-bold text-[var(--text-primary)]">{formatPrix(produit.prix_vente, boutique.langue)}</span>
+                    {produit.prix_original ? <span className="text-sm text-[var(--text-faint)] line-through">{formatPrix(produit.prix_original, boutique.langue)}</span> : null}
                   </div>
                 </div>
                 <div className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-6">

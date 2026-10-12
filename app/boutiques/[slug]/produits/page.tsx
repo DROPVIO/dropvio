@@ -4,8 +4,14 @@ import { notFound } from "next/navigation";
 import ProductGrid from "@/app/components/boutique/ProductGrid";
 import { getBaseUrl } from "@/lib/get-base-url";
 import { getBoutiqueBasePath } from "@/lib/boutique-links";
-import { getBoutiquePublicUrl } from "@/lib/boutique-subdomains";
 import { fetchBoutiqueApi } from "@/lib/boutique-internal-fetch";
+import {
+  chargerBoutiquePublique,
+  metadonneesBoutique,
+  metadonneesIntrouvable,
+  traductionsBoutique,
+  urlAbsolueBoutique,
+} from "@/lib/boutique-public";
 
 const PAGE_SIZE = 12;
 
@@ -25,25 +31,17 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const baseUrl = await getBaseUrl();
+  const donnees = await chargerBoutiquePublique(slug);
+  if (!donnees) return metadonneesIntrouvable();
+  const { boutique } = donnees;
+  const t = await traductionsBoutique(boutique.langue);
 
-  const boutiqueRes = await fetchBoutiqueApi(`${baseUrl}/api/boutiques/slug/${slug}`);
-  if (!boutiqueRes.ok) {
-    return { title: "Boutique introuvable" };
-  }
-  const { boutique } = (await boutiqueRes.json()) as { boutique: { nom: string } };
-
-  const title = `Catalogue — ${boutique.nom}`;
-  const boutiqueUrl = getBoutiquePublicUrl(slug);
-  const absoluteBoutiqueUrl = boutiqueUrl.startsWith("http") ? boutiqueUrl : `${baseUrl}${boutiqueUrl}`;
-  const canonical = `${absoluteBoutiqueUrl}/produits`;
-
-  return {
-    title,
-    alternates: { canonical },
-    openGraph: { title, url: canonical, type: "website" },
-    twitter: { card: "summary_large_image", title },
-  };
+  return metadonneesBoutique({
+    boutique,
+    titre: t("meta.catalogueTitre", { nom: boutique.nom }),
+    description: t("meta.catalogueDescription", { nom: boutique.nom }),
+    canonical: `${await urlAbsolueBoutique(slug)}/produits`,
+  });
 }
 
 export default async function CataloguePage({

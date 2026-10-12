@@ -1235,5 +1235,20 @@
         "passerPro": "🔒 Upgrade to Pro"
       }
     }
+  },
+  "boutique": {
+    "meta": {
+      "introuvable": "Store not found",
+      "accueilDescription": "Discover the {nom} store: all its products, collections and new arrivals.",
+      "produitTitre": "{produit} | {nom}",
+      "produitDescription": "{produit} for {prix} at {nom}.",
+      "catalogueTitre": "Catalog | {nom}",
+      "catalogueDescription": "All products from the {nom} store, by collection.",
+      "collectionTitre": "{collection} | {nom}",
+      "collectionDescription": "The {collection} collection from the {nom} store.",
+      "mentionsTitre": "Legal notice | {nom}",
+      "mentionsDescription": "Legal notice of the {nom} store.",
+      "panierTitre": "Cart | {nom}"
+    }
   }
 }

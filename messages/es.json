@@ -1235,5 +1235,20 @@
         "passerPro": "🔒 Pasa al plan Pro"
       }
     }
+  },
+  "boutique": {
+    "meta": {
+      "introuvable": "Tienda no encontrada",
+      "accueilDescription": "Descubre la tienda {nom}: todos sus productos, colecciones y novedades.",
+      "produitTitre": "{produit} | {nom}",
+      "produitDescription": "{produit} por {prix} en {nom}.",
+      "catalogueTitre": "Catálogo | {nom}",
+      "catalogueDescription": "Todos los productos de la tienda {nom}, por colección.",
+      "collectionTitre": "{collection} | {nom}",
+      "collectionDescription": "La colección {collection} de la tienda {nom}.",
+      "mentionsTitre": "Aviso legal | {nom}",
+      "mentionsDescription": "Aviso legal de la tienda {nom}.",
+      "panierTitre": "Carrito | {nom}"
+    }
   }
 }

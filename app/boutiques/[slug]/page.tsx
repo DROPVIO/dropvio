@@ -8,47 +8,38 @@ import VideoCarousel from "@/app/components/boutique/VideoCarousel";
 import { TEXTES_DEFAUT } from "@/lib/site-templates";
 import { getBaseUrl } from "@/lib/get-base-url";
 import { getBoutiqueBasePath } from "@/lib/boutique-links";
-import { getBoutiquePublicUrl } from "@/lib/boutique-subdomains";
 import { fetchBoutiqueApi } from "@/lib/boutique-internal-fetch";
+import {
+  chargerBoutiquePublique,
+  metadonneesBoutique,
+  metadonneesIntrouvable,
+  traductionsBoutique,
+  tronquer,
+  urlAbsolueBoutique,
+} from "@/lib/boutique-public";
+import JsonLd from "@/app/components/boutique/JsonLd";
 
-function truncate(text: string, max: number): string {
-  return text.length > max ? `${text.slice(0, max - 1).trimEnd()}…` : text;
-}
-
-// Réutilise volontairement le même fetch (même URL, mêmes options) que le composant de
-// page ci-dessous : Next.js dédoublonne automatiquement les appels fetch identiques faits
-// pendant le rendu d'une même requête, donc pas de coût réseau supplémentaire.
+// Titre, description et données structurées dans la langue de la boutique (jamais celle du
+// visiteur) ; une boutique privée (aperçu du propriétaire) n'est pas indexée.
 export async function generateMetadata({
   params,
 }: {
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const baseUrl = await getBaseUrl();
+  const donnees = await chargerBoutiquePublique(slug);
+  if (!donnees) return metadonneesIntrouvable();
+  const { boutique } = donnees;
+  const t = await traductionsBoutique(boutique.langue);
 
-  const boutiqueRes = await fetchBoutiqueApi(`${baseUrl}/api/boutiques/slug/${slug}`);
-  if (!boutiqueRes.ok) {
-    return { title: "Boutique introuvable" };
-  }
-  const { boutique } = (await boutiqueRes.json()) as {
-    boutique: { nom: string; description: string | null };
-  };
-
-  const title = boutique.nom;
-  const description = boutique.description?.trim()
-    ? truncate(boutique.description.trim(), 155)
-    : `Découvre les produits de ${boutique.nom}.`;
-
-  const boutiqueUrl = getBoutiquePublicUrl(slug);
-  const canonical = boutiqueUrl.startsWith("http") ? boutiqueUrl : `${baseUrl}${boutiqueUrl}`;
-
-  return {
-    title,
-    description,
-    alternates: { canonical },
-    openGraph: { title, description, url: canonical, type: "website" },
-    twitter: { card: "summary_large_image", title, description },
-  };
+  return metadonneesBoutique({
+    boutique,
+    titre: boutique.nom,
+    description: boutique.description?.trim()
+      ? tronquer(boutique.description.trim(), 155)
+      : t("meta.accueilDescription", { nom: boutique.nom }),
+    canonical: await urlAbsolueBoutique(slug),
+  });
 }
 
 type ProduitCarte = {
@@ -65,13 +56,12 @@ export default async function BoutiquePage({ params }: { params: Promise<{ slug:
   const { slug } = await params;
   const baseUrl = await getBaseUrl();
 
-  const boutiqueRes = await fetchBoutiqueApi(`${baseUrl}/api/boutiques/slug/${slug}`);
-  if (!boutiqueRes.ok) {
+  const donnees = await chargerBoutiquePublique(slug);
+  if (!donnees) {
     notFound();
   }
-  const { boutique } = (await boutiqueRes.json()) as {
-    boutique: { id: string; nom: string; slug: string; description: string | null; theme: string | null; settings: unknown };
-  };
+  const { boutique } = donnees;
+  const urlBoutique = await urlAbsolueBoutique(slug);
 
   // La page d'accueil ne montre plus qu'un aperçu (bestsellers + spotlight) — le catalogue
   // complet avec filtres/recherche/pagination vit désormais sur /produits (voir ce fichier
@@ -102,6 +92,17 @@ export default async function BoutiquePage({ params }: { params: Promise<{ slug:
 
   return (
     <main className="min-h-screen bg-[var(--bg)] text-[var(--text-primary)]">
+      <JsonLd
+        data={{
+          "@context": "https://schema.org",
+          "@type": "Store",
+          name: boutique.nom,
+          ...(boutique.description?.trim() && { description: boutique.description.trim() }),
+          url: urlBoutique,
+          inLanguage: boutique.langue,
+          currenciesAccepted: "EUR",
+        }}
+      />
       {/* HERO — pleine largeur, accroche générique fixe (jamais boutique.description : le
           vrai texte de la boutique est l'exclusivité de la section "À propos" plus bas,
           pour ne pas recréer le doublon corrigé plus tôt ce soir). Dégradé en style inline

@@ -4,8 +4,14 @@ import { notFound } from "next/navigation";
 import ProductGrid from "@/app/components/boutique/ProductGrid";
 import { getBaseUrl } from "@/lib/get-base-url";
 import { getBoutiqueBasePath } from "@/lib/boutique-links";
-import { getBoutiquePublicUrl } from "@/lib/boutique-subdomains";
 import { fetchBoutiqueApi } from "@/lib/boutique-internal-fetch";
+import {
+  chargerBoutiquePublique,
+  metadonneesBoutique,
+  metadonneesIntrouvable,
+  traductionsBoutique,
+  urlAbsolueBoutique,
+} from "@/lib/boutique-public";
 
 const PAGE_SIZE = 12;
 
@@ -15,32 +21,18 @@ export async function generateMetadata({
   params: Promise<{ slug: string; categorieSlug: string }>;
 }): Promise<Metadata> {
   const { slug, categorieSlug } = await params;
-  const baseUrl = await getBaseUrl();
+  const donnees = await chargerBoutiquePublique(slug);
+  const categorie = donnees?.categories.find((c) => c.slug === categorieSlug);
+  if (!donnees || !categorie) return metadonneesIntrouvable();
+  const { boutique } = donnees;
+  const t = await traductionsBoutique(boutique.langue);
 
-  const boutiqueRes = await fetchBoutiqueApi(`${baseUrl}/api/boutiques/slug/${slug}`);
-  if (!boutiqueRes.ok) {
-    return { title: "Collection introuvable" };
-  }
-  const { boutique, categories } = (await boutiqueRes.json()) as {
-    boutique: { nom: string };
-    categories: { id: string; nom: string; slug: string }[];
-  };
-  const categorie = categories.find((c) => c.slug === categorieSlug);
-  if (!categorie) {
-    return { title: "Collection introuvable" };
-  }
-
-  const title = `${categorie.nom} — ${boutique.nom}`;
-  const boutiqueUrl = getBoutiquePublicUrl(slug);
-  const absoluteBoutiqueUrl = boutiqueUrl.startsWith("http") ? boutiqueUrl : `${baseUrl}${boutiqueUrl}`;
-  const canonical = `${absoluteBoutiqueUrl}/collections/${categorieSlug}`;
-
-  return {
-    title,
-    alternates: { canonical },
-    openGraph: { title, url: canonical, type: "website" },
-    twitter: { card: "summary_large_image", title },
-  };
+  return metadonneesBoutique({
+    boutique,
+    titre: t("meta.collectionTitre", { collection: categorie.nom, nom: boutique.nom }),
+    description: t("meta.collectionDescription", { collection: categorie.nom, nom: boutique.nom }),
+    canonical: `${await urlAbsolueBoutique(slug)}/collections/${categorieSlug}`,
+  });
 }
 
 export default async function CollectionPage({

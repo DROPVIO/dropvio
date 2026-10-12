@@ -1235,5 +1235,20 @@
         "passerPro": "🔒 Passe au plan Pro"
       }
     }
+  },
+  "boutique": {
+    "meta": {
+      "introuvable": "Boutique introuvable",
+      "accueilDescription": "Découvre la boutique {nom} : tous ses produits, ses collections et ses nouveautés.",
+      "produitTitre": "{produit} | {nom}",
+      "produitDescription": "{produit} à {prix} chez {nom}.",
+      "catalogueTitre": "Catalogue | {nom}",
+      "catalogueDescription": "Tous les produits de la boutique {nom}, par collection.",
+      "collectionTitre": "{collection} | {nom}",
+      "collectionDescription": "La collection {collection} de la boutique {nom}.",
+      "mentionsTitre": "Mentions légales | {nom}",
+      "mentionsDescription": "Mentions légales de la boutique {nom}.",
+      "panierTitre": "Panier | {nom}"
+    }
   }
 }
