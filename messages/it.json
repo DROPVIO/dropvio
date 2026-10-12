@@ -1160,6 +1160,18 @@
           "produitRequis": "Aggiungi almeno un prodotto prima di rendere pubblico il negozio.",
           "confirmerPublier": "Rendere pubblico il negozio? Sarà visibile a tutti all'indirizzo «{slug}» e potrà essere indicizzato da Google.",
           "confirmerMasquer": "Rendere privato il negozio? I visitatori non potranno più accedervi e verrà rimosso dalla sitemap."
+        },
+        "enregistrer": "Salva",
+        "enregistrement": "Salvataggio…",
+        "enregistre": "Salvato.",
+        "identite": {
+          "titre": "Nome e indirizzo",
+          "nom": "Nome del negozio",
+          "slug": "Slug (indirizzo del negozio)",
+          "aideSlug": "Lettere minuscole, numeri e trattini. Compare nell'indirizzo pubblico del negozio.",
+          "avertissementSlug": "Il negozio è pubblico: il vecchio link non funzionerà più dopo questa modifica.",
+          "confirmerSlugPublic": "Cambiare l'indirizzo da «{ancien}» a «{nouveau}»? Il negozio è pubblico: il vecchio link non funzionerà più, anche su Google e nei link già condivisi.",
+          "nomRequis": "Il nome del negozio è obbligatorio."
         }
       }
     }

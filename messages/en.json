@@ -1160,6 +1160,18 @@
           "produitRequis": "Add at least one product before making the store public.",
           "confirmerPublier": "Make the store public? Anyone will be able to see it at “{slug}”, and Google may index it.",
           "confirmerMasquer": "Make the store private? Visitors will no longer be able to access it, and it will be removed from the sitemap."
+        },
+        "enregistrer": "Save",
+        "enregistrement": "Saving…",
+        "enregistre": "Saved.",
+        "identite": {
+          "titre": "Name and address",
+          "nom": "Store name",
+          "slug": "Slug (store address)",
+          "aideSlug": "Lowercase letters, numbers and hyphens. It appears in the store's public address.",
+          "avertissementSlug": "The store is public: the old link will stop working after this change.",
+          "confirmerSlugPublic": "Change the address from “{ancien}” to “{nouveau}”? The store is public: the old link will stop working, including on Google and in links already shared.",
+          "nomRequis": "The store name is required."
         }
       }
     }

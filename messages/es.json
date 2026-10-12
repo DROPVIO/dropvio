@@ -1160,6 +1160,18 @@
           "produitRequis": "Añade al menos un producto antes de hacer pública la tienda.",
           "confirmerPublier": "¿Hacer pública la tienda? Cualquiera podrá verla en «{slug}» y Google podrá indexarla.",
           "confirmerMasquer": "¿Hacer privada la tienda? Los visitantes ya no podrán acceder y saldrá del sitemap."
+        },
+        "enregistrer": "Guardar",
+        "enregistrement": "Guardando…",
+        "enregistre": "Guardado.",
+        "identite": {
+          "titre": "Nombre y dirección",
+          "nom": "Nombre de la tienda",
+          "slug": "Slug (dirección de la tienda)",
+          "aideSlug": "Letras minúsculas, números y guiones. Aparece en la dirección pública de la tienda.",
+          "avertissementSlug": "La tienda es pública: el enlace anterior dejará de funcionar tras este cambio.",
+          "confirmerSlugPublic": "¿Cambiar la dirección de «{ancien}» a «{nouveau}»? La tienda es pública: el enlace anterior dejará de funcionar, también en Google y en los enlaces ya compartidos.",
+          "nomRequis": "El nombre de la tienda es obligatorio."
         }
       }
     }

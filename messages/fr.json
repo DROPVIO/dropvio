@@ -1160,6 +1160,18 @@
           "produitRequis": "Ajoute au moins un produit avant de rendre la boutique publique.",
           "confirmerPublier": "Rendre la boutique publique ? Elle sera visible par tout le monde à l'adresse « {slug} » et pourra être indexée par Google.",
           "confirmerMasquer": "Rendre la boutique privée ? Les visiteurs ne pourront plus y accéder et elle sortira du sitemap."
+        },
+        "enregistrer": "Enregistrer",
+        "enregistrement": "Enregistrement…",
+        "enregistre": "Enregistré.",
+        "identite": {
+          "titre": "Nom et adresse",
+          "nom": "Nom de la boutique",
+          "slug": "Slug (adresse de la boutique)",
+          "aideSlug": "Lettres minuscules, chiffres et tirets. Il apparaît dans l'adresse publique de la boutique.",
+          "avertissementSlug": "La boutique est publique : l'ancien lien ne fonctionnera plus après ce changement.",
+          "confirmerSlugPublic": "Changer l'adresse de « {ancien} » en « {nouveau} » ? La boutique est publique : l'ancien lien ne fonctionnera plus, y compris dans Google et dans les liens déjà partagés.",
+          "nomRequis": "Le nom de la boutique est requis."
         }
       }
     }

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { useApiErrorMessage } from "@/lib/use-api-error";
+import { isValidSlug, slugify } from "@/lib/slugify";
 
 export type BoutiqueReglable = {
   id: string;
@@ -17,10 +18,16 @@ type Props = {
   onUpdated: (patch: Partial<BoutiqueReglable>) => void;
 };
 
-// Réglages de la boutique : visibilité publique.
+// Réglages de la boutique : visibilité publique, nom et slug.
 export default function BoutiqueReglages({ boutique, produitsCount, onUpdated }: Props) {
   const t = useTranslations("siteBuilder.boutique.reglages");
   const apiErrorMessage = useApiErrorMessage();
+
+  const [nom, setNom] = useState(boutique.nom);
+  const [slug, setSlug] = useState(boutique.slug);
+  const [identiteEnCours, setIdentiteEnCours] = useState(false);
+  const [identiteErreur, setIdentiteErreur] = useState<string | null>(null);
+  const [identiteSucces, setIdentiteSucces] = useState(false);
 
   const [visibiliteEnCours, setVisibiliteEnCours] = useState(false);
   const [visibiliteErreur, setVisibiliteErreur] = useState<string | null>(null);
@@ -38,6 +45,37 @@ export default function BoutiqueReglages({ boutique, produitsCount, onUpdated }:
     } catch {
       return { ok: false, message: apiErrorMessage(null, "network") };
     }
+  }
+
+  async function enregistrerIdentite() {
+    const nomFinal = nom.trim();
+    const slugFinal = slugify(slug);
+    setIdentiteErreur(null);
+    setIdentiteSucces(false);
+    if (!nomFinal) {
+      setIdentiteErreur(t("identite.nomRequis"));
+      return;
+    }
+    if (!isValidSlug(slugFinal)) {
+      setIdentiteErreur(apiErrorMessage({ code: "slug_invalid" }));
+      return;
+    }
+    const slugChange = slugFinal !== boutique.slug;
+    if (slugChange && boutique.est_publique && !window.confirm(t("identite.confirmerSlugPublic", { ancien: boutique.slug, nouveau: slugFinal }))) {
+      return;
+    }
+    setIdentiteEnCours(true);
+    const res = await patch({ nom: nomFinal, ...(slugChange && { slug: slugFinal }) });
+    setIdentiteEnCours(false);
+    if (!res.ok) {
+      setIdentiteErreur(res.message);
+      return;
+    }
+    setNom(nomFinal);
+    setSlug(slugFinal);
+    onUpdated({ nom: nomFinal, slug: slugFinal });
+    setIdentiteSucces(true);
+    window.setTimeout(() => setIdentiteSucces(false), 2500);
   }
 
   async function basculerVisibilite() {
@@ -62,35 +100,77 @@ export default function BoutiqueReglages({ boutique, produitsCount, onUpdated }:
     onUpdated({ est_publique: rendrePublique });
   }
 
+  const champ =
+    "mt-2 w-full rounded-2xl border border-[var(--border)] bg-[var(--bg-sunken)] px-4 py-3 text-sm text-[var(--text-primary)] outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500";
+  const identiteModifiee = nom.trim() !== boutique.nom || slugify(slug) !== boutique.slug;
+
   return (
-    <div className="mt-6 rounded-3xl border border-[var(--border)] bg-[var(--surface-2)] p-4">
-      <h3 className="text-sm font-semibold text-[var(--text-primary)]">{t("visibilite.titre")}</h3>
-      <div className="mt-3 flex flex-wrap items-center gap-3">
-        <button
-          type="button"
-          role="switch"
-          aria-checked={boutique.est_publique}
-          onClick={() => void basculerVisibilite()}
-          disabled={visibiliteEnCours}
-          className={`relative h-7 w-12 shrink-0 rounded-full transition disabled:opacity-50 ${
-            boutique.est_publique ? "bg-[var(--success)]" : "bg-[var(--surface-3)]"
-          }`}
-        >
-          <span className="sr-only">{t("visibilite.titre")}</span>
-          <span
-            className={`absolute top-1 h-5 w-5 rounded-full bg-white transition-all ${
-              boutique.est_publique ? "left-6" : "left-1"
-            }`}
-          />
-        </button>
-        <span className="text-sm font-semibold text-[var(--text-primary)]">
-          {boutique.est_publique ? t("visibilite.publique") : t("visibilite.privee")}
-        </span>
+    <>
+      <div className="mt-6 rounded-3xl border border-[var(--border)] bg-[var(--surface-2)] p-4">
+        <h3 className="text-sm font-semibold text-[var(--text-primary)]">{t("identite.titre")}</h3>
+        <div className="mt-3 grid gap-4 sm:grid-cols-2">
+          <label className="block text-sm text-[var(--text-muted)]">
+            {t("identite.nom")}
+            <input type="text" value={nom} onChange={(e) => setNom(e.target.value)} className={champ} />
+          </label>
+          <label className="block text-sm text-[var(--text-muted)]">
+            {t("identite.slug")}
+            <input
+              type="text"
+              value={slug}
+              onChange={(e) => setSlug(e.target.value)}
+              onBlur={() => setSlug(slugify(slug))}
+              className={champ}
+            />
+          </label>
+        </div>
+        <p className="mt-2 text-xs text-[var(--text-muted)]">{t("identite.aideSlug")}</p>
+        {boutique.est_publique && slugify(slug) !== boutique.slug ? (
+          <p className="mt-2 text-xs text-[var(--warning)]">{t("identite.avertissementSlug")}</p>
+        ) : null}
+        <div className="mt-3 flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => void enregistrerIdentite()}
+            disabled={identiteEnCours || !identiteModifiee}
+            className="rounded-2xl bg-violet-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-violet-400 disabled:opacity-50"
+          >
+            {identiteEnCours ? t("enregistrement") : t("enregistrer")}
+          </button>
+          {identiteSucces ? <span className="text-sm text-[var(--success)]">{t("enregistre")}</span> : null}
+          {identiteErreur ? <span className="text-sm text-[var(--danger)]">{identiteErreur}</span> : null}
+        </div>
       </div>
-      <p className="mt-2 text-xs text-[var(--text-muted)]">
-        {boutique.est_publique ? t("visibilite.aidePublique") : t("visibilite.aidePrivee")}
-      </p>
-      {visibiliteErreur ? <p className="mt-2 text-sm text-[var(--danger)]">{visibiliteErreur}</p> : null}
-    </div>
+
+      <div className="mt-6 rounded-3xl border border-[var(--border)] bg-[var(--surface-2)] p-4">
+        <h3 className="text-sm font-semibold text-[var(--text-primary)]">{t("visibilite.titre")}</h3>
+        <div className="mt-3 flex flex-wrap items-center gap-3">
+          <button
+            type="button"
+            role="switch"
+            aria-checked={boutique.est_publique}
+            onClick={() => void basculerVisibilite()}
+            disabled={visibiliteEnCours}
+            className={`relative h-7 w-12 shrink-0 rounded-full transition disabled:opacity-50 ${
+              boutique.est_publique ? "bg-[var(--success)]" : "bg-[var(--surface-3)]"
+            }`}
+          >
+            <span className="sr-only">{t("visibilite.titre")}</span>
+            <span
+              className={`absolute top-1 h-5 w-5 rounded-full bg-white transition-all ${
+                boutique.est_publique ? "left-6" : "left-1"
+              }`}
+            />
+          </button>
+          <span className="text-sm font-semibold text-[var(--text-primary)]">
+            {boutique.est_publique ? t("visibilite.publique") : t("visibilite.privee")}
+          </span>
+        </div>
+        <p className="mt-2 text-xs text-[var(--text-muted)]">
+          {boutique.est_publique ? t("visibilite.aidePublique") : t("visibilite.aidePrivee")}
+        </p>
+        {visibiliteErreur ? <p className="mt-2 text-sm text-[var(--danger)]">{visibiliteErreur}</p> : null}
+      </div>
+    </>
   );
 }
