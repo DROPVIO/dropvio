@@ -1566,6 +1566,132 @@
         "reseauTelecharge": "Unable to reach the server: the HTML was downloaded but not saved to “My sites”.",
         "reseauRien": "Unable to reach the server: nothing was saved to “My sites”."
       }
+    },
+    "builder": {
+      "titre": "Landing page generator",
+      "intro": "Generate a complete HTML landing page for your product in seconds with AI.",
+      "modeBoutique": "Store mode",
+      "chargement": "Loading…",
+      "facultatif": "(optional)",
+      "fichierTelecharge": "File saved to your Downloads: {fichier}",
+      "generer": "Generate the landing page with AI",
+      "genererAuto": "Automatic generation: AI picks the style",
+      "chargementRegeneration": "Loading the site data to regenerate…",
+      "modes": {
+        "ia": "🤖 AI generation",
+        "template": "🎨 Template editor"
+      },
+      "prompt": {
+        "label": "Your site prompt",
+        "aide": "Describe the site you want, from A to Z: sections, copy, tone, animations, mood. The AI starts from a base structure, but your prompt matters most.",
+        "placeholder": "E.g. a full-screen hero with a mood video, then an “our story” section in two columns, testimonials in a carousel, a warm, family tone, soft scroll animations…",
+        "compteur": "{count, plural, one {# character} other {# characters}}",
+        "compteurManquant": "{count, plural, one {# character} other {# characters}}: {manquant} more needed",
+        "raison": "The button is disabled: your prompt must be at least {min} characters long ({manquant} more). It drives the whole generation."
+      },
+      "brouillon": {
+        "introuvable": "The store draft can't be found in this tab. Go back to your store page and click “Create my site” again.",
+        "bandeau": "🏪 Store mode: <strong>{nom}</strong>, {count, plural, one {# product imported} other {# products imported}}.",
+        "bandeauSurTotal": "🏪 Store mode: <strong>{nom}</strong>, {count, plural, one {# product imported} other {# products imported}} out of {total}.",
+        "importes": "{count, plural, one {# product imported} other {# products imported}}"
+      },
+      "etapes": {
+        "infos": "Product info",
+        "generation": "Generation",
+        "resultat": "Result"
+      },
+      "format": {
+        "titre": "Export format",
+        "aide": "You can change it anytime from “My sites”; the generated page stays the same.",
+        "html": "📄 HTML",
+        "liquid": "🛍 Liquid (Shopify)"
+      },
+      "formulaire": {
+        "importer": "Import from AliExpress",
+        "importerBouton": "Import",
+        "nom": "Product name",
+        "reformuler": "✨ Rephrase",
+        "nomPlaceholder": "E.g. Pro heated lumbar belt",
+        "description": "Short description",
+        "nomDabord": "Enter a product name first",
+        "genererDescription": "✨ Generate a description",
+        "descriptionPlaceholder": "E.g. Relieves lower back pain with infrared heat. Ideal for the office and sports. 8-hour battery.",
+        "imageAvertissement": "Add the URL of a photo of your product below. Without an image, your landing page will show <strong>no real product photo</strong>, just a generic decorative visual (gradient or icon).",
+        "image": "Product image URL",
+        "imagePlaceholder": "https://example.com/product-image.jpg",
+        "apercuImage": "Image preview",
+        "prixVente": "Selling price",
+        "prixBarre": "Compare-at price"
+      },
+      "style": {
+        "titre": "Page style",
+        "personnaliser": "Customize →",
+        "retour": "← Back",
+        "enregistrer": "Save changes"
+      },
+      "styles": {
+        "premium": "Elegant, exclusive, high-end",
+        "nature": "Sustainable, natural, ethical",
+        "mainstream": "Simple, effective, mass-market",
+        "retro": "Nostalgic, authentic, warm",
+        "minimal": "Understated, clean, modern",
+        "tech": "Innovative, digital, high-tech"
+      },
+      "corrections": {
+        "titre": "Fixes to take into account",
+        "placeholder": "Paste the weak points from a previous audit here (one fix per line): the AI will take them into account for this generation."
+      },
+      "generation": {
+        "titre": "The AI is generating your landing page…",
+        "aide": "Creating the hero, benefits, social proof and buy button"
+      },
+      "resultat": {
+        "genereePour": "Landing page generated for",
+        "recommencer": "Start over",
+        "fichierHtml": "⬇ .html file",
+        "fichierLiquid": "⬇ .liquid file",
+        "telechargerLiquid": "⬇ Download the .liquid",
+        "telechargerHtml": "⬇ Download the HTML",
+        "passerPro": "🔒 Upgrade to Pro to download your site",
+        "titreApercu": "Landing page preview"
+      },
+      "shopify": {
+        "titre": "Publish to Shopify",
+        "connecte": "Connected to {domaine}",
+        "aConnecter": "Connect your store to publish in one click",
+        "couleursNonEnregistrees": "⚠️ Unsaved color changes: click “Save these colors” above before publishing, or Shopify will get the old version.",
+        "reservePro": "🔒 Publishing to Shopify is available on the Pro and Agency plans.",
+        "passerPro": "Upgrade to Pro →",
+        "verification": "Checking the connection…",
+        "domaineAide": "Enter your store's domain to connect it: you won't need to copy and paste code anymore.",
+        "domainePlaceholder": "my-store.myshopify.com",
+        "formatDomaine": "Expected format: my-store.myshopify.com",
+        "connecter": "Connect my Shopify store",
+        "manuel": "Prefer doing it yourself? Download the HTML or .liquid file above and paste it into your Shopify admin.",
+        "pageHtml": "📄 Standalone HTML page",
+        "pageHtmlAide": "Ideal for Facebook and TikTok ads",
+        "sectionLiquid": "💧 Theme Liquid section",
+        "sectionLiquidAide": "Fits into your existing theme",
+        "attenteSauvegarde": "Waiting for the page to be saved: try again in a moment if the buttons stay greyed out.",
+        "publication": "Publishing ({mode})…",
+        "etapeManuelle": "Section published: one manual step remains",
+        "publie": "Published to Shopify 🎉",
+        "voirPage": "View the page →",
+        "ouvrirAdmin": "Open in Shopify admin →",
+        "pasSauvegardee": "This page hasn't been saved yet: it can't be published to Shopify."
+      },
+      "erreurs": {
+        "chargementSite": "Unable to load this site.",
+        "shopify": "Unable to publish to Shopify.",
+        "importProduit": "Product not found.",
+        "reformuler": "Unable to rephrase the name.",
+        "genererDescription": "Unable to generate the description.",
+        "generation": "Generation failed. Please try again.",
+        "sauvegarde": "This page couldn't be saved to “My sites”.",
+        "sauvegardeReseau": "This page couldn't be saved to “My sites” (server unreachable).",
+        "sauvegardeEnCours": "The site's initial save isn't finished yet: try again in a moment.",
+        "couleurs": "Unable to save these colors."
+      }
     }
   },
   "boutique": {

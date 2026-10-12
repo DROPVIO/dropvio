@@ -1566,6 +1566,132 @@
         "reseauTelecharge": "No se puede contactar con el servidor: el HTML se ha descargado, pero no se ha guardado en «Mis sitios».",
         "reseauRien": "No se puede contactar con el servidor: no se ha guardado nada en «Mis sitios»."
       }
+    },
+    "builder": {
+      "titre": "Generador de landing pages",
+      "intro": "Genera una landing page HTML completa para tu producto en segundos con la IA.",
+      "modeBoutique": "Modo tienda",
+      "chargement": "Cargando…",
+      "facultatif": "(opcional)",
+      "fichierTelecharge": "Archivo guardado en tus Descargas: {fichier}",
+      "generer": "Generar la landing page con IA",
+      "genererAuto": "Generación automática: la IA elige el estilo",
+      "chargementRegeneration": "Cargando los datos del sitio que se va a regenerar…",
+      "modes": {
+        "ia": "🤖 Generación con IA",
+        "template": "🎨 Editor de plantillas"
+      },
+      "prompt": {
+        "label": "Prompt de tu sitio",
+        "aide": "Describe el sitio que quieres, de la A a la Z: secciones, textos, tono, animaciones, ambiente. La IA parte de una estructura base, pero lo que más cuenta es tu prompt.",
+        "placeholder": "Ej.: un hero a pantalla completa con un vídeo de ambiente, luego una sección «nuestra historia» en dos columnas, testimonios en carrusel, un tono cálido y familiar, animaciones suaves al desplazarse…",
+        "compteur": "{count, plural, one {# carácter} other {# caracteres}}",
+        "compteurManquant": "{count, plural, one {# carácter} other {# caracteres}}: faltan al menos {manquant}",
+        "raison": "El botón está desactivado: tu prompt debe tener al menos {min} caracteres (faltan {manquant}). Es lo que guía toda la generación."
+      },
+      "brouillon": {
+        "introuvable": "No se encuentra el borrador de la tienda en esta pestaña. Vuelve a la página de tu tienda y pulsa de nuevo «Crear mi sitio».",
+        "bandeau": "🏪 Modo tienda: <strong>{nom}</strong>, {count, plural, one {# producto importado} other {# productos importados}}.",
+        "bandeauSurTotal": "🏪 Modo tienda: <strong>{nom}</strong>, {count, plural, one {# producto importado} other {# productos importados}} de {total} en total.",
+        "importes": "{count, plural, one {# producto importado} other {# productos importados}}"
+      },
+      "etapes": {
+        "infos": "Información del producto",
+        "generation": "Generación",
+        "resultat": "Resultado"
+      },
+      "format": {
+        "titre": "Formato de exportación",
+        "aide": "Se puede cambiar en cualquier momento desde «Mis sitios»; la página generada no cambia.",
+        "html": "📄 HTML",
+        "liquid": "🛍 Liquid (Shopify)"
+      },
+      "formulaire": {
+        "importer": "Importar desde AliExpress",
+        "importerBouton": "Importar",
+        "nom": "Nombre del producto",
+        "reformuler": "✨ Reformular",
+        "nomPlaceholder": "Ej.: Cinturón térmico lumbar Pro",
+        "description": "Descripción breve",
+        "nomDabord": "Escribe primero un nombre de producto",
+        "genererDescription": "✨ Generar una descripción",
+        "descriptionPlaceholder": "Ej.: Alivia el dolor lumbar gracias al calor infrarrojo. Ideal para la oficina y el deporte. Batería de 8 h.",
+        "imageAvertissement": "Añade abajo la URL de una foto de tu producto. Sin imagen, tu landing page no mostrará <strong>ninguna foto real del producto</strong>, solo un visual decorativo genérico (degradado o icono).",
+        "image": "URL de la imagen del producto",
+        "imagePlaceholder": "https://ejemplo.com/imagen-producto.jpg",
+        "apercuImage": "Vista previa de la imagen",
+        "prixVente": "Precio de venta",
+        "prixBarre": "Precio tachado"
+      },
+      "style": {
+        "titre": "Estilo de la página",
+        "personnaliser": "Personalizar →",
+        "retour": "← Volver",
+        "enregistrer": "Guardar los cambios"
+      },
+      "styles": {
+        "premium": "Elegante, exclusivo, de alta gama",
+        "nature": "Sostenible, natural, ético",
+        "mainstream": "Sencillo, eficaz, para el gran público",
+        "retro": "Nostálgico, auténtico, cálido",
+        "minimal": "Sobrio, claro, moderno",
+        "tech": "Innovador, digital, high-tech"
+      },
+      "corrections": {
+        "titre": "Correcciones a tener en cuenta",
+        "placeholder": "Pega aquí los puntos débiles de una auditoría anterior (una corrección por línea): la IA los tendrá en cuenta en esta generación."
+      },
+      "generation": {
+        "titre": "La IA está generando tu landing page…",
+        "aide": "Creando el hero, los beneficios, la prueba social y el botón de compra"
+      },
+      "resultat": {
+        "genereePour": "Landing page generada para",
+        "recommencer": "Empezar de nuevo",
+        "fichierHtml": "⬇ Archivo .html",
+        "fichierLiquid": "⬇ Archivo .liquid",
+        "telechargerLiquid": "⬇ Descargar el .liquid",
+        "telechargerHtml": "⬇ Descargar el HTML",
+        "passerPro": "🔒 Pasa al plan Pro para descargar tu sitio",
+        "titreApercu": "Vista previa de la landing page"
+      },
+      "shopify": {
+        "titre": "Publicar en Shopify",
+        "connecte": "Conectado a {domaine}",
+        "aConnecter": "Conecta tu tienda para publicar con un clic",
+        "couleursNonEnregistrees": "⚠️ Colores modificados sin guardar: pulsa «Guardar estos colores» arriba antes de publicar; si no, Shopify recibirá la versión anterior.",
+        "reservePro": "🔒 La publicación en Shopify está reservada a los planes Pro y Agency.",
+        "passerPro": "Pasa al plan Pro →",
+        "verification": "Comprobando la conexión…",
+        "domaineAide": "Introduce el dominio de tu tienda para conectarla: ya no tendrás que copiar y pegar código.",
+        "domainePlaceholder": "mi-tienda.myshopify.com",
+        "formatDomaine": "Formato esperado: mi-tienda.myshopify.com",
+        "connecter": "Conectar mi tienda Shopify",
+        "manuel": "¿Prefieres hacerlo tú? Descarga el HTML o el archivo .liquid de arriba y pégalo en tu administrador de Shopify.",
+        "pageHtml": "📄 Página HTML independiente",
+        "pageHtmlAide": "Ideal para anuncios de Facebook y TikTok",
+        "sectionLiquid": "💧 Sección Liquid del tema",
+        "sectionLiquidAide": "Se integra en tu tema actual",
+        "attenteSauvegarde": "Esperando a que se guarde la página: vuelve a intentarlo en un momento si los botones siguen en gris.",
+        "publication": "Publicando ({mode})…",
+        "etapeManuelle": "Sección publicada: queda un paso manual",
+        "publie": "Publicado en Shopify 🎉",
+        "voirPage": "Ver la página →",
+        "ouvrirAdmin": "Abrir en el administrador de Shopify →",
+        "pasSauvegardee": "Esta página aún no se ha guardado: no se puede publicar en Shopify."
+      },
+      "erreurs": {
+        "chargementSite": "No se puede cargar este sitio.",
+        "shopify": "No se puede publicar en Shopify.",
+        "importProduit": "Producto no encontrado.",
+        "reformuler": "No se puede reformular el nombre.",
+        "genererDescription": "No se puede generar la descripción.",
+        "generation": "La generación ha fallado. Inténtalo de nuevo.",
+        "sauvegarde": "Esta página no se ha podido guardar en «Mis sitios».",
+        "sauvegardeReseau": "Esta página no se ha podido guardar en «Mis sitios» (servidor inaccesible).",
+        "sauvegardeEnCours": "El guardado inicial del sitio aún no ha terminado: vuelve a intentarlo en un momento.",
+        "couleurs": "No se pueden guardar estos colores."
+      }
     }
   },
   "boutique": {

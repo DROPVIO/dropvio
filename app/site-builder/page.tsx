@@ -18,21 +18,25 @@ import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
 import { slugFichier, telechargerTexte } from "@/lib/audit-download";
 import { ToastHost, useToast } from "@/components/Toast";
 import { LIEN_CHANGER_DE_PLAN } from "@/lib/plan-links";
+import { useTranslations } from "next-intl";
+import { useApiErrorMessage } from "@/lib/use-api-error";
 
 type Step = 1 | 2 | 3;
 
 type Palette = { primary: string; secondary: string; accent: string };
 
 const STYLES: Array<{
-  id: string; icon: string; label: string; desc: string;
+  // label : nom du style, volontairement non traduit ; sa description est dans
+  // siteBuilder.builder.styles.<id>.
+  id: string; icon: string; label: string;
   from: string; to: string; defaultPalette: Palette;
 }> = [
-  { id: "premium",    icon: "✨", label: "Luxueux / Premium",            desc: "Élégant, exclusif, haut de gamme",     from: "#7c3aed", to: "#ec4899", defaultPalette: { primary: "#7c3aed", secondary: "#1a0533", accent: "#f59e0b" } },
-  { id: "nature",     icon: "🌿", label: "Éco-responsable / Nature",     desc: "Durable, naturel, éthique",            from: "#16a34a", to: "#0891b2", defaultPalette: { primary: "#16a34a", secondary: "#052e16", accent: "#0891b2" } },
-  { id: "mainstream", icon: "🛒", label: "Mainstream / Accessible",      desc: "Simple, efficace, grand public",       from: "#2563eb", to: "#7c3aed", defaultPalette: { primary: "#2563eb", secondary: "#0f172a", accent: "#06b6d4" } },
-  { id: "retro",      icon: "🎞️", label: "Rétro / Vintage",              desc: "Nostalgique, authentique, chaleureux", from: "#ea580c", to: "#ca8a04", defaultPalette: { primary: "#ea580c", secondary: "#1c0a00", accent: "#ca8a04" } },
-  { id: "minimal",    icon: "◻",  label: "Minimaliste / Épuré",          desc: "Sobre, clair, moderne",                from: "#09090b", to: "#312e81", defaultPalette: { primary: "#a78bfa", secondary: "#09090b", accent: "#e4e4e7" } },
-  { id: "tech",       icon: "⚡", label: "Tech / Futuriste",             desc: "Innovant, digital, high-tech",         from: "#0ea5e9", to: "#7c3aed", defaultPalette: { primary: "#0ea5e9", secondary: "#0c1a2e", accent: "#7c3aed" } },
+  { id: "premium",    icon: "✨", label: "Luxueux / Premium",                 from: "#7c3aed", to: "#ec4899", defaultPalette: { primary: "#7c3aed", secondary: "#1a0533", accent: "#f59e0b" } },
+  { id: "nature",     icon: "🌿", label: "Éco-responsable / Nature",                 from: "#16a34a", to: "#0891b2", defaultPalette: { primary: "#16a34a", secondary: "#052e16", accent: "#0891b2" } },
+  { id: "mainstream", icon: "🛒", label: "Mainstream / Accessible",             from: "#2563eb", to: "#7c3aed", defaultPalette: { primary: "#2563eb", secondary: "#0f172a", accent: "#06b6d4" } },
+  { id: "retro",      icon: "🎞️", label: "Rétro / Vintage",               from: "#ea580c", to: "#ca8a04", defaultPalette: { primary: "#ea580c", secondary: "#1c0a00", accent: "#ca8a04" } },
+  { id: "minimal",    icon: "◻",  label: "Minimaliste / Épuré",                          from: "#09090b", to: "#312e81", defaultPalette: { primary: "#a78bfa", secondary: "#09090b", accent: "#e4e4e7" } },
+  { id: "tech",       icon: "⚡", label: "Tech / Futuriste",                      from: "#0ea5e9", to: "#7c3aed", defaultPalette: { primary: "#0ea5e9", secondary: "#0c1a2e", accent: "#7c3aed" } },
 ];
 
 
@@ -65,6 +69,9 @@ function prixFromParam(value: string | null): string {
 
 function SiteBuilderContent() {
   const { toast, succes, fermer } = useToast();
+  const t = useTranslations("siteBuilder.builder");
+  const tPalette = useTranslations("siteBuilder.palette");
+  const apiErrorMessage = useApiErrorMessage();
   const searchParams = useSearchParams();
 
   const [mode, setMode] = useState<"ia" | "template">(searchParams.get("mode") === "template" ? "template" : "ia");
@@ -81,8 +88,8 @@ function SiteBuilderContent() {
   // SHOW_LEGACY_TEMPLATES dans lib/flags.ts.
   const modesVisibles = (
     [
-      { id: "ia", label: "🤖 Génération IA" },
-      { id: "template", label: "🎨 Éditeur de templates" },
+      { id: "ia", label: t("modes.ia") },
+      { id: "template", label: t("modes.template") },
     ] as const
   ).filter((m) => m.id !== "template" || SHOW_LEGACY_TEMPLATES || mode === "template");
   const [productName, setProductName] = useState(searchParams.get("name") ?? "");
@@ -158,7 +165,7 @@ function SiteBuilderContent() {
       .then(async (res) => {
         const json = await res.json();
         if (!res.ok) {
-          setRegenerateError(json.error ?? "Impossible de charger ce site.");
+          setRegenerateError(apiErrorMessage(json, t("erreurs.chargementSite")));
           return;
         }
         if (typeof json.nom_produit === "string") setProductName(json.nom_produit);
@@ -182,7 +189,7 @@ function SiteBuilderContent() {
           setDraftPalette(restored);
         }
       })
-      .catch(() => setRegenerateError("Impossible de contacter le serveur."))
+      .catch(() => setRegenerateError(apiErrorMessage({ code: "network" })))
       .finally(() => setRegenerating(false));
 
     // Corrections du dernier audit lié à ce site (audits_realises.site_id, voir
@@ -273,7 +280,7 @@ function SiteBuilderContent() {
   function handleConnectShopify() {
     const shop = shopifyDomainInput.trim().toLowerCase();
     if (!/^[a-z0-9][a-z0-9-]*\.myshopify\.com$/.test(shop)) {
-      setShopifyPushError("Format attendu : ma-boutique.myshopify.com");
+      setShopifyPushError(t("shopify.formatDomaine"));
       return;
     }
     const returnTo = window.location.pathname + window.location.search;
@@ -282,7 +289,7 @@ function SiteBuilderContent() {
 
   async function handlePushToShopify(mode: "html" | "liquid") {
     if (!savedSiteId) {
-      setShopifyPushError("Cette page n'a pas encore été sauvegardée — impossible de la publier sur Shopify.");
+      setShopifyPushError(t("shopify.pasSauvegardee"));
       return;
     }
     setShopifyPushingMode(mode);
@@ -296,12 +303,12 @@ function SiteBuilderContent() {
       });
       const json = await response.json();
       if (!response.ok) {
-        setShopifyPushError(json.error || "Impossible de publier sur Shopify.");
+        setShopifyPushError(apiErrorMessage(json, t("erreurs.shopify")));
         return;
       }
       setShopifyPushResult(json);
     } catch {
-      setShopifyPushError("Impossible de contacter le serveur.");
+      setShopifyPushError(apiErrorMessage({ code: "network" }));
     } finally {
       setShopifyPushingMode(null);
     }
@@ -332,7 +339,7 @@ function SiteBuilderContent() {
       });
       const json = await res.json();
       if (!res.ok) {
-        setAliexpressError(json.error ?? "Produit introuvable");
+        setAliexpressError(apiErrorMessage(json, t("erreurs.importProduit")));
       } else {
         if (json.nom) setProductName(json.nom);
         if (json.description) setDescription(json.description);
@@ -342,7 +349,7 @@ function SiteBuilderContent() {
         // future régénération — voir le useEffect de pré-remplissage plus haut.
       }
     } catch {
-      setAliexpressError("Impossible de contacter l'API");
+      setAliexpressError(apiErrorMessage({ code: "network" }));
     } finally {
       setAliexpressLoading(false);
     }
@@ -360,12 +367,12 @@ function SiteBuilderContent() {
       });
       const json = await response.json();
       if (!response.ok) {
-        setTexteIaError(json.error || "Impossible de reformuler le nom.");
+        setTexteIaError(apiErrorMessage(json, t("erreurs.reformuler")));
         return;
       }
       setProductName(json.texte);
     } catch {
-      setTexteIaError("Impossible de contacter le serveur.");
+      setTexteIaError(apiErrorMessage({ code: "network" }));
     } finally {
       setReformulatingNom(false);
     }
@@ -383,12 +390,12 @@ function SiteBuilderContent() {
       });
       const json = await response.json();
       if (!response.ok) {
-        setTexteIaError(json.error || "Impossible de générer la description.");
+        setTexteIaError(apiErrorMessage(json, t("erreurs.genererDescription")));
         return;
       }
       setDescription(json.texte);
     } catch {
-      setTexteIaError("Impossible de contacter le serveur.");
+      setTexteIaError(apiErrorMessage({ code: "network" }));
     } finally {
       setGeneratingDescription(false);
     }
@@ -447,7 +454,7 @@ function SiteBuilderContent() {
       });
       const json = await res.json();
       if (!res.ok) {
-        setError(json.error ?? "Une erreur est survenue");
+        setError(apiErrorMessage(json, t("erreurs.generation")));
         setStep(1);
         return;
       }
@@ -492,16 +499,16 @@ function SiteBuilderContent() {
         .then(async (res) => {
           const data = await res.json().catch(() => ({}));
           if (!res.ok) {
-            setSaveWarning(data.error ?? "Cette page n'a pas pu être sauvegardée dans « Mes sites ».");
+            setSaveWarning(apiErrorMessage(data, t("erreurs.sauvegarde")));
             return;
           }
           // Publier sur Shopify (route /api/sites-generes/[id]/shopify-push) a besoin de
           // cet id — sans sauvegarde réussie, il n'y a rien à publier.
           setSavedSiteId(data.id ?? null);
         })
-        .catch(() => setSaveWarning("Cette page n'a pas pu être sauvegardée dans « Mes sites » (connexion au serveur impossible)."));
+        .catch(() => setSaveWarning(t("erreurs.sauvegardeReseau")));
     } catch {
-      setError("Impossible de contacter l'API");
+      setError(apiErrorMessage({ code: "network" }));
       setStep(1);
     }
   }
@@ -512,7 +519,7 @@ function SiteBuilderContent() {
     // contenir des accents, que l'ancien replace() sur les espaces laissait passer.
     const nomFichier = `${slugFichier(nom)}-landing.html`;
     telechargerTexte(generatedHtml, nomFichier);
-    succes(`Fichier enregistré dans vos Téléchargements : ${nomFichier}`);
+    succes(t("fichierTelecharge", { fichier: nomFichier }));
   }
 
   function handleDownloadLiquid() {
@@ -520,12 +527,12 @@ function SiteBuilderContent() {
     const liquid = htmlToLiquidSection(generatedHtml, nom);
     const nomFichier = `${slugFichier(nom)}-section.liquid`;
     telechargerTexte(liquid, nomFichier, "text/plain;charset=utf-8");
-    succes(`Fichier enregistré dans vos Téléchargements : ${nomFichier}`);
+    succes(t("fichierTelecharge", { fichier: nomFichier }));
   }
 
   async function handleSaveColors() {
     if (!savedSiteId) {
-      setColorSaveError("Sauvegarde initiale du site pas encore terminée, réessaie dans un instant.");
+      setColorSaveError(t("erreurs.sauvegardeEnCours"));
       return;
     }
     setSavingColors(true);
@@ -539,14 +546,14 @@ function SiteBuilderContent() {
       });
       const json = await response.json();
       if (!response.ok) {
-        setColorSaveError(json.error || "Impossible d'enregistrer ces couleurs.");
+        setColorSaveError(apiErrorMessage(json, t("erreurs.couleurs")));
         return;
       }
       setColorSaveSuccess(true);
       setColorsDirty(false);
       window.setTimeout(() => setColorSaveSuccess(false), 2500);
     } catch {
-      setColorSaveError("Impossible de contacter le serveur.");
+      setColorSaveError(apiErrorMessage({ code: "network" }));
     } finally {
       setSavingColors(false);
     }
@@ -578,23 +585,23 @@ function SiteBuilderContent() {
   const champPrompt = (
     <div className="flex flex-col gap-2">
       <label htmlFor="prompt-site" className="text-sm font-medium text-[var(--text-primary)]">
-        Prompt de ton site <span className="text-[var(--danger)]">*</span>
+        {t("prompt.label")} <span className="text-[var(--danger)]">*</span>
       </label>
       <p className="text-xs text-[var(--text-faint)]">
-        Décris le site que tu veux, de A à Z : sections, textes, ton, animations, ambiance. L&apos;IA s&apos;appuie sur
-        une structure de base, mais c&apos;est ton prompt qui compte le plus.
+        {t("prompt.aide")}
       </p>
       <textarea
         id="prompt-site"
         value={promptSite}
         onChange={(e) => setPromptSite(e.target.value)}
         rows={6}
-        placeholder="ex : Un hero plein écran avec une vidéo d'ambiance, puis une section « notre histoire » en deux colonnes, des témoignages en carrousel, un ton chaleureux et familial, des animations douces au défilement…"
+        placeholder={t("prompt.placeholder")}
         className="w-full bg-[var(--bg)] border border-[var(--border-strong)] rounded-xl px-4 py-3 text-sm text-[var(--text-primary)] placeholder-[var(--text-faint)] focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition resize-y"
       />
       <p className={`text-right text-xs ${promptManquant > 0 ? "text-[var(--text-faint)]" : "text-[var(--accent)]"}`}>
-        {promptSite.trim().length} caractère{promptSite.trim().length > 1 ? "s" : ""}
-        {promptManquant > 0 ? ` — encore ${promptManquant} minimum` : ""}
+        {promptManquant > 0
+          ? t("prompt.compteurManquant", { count: promptSite.trim().length, manquant: promptManquant })
+          : t("prompt.compteur", { count: promptSite.trim().length })}
       </p>
     </div>
   );
@@ -602,8 +609,7 @@ function SiteBuilderContent() {
   const raisonPrompt =
     promptManquant > 0 ? (
       <p className="text-xs text-[var(--danger)]">
-        Le bouton est désactivé : ton prompt doit faire au moins {PROMPT_MIN_CARACTERES} caractères (encore{" "}
-        {promptManquant}). C&apos;est lui qui guide toute la génération.
+        {t("prompt.raison", { min: PROMPT_MIN_CARACTERES, manquant: promptManquant })}
       </p>
     ) : null;
 
@@ -620,18 +626,17 @@ function SiteBuilderContent() {
           <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between mb-3">
             <div>
               <h1 className="text-3xl font-extrabold tracking-tight">
-                Générateur de Landing Page
+                {t("titre")}
               </h1>
               <p className="text-[var(--text-muted)] text-sm max-w-md mt-3">
-                Génère une landing page HTML complète pour ton produit dropshipping
-                en quelques secondes grâce à l&apos;IA.
+                {t("intro")}
               </p>
             </div>
             <Link
               href="/site-builder/boutique"
               className="inline-flex items-center justify-center rounded-2xl border border-[var(--border-strong)] bg-[var(--surface-2)] px-5 py-3 text-sm font-semibold text-[var(--text-primary)] transition hover:border-violet-500/40 hover:bg-violet-500/10"
             >
-              Mode boutique
+              {t("modeBoutique")}
             </Link>
           </div>
         </div>
@@ -641,24 +646,29 @@ function SiteBuilderContent() {
             boutiqueDraft en lecture pour leur génération respective). */}
         {brouillonIntrouvable && (
           <div className="mb-4 rounded-2xl border border-amber-500/30 bg-amber-500/10 px-5 py-4 text-sm text-[var(--warning)]">
-            Le brouillon de la boutique est introuvable dans cet onglet. Retourne sur la page de ta boutique et relance « Créer mon site ».
+            {t("brouillon.introuvable")}
           </div>
         )}
         {boutiqueDraft && (
           <>
             <div className="mb-4 rounded-2xl border border-violet-500/30 bg-violet-500/10 px-5 py-4 text-sm text-[var(--text-primary)]">
-              🏪 Mode boutique — <strong>{boutiqueDraft.nomBoutique}</strong> : {boutiqueDraft.produits.length} produit
-              {boutiqueDraft.produits.length > 1 ? "s" : ""} importé{boutiqueDraft.produits.length > 1 ? "s" : ""}
-              {boutiqueDraft.totalProduitsBoutique > boutiqueDraft.produits.length
-                ? ` sur ${boutiqueDraft.totalProduitsBoutique} au total.`
-                : "."}
+              {t.rich(
+                boutiqueDraft.totalProduitsBoutique > boutiqueDraft.produits.length
+                  ? "brouillon.bandeauSurTotal"
+                  : "brouillon.bandeau",
+                {
+                  nom: boutiqueDraft.nomBoutique,
+                  count: boutiqueDraft.produits.length,
+                  total: boutiqueDraft.totalProduitsBoutique,
+                  strong: (chunks) => <strong>{chunks}</strong>,
+                }
+              )}
             </div>
             {/* Liste repliée par défaut : avec tous les produits de la boutique, l'éditeur
                 pousserait le reste du formulaire très bas. */}
             <details className="mb-4">
               <summary className="cursor-pointer select-none text-sm font-semibold text-[var(--text-primary)]">
-                {boutiqueDraft.produits.length} produit{boutiqueDraft.produits.length > 1 ? "s" : ""} importé
-                {boutiqueDraft.produits.length > 1 ? "s" : ""}
+                {t("brouillon.importes", { count: boutiqueDraft.produits.length })}
               </summary>
               <div className="mt-3">
                 <BoutiqueProduitsEditor draft={boutiqueDraft} onChange={setBoutiqueDraft} />
@@ -716,7 +726,7 @@ function SiteBuilderContent() {
                 {step > s ? "✓" : s}
               </div>
               <span className={`text-xs font-medium ${step >= s ? "text-[var(--text-muted)]" : "text-[var(--text-faint)]"}`}>
-                {s === 1 ? "Infos produit" : s === 2 ? "Génération" : "Résultat"}
+                {s === 1 ? t("etapes.infos") : s === 2 ? t("etapes.generation") : t("etapes.resultat")}
               </span>
               {s < 3 && (
                 <div className={`w-8 h-px ml-1 ${step > s ? "bg-violet-500/50" : "bg-[var(--border-strong)]"}`} />
@@ -732,16 +742,16 @@ function SiteBuilderContent() {
         {step === 1 && (
           <div className="mb-6 rounded-2xl bg-[var(--surface)] border border-[var(--border)] px-6 py-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex flex-col gap-1">
-              <span className="text-sm font-medium text-[var(--text-muted)]">Format d&apos;export</span>
+              <span className="text-sm font-medium text-[var(--text-muted)]">{t("format.titre")}</span>
               <span className="text-xs text-[var(--text-faint)]">
-                Modifiable à tout moment depuis « Mes sites » — la page générée, elle, reste la même.
+                {t("format.aide")}
               </span>
             </div>
             <div className="inline-flex gap-1 p-1 rounded-xl bg-[var(--bg)] border border-[var(--border-strong)] self-start sm:self-auto">
               {(
                 [
-                  { id: "html", label: "📄 HTML" },
-                  { id: "liquid", label: "🛍 Liquid (Shopify)" },
+                  { id: "html", label: t("format.html") },
+                  { id: "liquid", label: t("format.liquid") },
                 ] as const
               ).map((f) => (
                 <button
@@ -778,7 +788,7 @@ function SiteBuilderContent() {
               disabled={!canGenerate}
               className="w-full py-3 rounded-xl bg-gradient-to-r from-violet-600 to-blue-600 text-white text-sm font-semibold hover:from-violet-500 hover:to-blue-500 transition-all duration-200 shadow-lg shadow-violet-900/40 disabled:opacity-40 disabled:cursor-not-allowed"
             >
-              Générer la landing page avec l&apos;IA
+              {t("generer")}
             </button>
             {raisonPrompt}
           </div>
@@ -795,7 +805,7 @@ function SiteBuilderContent() {
 
             {regenerating && (
               <div className="rounded-xl bg-violet-500/10 border border-violet-500/20 px-4 py-3 text-[var(--accent)] text-sm">
-                Chargement des données du site à régénérer…
+                {t("chargementRegeneration")}
               </div>
             )}
             {regenerateError && (
@@ -809,8 +819,8 @@ function SiteBuilderContent() {
             {/* AliExpress import */}
             <div className="flex flex-col gap-2">
               <label className="text-sm font-medium text-[var(--text-muted)]">
-                Importer depuis AliExpress{" "}
-                <span className="text-[var(--text-faint)] font-normal">(optionnel)</span>
+                {t("formulaire.importer")}{" "}
+                <span className="text-[var(--text-faint)] font-normal">{t("facultatif")}</span>
               </label>
               <div className="flex gap-2">
                 <input
@@ -826,7 +836,7 @@ function SiteBuilderContent() {
                   disabled={!aliexpressUrl.trim() || aliexpressLoading}
                   className="px-4 py-3 rounded-xl bg-violet-600/20 border border-violet-500/30 text-[var(--accent)] text-sm font-semibold hover:bg-violet-600/30 transition disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap"
                 >
-                  {aliexpressLoading ? "…" : "Importer"}
+                  {aliexpressLoading ? "…" : t("formulaire.importerBouton")}
                 </button>
               </div>
               {aliexpressError && (
@@ -839,21 +849,21 @@ function SiteBuilderContent() {
             {/* Product name */}
             <div className="flex flex-col gap-2">
               <div className="flex items-center justify-between gap-2">
-                <label className="text-sm font-medium text-[var(--text-muted)]">Nom du produit</label>
+                <label className="text-sm font-medium text-[var(--text-muted)]">{t("formulaire.nom")}</label>
                 <button
                   type="button"
                   onClick={handleReformulerNom}
                   disabled={!productName.trim() || reformulatingNom}
                   className="shrink-0 rounded-xl border border-[var(--border-strong)] bg-[var(--bg)] px-2.5 py-1 text-xs font-semibold text-[var(--text-primary)] transition hover:border-violet-500/40 hover:bg-violet-500/10 disabled:opacity-50"
                 >
-                  {reformulatingNom ? "…" : "✨ Reformuler"}
+                  {reformulatingNom ? "…" : t("formulaire.reformuler")}
                 </button>
               </div>
               <input
                 type="text"
                 value={productName}
                 onChange={(e) => setProductName(e.target.value)}
-                placeholder="ex: Ceinture Chauffante Lombaire Pro"
+                placeholder={t("formulaire.nomPlaceholder")}
                 className="bg-[var(--bg)] border border-[var(--border-strong)] rounded-xl px-4 py-3 text-sm text-[var(--text-primary)] placeholder-[var(--text-faint)] focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition"
               />
             </div>
@@ -861,22 +871,22 @@ function SiteBuilderContent() {
             {/* Description */}
             <div className="flex flex-col gap-2">
               <div className="flex items-center justify-between gap-2">
-                <label className="text-sm font-medium text-[var(--text-muted)]">Description courte</label>
+                <label className="text-sm font-medium text-[var(--text-muted)]">{t("formulaire.description")}</label>
                 <button
                   type="button"
                   onClick={handleGenererDescription}
                   disabled={!productName.trim() || generatingDescription}
                   className="shrink-0 rounded-xl border border-[var(--border-strong)] bg-[var(--bg)] px-2.5 py-1 text-xs font-semibold text-[var(--text-primary)] transition hover:border-violet-500/40 hover:bg-violet-500/10 disabled:opacity-50"
-                  title={!productName.trim() ? "Renseigne d'abord un nom de produit" : undefined}
+                  title={!productName.trim() ? t("formulaire.nomDabord") : undefined}
                 >
-                  {generatingDescription ? "…" : "✨ Générer une description"}
+                  {generatingDescription ? "…" : t("formulaire.genererDescription")}
                 </button>
               </div>
               <textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 rows={3}
-                placeholder="ex: Soulage les douleurs lombaires grâce à la chaleur infrarouge. Idéal pour le bureau et le sport. Batterie longue durée 8h."
+                placeholder={t("formulaire.descriptionPlaceholder")}
                 className="bg-[var(--bg)] border border-[var(--border-strong)] rounded-xl px-4 py-3 text-sm text-[var(--text-primary)] placeholder-[var(--text-faint)] focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition resize-none"
               />
               {texteIaError ? <p className="text-xs text-[var(--danger)]">{texteIaError}</p> : null}
@@ -887,20 +897,18 @@ function SiteBuilderContent() {
               <div className="rounded-xl bg-amber-500/[0.08] border border-amber-500/20 px-4 py-3 flex gap-2.5 items-start">
                 <span className="shrink-0">📷</span>
                 <p className="text-xs text-[var(--warning)] leading-relaxed">
-                  Ajoute l&apos;URL d&apos;une photo de ton produit ci-dessous. Sans image, ta landing page
-                  n&apos;affichera <strong>aucune vraie photo produit</strong> — juste un visuel décoratif
-                  générique (dégradé ou icône) à la place.
+                  {t.rich("formulaire.imageAvertissement", { strong: (chunks) => <strong>{chunks}</strong> })}
                 </p>
               </div>
               <label className="text-sm font-medium text-[var(--text-muted)]">
-                URL de l&apos;image produit{" "}
-                <span className="text-[var(--text-faint)] font-normal">(optionnel)</span>
+                {t("formulaire.image")}{" "}
+                <span className="text-[var(--text-faint)] font-normal">{t("facultatif")}</span>
               </label>
               <input
                 type="url"
                 value={imageUrl}
                 onChange={(e) => setImageUrl(e.target.value)}
-                placeholder="https://exemple.com/image-produit.jpg"
+                placeholder={t("formulaire.imagePlaceholder")}
                 className="bg-[var(--bg)] border border-[var(--border-strong)] rounded-xl px-4 py-3 text-sm text-[var(--text-primary)] placeholder-[var(--text-faint)] focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition"
               />
               {imageUrl.trim() && (
@@ -913,7 +921,7 @@ function SiteBuilderContent() {
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={imageUrl}
-                    alt="Aperçu"
+                    alt={t("formulaire.apercuImage")}
                     className="max-h-full max-w-full object-contain"
                     onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
                   />
@@ -925,7 +933,7 @@ function SiteBuilderContent() {
             <div className="flex gap-3">
               <div className="flex flex-col gap-2 flex-1">
                 <label className="text-sm font-medium text-[var(--text-muted)]">
-                  Prix de vente <span className="text-[var(--danger)]">*</span>
+                  {t("formulaire.prixVente")} <span className="text-[var(--danger)]">*</span>
                 </label>
                 <div className="relative">
                   <input
@@ -942,7 +950,7 @@ function SiteBuilderContent() {
               </div>
               <div className="flex flex-col gap-2 flex-1">
                 <label className="text-sm font-medium text-[var(--text-muted)]">
-                  Prix barré <span className="text-[var(--text-faint)] font-normal">(optionnel)</span>
+                  {t("formulaire.prixBarre")} <span className="text-[var(--text-faint)] font-normal">{t("facultatif")}</span>
                 </label>
                 <div className="relative">
                   <input
@@ -962,7 +970,7 @@ function SiteBuilderContent() {
             {/* Style chooser */}
             {!autoMode && (
               <div className="flex flex-col gap-2">
-                <label className="text-sm font-medium text-[var(--text-muted)]">Style de la page</label>
+                <label className="text-sm font-medium text-[var(--text-muted)]">{t("style.titre")}</label>
 
                 {/* Trigger button */}
                 <button
@@ -986,7 +994,7 @@ function SiteBuilderContent() {
                     <p className="text-sm font-semibold text-[var(--text-primary)] leading-tight">
                       {selectedStyle.icon} {selectedStyle.label}
                     </p>
-                    <p className="text-[11px] text-[var(--text-faint)] mt-0.5">{selectedStyle.desc}</p>
+                    <p className="text-[11px] text-[var(--text-faint)] mt-0.5">{t(`styles.${selectedStyle.id}`)}</p>
                   </div>
                   <span className="text-[var(--text-faint)] text-xs">{styleDrawerOpen ? "▲" : "▼"}</span>
                 </button>
@@ -1017,9 +1025,9 @@ function SiteBuilderContent() {
                               <div className="w-8 h-8 rounded-lg shrink-0" style={{ background: `linear-gradient(135deg, ${s.from}, ${s.to})` }} />
                               <div className="flex-1 min-w-0">
                                 <p className="text-sm font-semibold text-[var(--text-primary)]">{s.icon} {s.label}</p>
-                                <p className="text-[11px] text-[var(--text-faint)] mt-0.5">{s.desc}</p>
+                                <p className="text-[11px] text-[var(--text-faint)] mt-0.5">{t(`styles.${s.id}`)}</p>
                               </div>
-                              <span className="text-[var(--text-faint)] text-xs shrink-0">Personnaliser →</span>
+                              <span className="text-[var(--text-faint)] text-xs shrink-0">{t("style.personnaliser")}</span>
                             </button>
                           );
                         })}
@@ -1028,11 +1036,9 @@ function SiteBuilderContent() {
                       /* ── Phase 2 : édition de la palette ── */
                       (() => {
                         const editingStyle = STYLES.find((s) => s.id === editingStyleId)!;
-                        const colorFields: Array<{ key: keyof Palette; label: string; hint: string }> = [
-                          { key: "primary",   label: "Couleur principale",  hint: "CTA, boutons, accents forts" },
-                          { key: "secondary", label: "Couleur secondaire",  hint: "Fonds de sections alternées" },
-                          { key: "accent",    label: "Couleur accent",      hint: "Badges, icônes, hover" },
-                        ];
+                        const colorFields: Array<{ key: keyof Palette; label: string; hint: string }> = (
+                          ["primary", "secondary", "accent"] as const
+                        ).map((key) => ({ key, label: tPalette(`${key}.label`), hint: tPalette(`${key}.hint`) }));
                         return (
                           <div className="flex flex-col">
                             {/* Header palette editor */}
@@ -1042,7 +1048,7 @@ function SiteBuilderContent() {
                                 onClick={() => setEditingStyleId(null)}
                                 className="text-[var(--text-faint)] hover:text-[var(--text-primary)] transition text-sm"
                               >
-                                ← Retour
+                                {t("style.retour")}
                               </button>
                               <div className="w-px h-4 bg-[var(--border-strong)]" />
                               <span className="text-sm font-semibold text-[var(--text-primary)]">{editingStyle.icon} {editingStyle.label}</span>
@@ -1091,7 +1097,7 @@ function SiteBuilderContent() {
                                 }}
                                 className="w-full py-2.5 rounded-xl bg-violet-600 hover:bg-violet-500 text-white text-sm font-semibold transition"
                               >
-                                Enregistrer les modifications
+                                {t("style.enregistrer")}
                               </button>
                             </div>
                           </div>
@@ -1108,13 +1114,13 @@ function SiteBuilderContent() {
                 vide et éditable librement. Pris en compte dans le prompt si non vide. */}
             <div className="flex flex-col gap-2">
               <label className="text-sm font-medium text-[var(--text-muted)]">
-                Corrections à prendre en compte{" "}
-                <span className="text-[var(--text-faint)] font-normal">(optionnel)</span>
+                {t("corrections.titre")}{" "}
+                <span className="text-[var(--text-faint)] font-normal">{t("facultatif")}</span>
               </label>
               <textarea
                 value={corrections}
                 onChange={(e) => setCorrections(e.target.value)}
-                placeholder="Colle ici les points faibles d'un audit précédent (une correction par ligne) — l'IA en tiendra compte pour cette génération."
+                placeholder={t("corrections.placeholder")}
                 rows={4}
                 className="w-full bg-[var(--bg)] border border-[var(--border-strong)] rounded-xl px-4 py-3 text-sm text-[var(--text-primary)] placeholder-[var(--text-faint)] focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition resize-y"
               />
@@ -1129,7 +1135,7 @@ function SiteBuilderContent() {
                 disabled={!canGenerate || autoMode}
                 className="w-full py-3 rounded-xl bg-gradient-to-r from-violet-600 to-blue-600 text-white text-sm font-semibold hover:from-violet-500 hover:to-blue-500 transition-all duration-200 shadow-lg shadow-violet-900/40 disabled:opacity-40 disabled:cursor-not-allowed"
               >
-                Générer la landing page avec l&apos;IA
+                {t("generer")}
               </button>
 
               <button
@@ -1141,7 +1147,7 @@ function SiteBuilderContent() {
                 className="w-full py-3 rounded-xl border border-[var(--border-strong)] text-[var(--text-muted)] text-sm font-semibold hover:border-[var(--border-strong)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-2)] transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                 <span>🤖</span>
-                Génération automatique — l&apos;IA choisit le style
+                {t("genererAuto")}
               </button>
               {raisonPrompt}
             </div>
@@ -1158,8 +1164,8 @@ function SiteBuilderContent() {
               </div>
             </div>
             <div className="flex flex-col gap-2">
-              <p className="text-[var(--text-primary)] font-semibold">L&apos;IA génère votre landing page…</p>
-              <p className="text-[var(--text-faint)] text-sm">Création du hero, bénéfices, preuve sociale et CTA</p>
+              <p className="text-[var(--text-primary)] font-semibold">{t("generation.titre")}</p>
+              <p className="text-[var(--text-faint)] text-sm">{t("generation.aide")}</p>
             </div>
           </div>
         )}
@@ -1174,7 +1180,7 @@ function SiteBuilderContent() {
             )}
             <div className="flex items-center justify-between">
               <p className="text-sm text-[var(--text-muted)]">
-                Landing page générée pour{" "}
+                {t("resultat.genereePour")}{" "}
                 <span className="text-[var(--text-primary)] font-medium">
                   {boutiqueDraft ? boutiqueDraft.nomBoutique : productName}
                 </span>
@@ -1184,7 +1190,7 @@ function SiteBuilderContent() {
                   onClick={handleReset}
                   className="px-4 py-2 rounded-xl border border-[var(--border-strong)] text-[var(--text-muted)] text-xs font-medium hover:border-[var(--border-strong)] hover:text-[var(--text-primary)] transition"
                 >
-                  Recommencer
+                  {t("resultat.recommencer")}
                 </button>
                 {canExport ? (
                   <>
@@ -1195,13 +1201,13 @@ function SiteBuilderContent() {
                       onClick={formatExport === "liquid" ? handleDownload : handleDownloadLiquid}
                       className="px-4 py-2 rounded-xl border border-emerald-500/30 bg-emerald-500/10 text-[var(--success)] text-xs font-semibold hover:bg-emerald-500/20 transition"
                     >
-                      {formatExport === "liquid" ? "⬇ Fichier .html" : "⬇ Fichier .liquid"}
+                      {formatExport === "liquid" ? t("resultat.fichierHtml") : t("resultat.fichierLiquid")}
                     </button>
                     <button
                       onClick={formatExport === "liquid" ? handleDownloadLiquid : handleDownload}
                       className="px-4 py-2 rounded-xl bg-gradient-to-r from-violet-600 to-blue-600 text-white text-xs font-semibold hover:from-violet-500 hover:to-blue-500 transition-all shadow-lg shadow-violet-900/40"
                     >
-                      {formatExport === "liquid" ? "⬇ Télécharger le .liquid" : "⬇ Télécharger le HTML"}
+                      {formatExport === "liquid" ? t("resultat.telechargerLiquid") : t("resultat.telechargerHtml")}
                     </button>
                   </>
                 ) : (
@@ -1209,7 +1215,7 @@ function SiteBuilderContent() {
                     href={LIEN_CHANGER_DE_PLAN}
                     className="px-4 py-2 rounded-xl bg-gradient-to-r from-violet-600 to-blue-600 text-white text-xs font-semibold hover:from-violet-500 hover:to-blue-500 transition-all shadow-lg shadow-violet-900/40"
                   >
-                    🔒 Passe au plan Pro pour télécharger ton site
+                    {t("resultat.passerPro")}
                   </Link>
                 )}
               </div>
@@ -1232,7 +1238,7 @@ function SiteBuilderContent() {
               ) : (
                 <iframe
                   srcDoc={generatedHtml}
-                  title="Landing page preview"
+                  title={t("resultat.titreApercu")}
                   className="w-full"
                   style={{ height: "70vh", border: "none", background: "#fff" }}
                   sandbox="allow-same-origin"
@@ -1259,39 +1265,39 @@ function SiteBuilderContent() {
               <div className="flex items-center gap-3 mb-5">
                 <div className="w-8 h-8 rounded-lg bg-emerald-500/15 border border-emerald-500/20 flex items-center justify-center text-base">🛍️</div>
                 <div>
-                  <h2 className="text-sm font-semibold text-[var(--text-primary)]">Publier sur Shopify</h2>
+                  <h2 className="text-sm font-semibold text-[var(--text-primary)]">{t("shopify.titre")}</h2>
                   <p className="text-xs text-[var(--text-faint)] mt-0.5">
-                    {shopifyConnected ? `Connecté à ${shopifyDomain}` : "Connecte ta boutique pour publier en un clic"}
+                    {shopifyConnected ? t("shopify.connecte", { domaine: shopifyDomain ?? "" }) : t("shopify.aConnecter")}
                   </p>
                 </div>
               </div>
 
               {colorsDirty ? (
                 <div className="mb-4 rounded-xl bg-amber-500/10 border border-amber-500/20 px-4 py-3 text-[var(--warning)] text-xs">
-                  ⚠️ Couleurs modifiées non enregistrées — clique « Enregistrer ces couleurs » ci-dessus avant de publier, sinon Shopify recevra l&apos;ancienne version.
+                  {t("shopify.couleursNonEnregistrees")}
                 </div>
               ) : null}
 
               {!canExport ? (
                 <div className="rounded-xl bg-violet-500/10 border border-violet-500/20 px-4 py-3 text-xs text-[var(--text-muted)]">
-                  🔒 La publication sur Shopify est réservée aux plans Pro et Agency.{" "}
+                  {t("shopify.reservePro")}{" "}
                   <Link href={LIEN_CHANGER_DE_PLAN} className="text-[var(--accent)] font-semibold hover:underline">
-                    Passe au plan Pro →
+                    {t("shopify.passerPro")}
                   </Link>
                 </div>
               ) : shopifyConnected === null ? (
-                <p className="text-xs text-[var(--text-faint)]">Vérification de la connexion…</p>
+                <p className="text-xs text-[var(--text-faint)]">{t("shopify.verification")}</p>
               ) : !shopifyConnected ? (
                 <div className="flex flex-col gap-3">
                   <p className="text-xs text-[var(--text-faint)]">
-                    Renseigne le domaine de ta boutique pour la connecter — tu n&apos;auras plus jamais besoin de copier-coller de code.
+                    {t("shopify.domaineAide")}
                   </p>
                   <div className="flex gap-2">
                     <input
                       type="text"
                       value={shopifyDomainInput}
                       onChange={(e) => setShopifyDomainInput(e.target.value)}
-                      placeholder="ma-boutique.myshopify.com"
+                      placeholder={t("shopify.domainePlaceholder")}
                       className="flex-1 bg-[var(--bg)] border border-[var(--border-strong)] rounded-xl px-4 py-3 text-sm text-[var(--text-primary)] placeholder-[var(--text-faint)] focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition"
                     />
                     <button
@@ -1300,12 +1306,12 @@ function SiteBuilderContent() {
                       disabled={!shopifyDomainInput.trim()}
                       className="px-5 py-3 rounded-xl bg-gradient-to-r from-violet-600 to-blue-600 text-white text-sm font-semibold hover:from-violet-500 hover:to-blue-500 transition disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap"
                     >
-                      Connecter ma boutique Shopify
+                      {t("shopify.connecter")}
                     </button>
                   </div>
                   {/* Fallback manuel, gardé pour ceux qui ne veulent pas connecter leur boutique */}
                   <p className="text-[11px] text-[var(--text-faint)] mt-1">
-                    Tu préfères le faire toi-même ? Télécharge le HTML ou le fichier .liquid ci-dessus et colle-le dans ton admin Shopify.
+                    {t("shopify.manuel")}
                   </p>
                 </div>
               ) : (
@@ -1317,8 +1323,8 @@ function SiteBuilderContent() {
                       disabled={shopifyPushingMode !== null || !savedSiteId}
                       className="rounded-xl border border-blue-500/20 bg-blue-500/10 px-4 py-3 text-left transition hover:bg-blue-500/20 disabled:opacity-40 disabled:cursor-not-allowed"
                     >
-                      <p className="text-sm font-semibold text-[var(--text-primary)]">📄 Page HTML standalone</p>
-                      <p className="text-[11px] text-[var(--text-faint)] mt-1">Idéal pour les pubs Facebook/TikTok</p>
+                      <p className="text-sm font-semibold text-[var(--text-primary)]">{t("shopify.pageHtml")}</p>
+                      <p className="text-[11px] text-[var(--text-faint)] mt-1">{t("shopify.pageHtmlAide")}</p>
                     </button>
                     <button
                       type="button"
@@ -1326,19 +1332,19 @@ function SiteBuilderContent() {
                       disabled={shopifyPushingMode !== null || !savedSiteId}
                       className="rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-3 text-left transition hover:bg-emerald-500/20 disabled:opacity-40 disabled:cursor-not-allowed"
                     >
-                      <p className="text-sm font-semibold text-[var(--text-primary)]">💧 Section Liquid du thème</p>
-                      <p className="text-[11px] text-[var(--text-faint)] mt-1">S&apos;intègre à ton thème existant</p>
+                      <p className="text-sm font-semibold text-[var(--text-primary)]">{t("shopify.sectionLiquid")}</p>
+                      <p className="text-[11px] text-[var(--text-faint)] mt-1">{t("shopify.sectionLiquidAide")}</p>
                     </button>
                   </div>
 
                   {!savedSiteId && (
                     <p className="text-[11px] text-[var(--warning)]">
-                      En attente de la sauvegarde de la page — réessaie dans un instant si les boutons restent grisés.
+                      {t("shopify.attenteSauvegarde")}
                     </p>
                   )}
 
                   {shopifyPushingMode && (
-                    <p className="text-xs text-[var(--text-muted)]">Publication en cours ({shopifyPushingMode})…</p>
+                    <p className="text-xs text-[var(--text-muted)]">{t("shopify.publication", { mode: shopifyPushingMode })}</p>
                   )}
 
                   {shopifyPushError && (
@@ -1351,8 +1357,8 @@ function SiteBuilderContent() {
                     <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-4 flex flex-col gap-2">
                       <p className="text-sm font-semibold text-[var(--success)]">
                         {shopifyPushResult.mode === "liquid" && shopifyPushResult.autoAttached === false
-                          ? "Section publiée — une étape manuelle reste à faire"
-                          : "Publié sur Shopify 🎉"}
+                          ? t("shopify.etapeManuelle")
+                          : t("shopify.publie")}
                       </p>
                       {shopifyPushResult.message && (
                         <p className="text-xs text-[var(--text-muted)]">{shopifyPushResult.message}</p>
@@ -1364,7 +1370,7 @@ function SiteBuilderContent() {
                           rel="noopener noreferrer"
                           className="text-xs font-semibold text-[var(--success)] hover:opacity-80 underline"
                         >
-                          Voir la page →
+                          {t("shopify.voirPage")}
                         </a>
                         <a
                           href={shopifyPushResult.admin_url}
@@ -1372,7 +1378,7 @@ function SiteBuilderContent() {
                           rel="noopener noreferrer"
                           className="text-xs font-semibold text-[var(--text-muted)] hover:text-[var(--text-primary)] underline"
                         >
-                          Ouvrir dans l&apos;admin Shopify →
+                          {t("shopify.ouvrirAdmin")}
                         </a>
                       </div>
                     </div>
@@ -1391,13 +1397,18 @@ function SiteBuilderContent() {
   );
 }
 
+function ChargementSiteBuilder() {
+  const t = useTranslations("siteBuilder.builder");
+  return (
+    <div className="min-h-screen bg-[var(--bg)] flex items-center justify-center text-[var(--text-faint)] text-sm">
+      {t("chargement")}
+    </div>
+  );
+}
+
 export default function SiteBuilderPage() {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen bg-[var(--bg)] flex items-center justify-center text-[var(--text-faint)] text-sm">
-        Chargement…
-      </div>
-    }>
+    <Suspense fallback={<ChargementSiteBuilder />}>
       <SiteBuilderContent />
     </Suspense>
   );
