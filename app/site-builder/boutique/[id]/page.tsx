@@ -12,6 +12,8 @@ import { writeBoutiqueDraft, type ProduitBoutiqueDraft } from "@/lib/site-builde
 import { PLAN_LIMITS } from "@/lib/plan-limits";
 import BoutiqueReglages from "@/components/site-builder/BoutiqueReglages";
 import { LIEN_CHANGER_DE_PLAN } from "@/lib/plan-links";
+import { AlerteLimiteProduits, CompteurProduits, limiteProduitsAtteinte } from "@/components/site-builder/LimiteProduitsBoutique";
+import { useApiErrorMessage } from "@/lib/use-api-error";
 
 type Boutique = {
   id: string;
@@ -73,6 +75,7 @@ function toProduitBoutique(prod: BoutiqueProduct): ProduitBoutiqueDraft {
 export default function BoutiqueBuilderDetailPage() {
   const params = useParams();
   const router = useRouter();
+  const apiErrorMessage = useApiErrorMessage();
   const [boutique, setBoutique] = useState<Boutique | null>(null);
   // Compteurs non filtrés renvoyés par GET /api/boutiques/[id] (réglages, limite du plan).
   const [produitsCount, setProduitsCount] = useState(0);
@@ -241,6 +244,9 @@ export default function BoutiqueBuilderDetailPage() {
   // (profils.plan via /api/plan) et même valeur que le plafond serveur de
   // POST /api/boutiques/[id]/produits. Plan pas encore connu : "free", comme le repli ci-dessus.
   const limiteProduitsPlan = PLAN_LIMITS[plan ?? "free"].produitsBoutiqueMax;
+  // Ajout bloqué à la limite du plan (ou au-delà après un passage à un plan inférieur) ;
+  // l'édition des produits existants reste possible.
+  const ajoutBloque = plan !== null && limiteProduitsAtteinte(plan, produitsCount);
 
   async function handlePushShopify() {
     if (!params?.id) return;
@@ -803,7 +809,8 @@ export default function BoutiqueBuilderDetailPage() {
       });
       const json = await response.json();
       if (!response.ok) {
-        setProductFormError(json.error || "Impossible d'enregistrer le produit.");
+        setProductFormError(json.code ? apiErrorMessage(json) : json.error || "Impossible d'enregistrer le produit.");
+        if (json.code?.startsWith("boutique_product_limit")) void rafraichirCompteurs();
         return;
       }
       setProductFormSuccess(editingProductId ? "Produit mis à jour." : "Produit ajouté avec succès.");
@@ -1373,10 +1380,7 @@ export default function BoutiqueBuilderDetailPage() {
                   {totalProduits} produit{totalProduits > 1 ? "s" : ""} dans la boutique
                 </p>
               </div>
-              <div className="flex flex-wrap gap-2 text-xs text-[var(--text-faint)]">
-                <span className="rounded-full border border-[var(--border)] bg-[var(--surface-2)] px-3 py-2">Max Free: 10</span>
-                <span className="rounded-full border border-[var(--border)] bg-[var(--surface-2)] px-3 py-2">Max Pro/Agency: 200</span>
-              </div>
+              {plan !== null ? <CompteurProduits plan={plan} count={produitsCount} /> : null}
             </div>
 
             <div className="rounded-3xl border border-[var(--border)] bg-[var(--surface-2)] p-4">
@@ -1481,6 +1485,12 @@ export default function BoutiqueBuilderDetailPage() {
             <p className="mt-2 text-sm text-[var(--text-muted)]">
               Utilise l&apos;import AliExpress ou remplis le formulaire manuellement.
             </p>
+            {plan !== null ? (
+              <div className="mt-4 flex flex-col items-start gap-3">
+                <CompteurProduits plan={plan} count={produitsCount} />
+                <AlerteLimiteProduits plan={plan} count={produitsCount} />
+              </div>
+            ) : null}
             <form onSubmit={handleSubmitProduct} className="mt-6 space-y-4">
               <div className="space-y-3 rounded-3xl border border-[var(--border)] bg-[var(--surface-2)] p-4">
                 <label className="text-sm font-medium text-[var(--text-muted)]">Importer depuis AliExpress</label>
@@ -1619,7 +1629,7 @@ export default function BoutiqueBuilderDetailPage() {
               <div className="flex flex-wrap gap-2">
                 <button
                   type="submit"
-                  disabled={savingProduct}
+                  disabled={savingProduct || (!editingProductId && ajoutBloque)}
                   className="rounded-2xl bg-violet-500 px-4 py-3 text-sm font-semibold text-white transition hover:bg-violet-400 disabled:opacity-50"
                 >
                   {editingProductId ? "Mettre à jour" : "Ajouter le produit"}

@@ -1148,7 +1148,9 @@
     "publish_slug_invalid": "Correggi lo slug del negozio prima di renderlo pubblico.",
     "publish_requires_product": "Aggiungi almeno un prodotto prima di rendere pubblico il negozio.",
     "category_slug_taken": "Un'altra categoria di questo negozio usa già questo slug.",
-    "category_not_found": "Categoria non trovata."
+    "category_not_found": "Categoria non trovata.",
+    "boutique_product_limit_upgrade": "Hai raggiunto il limite di {max} prodotti del piano {plan}. Passa al piano {planSuperieur} per arrivare a {maxSuperieur} prodotti per negozio.",
+    "boutique_product_limit_max": "Hai raggiunto il massimo di {max} prodotti per negozio."
   },
   "siteBuilder": {
     "boutique": {
@@ -1183,6 +1185,14 @@
           "bouton": "Elimina il negozio",
           "enCours": "Eliminazione…"
         }
+      },
+      "limite": {
+        "compteur": "{count} / {max} prodotti (piano {plan})",
+        "compteurIllimite": "{count, plural, one {# prodotto} other {# prodotti}} (illimitato)",
+        "atteinte": "Hai raggiunto il limite di {max} prodotti del piano {plan}: non puoi aggiungere altri prodotti a questo negozio.",
+        "depassement": "Il tuo negozio ha {count} prodotti, oltre il limite di {max} del piano {plan}. Nessun prodotto è stato eliminato e restano tutti online, ma non puoi aggiungerne altri.",
+        "passer": "Passa al piano {plan} per arrivare a {max} prodotti",
+        "passerIllimite": "Passa al piano {plan} per prodotti illimitati"
       }
     }
   }

@@ -23,6 +23,20 @@ export function planLabel(plan: Plan): string {
   return PLAN_LABEL[plan];
 }
 
+const PLANS_ORDONNES: Plan[] = ["free", "pro", "agency"];
+
+// Premier plan au-dessus de `plan` qui autorise plus de produits par boutique, ou null si
+// aucun plan ne va plus loin (le message de limite ne propose alors pas de changer de plan).
+export function planSuperieurProduitsBoutique(plan: Plan): Plan | null {
+  const max = PLAN_LIMITS[plan].produitsBoutiqueMax;
+  if (max === null) return null;
+  for (const candidat of PLANS_ORDONNES.slice(PLANS_ORDONNES.indexOf(plan) + 1)) {
+    const maxCandidat = PLAN_LIMITS[candidat].produitsBoutiqueMax;
+    if (maxCandidat === null || maxCandidat > max) return candidat;
+  }
+  return null;
+}
+
 // Premier jour du mois calendaire en cours (UTC), au format YYYY-MM-DD — sert de clé
 // de regroupement dans usage_mensuel. Se "réinitialise" naturellement au changement de mois.
 export function currentMonthKey(): string {

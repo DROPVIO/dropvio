@@ -1148,7 +1148,9 @@
     "publish_slug_invalid": "Fix the store slug before making it public.",
     "publish_requires_product": "Add at least one product before making the store public.",
     "category_slug_taken": "Another category in this store already uses this slug.",
-    "category_not_found": "Category not found."
+    "category_not_found": "Category not found.",
+    "boutique_product_limit_upgrade": "You've reached the {max}-product limit of the {plan} plan. Upgrade to {planSuperieur} for up to {maxSuperieur} products per store.",
+    "boutique_product_limit_max": "You've reached the maximum of {max} products per store."
   },
   "siteBuilder": {
     "boutique": {
@@ -1183,6 +1185,14 @@
           "bouton": "Delete the store",
           "enCours": "Deleting…"
         }
+      },
+      "limite": {
+        "compteur": "{count} / {max} products ({plan} plan)",
+        "compteurIllimite": "{count, plural, one {# product} other {# products}} (unlimited)",
+        "atteinte": "You've reached the {max}-product limit of the {plan} plan: you can't add more products to this store.",
+        "depassement": "Your store has {count} products, over the {max}-product limit of the {plan} plan. No product has been deleted and they all stay online, but you can't add any more.",
+        "passer": "Upgrade to the {plan} plan for up to {max} products",
+        "passerIllimite": "Upgrade to the {plan} plan for unlimited products"
       }
     }
   }

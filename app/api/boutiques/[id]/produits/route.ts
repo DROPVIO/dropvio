@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerUserPlanOnly } from "@/lib/supabase-server";
-import { PLAN_LIMITS, planLabel } from "@/lib/plan-limits";
+import { PLAN_LIMITS, planLabel, planSuperieurProduitsBoutique } from "@/lib/plan-limits";
+import { apiError } from "@/lib/api-errors";
 
 const DEFAULT_LIMIT = 20;
 const MAX_LIMIT = 100;
@@ -90,11 +91,21 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
 
   const max = PLAN_LIMITS[plan].produitsBoutiqueMax;
   if (max !== null && (count ?? 0) >= max) {
-    return NextResponse.json(
-      {
-        error: `Tu as atteint la limite de ${max} produits sur le plan ${planLabel(plan)}. Passe Pro ou Agency pour gérer jusqu'à 200 produits par boutique.`,
-      },
-      { status: 403 }
+    const superieur = planSuperieurProduitsBoutique(plan);
+    if (superieur) {
+      const maxSuperieur = PLAN_LIMITS[superieur].produitsBoutiqueMax;
+      return apiError(
+        "boutique_product_limit_upgrade",
+        403,
+        `Tu as atteint la limite de ${max} produits du plan ${planLabel(plan)}. Passe au plan ${planLabel(superieur)} pour aller jusqu'à ${maxSuperieur ?? "∞"} produits par boutique.`,
+        { values: { max, plan: planLabel(plan), planSuperieur: planLabel(superieur), maxSuperieur: maxSuperieur ?? "∞" } }
+      );
+    }
+    return apiError(
+      "boutique_product_limit_max",
+      403,
+      `Tu as atteint la limite maximale de ${max} produits par boutique.`,
+      { values: { max } }
     );
   }
 
