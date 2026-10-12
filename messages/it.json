@@ -1172,6 +1172,14 @@
           "avertissementSlug": "Il negozio è pubblico: il vecchio link non funzionerà più dopo questa modifica.",
           "confirmerSlugPublic": "Cambiare l'indirizzo da «{ancien}» a «{nouveau}»? Il negozio è pubblico: il vecchio link non funzionerà più, anche su Google e nei link già condivisi.",
           "nomRequis": "Il nome del negozio è obbligatorio."
+        },
+        "suppression": {
+          "titre": "Elimina il negozio",
+          "aide": "Elimina definitivamente il negozio, {produits, plural, =0 {nessun prodotto} one {il suo prodotto} other {i suoi # prodotti}} e {categories, plural, =0 {nessuna categoria} one {la sua categoria} other {le sue # categorie}}. {sites, plural, =0 {Nessun sito generato è collegato a questo negozio.} one {Il sito generato da questo negozio resta in «I miei siti», senza collegamento al negozio.} other {I # siti generati da questo negozio restano in «I miei siti», senza collegamento al negozio.}}",
+          "confirmer": "Eliminazione definitiva di «{nom}»: verranno eliminati {produits, plural, =0 {nessun prodotto} one {# prodotto} other {# prodotti}} e {categories, plural, =0 {nessuna categoria} one {# categoria} other {# categorie}}. {sites, plural, =0 {} one {# sito generato verrà conservato, senza collegamento al negozio. } other {# siti generati verranno conservati, senza collegamento al negozio. }}Questa azione è irreversibile.\n\nDigita il nome del negozio per confermare:",
+          "nomIncorrect": "Il nome digitato non corrisponde: il negozio non è stato eliminato.",
+          "bouton": "Elimina il negozio",
+          "enCours": "Eliminazione…"
         }
       }
     }

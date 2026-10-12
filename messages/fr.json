@@ -1172,6 +1172,14 @@
           "avertissementSlug": "La boutique est publique : l'ancien lien ne fonctionnera plus après ce changement.",
           "confirmerSlugPublic": "Changer l'adresse de « {ancien} » en « {nouveau} » ? La boutique est publique : l'ancien lien ne fonctionnera plus, y compris dans Google et dans les liens déjà partagés.",
           "nomRequis": "Le nom de la boutique est requis."
+        },
+        "suppression": {
+          "titre": "Supprimer la boutique",
+          "aide": "Supprime définitivement la boutique, {produits, plural, =0 {aucun produit} one {son produit} other {ses # produits}} et {categories, plural, =0 {aucune catégorie} one {sa catégorie} other {ses # catégories}}. {sites, plural, =0 {Aucun site généré n'est lié à cette boutique.} one {Le site généré depuis cette boutique est conservé dans « Mes sites », sans lien vers elle.} other {Les # sites générés depuis cette boutique sont conservés dans « Mes sites », sans lien vers elle.}}",
+          "confirmer": "Suppression définitive de « {nom} » : {produits, plural, =0 {aucun produit} one {# produit} other {# produits}} et {categories, plural, =0 {aucune catégorie} one {# catégorie} other {# catégories}} seront supprimés. {sites, plural, =0 {} one {# site généré sera conservé, sans lien vers la boutique. } other {# sites générés seront conservés, sans lien vers la boutique. }}Cette action est irréversible.\n\nTape le nom de la boutique pour confirmer :",
+          "nomIncorrect": "Le nom saisi ne correspond pas : la boutique n'a pas été supprimée.",
+          "bouton": "Supprimer la boutique",
+          "enCours": "Suppression…"
         }
       }
     }

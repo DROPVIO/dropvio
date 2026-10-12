@@ -15,11 +15,21 @@ export type BoutiqueReglable = {
 type Props = {
   boutique: BoutiqueReglable;
   produitsCount: number;
+  categoriesCount: number;
+  sitesCount: number;
   onUpdated: (patch: Partial<BoutiqueReglable>) => void;
+  onDeleted: () => void;
 };
 
-// Réglages de la boutique : visibilité publique, nom et slug.
-export default function BoutiqueReglages({ boutique, produitsCount, onUpdated }: Props) {
+// Réglages de la boutique : nom et slug, visibilité publique, suppression.
+export default function BoutiqueReglages({
+  boutique,
+  produitsCount,
+  categoriesCount,
+  sitesCount,
+  onUpdated,
+  onDeleted,
+}: Props) {
   const t = useTranslations("siteBuilder.boutique.reglages");
   const apiErrorMessage = useApiErrorMessage();
 
@@ -28,6 +38,9 @@ export default function BoutiqueReglages({ boutique, produitsCount, onUpdated }:
   const [identiteEnCours, setIdentiteEnCours] = useState(false);
   const [identiteErreur, setIdentiteErreur] = useState<string | null>(null);
   const [identiteSucces, setIdentiteSucces] = useState(false);
+
+  const [suppressionEnCours, setSuppressionEnCours] = useState(false);
+  const [suppressionErreur, setSuppressionErreur] = useState<string | null>(null);
 
   const [visibiliteEnCours, setVisibiliteEnCours] = useState(false);
   const [visibiliteErreur, setVisibiliteErreur] = useState<string | null>(null);
@@ -100,6 +113,39 @@ export default function BoutiqueReglages({ boutique, produitsCount, onUpdated }:
     onUpdated({ est_publique: rendrePublique });
   }
 
+  // Suppression définitive : produits et catégories partent en cascade, les sites générés
+  // restent dans « Mes sites » sans lien vers la boutique (sites_generes.boutique_id → null).
+  async function supprimer() {
+    setSuppressionErreur(null);
+    const saisie = window.prompt(
+      t("suppression.confirmer", {
+        nom: boutique.nom,
+        produits: produitsCount,
+        categories: categoriesCount,
+        sites: sitesCount,
+      })
+    );
+    if (saisie === null) return;
+    if (saisie.trim() !== boutique.nom) {
+      setSuppressionErreur(t("suppression.nomIncorrect"));
+      return;
+    }
+    setSuppressionEnCours(true);
+    try {
+      const res = await fetch(`/api/boutiques/${boutique.id}`, { method: "DELETE" });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setSuppressionErreur(apiErrorMessage(json));
+        return;
+      }
+      onDeleted();
+    } catch {
+      setSuppressionErreur(apiErrorMessage(null, "network"));
+    } finally {
+      setSuppressionEnCours(false);
+    }
+  }
+
   const champ =
     "mt-2 w-full rounded-2xl border border-[var(--border)] bg-[var(--bg-sunken)] px-4 py-3 text-sm text-[var(--text-primary)] outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500";
   const identiteModifiee = nom.trim() !== boutique.nom || slugify(slug) !== boutique.slug;
@@ -170,6 +216,22 @@ export default function BoutiqueReglages({ boutique, produitsCount, onUpdated }:
           {boutique.est_publique ? t("visibilite.aidePublique") : t("visibilite.aidePrivee")}
         </p>
         {visibiliteErreur ? <p className="mt-2 text-sm text-[var(--danger)]">{visibiliteErreur}</p> : null}
+      </div>
+
+      <div className="mt-6 rounded-3xl border border-[var(--danger)]/30 bg-[var(--danger)]/5 p-4">
+        <h3 className="text-sm font-semibold text-[var(--danger)]">{t("suppression.titre")}</h3>
+        <p className="mt-1 text-xs text-[var(--text-muted)]">
+          {t("suppression.aide", { produits: produitsCount, categories: categoriesCount, sites: sitesCount })}
+        </p>
+        <button
+          type="button"
+          onClick={() => void supprimer()}
+          disabled={suppressionEnCours}
+          className="mt-3 rounded-2xl bg-[var(--danger)] px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90 disabled:opacity-50"
+        >
+          {suppressionEnCours ? t("suppression.enCours") : t("suppression.bouton")}
+        </button>
+        {suppressionErreur ? <p className="mt-2 text-sm text-[var(--danger)]">{suppressionErreur}</p> : null}
       </div>
     </>
   );

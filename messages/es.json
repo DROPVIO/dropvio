@@ -1172,6 +1172,14 @@
           "avertissementSlug": "La tienda es pública: el enlace anterior dejará de funcionar tras este cambio.",
           "confirmerSlugPublic": "¿Cambiar la dirección de «{ancien}» a «{nouveau}»? La tienda es pública: el enlace anterior dejará de funcionar, también en Google y en los enlaces ya compartidos.",
           "nomRequis": "El nombre de la tienda es obligatorio."
+        },
+        "suppression": {
+          "titre": "Eliminar la tienda",
+          "aide": "Elimina definitivamente la tienda, {produits, plural, =0 {ningún producto} one {su producto} other {sus # productos}} y {categories, plural, =0 {ninguna categoría} one {su categoría} other {sus # categorías}}. {sites, plural, =0 {Ningún sitio generado está vinculado a esta tienda.} one {El sitio generado desde esta tienda se conserva en «Mis sitios», sin vínculo con ella.} other {Los # sitios generados desde esta tienda se conservan en «Mis sitios», sin vínculo con ella.}}",
+          "confirmer": "Eliminación definitiva de «{nom}»: se eliminarán {produits, plural, =0 {ningún producto} one {# producto} other {# productos}} y {categories, plural, =0 {ninguna categoría} one {# categoría} other {# categorías}}. {sites, plural, =0 {} one {Se conservará # sitio generado, sin vínculo con la tienda. } other {Se conservarán # sitios generados, sin vínculo con la tienda. }}Esta acción es irreversible.\n\nEscribe el nombre de la tienda para confirmar:",
+          "nomIncorrect": "El nombre escrito no coincide: la tienda no se ha eliminado.",
+          "bouton": "Eliminar la tienda",
+          "enCours": "Eliminando…"
         }
       }
     }

@@ -75,6 +75,7 @@ export default function BoutiqueBuilderDetailPage() {
   const [boutique, setBoutique] = useState<Boutique | null>(null);
   // Compteurs non filtrés renvoyés par GET /api/boutiques/[id] (réglages, limite du plan).
   const [produitsCount, setProduitsCount] = useState(0);
+  const [sitesCount, setSitesCount] = useState(0);
   const [globalError, setGlobalError] = useState<string | null>(null);
 
   const [products, setProducts] = useState<BoutiqueProduct[]>([]);
@@ -272,6 +273,7 @@ export default function BoutiqueBuilderDetailPage() {
       }
       setBoutique(json.boutique ?? null);
       setProduitsCount(json.produitsCount ?? 0);
+      setSitesCount(json.sitesCount ?? 0);
       setMentionsLegales(json.boutique?.mentions_legales ?? "");
       setBandeauTexte(json.boutique?.settings?.bandeauTexte ?? "");
       setBandeauVideos(json.boutique?.settings?.bandeauVideos ?? []);
@@ -1002,7 +1004,10 @@ export default function BoutiqueBuilderDetailPage() {
               <BoutiqueReglages
                 boutique={boutique}
                 produitsCount={produitsCount}
+                categoriesCount={categories.length}
+                sitesCount={sitesCount}
                 onUpdated={(patch) => setBoutique((prev) => (prev ? { ...prev, ...patch } : prev))}
+                onDeleted={() => router.push("/site-builder/boutique")}
               />
             ) : null}
 

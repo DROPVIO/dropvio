@@ -1172,6 +1172,14 @@
           "avertissementSlug": "The store is public: the old link will stop working after this change.",
           "confirmerSlugPublic": "Change the address from “{ancien}” to “{nouveau}”? The store is public: the old link will stop working, including on Google and in links already shared.",
           "nomRequis": "The store name is required."
+        },
+        "suppression": {
+          "titre": "Delete the store",
+          "aide": "Permanently deletes the store, {produits, plural, =0 {no products} one {its product} other {its # products}} and {categories, plural, =0 {no categories} one {its category} other {its # categories}}. {sites, plural, =0 {No generated site is linked to this store.} one {The site generated from this store is kept in “My sites”, without a link to it.} other {The # sites generated from this store are kept in “My sites”, without a link to it.}}",
+          "confirmer": "Permanent deletion of “{nom}”: {produits, plural, =0 {no products} one {# product} other {# products}} and {categories, plural, =0 {no categories} one {# category} other {# categories}} will be deleted. {sites, plural, =0 {} one {# generated site will be kept, without a link to the store. } other {# generated sites will be kept, without a link to the store. }}This cannot be undone.\n\nType the store name to confirm:",
+          "nomIncorrect": "The name you typed doesn't match: the store was not deleted.",
+          "bouton": "Delete the store",
+          "enCours": "Deleting…"
         }
       }
     }
