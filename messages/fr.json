@@ -382,7 +382,8 @@
       "empty": "Aucune boutique créée pour l'instant.",
       "cta": "Créer une boutique →",
       "public": "publique",
-      "produitsCount": "{count, plural, one {# produit} other {# produits}}"
+      "produitsCount": "{count, plural, one {# produit} other {# produits}}",
+      "auDelaLimite": "au-delà de la limite de {max} produits du plan, ajouts bloqués"
     },
     "marges": {
       "title": "Calculateur de marge",
@@ -1192,7 +1193,8 @@
         "atteinte": "Limite de {max} produits atteinte sur le plan {plan} : tu ne peux plus ajouter de produit à cette boutique.",
         "depassement": "Ta boutique compte {count} produits, au-delà de la limite de {max} du plan {plan}. Aucun produit n'a été supprimé et tous restent en ligne, mais tu ne peux plus en ajouter.",
         "passer": "Passer au plan {plan} pour aller jusqu'à {max} produits",
-        "passerIllimite": "Passer au plan {plan} pour des produits illimités"
+        "passerIllimite": "Passer au plan {plan} pour des produits illimités",
+        "voirPlans": "Voir les plans"
       }
     }
   }

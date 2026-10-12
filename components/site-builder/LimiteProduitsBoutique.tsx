@@ -58,3 +58,22 @@ export function AlerteLimiteProduits({ plan, count }: { plan: Plan; count: numbe
     </div>
   );
 }
+
+// Bandeau en haut de la page de gestion quand la boutique dépasse la limite du plan actuel
+// (passage à un plan inférieur) : rien n'est supprimé, seuls les ajouts sont bloqués.
+export function BandeauDepassementProduits({ plan, count }: { plan: Plan; count: number }) {
+  const t = useTranslations("siteBuilder.boutique.limite");
+  const max = PLAN_LIMITS[plan].produitsBoutiqueMax;
+  if (max === null || count <= max) return null;
+  const superieur = planSuperieurProduitsBoutique(plan);
+  return (
+    <div className="rounded-3xl border border-amber-500/30 bg-amber-500/10 p-6 text-sm text-[var(--warning)]">
+      <p>{t("depassement", { count, max, plan: planLabel(plan) })}</p>
+      {superieur ? (
+        <Link href={LIEN_CHANGER_DE_PLAN} className="mt-1 inline-block font-semibold underline underline-offset-2">
+          {t("voirPlans")}
+        </Link>
+      ) : null}
+    </div>
+  );
+}

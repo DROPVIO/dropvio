@@ -382,7 +382,8 @@
       "empty": "Aún no has creado ninguna tienda.",
       "cta": "Crear una tienda →",
       "public": "pública",
-      "produitsCount": "{count, plural, one {# producto} other {# productos}}"
+      "produitsCount": "{count, plural, one {# producto} other {# productos}}",
+      "auDelaLimite": "por encima del límite de {max} productos del plan, no se pueden añadir más"
     },
     "marges": {
       "title": "Calculadora de margen",
@@ -1192,7 +1193,8 @@
         "atteinte": "Has alcanzado el límite de {max} productos del plan {plan}: no puedes añadir más productos a esta tienda.",
         "depassement": "Tu tienda tiene {count} productos, por encima del límite de {max} del plan {plan}. No se ha eliminado ningún producto y todos siguen publicados, pero no puedes añadir más.",
         "passer": "Pasar al plan {plan} para llegar a {max} productos",
-        "passerIllimite": "Pasar al plan {plan} para productos ilimitados"
+        "passerIllimite": "Pasar al plan {plan} para productos ilimitados",
+        "voirPlans": "Ver los planes"
       }
     }
   }

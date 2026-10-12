@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
 import { toIntlTag, type AppLocale } from "@/lib/locale";
+import { PLAN_LIMITS, type Plan } from "@/lib/plan-limits";
 
 type BoutiqueRow = {
   id: string;
@@ -20,6 +21,16 @@ export default function BoutiquesDetailPage() {
   const intlTag = toIntlTag(useLocale() as AppLocale);
   const [loading, setLoading] = useState(true);
   const [boutiques, setBoutiques] = useState<BoutiqueRow[]>([]);
+  // Limite du plan actuel : signale les boutiques restées au-delà après un passage à un plan
+  // inférieur (aucun produit n'est supprimé, seuls les ajouts sont bloqués).
+  const [plan, setPlan] = useState<Plan | null>(null);
+  useEffect(() => {
+    fetch("/api/plan")
+      .then((res) => res.json())
+      .then((json) => setPlan(json.plan ?? "free"))
+      .catch(() => setPlan(null));
+  }, []);
+  const maxProduits = plan ? PLAN_LIMITS[plan].produitsBoutiqueMax : null;
 
   useEffect(() => {
     const supabase = createSupabaseBrowserClient();
@@ -105,6 +116,9 @@ export default function BoutiquesDetailPage() {
                     <p className="text-[11px] text-[var(--text-faint)] mt-0.5">
                       {new Date(b.created_at).toLocaleDateString(intlTag, { day: "numeric", month: "short", year: "numeric" })}
                       {b.est_publique && <span className="text-[var(--success)]"> · {t("boutiques.public")}</span>}
+                      {maxProduits !== null && b.produitsCount > maxProduits && (
+                        <span className="text-[var(--warning)]"> · {t("boutiques.auDelaLimite", { max: maxProduits })}</span>
+                      )}
                     </p>
                   </div>
                   <span className="text-sm font-semibold tabular-nums shrink-0 ml-4 text-[var(--text-muted)]">

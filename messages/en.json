@@ -382,7 +382,8 @@
       "empty": "No store created yet.",
       "cta": "Create a store →",
       "public": "public",
-      "produitsCount": "{count, plural, one {# product} other {# products}}"
+      "produitsCount": "{count, plural, one {# product} other {# products}}",
+      "auDelaLimite": "over the plan's {max}-product limit, adding is blocked"
     },
     "marges": {
       "title": "Margin calculator",
@@ -1192,7 +1193,8 @@
         "atteinte": "You've reached the {max}-product limit of the {plan} plan: you can't add more products to this store.",
         "depassement": "Your store has {count} products, over the {max}-product limit of the {plan} plan. No product has been deleted and they all stay online, but you can't add any more.",
         "passer": "Upgrade to the {plan} plan for up to {max} products",
-        "passerIllimite": "Upgrade to the {plan} plan for unlimited products"
+        "passerIllimite": "Upgrade to the {plan} plan for unlimited products",
+        "voirPlans": "See plans"
       }
     }
   }

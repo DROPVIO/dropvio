@@ -382,7 +382,8 @@
       "empty": "Nessun negozio creato per ora.",
       "cta": "Creare un negozio →",
       "public": "pubblico",
-      "produitsCount": "{count, plural, one {# prodotto} other {# prodotti}}"
+      "produitsCount": "{count, plural, one {# prodotto} other {# prodotti}}",
+      "auDelaLimite": "oltre il limite di {max} prodotti del piano, aggiunte bloccate"
     },
     "marges": {
       "title": "Calcolatore di margine",
@@ -1192,7 +1193,8 @@
         "atteinte": "Hai raggiunto il limite di {max} prodotti del piano {plan}: non puoi aggiungere altri prodotti a questo negozio.",
         "depassement": "Il tuo negozio ha {count} prodotti, oltre il limite di {max} del piano {plan}. Nessun prodotto è stato eliminato e restano tutti online, ma non puoi aggiungerne altri.",
         "passer": "Passa al piano {plan} per arrivare a {max} prodotti",
-        "passerIllimite": "Passa al piano {plan} per prodotti illimitati"
+        "passerIllimite": "Passa al piano {plan} per prodotti illimitati",
+        "voirPlans": "Vedi i piani"
       }
     }
   }

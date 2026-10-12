@@ -12,7 +12,7 @@ import { writeBoutiqueDraft, type ProduitBoutiqueDraft } from "@/lib/site-builde
 import { PLAN_LIMITS } from "@/lib/plan-limits";
 import BoutiqueReglages from "@/components/site-builder/BoutiqueReglages";
 import { LIEN_CHANGER_DE_PLAN } from "@/lib/plan-links";
-import { AlerteLimiteProduits, CompteurProduits, limiteProduitsAtteinte } from "@/components/site-builder/LimiteProduitsBoutique";
+import { AlerteLimiteProduits, BandeauDepassementProduits, CompteurProduits, limiteProduitsAtteinte } from "@/components/site-builder/LimiteProduitsBoutique";
 import { useApiErrorMessage } from "@/lib/use-api-error";
 
 type Boutique = {
@@ -998,6 +998,8 @@ export default function BoutiqueBuilderDetailPage() {
             {globalError}
           </div>
         ) : null}
+
+        {plan !== null ? <BandeauDepassementProduits plan={plan} count={produitsCount} /> : null}
 
         <div className="grid gap-6 xl:grid-cols-[0.9fr_0.55fr]">
           <section className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-6">
