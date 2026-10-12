@@ -4,12 +4,14 @@ import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { useApiErrorMessage } from "@/lib/use-api-error";
 import { isValidSlug, slugify } from "@/lib/slugify";
+import { SUPPORTED_LOCALES, type AppLocale } from "@/lib/locale";
 
 export type BoutiqueReglable = {
   id: string;
   nom: string;
   slug: string;
   est_publique: boolean;
+  langue: AppLocale;
 };
 
 type Props = {
@@ -17,16 +19,19 @@ type Props = {
   produitsCount: number;
   categoriesCount: number;
   sitesCount: number;
+  // false tant que la migration 042 (boutiques.langue) n'est pas appliquée.
+  langueDisponible: boolean;
   onUpdated: (patch: Partial<BoutiqueReglable>) => void;
   onDeleted: () => void;
 };
 
-// Réglages de la boutique : nom et slug, visibilité publique, suppression.
+// Réglages de la boutique : nom et slug, langue, visibilité publique, suppression.
 export default function BoutiqueReglages({
   boutique,
   produitsCount,
   categoriesCount,
   sitesCount,
+  langueDisponible,
   onUpdated,
   onDeleted,
 }: Props) {
@@ -38,6 +43,9 @@ export default function BoutiqueReglages({
   const [identiteEnCours, setIdentiteEnCours] = useState(false);
   const [identiteErreur, setIdentiteErreur] = useState<string | null>(null);
   const [identiteSucces, setIdentiteSucces] = useState(false);
+
+  const [langueEnCours, setLangueEnCours] = useState(false);
+  const [langueErreur, setLangueErreur] = useState<string | null>(null);
 
   const [suppressionEnCours, setSuppressionEnCours] = useState(false);
   const [suppressionErreur, setSuppressionErreur] = useState<string | null>(null);
@@ -89,6 +97,19 @@ export default function BoutiqueReglages({
     onUpdated({ nom: nomFinal, slug: slugFinal });
     setIdentiteSucces(true);
     window.setTimeout(() => setIdentiteSucces(false), 2500);
+  }
+
+  async function changerLangue(langue: AppLocale) {
+    if (langue === boutique.langue) return;
+    setLangueErreur(null);
+    setLangueEnCours(true);
+    const res = await patch({ langue });
+    setLangueEnCours(false);
+    if (!res.ok) {
+      setLangueErreur(res.message);
+      return;
+    }
+    onUpdated({ langue });
   }
 
   async function basculerVisibilite() {
@@ -186,6 +207,25 @@ export default function BoutiqueReglages({
           {identiteSucces ? <span className="text-sm text-[var(--success)]">{t("enregistre")}</span> : null}
           {identiteErreur ? <span className="text-sm text-[var(--danger)]">{identiteErreur}</span> : null}
         </div>
+      </div>
+
+      <div className="mt-6 rounded-3xl border border-[var(--border)] bg-[var(--surface-2)] p-4">
+        <h3 className="text-sm font-semibold text-[var(--text-primary)]">{t("langue.titre")}</h3>
+        <p className="mt-1 text-xs text-[var(--text-muted)]">{t("langue.aide")}</p>
+        <select
+          value={boutique.langue}
+          onChange={(e) => void changerLangue(e.target.value as AppLocale)}
+          disabled={langueEnCours || !langueDisponible}
+          className="mt-3 w-full max-w-xs rounded-2xl border border-[var(--border)] bg-[var(--surface)] px-4 py-2 text-sm text-[var(--text-primary)] outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 disabled:opacity-50"
+        >
+          {SUPPORTED_LOCALES.map((locale) => (
+            <option key={locale} value={locale}>
+              {t(`langue.options.${locale}`)}
+            </option>
+          ))}
+        </select>
+        {!langueDisponible ? <p className="mt-2 text-xs text-[var(--warning)]">{t("langue.indisponible")}</p> : null}
+        {langueErreur ? <p className="mt-2 text-sm text-[var(--danger)]">{langueErreur}</p> : null}
       </div>
 
       <div className="mt-6 rounded-3xl border border-[var(--border)] bg-[var(--surface-2)] p-4">

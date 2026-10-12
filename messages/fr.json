@@ -1158,7 +1158,8 @@
     "shopify_not_configured": "L'intégration Shopify n'est pas encore configurée côté serveur.",
     "shopify_not_connected": "Connecte d'abord ta boutique Shopify dans les paramètres.",
     "shopify_auth_expired": "L'accès à Shopify a expiré ou a été révoqué. Reconnecte ta boutique Shopify dans les paramètres.",
-    "generation_too_many_products": "Le plan {plan} permet au plus {max} produits par site boutique ({count} envoyés). Retire des produits avant de générer."
+    "generation_too_many_products": "Le plan {plan} permet au plus {max} produits par site boutique ({count} envoyés). Retire des produits avant de générer.",
+    "langue_migration_missing": "Le choix de langue n'est pas encore activé sur la base de données."
   },
   "siteBuilder": {
     "boutique": {
@@ -1192,6 +1193,17 @@
           "nomIncorrect": "Le nom saisi ne correspond pas : la boutique n'a pas été supprimée.",
           "bouton": "Supprimer la boutique",
           "enCours": "Suppression…"
+        },
+        "langue": {
+          "titre": "Langue de la boutique",
+          "aide": "Langue des pages publiques, de leur référencement Google et des sites générés depuis la boutique, quelle que soit la langue du visiteur. Les textes que tu saisis (produits, description) ne sont pas traduits.",
+          "indisponible": "Choix de langue pas encore activé sur la base de données (migration 042) : la boutique reste en français.",
+          "options": {
+            "fr": "Français",
+            "en": "English",
+            "es": "Español",
+            "it": "Italiano"
+          }
         }
       },
       "limite": {

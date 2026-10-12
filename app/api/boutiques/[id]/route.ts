@@ -3,6 +3,8 @@ import { getServerUserAndPlan } from "@/lib/supabase-server";
 import { apiError, UNIQUE_VIOLATION } from "@/lib/api-errors";
 import { isValidSlug } from "@/lib/slugify";
 import { RESERVED_SUBDOMAINS } from "@/lib/boutique-subdomains";
+import { avecRepliLangue, langueBoutique, UNDEFINED_COLUMN } from "@/lib/boutique-langue";
+import { isAppLocale } from "@/lib/locale";
 
 export async function GET(request: NextRequest, context: { params: Promise<{ id: string }> }) {
   const params = await context.params;
@@ -11,14 +13,18 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
     return NextResponse.json({ error: "Connecte-toi pour voir cette boutique." }, { status: 401 });
   }
 
-  const { data, error } = await supabase
-    .from("boutiques")
-    .select("id, nom, slug, description, theme, settings, mentions_legales, est_publique, created_at, updated_at")
-    .eq("id", params.id)
-    // La policy select_public (014) rend lisibles les boutiques publiques des autres : ce
-    // endpoint de gestion ne doit renvoyer que les siennes.
-    .eq("user_id", user.id)
-    .maybeSingle();
+  const colonnes = "id, nom, slug, description, theme, settings, mentions_legales, est_publique, created_at, updated_at";
+  const { data: ligne, error, langueDisponible } = await avecRepliLangue((avecLangue) =>
+    supabase
+      .from("boutiques")
+      .select(avecLangue ? `${colonnes}, langue` : colonnes)
+      .eq("id", params.id)
+      // La policy select_public (014) rend lisibles les boutiques publiques des autres : ce
+      // endpoint de gestion ne doit renvoyer que les siennes.
+      .eq("user_id", user.id)
+      .maybeSingle()
+  );
+  const data = ligne ? { ...(ligne as unknown as Record<string, unknown>), langue: langueBoutique(ligne as { langue?: unknown }) } : null;
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
@@ -34,10 +40,16 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
     supabase.from("sites_generes").select("id", { count: "exact", head: true }).eq("boutique_id", params.id),
   ]);
 
-  return NextResponse.json({ boutique: data, produitsCount: produitsCount ?? 0, sitesCount: sitesCount ?? 0 });
+  return NextResponse.json({
+    boutique: data,
+    produitsCount: produitsCount ?? 0,
+    sitesCount: sitesCount ?? 0,
+    // false tant que la migration 042 manque : le choix de langue est alors désactivé.
+    langueDisponible,
+  });
 }
 
-const CHAMPS_MODIFIABLES = ["nom", "slug", "description", "theme", "settings", "mentions_legales", "est_publique"] as const;
+const CHAMPS_MODIFIABLES = ["nom", "slug", "description", "theme", "settings", "mentions_legales", "est_publique", "langue"] as const;
 
 export async function PATCH(request: NextRequest, context: { params: Promise<{ id: string }> }) {
   const params = await context.params;
@@ -65,6 +77,9 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
     if (RESERVED_SUBDOMAINS.has(updates.slug)) {
       return apiError("slug_reserved", 400, "Ce slug est réservé.");
     }
+  }
+  if (updates.langue !== undefined && (typeof updates.langue !== "string" || !isAppLocale(updates.langue))) {
+    return apiError("invalid_request", 400, "Langue inconnue.");
   }
   if (updates.est_publique !== undefined && typeof updates.est_publique !== "boolean") {
     return apiError("invalid_request", 400, "est_publique doit être un booléen.");
@@ -114,6 +129,9 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
   if (error) {
     if (error.code === UNIQUE_VIOLATION) {
       return apiError("slug_taken", 409, "Ce slug est déjà utilisé par une autre boutique.");
+    }
+    if (error.code === UNDEFINED_COLUMN && "langue" in updates) {
+      return apiError("langue_migration_missing", 501, "Le choix de langue n'est pas encore activé : applique la migration 042_boutiques_langue.sql.");
     }
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
