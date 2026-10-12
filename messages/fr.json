@@ -1998,5 +1998,83 @@
       "contactTitre": "8. Contact",
       "contactTexte": "Pour toute question relative à tes données : <email>legal@dropvio.com</email>."
     }
+  },
+  "faq": {
+    "metaTitre": "Questions fréquentes | Dropvio",
+    "metaDescription": "Tout ce qu'il faut savoir sur Dropvio : compte, facturation, fonctionnalités, données.",
+    "nav": {
+      "fonctionnalites": "Fonctionnalités",
+      "faq": "FAQ",
+      "cta": "Commencer gratuitement"
+    },
+    "hero": {
+      "surtitre": "Centre d'aide",
+      "titre": "Questions fréquentes",
+      "intro": "Tout ce qu'il faut savoir sur Dropvio : compte, facturation, fonctionnalités, données."
+    },
+    "footer": {
+      "titre": "Une autre question ?",
+      "texte": "Crée ton compte gratuitement et découvre Dropvio par toi-même. Aucune carte bancaire requise.",
+      "cta": "Créer mon compte"
+    },
+    "plansBientot": "Les plans Pro et Agency arrivent bientôt. En attendant, contactez <email>{adresse}</email>.",
+    "categories": {
+      "general": "Général",
+      "comptes": "Comptes et facturation",
+      "fonctionnalites": "Fonctionnalités",
+      "donnees": "Données et sécurité"
+    },
+    "questions": {
+      "quoi": {
+        "q": "Qu'est-ce que Dropvio ?",
+        "a": "Une plateforme tout-en-un pour les dropshippers. Trouve des produits gagnants, calcule ta marge réelle, audite ta landing page et crée ton site, sans jongler entre 5 outils différents."
+      },
+      "langue": {
+        "q": "Dropvio est-il en français ?",
+        "a": "Oui, entièrement, ainsi qu'en anglais, espagnol et italien. Dropvio a été pensé d'abord pour le marché francophone, avec les vraies règles fiscales et légales françaises (TVA, URSSAF, taxes douanières)."
+      },
+      "freeGratuit": {
+        "q": "Le plan Free coûte-t-il quelque chose ?",
+        "a": "Non. Le compte Free est gratuit, sans limite de temps, et la création de compte ne demande aucune carte bancaire."
+      },
+      "differences": {
+        "q": "Quelle différence entre Free, Pro et Agency ?",
+        "free": "Free (0 €) : accès limité à chaque outil, audit IA non inclus",
+        "pro": "Pro (29 €/mois) : accès complet au finder et au calculateur, 30 audits IA par mois",
+        "agency": "Agency (59 €/mois) : comme Pro, avec 100 audits IA par mois",
+        "fin": "Seul le plan Free est ouvert pour l'instant : les plans Pro et Agency arrivent bientôt. En attendant, contactez <email>{adresse}</email>."
+      },
+      "changerPlan": {
+        "q": "Comment passer à Pro ou Agency, ou changer de plan ?"
+      },
+      "limite": {
+        "q": "Que se passe-t-il si j'atteins la limite de mon plan ?",
+        "a": "Un message clair t'indique la limite atteinte (par exemple, les audits du mois) et te propose de passer au plan supérieur si besoin. Rien ne se bloque sans explication."
+      },
+      "finder": {
+        "q": "Comment fonctionne le finder de produits ?",
+        "a": "Il utilise l'API AliExpress pour te montrer des produits filtrés par volume de commandes, note et marge. Il est mis à jour tous les jours."
+      },
+      "calculateur": {
+        "q": "Le calculateur de marge inclut-il vraiment toutes les taxes françaises ?",
+        "a": "Oui : URSSAF, seuil de TVA, frais Stripe, et la taxe UE de 3 € sur les colis extra-UE de moins de 150 € (en vigueur depuis juillet 2026)."
+      },
+      "audit": {
+        "q": "C'est quoi le score d'audit IA ?",
+        "a": "Un score sur 100, basé sur 9 critères issus d'études réelles (Nielsen Norman Group, Unbounce, McKinsey). Il te dit précisément quoi corriger sur ta landing page."
+      },
+      "siteBuilder": {
+        "q": "Le Site Builder, ça marche comment ?",
+        "a": "Deux modes : génération IA (à partir d'une description produit) ou templates prêts à personnaliser. Les sites sont sauvegardés dans « Mes sites », et le téléchargement du HTML est réservé aux plans Pro et Agency."
+      },
+      "partage": {
+        "q": "Mes données sont-elles partagées avec d'autres utilisateurs ?",
+        "a": "Non, jamais. Chaque compte est isolé : personne d'autre ne peut voir tes simulations, tes sites ou tes audits."
+      },
+      "rgpd": {
+        "q": "Dropvio respecte-t-il le RGPD ?",
+        "a": "Oui. Tu peux demander l'export ou la suppression de tes données à tout moment."
+      }
+    }
   }
 }

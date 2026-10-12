@@ -1998,5 +1998,83 @@
       "contactTitre": "8. Contatti",
       "contactTexte": "Per qualsiasi domanda sui tuoi dati: <email>legal@dropvio.com</email>."
     }
+  },
+  "faq": {
+    "metaTitre": "Domande frequenti | Dropvio",
+    "metaDescription": "Tutto quello che c'è da sapere su Dropvio: account, fatturazione, funzionalità, dati.",
+    "nav": {
+      "fonctionnalites": "Funzionalità",
+      "faq": "FAQ",
+      "cta": "Inizia gratis"
+    },
+    "hero": {
+      "surtitre": "Centro assistenza",
+      "titre": "Domande frequenti",
+      "intro": "Tutto quello che c'è da sapere su Dropvio: account, fatturazione, funzionalità, dati."
+    },
+    "footer": {
+      "titre": "Un'altra domanda?",
+      "texte": "Crea il tuo account gratuito e scopri Dropvio da solo. Nessuna carta di credito richiesta.",
+      "cta": "Crea il mio account"
+    },
+    "plansBientot": "I piani Pro e Agency arriveranno presto. Nel frattempo, contatta <email>{adresse}</email>.",
+    "categories": {
+      "general": "Generale",
+      "comptes": "Account e fatturazione",
+      "fonctionnalites": "Funzionalità",
+      "donnees": "Dati e sicurezza"
+    },
+    "questions": {
+      "quoi": {
+        "q": "Che cos'è Dropvio?",
+        "a": "Una piattaforma tutto in uno per i dropshipper. Trova prodotti vincenti, calcola il tuo margine reale, analizza la tua landing page e crea il tuo sito, senza destreggiarti tra 5 strumenti diversi."
+      },
+      "langue": {
+        "q": "Dropvio è disponibile in italiano?",
+        "a": "Sì, completamente, oltre che in francese, inglese e spagnolo. Dropvio è stato pensato prima di tutto per il mercato francofono, con le vere regole fiscali e legali francesi (IVA, URSSAF, dazi doganali)."
+      },
+      "freeGratuit": {
+        "q": "Il piano Free costa qualcosa?",
+        "a": "No. L'account Free è gratuito, senza limiti di tempo, e la registrazione non richiede alcuna carta di credito."
+      },
+      "differences": {
+        "q": "Che differenza c'è tra Free, Pro e Agency?",
+        "free": "Free (0 €): accesso limitato a ogni strumento, audit IA non incluso",
+        "pro": "Pro (29 €/mese): accesso completo al finder e al calcolatore, 30 audit IA al mese",
+        "agency": "Agency (59 €/mese): come Pro, con 100 audit IA al mese",
+        "fin": "Per ora è aperto solo il piano Free: i piani Pro e Agency arriveranno presto. Nel frattempo, contatta <email>{adresse}</email>."
+      },
+      "changerPlan": {
+        "q": "Come passo a Pro o Agency, o cambio piano?"
+      },
+      "limite": {
+        "q": "Cosa succede se raggiungo il limite del mio piano?",
+        "a": "Un messaggio chiaro ti indica il limite raggiunto (ad esempio, gli audit del mese) e ti propone di passare al piano superiore se serve. Niente viene bloccato senza spiegazione."
+      },
+      "finder": {
+        "q": "Come funziona il finder di prodotti?",
+        "a": "Usa l'API di AliExpress per mostrarti prodotti filtrati per volume di ordini, valutazione e margine. Viene aggiornato ogni giorno."
+      },
+      "calculateur": {
+        "q": "Il calcolatore di margine include davvero tutte le tasse francesi?",
+        "a": "Sì: URSSAF, soglia IVA, commissioni Stripe e la tassa UE di 3 € sui pacchi extra UE sotto i 150 € (in vigore da luglio 2026)."
+      },
+      "audit": {
+        "q": "Che cos'è il punteggio di audit IA?",
+        "a": "Un punteggio su 100, basato su 9 criteri tratti da studi reali (Nielsen Norman Group, Unbounce, McKinsey). Ti dice esattamente cosa correggere sulla tua landing page."
+      },
+      "siteBuilder": {
+        "q": "Come funziona il Site Builder?",
+        "a": "Due modalità: generazione IA (a partire da una descrizione del prodotto) o template pronti da personalizzare. I siti vengono salvati in «I miei siti» e il download dell'HTML è riservato ai piani Pro e Agency."
+      },
+      "partage": {
+        "q": "I miei dati vengono condivisi con altri utenti?",
+        "a": "No, mai. Ogni account è isolato: nessun altro può vedere le tue simulazioni, i tuoi siti o i tuoi audit."
+      },
+      "rgpd": {
+        "q": "Dropvio rispetta il GDPR?",
+        "a": "Sì. Puoi richiedere l'esportazione o la cancellazione dei tuoi dati in qualsiasi momento."
+      }
+    }
   }
 }

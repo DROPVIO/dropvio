@@ -1998,5 +1998,83 @@
       "contactTitre": "8. Contact",
       "contactTexte": "For any question about your data: <email>legal@dropvio.com</email>."
     }
+  },
+  "faq": {
+    "metaTitre": "Frequently asked questions | Dropvio",
+    "metaDescription": "Everything you need to know about Dropvio: account, billing, features, data.",
+    "nav": {
+      "fonctionnalites": "Features",
+      "faq": "FAQ",
+      "cta": "Get started for free"
+    },
+    "hero": {
+      "surtitre": "Help center",
+      "titre": "Frequently asked questions",
+      "intro": "Everything you need to know about Dropvio: account, billing, features, data."
+    },
+    "footer": {
+      "titre": "Another question?",
+      "texte": "Create your free account and discover Dropvio for yourself. No credit card required.",
+      "cta": "Create my account"
+    },
+    "plansBientot": "The Pro and Agency plans are coming soon. In the meantime, contact <email>{adresse}</email>.",
+    "categories": {
+      "general": "General",
+      "comptes": "Accounts and billing",
+      "fonctionnalites": "Features",
+      "donnees": "Data and security"
+    },
+    "questions": {
+      "quoi": {
+        "q": "What is Dropvio?",
+        "a": "An all-in-one platform for dropshippers. Find winning products, calculate your real margin, audit your landing page and build your site, without juggling 5 different tools."
+      },
+      "langue": {
+        "q": "Is Dropvio available in English?",
+        "a": "Yes, fully, as well as in French, Spanish and Italian. Dropvio was designed first for the French-speaking market, with real French tax and legal rules (VAT, URSSAF, customs duties)."
+      },
+      "freeGratuit": {
+        "q": "Does the Free plan cost anything?",
+        "a": "No. The Free account is free with no time limit, and signing up requires no credit card."
+      },
+      "differences": {
+        "q": "What's the difference between Free, Pro and Agency?",
+        "free": "Free (€0): limited access to each tool, AI audit not included",
+        "pro": "Pro (€29/month): full access to the finder and the calculator, 30 AI audits per month",
+        "agency": "Agency (€59/month): like Pro, with 100 AI audits per month",
+        "fin": "Only the Free plan is open for now: the Pro and Agency plans are coming soon. In the meantime, contact <email>{adresse}</email>."
+      },
+      "changerPlan": {
+        "q": "How do I upgrade to Pro or Agency, or change plans?"
+      },
+      "limite": {
+        "q": "What happens if I reach my plan's limit?",
+        "a": "A clear message tells you which limit you've reached (for example, the month's audits) and suggests upgrading if needed. Nothing is ever blocked without an explanation."
+      },
+      "finder": {
+        "q": "How does the product finder work?",
+        "a": "It uses the AliExpress API to show you products filtered by order volume, rating and margin. It's updated daily."
+      },
+      "calculateur": {
+        "q": "Does the margin calculator really include all French taxes?",
+        "a": "Yes: URSSAF, the VAT threshold, Stripe fees, and the €3 EU duty on non-EU parcels under €150 (in force since July 2026)."
+      },
+      "audit": {
+        "q": "What is the AI audit score?",
+        "a": "A score out of 100, based on 9 criteria from real studies (Nielsen Norman Group, Unbounce, McKinsey). It tells you exactly what to fix on your landing page."
+      },
+      "siteBuilder": {
+        "q": "How does the Site Builder work?",
+        "a": "Two modes: AI generation (from a product description) or ready-to-customize templates. Sites are saved to “My sites”, and HTML download is available on the Pro and Agency plans."
+      },
+      "partage": {
+        "q": "Is my data shared with other users?",
+        "a": "No, never. Each account is isolated: no one else can see your simulations, sites or audits."
+      },
+      "rgpd": {
+        "q": "Is Dropvio GDPR compliant?",
+        "a": "Yes. You can request the export or deletion of your data at any time."
+      }
+    }
   }
 }
