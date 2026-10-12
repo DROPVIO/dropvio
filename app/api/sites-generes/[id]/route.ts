@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseServerClient, getServerUserPlanOnly } from "@/lib/supabase-server";
+import { estFormatExport } from "@/lib/format-export";
 
 // Le select inclut les champs de pré-remplissage (description, lien_aliexpress, image_url,
 // prix_vente, prix_original, style_id, couleur_*, voir 032_sites_generes_regeneration_fields.sql)
@@ -48,6 +49,9 @@ const UNDEFINED_COLUMN = "42703";
 
 const MIGRATION_035_MANQUANTE =
   "L'annulation de correction IA n'est pas encore activée sur cette base : applique la migration 035_sites_generes_html_precedent.sql.";
+
+const MIGRATION_039_MANQUANTE =
+  "Le choix du format d'export n'est pas encore activé sur cette base : applique la migration 039_sites_generes_format_export.sql.";
 
 // Sauvegarde la version personnalisée (couleurs) produite par le panneau de personnalisation
 // post-génération du Site Builder (voir components/site-builder/ColorTokenPanel.tsx), bascule
@@ -124,6 +128,12 @@ export async function PATCH(
   if (typeof body.est_favori === "boolean") {
     updates.est_favori = body.est_favori;
   }
+  // Changement de format d'export après création (app/mes-sites/page.tsx). Ne touche jamais
+  // html_content : la conversion vers Liquid est faite à la demande, au téléchargement ou au
+  // push Shopify. Changer de format est donc instantané et réversible.
+  if (estFormatExport(body.format_export)) {
+    updates.format_export = body.format_export;
+  }
 
   if (Object.keys(updates).length === 0) {
     return NextResponse.json({ error: "Aucun champ valide à mettre à jour." }, { status: 400 });
@@ -165,12 +175,15 @@ export async function PATCH(
     .maybeSingle();
 
   if (error) {
-    const migrationManquante =
-      error.code === UNDEFINED_COLUMN && "html_content_precedent" in updates;
-    return NextResponse.json(
-      { error: migrationManquante ? MIGRATION_035_MANQUANTE : error.message },
-      { status: migrationManquante ? 501 : 500 }
-    );
+    // 501 plutôt que 500 quand la cause est une migration non appliquée : le message dit quoi
+    // faire au lieu de laisser un code PostgREST cryptique remonter jusqu'à l'utilisateur.
+    if (error.code === UNDEFINED_COLUMN && "html_content_precedent" in updates) {
+      return NextResponse.json({ error: MIGRATION_035_MANQUANTE }, { status: 501 });
+    }
+    if (error.code === UNDEFINED_COLUMN && "format_export" in updates) {
+      return NextResponse.json({ error: MIGRATION_039_MANQUANTE }, { status: 501 });
+    }
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
   if (!data) {
     return NextResponse.json({ error: "Site introuvable." }, { status: 404 });

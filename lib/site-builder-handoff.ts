@@ -5,9 +5,11 @@
 // passent pas à l'échelle pour une liste de produits ; sessionStorage évite d'introduire
 // une table/endpoint dédié pour un simple hand-off ponctuel entre deux pages de la même app.
 
-// Une landing page avec des dizaines de cartes produits perd son intérêt (page énorme,
-// redondante avec la vraie page boutique publique déjà existante à /boutiques/[slug]) —
-// plafond volontaire, avec mention explicite du total réel si la boutique en contient plus.
+// La limite d'ajout manuel de produits dans le builder suit le plan de l'utilisateur
+// (BoutiqueDraft.limiteProduits, tiré de PLAN_LIMITS[plan].produitsBoutiqueMax par la page
+// boutique) ; le serveur reste la référence pour le nombre de produits d'une boutique
+// (POST /api/boutiques/[id]/produits). Aucun produit transmis n'est retiré.
+// Plus utilisé par le builder — gardé exporté pour compatibilité, à supprimer après vérification.
 export const BOUTIQUE_PRODUITS_CAP = 30;
 
 import type { ProduitBoutique } from "./site-templates";
@@ -22,19 +24,29 @@ export type BoutiqueDraft = {
   nomBoutique: string;
   descriptionBoutique: string;
   produits: ProduitBoutiqueDraft[];
-  // Total réel de produits dans la boutique, peut être > produits.length si le plafond a
-  // été atteint (produits.length est alors toujours BOUTIQUE_PRODUITS_CAP).
+  // produits contient tous les produits transmis par la page boutique (aucune troncature) ;
+  // totalProduitsBoutique est le total réel de la boutique au moment du transfert.
   totalProduitsBoutique: number;
+  // Nombre maximum de produits dans le brouillon pour l'ajout manuel (plan de l'utilisateur).
+  // null ou absent : pas de limite.
+  limiteProduits?: number | null;
+  // Catégories de la boutique (déjà chargées par la page boutique), pour les sections de
+  // collection du site généré ; les produits y renvoient par categorieId. Absent : pas de
+  // collections, une seule grille de catalogue.
+  categories?: { id: string; nom: string; slug: string }[];
 };
 
 const STORAGE_KEY = "dropvio-site-builder-boutique-draft";
 
-export function writeBoutiqueDraft(draft: BoutiqueDraft): void {
+// Renvoie false si l'écriture échoue (sessionStorage indisponible : navigation privée
+// stricte, quota dépassé...) — l'appelant doit alors prévenir l'utilisateur plutôt que
+// d'ouvrir le Site Builder en mode boutique sans brouillon.
+export function writeBoutiqueDraft(draft: BoutiqueDraft): boolean {
   try {
     sessionStorage.setItem(STORAGE_KEY, JSON.stringify(draft));
+    return true;
   } catch {
-    // sessionStorage indisponible (navigation privée stricte, quota...) — le Site Builder
-    // retombera simplement sur le mode produit unique par défaut, jamais d'erreur bloquante.
+    return false;
   }
 }
 

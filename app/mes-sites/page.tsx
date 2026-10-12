@@ -5,6 +5,8 @@ import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
 import { toIntlTag, type AppLocale } from "@/lib/locale";
 import { slugFichier, telechargerTexte } from "@/lib/audit-download";
+import { htmlToLiquidSection } from "@/lib/html-to-liquid";
+import { FORMATS_EXPORT, LABEL_FORMAT, type FormatExport } from "@/lib/format-export";
 import { ToastHost, useToast } from "@/components/Toast";
 
 type Site = {
@@ -52,6 +54,13 @@ export default function MesSitesPage() {
   const [idsAnnulables, setIdsAnnulables] = useState<Set<string>>(new Set());
   const [undoing, setUndoing] = useState<string | null>(null);
 
+  // Format d'export par site (sites_generes.format_export, migration 039). Vide si 039 n'est
+  // pas appliquée : chaque site retombe alors sur "html", et le sélecteur reste affiché mais
+  // la route PATCH répondra 501 avec la consigne d'appliquer la migration.
+  const [formats, setFormats] = useState<Record<string, FormatExport>>({});
+  const [changingFormat, setChangingFormat] = useState<string | null>(null);
+  const formatDe = (id: string): FormatExport => formats[id] ?? "html";
+
   useEffect(() => {
     fetch("/api/sites-generes")
       .then((r) => r.json())
@@ -60,6 +69,7 @@ export default function MesSitesPage() {
         else {
           setSites(json.sites ?? []);
           setIdsAnnulables(new Set<string>(json.idsAnnulables ?? []));
+          setFormats(json.formats ?? {});
         }
       })
       .catch(() => setError(t("errorLoad")))
@@ -119,13 +129,56 @@ export default function MesSitesPage() {
       // slugFichier() et non un simple replace() sur les espaces : nom_produit vient de
       // l'utilisateur et contient souvent des accents, que l'ancien nom laissait passer tels
       // quels dans le nom de fichier.
-      const nomFichier = `${slugFichier(site.nom_produit)}-landing.html`;
+      // Conversion à la demande : la base ne stocke que du HTML, le Liquid est produit ici,
+      // au clic, à partir de ce même HTML (lib/html-to-liquid.ts, partagé avec le push
+      // Shopify côté serveur). Changer de format n'altère donc jamais le site sauvegardé.
+      const slug = slugFichier(site.nom_produit);
+      if (formatDe(site.id) === "liquid") {
+        const nomFichier = `${slug}-section.liquid`;
+        telechargerTexte(
+          htmlToLiquidSection(json.html_content, site.nom_produit),
+          nomFichier,
+          "text/plain;charset=utf-8"
+        );
+        succes(t("downloadOk", { nom: nomFichier }));
+        return;
+      }
+      const nomFichier = `${slug}-landing.html`;
       telechargerTexte(json.html_content, nomFichier);
       succes(t("downloadOk", { nom: nomFichier }));
     } catch {
       echec(t("errorDownload"));
     } finally {
       setDownloading(null);
+    }
+  }
+
+  /** Change le format d'export d'un site déjà créé. Mise à jour optimiste puis correction si
+   *  le serveur refuse — le changement est purement déclaratif (aucune réécriture de
+   *  html_content), donc un retour arrière visuel suffit. */
+  async function handleChangeFormat(site: Site, format: FormatExport) {
+    if (formatDe(site.id) === format) return;
+    const precedent = formatDe(site.id);
+    setFormats((prev) => ({ ...prev, [site.id]: format }));
+    setChangingFormat(site.id);
+    try {
+      const res = await fetch(`/api/sites-generes/${site.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ format_export: format }),
+      });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setFormats((prev) => ({ ...prev, [site.id]: precedent }));
+        echec(json.error || t("errorFormat"));
+        return;
+      }
+      succes(t("formatChanged", { format: LABEL_FORMAT[format] }));
+    } catch {
+      setFormats((prev) => ({ ...prev, [site.id]: precedent }));
+      echec(t("errorServer"));
+    } finally {
+      setChangingFormat(null);
     }
   }
 
@@ -298,7 +351,11 @@ export default function MesSitesPage() {
                         disabled={downloading === site.id}
                         className="flex-1 py-2 rounded-xl bg-gradient-to-r from-violet-600 to-blue-600 text-white text-xs font-semibold hover:from-violet-500 hover:to-blue-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                       >
-                        {downloading === site.id ? "…" : t("download")}
+                        {downloading === site.id
+                          ? "…"
+                          : formatDe(site.id) === "liquid"
+                          ? t("downloadLiquid")
+                          : t("download")}
                       </button>
                     ) : (
                       <Link
@@ -309,6 +366,30 @@ export default function MesSitesPage() {
                       </Link>
                     )}
                   </div>
+                  {/* Format d'export — affiché seulement aux plans qui peuvent exporter : pour
+                      un plan free, le choix n'aurait aucun effet observable. Le HTML stocké
+                      est le même dans les deux cas, la conversion a lieu au téléchargement. */}
+                  {canExport && (
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-[11px] text-[var(--text-faint)] shrink-0">{t("formatLabel")}</span>
+                      <div className="inline-flex gap-0.5 p-0.5 rounded-lg bg-[var(--bg)] border border-[var(--border)]">
+                        {FORMATS_EXPORT.map((f) => (
+                          <button
+                            key={f}
+                            onClick={() => handleChangeFormat(site, f)}
+                            disabled={changingFormat === site.id}
+                            className={`px-2.5 py-1 rounded-md text-[11px] font-semibold transition disabled:opacity-50 ${
+                              formatDe(site.id) === f
+                                ? "bg-violet-600 text-white"
+                                : "text-[var(--text-faint)] hover:text-[var(--text-muted)]"
+                            }`}
+                          >
+                            {LABEL_FORMAT[f]}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                   {/* Audit IA : réservé aux plans Pro/Agency côté serveur (quota free = 0
                       audit, voir lib/plan-limits.ts) — un free est donc renvoyé vers les
                       tarifs plutôt que vers un audit qui échouerait en 403. */}

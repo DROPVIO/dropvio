@@ -1,6 +1,6 @@
 "use client";
 
-import { BOUTIQUE_PRODUITS_CAP, type BoutiqueDraft, type ProduitBoutiqueDraft } from "@/lib/site-builder-handoff";
+import { type BoutiqueDraft, type ProduitBoutiqueDraft } from "@/lib/site-builder-handoff";
 
 // Édition du brouillon multi-produits (mode boutique) — rendu une seule fois dans
 // app/site-builder/page.tsx, partagé entre les modes IA et Éditeur de templates (tous deux
@@ -25,8 +25,12 @@ export default function BoutiqueProduitsEditor({
     onChange({ ...draft, produits: draft.produits.filter((_, idx) => idx !== i) });
   }
 
+  // Limite d'ajout du plan (draft.limiteProduits) — null ou absente : pas de limite.
+  const limite = draft.limiteProduits ?? null;
+  const limiteAtteinte = limite !== null && draft.produits.length >= limite;
+
   function addProduit() {
-    if (draft.produits.length >= BOUTIQUE_PRODUITS_CAP) return;
+    if (limiteAtteinte) return;
     onChange({ ...draft, produits: [...draft.produits, { ...PRODUIT_VIDE }] });
   }
 
@@ -53,16 +57,15 @@ export default function BoutiqueProduitsEditor({
 
       <div className="flex items-center justify-between">
         <p className="text-sm font-medium text-[var(--text-muted)]">
-          Produits ({draft.produits.length}
-          {draft.totalProduitsBoutique > draft.produits.length ? ` sur ${draft.totalProduitsBoutique}` : ""})
+          Produits ({draft.produits.length} sur {draft.totalProduitsBoutique})
         </p>
         <button
           type="button"
           onClick={addProduit}
-          disabled={draft.produits.length >= BOUTIQUE_PRODUITS_CAP}
+          disabled={limiteAtteinte}
           className="text-[11px] text-[var(--accent)] hover:opacity-80 transition disabled:opacity-40 disabled:cursor-not-allowed"
         >
-          + Ajouter un produit{draft.produits.length >= BOUTIQUE_PRODUITS_CAP ? ` (max ${BOUTIQUE_PRODUITS_CAP})` : ""}
+          + Ajouter un produit{limite !== null ? ` (max ${limite})` : ""}
         </button>
       </div>
 

@@ -97,9 +97,12 @@ export default function DashboardPage() {
         const now = new Date();
         const startOfMonth = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1)).toISOString();
 
-        // usage_mensuel (audit_ia, site_builder) fusionné ici : ces deux requêtes ne
-        // dépendent que de user.id, déjà disponible — les isoler dans un Promise.all
-        // séparé après coup ne faisait qu'ajouter une étape séquentielle inutile.
+        // usage_mensuel (audit_ia seul) fusionné ici : cette requête ne dépend que de
+        // user.id, déjà disponible — l'isoler dans un Promise.all séparé après coup ne
+        // faisait qu'ajouter une étape séquentielle inutile.
+        // site_builder n'y figure pas : ce compteur n'est jamais incrémenté (aucun appelant
+        // d'incrementMonthlyUsage pour cette feature), il affichait donc 0 en permanence.
+        // Le quota des sites se mesure sur les lignes de sites_generes — voir plus bas.
         const [
           { data: p },
           { data: sitesRows },
@@ -108,13 +111,15 @@ export default function DashboardPage() {
           { data: auds },
           { data: mesBoutiques },
           auditsUsed,
-          sitesUsed,
         ] = await Promise.all([
           supabase.from("profils").select("nom_complet, plan").eq("id", user.id).maybeSingle(),
           // Lignes complètes (pas juste un count) : sert à la fois au total/ce mois-ci
-          // ci-dessous ET au graphique d'activité (DashboardActiviteChart), qui n'a plus
-          // sa propre requête sur cette table.
-          supabase.from("sites_generes").select("id, created_at").eq("user_id", user.id).limit(1000),
+          // ci-dessous, au quota mensuel ET au graphique d'activité
+          // (DashboardActiviteChart), qui n'a plus sa propre requête sur cette table.
+          // is_trace est sélectionné pour le seul calcul du quota : les lignes de trace du
+          // flux « Préparer ma boutique » (voir 028_sites_generes_is_trace.sql) ne sont pas
+          // des générations et ne décomptent rien.
+          supabase.from("sites_generes").select("id, created_at, is_trace").eq("user_id", user.id).limit(1000),
           // produits_dedup (supabase/migrations/027_produits_dedup_view.sql) : compte le
           // catalogue tel que l'utilisateur le voit réellement dans produits-gagnants
           // (dédupliqué par (nom, niche)), pas le nombre brut de lignes sourcées.
@@ -126,7 +131,6 @@ export default function DashboardPage() {
           // seule ne garantit pas qu'on ne liste que les miennes.
           supabase.from("boutiques").select("id").eq("user_id", user.id),
           getMonthlyUsage(supabase, user.id, "audit_ia"),
-          getMonthlyUsage(supabase, user.id, "site_builder"),
         ]);
 
         if (p) setProfile(p as Profile);
@@ -161,7 +165,12 @@ export default function DashboardPage() {
         }
 
         setAuditsMoisUsage(auditsUsed);
-        setSitesMoisUsage(sitesUsed);
+        // Même règle exactement que celle appliquée côté serveur (app/api/generate-site,
+        // app/api/sites-generes) : lignes du mois en cours, traces exclues. Calculé sur
+        // siteRows, déjà chargé ci-dessus — aucune requête supplémentaire.
+        setSitesMoisUsage(
+          siteRows.filter((site) => site.created_at >= startOfMonth && !site.is_trace).length
+        );
 
         // Passé en props à DashboardActiviteChart, qui n'a plus besoin de refetcher ces
         // 5 sources ni de faire son propre auth.getUser() (voir components/DashboardActiviteChart.tsx).

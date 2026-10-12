@@ -326,6 +326,35 @@ export async function shopifyFetch<T = unknown>(
 
 type ShopifyFulfillmentOrder = { id: number; status: string };
 
+// Page de la boutique en ligne (Admin REST /pages) — champs utilisés par la publication des
+// sites générés (app/api/sites-generes/[id]/shopify-push).
+export type ShopifyPage = { id: number; handle: string; title?: string };
+
+export async function createPage(
+  shop: string,
+  accessToken: string,
+  page: { handle: string; title: string; body_html: string }
+): Promise<ShopifyPage> {
+  const res = await shopifyFetch<{ page: ShopifyPage }>(shop, accessToken, "/pages.json", {
+    method: "POST",
+    body: JSON.stringify({ page: { ...page, published: true } }),
+  });
+  return res.page;
+}
+
+export async function updatePage(
+  shop: string,
+  accessToken: string,
+  pageId: number,
+  page: { title: string; body_html: string }
+): Promise<ShopifyPage> {
+  const res = await shopifyFetch<{ page: ShopifyPage }>(shop, accessToken, `/pages/${pageId}.json`, {
+    method: "PUT",
+    body: JSON.stringify({ page }),
+  });
+  return res.page;
+}
+
 // Pousse le numéro de suivi saisi par le marchand vers Shopify une fois qu'il a commandé sur
 // AliExpress. Passe par le modèle FulfillmentOrder (obligatoire depuis la dépréciation de la
 // création directe de fulfillment sur /orders/{id}/fulfillments.json) : il faut d'abord

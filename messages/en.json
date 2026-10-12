@@ -510,7 +510,11 @@
       "errorFavorite": "Error while updating the favorite.",
       "errorPublish": "Could not publish to Shopify.",
       "errorServer": "Could not reach the server.",
-      "downloadOk": "File saved to your Downloads: {nom}"
+      "downloadOk": "File saved to your Downloads: {nom}",
+      "formatLabel": "Export format",
+      "downloadLiquid": "Download the .liquid",
+      "formatChanged": "Export format: {format}",
+      "errorFormat": "Could not change the export format."
     },
     "spy": {
       "badge": "Competitive intelligence",

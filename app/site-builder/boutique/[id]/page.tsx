@@ -2,12 +2,14 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState, type FormEvent } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { slugify } from "@/lib/slugify";
 import ProduitsSuggeres from "@/components/ProduitsSuggeres";
 import { NICHES } from "@/lib/niches";
 import { getBoutiquePublicUrl } from "@/lib/boutique-subdomains";
 import PaletteEditor, { type Palette } from "@/app/components/PaletteEditor";
+import { writeBoutiqueDraft, type ProduitBoutiqueDraft } from "@/lib/site-builder-handoff";
+import { PLAN_LIMITS } from "@/lib/plan-limits";
 
 type Boutique = {
   id: string;
@@ -42,13 +44,33 @@ type BoutiqueProduct = {
 };
 
 const DEFAULT_PAGE_SIZE = 20;
+// Taille de page du chargement complet (loadAllProduits) — sans rapport avec la liste affichée.
+const CHARGEMENT_COMPLET_PAGE_SIZE = 100;
 
 function formatPrice(value: number | null | undefined) {
   return value == null ? "" : `${value.toFixed(2)}€`;
 }
 
+// Produit de la boutique → format du brouillon Site Builder (ProduitBoutique). Prix en
+// chaînes à 2 décimales, affichées telles quelles par la grille ; prix_vente à 0 (défaut en
+// base) donne "" — pas de prix ni de paiement sur la carte. Prix barré seulement s'il
+// dépasse le prix de vente.
+function toProduitBoutique(prod: BoutiqueProduct): ProduitBoutiqueDraft {
+  const vente = Number(prod.prix_vente) || 0;
+  const original = prod.prix_original == null ? null : Number(prod.prix_original);
+  return {
+    nom: prod.nom,
+    description: prod.description ?? "",
+    image: prod.image_urls?.[0] ?? null,
+    prixVente: vente > 0 ? vente.toFixed(2) : "",
+    prixOriginal: original != null && original > vente ? original.toFixed(2) : "",
+    categorieId: prod.category_id ?? null,
+  };
+}
+
 export default function BoutiqueBuilderDetailPage() {
   const params = useParams();
+  const router = useRouter();
   const [boutique, setBoutique] = useState<Boutique | null>(null);
   const [globalError, setGlobalError] = useState<string | null>(null);
 
@@ -137,17 +159,43 @@ export default function BoutiqueBuilderDetailPage() {
     [categories]
   );
 
-  // Préremplit le Site Builder avec le nom/la description de la boutique — les boutiques
-  // n'ayant pas de champ image propre, l'image du premier produit sert de visuel par défaut
-  // s'il y en a un. boutique_id relie ensuite le site généré à cette boutique (sites_generes).
-  function buildSiteBuilderPrefillUrl(mode: "ia" | "template"): string {
+  // Préremplit le Site Builder avec UN même produit : le premier qui a une image ET un prix
+  // (prix_vente vaut 0 par défaut en base) — son nom, sa description (repli sur celle de la
+  // boutique), son image, son prix et son prix barré, pour que la page générée ne mélange
+  // jamais deux produits. Sans produit complet : nom et description de la boutique, sans
+  // image ni prix. boutique_id relie ensuite le site généré à cette boutique (sites_generes).
+  // overrides : description et palette tout juste enregistrées par handleCreerMonSite — l'état
+  // `boutique` n'est pas encore à jour dans ce même clic. La palette part en colorPrimary/
+  // colorSecondary/colorAccent, lus par app/site-builder/page.tsx comme palette initiale.
+  function buildSiteBuilderPrefillUrl(
+    mode: "ia" | "template",
+    overrides?: { description?: string | null; palette?: Palette }
+  ): string {
     const p = new URLSearchParams();
     p.set("mode", mode);
     if (typeof params?.id === "string") p.set("boutiqueId", params.id);
-    if (boutique?.nom) p.set("name", boutique.nom);
-    p.set("description", boutique?.description || `Découvrez les produits de la boutique ${boutique?.nom ?? ""}.`);
-    const firstImage = products.find((prod) => prod.image_urls?.[0])?.image_urls?.[0];
-    if (firstImage) p.set("image", firstImage);
+    const boutiqueDescription = overrides?.description !== undefined ? overrides.description : boutique?.description;
+    const produitVedette = products.find((prod) => prod.image_urls?.[0] && prod.prix_vente > 0);
+    if (produitVedette) {
+      p.set("name", produitVedette.nom);
+      p.set(
+        "description",
+        produitVedette.description || boutiqueDescription || `Découvrez les produits de la boutique ${boutique?.nom ?? ""}.`
+      );
+      p.set("image", produitVedette.image_urls[0]);
+      p.set("prixVente", String(produitVedette.prix_vente));
+      if (produitVedette.prix_original != null && produitVedette.prix_original > produitVedette.prix_vente) {
+        p.set("prixOriginal", String(produitVedette.prix_original));
+      }
+    } else {
+      if (boutique?.nom) p.set("name", boutique.nom);
+      p.set("description", boutiqueDescription || `Découvrez les produits de la boutique ${boutique?.nom ?? ""}.`);
+    }
+    if (overrides?.palette) {
+      p.set("colorPrimary", overrides.palette.primary);
+      p.set("colorSecondary", overrides.palette.secondary);
+      p.set("colorAccent", overrides.palette.accent);
+    }
     return `/site-builder?${p.toString()}`;
   }
 
@@ -171,7 +219,7 @@ export default function BoutiqueBuilderDetailPage() {
 
   // Restriction plan free — export HTML boutique et publication Shopify réservés à
   // Pro/Agency (voir diagnostic "restriction export Site Builder", même règle que
-  // app/site-builder/page.tsx). Démarre à false tant que /api/plan n'a pas répondu.
+  // app/site-builder/page.tsx). plan démarre à null tant que /api/plan n'a pas répondu.
   const [plan, setPlan] = useState<"free" | "pro" | "agency" | null>(null);
   useEffect(() => {
     fetch("/api/plan")
@@ -180,6 +228,14 @@ export default function BoutiqueBuilderDetailPage() {
       .catch(() => setPlan("free"));
   }, []);
   const canExport = plan === "pro" || plan === "agency";
+  // plan vaut null tant que /api/plan n'a pas répondu (succès ou erreur, l'erreur donnant
+  // "free") — « Créer mon site » attend cette réponse pour ne jamais transmettre au builder
+  // la limite Free par défaut à un compte Pro/Agency.
+  const planCharge = plan !== null;
+  // Limite d'ajout de produits dans le brouillon du builder (null = illimité) — même plan
+  // (profils.plan via /api/plan) et même valeur que le plafond serveur de
+  // POST /api/boutiques/[id]/produits. Plan pas encore connu : "free", comme le repli ci-dessus.
+  const limiteProduitsPlan = PLAN_LIMITS[plan ?? "free"].produitsBoutiqueMax;
 
   async function handlePushShopify() {
     if (!params?.id) return;
@@ -401,6 +457,125 @@ export default function BoutiqueBuilderDetailPage() {
     }
   }
 
+  // Enregistre la description/palette de la boutique (PATCH) et met l'état local à jour —
+  // partagé par handleConfirmerContenu et handleCreerMonSite. Renvoie false si le serveur
+  // refuse (erreur déjà affichée) ; une erreur réseau remonte à l'appelant.
+  async function enregistrerContenuBoutique(description: string | null, palette: Palette): Promise<boolean> {
+    if (typeof params?.id !== "string" || !boutique) return false;
+    const res = await fetch(`/api/boutiques/${params.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        description,
+        settings: { ...(boutique.settings ?? {}), palette },
+      }),
+    });
+    const json = await res.json();
+    if (!res.ok) {
+      setContenuError(json.error ?? "Impossible d'enregistrer les changements.");
+      return false;
+    }
+    setBoutique((prev) =>
+      prev
+        ? { ...prev, description, settings: { ...(prev.settings ?? {}), palette } }
+        : prev
+    );
+    return true;
+  }
+
+  // Tous les produits de la boutique, page après page — indépendant de la pagination
+  // affichée (products/totalPages restent inchangés). Appelé seulement au clic sur
+  // « Créer mon site » pour une boutique multi-produits, jamais au chargement. Lève une
+  // erreur dès que la liste ne peut pas être complète (page en échec, page incomplète alors
+  // qu'il en reste, nombre final différent du total de la 1re page) : jamais de liste partielle.
+  async function loadAllProduits(): Promise<{ produits: BoutiqueProduct[]; total: number }> {
+    const tous: BoutiqueProduct[] = [];
+    let total = 0;
+    let page = 1;
+    let totalPagesApi = 1;
+    do {
+      const response = await fetch(`/api/boutiques/${params?.id}/produits?page=${page}&limit=${CHARGEMENT_COMPLET_PAGE_SIZE}`);
+      const json = await response.json();
+      if (!response.ok) throw new Error(json.error || "Impossible de charger les produits.");
+      const recus = (json.products ?? []) as BoutiqueProduct[];
+      if (page === 1) total = json.total ?? 0;
+      totalPagesApi = json.totalPages ?? 1;
+      if (page < totalPagesApi && recus.length < CHARGEMENT_COMPLET_PAGE_SIZE) {
+        throw new Error(
+          `page ${page} incomplète : ${recus.length} produits reçus sur ${CHARGEMENT_COMPLET_PAGE_SIZE} demandés, alors qu'il reste des pages.`
+        );
+      }
+      tous.push(...recus);
+      page += 1;
+    } while (page <= totalPagesApi);
+    if (tous.length !== total) {
+      throw new Error(`${tous.length} reçus sur ${total} attendus.`);
+    }
+    return { produits: tous, total };
+  }
+
+  // « Créer mon site » : enregistre description + palette, puis ouvre le Site Builder en mode
+  // IA prérempli avec ces valeurs — sans export HTML, sans ajout à « Mes sites », sans aperçu.
+  // Boutique multi-produits (total réel, voir loadAllProduits) : tous les produits partent
+  // dans le brouillon sessionStorage (writeBoutiqueDraft) et le builder s'ouvre en mode
+  // boutique (multi=1). Un seul produit ou aucun : mode produit unique prérempli, comme avant.
+  async function handleCreerMonSite() {
+    if (!planCharge) return;
+    if (typeof params?.id !== "string" || !reviewPalette || !boutique) return;
+    setConfirmingContenu(true);
+    setContenuError(null);
+    try {
+      const description = reviewDescription?.trim() ? reviewDescription : boutique.description;
+      const palette = reviewPalette;
+      if (!(await enregistrerContenuBoutique(description, palette))) return;
+      // Chargement complet AVANT de choisir le mode : totalProduits (liste affichée) devient
+      // le total filtré dès qu'une recherche ou une catégorie est active, alors que
+      // loadAllProduits n'envoie aucun filtre et renvoie le total réel de la boutique.
+      let produits: BoutiqueProduct[];
+      let totalReel: number;
+      try {
+        ({ produits, total: totalReel } = await loadAllProduits());
+      } catch (err) {
+        setContenuError(
+          `Description et palette enregistrées, mais impossible de charger tous les produits : ${
+            err instanceof Error ? err.message : "erreur inconnue"
+          }`
+        );
+        return;
+      }
+      if (totalReel <= 1) {
+        router.push(buildSiteBuilderPrefillUrl("ia", { description, palette }));
+        return;
+      }
+      const brouillonEcrit = writeBoutiqueDraft({
+        boutiqueId: params.id,
+        nomBoutique: boutique.nom,
+        descriptionBoutique: description ?? "",
+        produits: produits.map(toProduitBoutique),
+        totalProduitsBoutique: totalReel,
+        limiteProduits: limiteProduitsPlan,
+        // Catégories déjà chargées par cette page (fetchCategories) — aucun appel en plus.
+        categories: categories.map((c) => ({ id: c.id, nom: c.nom, slug: c.slug })),
+      });
+      if (!brouillonEcrit) {
+        setContenuError("Impossible de transmettre les produits au Site Builder (stockage du navigateur plein ou désactivé).");
+        return;
+      }
+      const p = new URLSearchParams();
+      p.set("mode", "ia");
+      p.set("multi", "1");
+      p.set("boutiqueId", params.id);
+      p.set("colorPrimary", palette.primary);
+      p.set("colorSecondary", palette.secondary);
+      p.set("colorAccent", palette.accent);
+      router.push(`/site-builder?${p.toString()}`);
+    } catch {
+      setContenuError("Impossible de contacter le serveur.");
+    } finally {
+      setConfirmingContenu(false);
+    }
+  }
+
   // Applique la description/palette revues par l'utilisateur, puis ouvre l'aperçu
   // propriétaire (getBoutiquePublicUrl) — jamais rendu public automatiquement, la
   // boutique reste régie par est_publique comme partout ailleurs.
@@ -409,25 +584,7 @@ export default function BoutiqueBuilderDetailPage() {
     setConfirmingContenu(true);
     setContenuError(null);
     try {
-      const res = await fetch(`/api/boutiques/${params.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          description: reviewDescription,
-          settings: { ...(boutique.settings ?? {}), palette: reviewPalette },
-        }),
-      });
-      const json = await res.json();
-      if (!res.ok) {
-        setContenuError(json.error ?? "Impossible d'enregistrer les changements.");
-        return;
-      }
-      const confirmedPalette = reviewPalette;
-      setBoutique((prev) =>
-        prev
-          ? { ...prev, description: reviewDescription, settings: { ...(prev.settings ?? {}), palette: confirmedPalette } }
-          : prev
-      );
+      if (!(await enregistrerContenuBoutique(reviewDescription, reviewPalette))) return;
       setReviewDescription(null);
       setReviewPalette(null);
 
@@ -1011,9 +1168,8 @@ export default function BoutiqueBuilderDetailPage() {
             <>
               <h3 className="mt-2 text-lg font-semibold text-[var(--text-primary)]">Préparer ta boutique</h3>
               <p className="mt-1 text-sm text-[var(--text-faint)]">
-                Avec plusieurs produits, ta boutique est déjà un vrai site multi-page (fiches produit, catégories,
-                panier) — pas besoin d&apos;en générer une autre. Ceci propose juste une description et une palette
-                de couleurs pour la compléter avant de la prévisualiser.
+                Ta boutique a une description et une palette. Crée ensuite une landing page prérempli dans le Site
+                Builder.
               </p>
               {contenuError && (
                 <p className="mt-2 text-sm text-[var(--danger)]">{contenuError}</p>
@@ -1047,11 +1203,11 @@ export default function BoutiqueBuilderDetailPage() {
                   <div className="flex flex-wrap gap-3">
                     <button
                       type="button"
-                      onClick={() => void handleConfirmerContenu()}
-                      disabled={confirmingContenu}
-                      className="rounded-2xl bg-gradient-to-r from-violet-600 to-blue-600 px-5 py-3 text-sm font-semibold text-white transition hover:from-violet-500 hover:to-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                      onClick={() => void handleCreerMonSite()}
+                      disabled={!planCharge || confirmingContenu}
+                      className="rounded-2xl bg-gradient-to-r from-violet-600 to-blue-600 px-5 py-3 text-sm font-semibold text-white transition hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      {confirmingContenu ? "Enregistrement…" : "✅ Confirmer et voir l'aperçu"}
+                      {!planCharge ? "Chargement…" : confirmingContenu ? "Enregistrement…" : "🤖 Créer mon site"}
                     </button>
                     <button
                       type="button"
@@ -1076,9 +1232,10 @@ export default function BoutiqueBuilderDetailPage() {
                 l&apos;IA ou l&apos;éditeur de templates.
               </p>
               <div className="mt-4 flex flex-wrap gap-3">
+                {/* Le lien préremplit le Site Builder (mode produit unique) avec le nom, la description et l'image du premier produit de la boutique. */}
                 <Link
                   href={buildSiteBuilderPrefillUrl("ia")}
-                  className="rounded-2xl bg-gradient-to-r from-violet-600 to-blue-600 px-5 py-3 text-sm font-semibold text-white transition hover:from-violet-500 hover:to-blue-500"
+                  className="rounded-2xl bg-gradient-to-r from-violet-600 to-blue-600 px-5 py-3 text-sm font-semibold text-white transition hover:opacity-90"
                 >
                   🤖 Génération IA
                 </Link>
@@ -1179,6 +1336,9 @@ export default function BoutiqueBuilderDetailPage() {
               <div>
                 <h3 className="text-xl font-semibold text-[var(--text-primary)]">Produits</h3>
                 <p className="mt-2 text-sm text-[var(--text-muted)]">Liste des produits et gestion rapide.</p>
+                <p className="mt-1 text-sm font-medium text-[var(--text-primary)]">
+                  {totalProduits} produit{totalProduits > 1 ? "s" : ""} dans la boutique
+                </p>
               </div>
               <div className="flex flex-wrap gap-2 text-xs text-[var(--text-faint)]">
                 <span className="rounded-full border border-[var(--border)] bg-[var(--surface-2)] px-3 py-2">Max Free: 10</span>

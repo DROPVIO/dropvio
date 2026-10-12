@@ -6,8 +6,13 @@ import { useSearchParams } from "next/navigation";
 import TemplateEditor from "./TemplateEditor";
 import BoutiqueProduitsEditor from "@/components/site-builder/BoutiqueProduitsEditor";
 import ColorTokenPanel from "@/components/site-builder/ColorTokenPanel";
+import InspirationStyle from "@/components/site-builder/InspirationStyle";
+import ApercuPages from "@/components/site-builder/ApercuPages";
+import { pagesSiMultiples } from "@/lib/site-builder-pages";
+import type { FicheStyle } from "@/lib/style-fiche";
 import { applyTokenValue } from "@/lib/color-tokens";
 import { htmlToLiquidSection } from "@/lib/html-to-liquid";
+import { SHOW_LEGACY_TEMPLATES } from "@/lib/flags";
 import { readAndClearBoutiqueDraft, type BoutiqueDraft } from "@/lib/site-builder-handoff";
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
 import { slugFichier, telechargerTexte } from "@/lib/audit-download";
@@ -30,8 +35,31 @@ const STYLES: Array<{
 ];
 
 
+// Longueur minimale du prompt du site — même seuil que PROMPT_MIN_CARACTERES côté serveur
+// (app/api/generate-site/route.ts), qui refuse aussi la génération en dessous.
+const PROMPT_MIN_CARACTERES = 20;
+
 function addTargetBlank(html: string): string {
   return html.replace(/<a(\s)/gi, '<a target="_blank" rel="noopener noreferrer"$1');
+}
+
+// Palette initiale passée par « Créer mon site » (page boutique) via ?colorPrimary=…
+// &colorSecondary=…&colorAccent=… — appliquée seulement si les trois sont en #RRGGBB,
+// sinon on garde la palette par défaut du premier style.
+const HEX_COLOR = /^#[0-9a-fA-F]{6}$/;
+function initialPaletteFromParams(searchParams: Pick<URLSearchParams, "get">): Palette {
+  const primary = searchParams.get("colorPrimary");
+  const secondary = searchParams.get("colorSecondary");
+  const accent = searchParams.get("colorAccent");
+  if (primary && secondary && accent && HEX_COLOR.test(primary) && HEX_COLOR.test(secondary) && HEX_COLOR.test(accent)) {
+    return { primary, secondary, accent };
+  }
+  return STYLES[0].defaultPalette;
+}
+
+const PRIX_FORMAT = /^\d+(\.\d{1,2})?$/;
+function prixFromParam(value: string | null): string {
+  return value && PRIX_FORMAT.test(value) && Number(value) > 0 ? value : "";
 }
 
 function SiteBuilderContent() {
@@ -39,7 +67,23 @@ function SiteBuilderContent() {
   const searchParams = useSearchParams();
 
   const [mode, setMode] = useState<"ia" | "template">(searchParams.get("mode") === "template" ? "template" : "ia");
+  // Format d'export choisi à la création. N'influence PAS la génération : Claude produit
+  // toujours du HTML standalone, et c'est lui qui est stocké dans sites_generes.html_content.
+  // Le format ne décide que de la forme du fichier téléchargé / poussé vers Shopify, par
+  // conversion à la demande (lib/html-to-liquid.ts). Il est modifiable après coup depuis
+  // « Mes sites ».
+  const [formatExport, setFormatExport] = useState<"html" | "liquid">("html");
   const [step, setStep] = useState<Step>(1);
+
+  // Modes de création offerts par le sélecteur. « template » n'y figure que si le flag est
+  // levé, ou si l'utilisateur est déjà dans ce mode (arrivée par ?mode=template) — voir
+  // SHOW_LEGACY_TEMPLATES dans lib/flags.ts.
+  const modesVisibles = (
+    [
+      { id: "ia", label: "🤖 Génération IA" },
+      { id: "template", label: "🎨 Éditeur de templates" },
+    ] as const
+  ).filter((m) => m.id !== "template" || SHOW_LEGACY_TEMPLATES || mode === "template");
   const [productName, setProductName] = useState(searchParams.get("name") ?? "");
   const [description, setDescription] = useState(searchParams.get("description") ?? "");
   const [imageUrl, setImageUrl] = useState(searchParams.get("image") ?? "");
@@ -75,13 +119,15 @@ function SiteBuilderContent() {
   const [selectedStyleId, setSelectedStyleId] = useState("premium");
   const [styleDrawerOpen, setStyleDrawerOpen] = useState(false);
   const [editingStyleId, setEditingStyleId] = useState<string | null>(null);
-  const [palette, setPalette] = useState<Palette>(STYLES[0].defaultPalette);
-  const [draftPalette, setDraftPalette] = useState<Palette>(STYLES[0].defaultPalette);
+  const [palette, setPalette] = useState<Palette>(() => initialPaletteFromParams(searchParams));
+  const [draftPalette, setDraftPalette] = useState<Palette>(() => initialPaletteFromParams(searchParams));
   const [autoMode, setAutoMode] = useState(false);
 
   // Prices
-  const [salePrice, setSalePrice] = useState("");
-  const [originalPrice, setOriginalPrice] = useState("");
+  // Préremplis par ?prixVente=…&prixOriginal=… (page boutique) — repris seulement si c'est un
+  // prix valide (chiffres, 2 décimales max) et > 0, sinon le champ reste vide comme avant.
+  const [salePrice, setSalePrice] = useState(() => prixFromParam(searchParams.get("prixVente")));
+  const [originalPrice, setOriginalPrice] = useState(() => prixFromParam(searchParams.get("prixOriginal")));
 
   // AliExpress import
   const [aliexpressUrl, setAliexpressUrl] = useState("");
@@ -92,6 +138,13 @@ function SiteBuilderContent() {
   // handleGenerate ci-dessous et app/api/generate-site/route.ts) — un texte libre, une
   // correction par ligne, éditable à la main même sans régénération en cours.
   const [corrections, setCorrections] = useState("");
+  // Prompt du site, obligatoire dans les deux modes (au moins PROMPT_MIN_CARACTERES) : c'est la
+  // consigne principale de la génération — sections, textes, animations — et il prime sur la
+  // structure de base du prompt serveur (app/api/generate-site/route.ts, blocPromptUtilisateur).
+  const [promptSite, setPromptSite] = useState("");
+  // Fiche de style extraite des captures d'inspiration (components/site-builder/InspirationStyle.tsx),
+  // envoyée avec la génération dans les deux modes — absente : prompt inchangé.
+  const [ficheStyle, setFicheStyle] = useState<FicheStyle | null>(null);
 
   // Régénération pré-remplie (?regenerate=<id>, bouton "Regénérer" de app/mes-sites/page.tsx)
   // — recharge au montage tout ce qui a été perdu après la génération initiale (seuls
@@ -169,6 +222,9 @@ function SiteBuilderContent() {
 
   // Result
   const [generatedHtml, setGeneratedHtml] = useState("");
+  // Site multi-pages (clé → HTML) quand la génération en renvoie au moins deux — l'aperçu
+  // passe alors par ApercuPages, une page à la fois. null : aperçu d'une seule page, inchangé.
+  const [generatedPages, setGeneratedPages] = useState<Record<string, string> | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [saveWarning, setSaveWarning] = useState<string | null>(null);
   const [savedSiteId, setSavedSiteId] = useState<string | null>(null);
@@ -351,6 +407,7 @@ function SiteBuilderContent() {
     // palette) n'est pas supporté côté API pour ce mode — voir handleGenerateBoutique,
     // app/api/generate-site/route.ts — la grille injectée doit connaître la couleur d'accent
     // à l'avance. On résout donc toujours une palette concrète ici aussi.
+    if (promptSite.trim().length < PROMPT_MIN_CARACTERES) return;
     if (boutiqueDraft) {
       if (boutiqueDraft.produits.length === 0) return;
     } else if (!productName.trim() || !description.trim()) {
@@ -365,10 +422,15 @@ function SiteBuilderContent() {
             nomBoutique: boutiqueDraft.nomBoutique,
             descriptionBoutique: boutiqueDraft.descriptionBoutique,
             produits: boutiqueDraft.produits,
+            categories: boutiqueDraft.categories,
+            // Sert à relire côté serveur les mentions légales déjà renseignées de la boutique.
+            boutiqueId: boutiqueDraft.boutiqueId,
             colorPrimary: palette.primary,
             colorSecondary: palette.secondary,
             colorAccent: palette.accent,
             style: selectedStyleId,
+            prompt: promptSite.trim(),
+            ficheStyle: ficheStyle ?? undefined,
           }
         : {
             productName,
@@ -383,6 +445,8 @@ function SiteBuilderContent() {
             salePrice: salePrice.trim() || undefined,
             originalPrice: originalPrice.trim() || undefined,
             corrections: correctionsList(),
+            ficheStyle: ficheStyle ?? undefined,
+            prompt: promptSite.trim(),
           };
       const res = await fetch("/api/generate-site", {
         method: "POST",
@@ -397,6 +461,7 @@ function SiteBuilderContent() {
       }
       const finalHtml = addTargetBlank(json.html);
       setGeneratedHtml(finalHtml);
+      setGeneratedPages(pagesSiMultiples(json.pages));
       setSaveWarning(null);
       setStep(3);
 
@@ -409,7 +474,13 @@ function SiteBuilderContent() {
         body: JSON.stringify({
           nom_produit: boutiqueDraft ? boutiqueDraft.nomBoutique : productName,
           html_content: finalHtml,
+          // Site boutique multi-pages : html_content ne contient que l'accueil, le catalogue et
+          // les collections sont dans pages (040_sites_generes_pages.sql).
+          pages: pagesSiMultiples(json.pages) ?? undefined,
           boutique_id: boutiqueId,
+          // Envoyé pour les deux modes : contrairement aux champs de pré-remplissage, le
+          // format d'export a un sens pour un site boutique comme pour un mono-produit.
+          format_export: formatExport,
           // Champs de pré-remplissage pour une future régénération (voir useEffect de
           // pré-remplissage ci-dessus) — uniquement pertinents en mode mono-page, jamais
           // envoyés pour un site boutique (plusieurs produits, pas de description unique).
@@ -492,6 +563,7 @@ function SiteBuilderContent() {
   function handleReset() {
     setStep(1);
     setGeneratedHtml("");
+    setGeneratedPages(null);
     setError(null);
     setSaveWarning(null);
     setSavedSiteId(null);
@@ -502,9 +574,46 @@ function SiteBuilderContent() {
     setOriginalPrice("");
   }
 
-  const canGenerate = boutiqueDraft
-    ? boutiqueDraft.produits.length > 0
-    : productName.trim() && description.trim() && salePrice.trim();
+  // Caractères manquants au prompt pour pouvoir générer (0 : prompt suffisant).
+  const promptManquant = Math.max(0, PROMPT_MIN_CARACTERES - promptSite.trim().length);
+  const canGenerate =
+    promptManquant === 0 &&
+    (boutiqueDraft
+      ? boutiqueDraft.produits.length > 0
+      : productName.trim() && description.trim() && salePrice.trim());
+
+  // Champ du prompt, rendu en tête de l'étape 1 dans les deux modes.
+  const champPrompt = (
+    <div className="flex flex-col gap-2">
+      <label htmlFor="prompt-site" className="text-sm font-medium text-[var(--text-primary)]">
+        Prompt de ton site <span className="text-[var(--danger)]">*</span>
+      </label>
+      <p className="text-xs text-[var(--text-faint)]">
+        Décris le site que tu veux, de A à Z : sections, textes, ton, animations, ambiance. L&apos;IA s&apos;appuie sur
+        une structure de base, mais c&apos;est ton prompt qui compte le plus.
+      </p>
+      <textarea
+        id="prompt-site"
+        value={promptSite}
+        onChange={(e) => setPromptSite(e.target.value)}
+        rows={6}
+        placeholder="ex : Un hero plein écran avec une vidéo d'ambiance, puis une section « notre histoire » en deux colonnes, des témoignages en carrousel, un ton chaleureux et familial, des animations douces au défilement…"
+        className="w-full bg-[var(--bg)] border border-[var(--border-strong)] rounded-xl px-4 py-3 text-sm text-[var(--text-primary)] placeholder-[var(--text-faint)] focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition resize-y"
+      />
+      <p className={`text-right text-xs ${promptManquant > 0 ? "text-[var(--text-faint)]" : "text-[var(--accent)]"}`}>
+        {promptSite.trim().length} caractère{promptSite.trim().length > 1 ? "s" : ""}
+        {promptManquant > 0 ? ` — encore ${promptManquant} minimum` : ""}
+      </p>
+    </div>
+  );
+  // Raison affichée sous le bouton quand le prompt est trop court (bouton désactivé).
+  const raisonPrompt =
+    promptManquant > 0 ? (
+      <p className="text-xs text-[var(--danger)]">
+        Le bouton est désactivé : ton prompt doit faire au moins {PROMPT_MIN_CARACTERES} caractères (encore{" "}
+        {promptManquant}). C&apos;est lui qui guide toute la génération.
+      </p>
+    ) : null;
 
   return (
     <div className="min-h-screen bg-[var(--bg)] text-[var(--text-primary)] font-sans px-4 py-16">
@@ -544,36 +653,51 @@ function SiteBuilderContent() {
               🏪 Mode boutique — <strong>{boutiqueDraft.nomBoutique}</strong> : {boutiqueDraft.produits.length} produit
               {boutiqueDraft.produits.length > 1 ? "s" : ""} importé{boutiqueDraft.produits.length > 1 ? "s" : ""}
               {boutiqueDraft.totalProduitsBoutique > boutiqueDraft.produits.length
-                ? ` sur ${boutiqueDraft.totalProduitsBoutique} au total (plafond de ${boutiqueDraft.produits.length} atteint).`
+                ? ` sur ${boutiqueDraft.totalProduitsBoutique} au total.`
                 : "."}
             </div>
-            <BoutiqueProduitsEditor draft={boutiqueDraft} onChange={setBoutiqueDraft} />
+            {/* Liste repliée par défaut : avec tous les produits de la boutique, l'éditeur
+                pousserait le reste du formulaire très bas. */}
+            <details className="mb-4">
+              <summary className="cursor-pointer select-none text-sm font-semibold text-[var(--text-primary)]">
+                {boutiqueDraft.produits.length} produit{boutiqueDraft.produits.length > 1 ? "s" : ""} importé
+                {boutiqueDraft.produits.length > 1 ? "s" : ""}
+              </summary>
+              <div className="mt-3">
+                <BoutiqueProduitsEditor draft={boutiqueDraft} onChange={setBoutiqueDraft} />
+              </div>
+            </details>
           </>
         )}
 
-        {/* Mode toggle */}
-        <div className="flex justify-center mb-10">
-          <div className="inline-flex gap-1 p-1 rounded-xl bg-[var(--surface)] border border-[var(--border)]">
-            {(
-              [
-                { id: "ia", label: "🤖 Génération IA" },
-                { id: "template", label: "🎨 Éditeur de templates" },
-              ] as const
-            ).map((m) => (
-              <button
-                key={m.id}
-                onClick={() => setMode(m.id)}
-                className={`px-4 py-2 rounded-lg text-xs font-semibold transition-all ${
-                  mode === m.id
-                    ? "bg-violet-600 text-white"
-                    : "text-[var(--text-faint)] hover:text-[var(--text-muted)]"
-                }`}
-              >
-                {m.label}
-              </button>
-            ))}
+        {/* Mode toggle — l'onglet « Éditeur de templates » (ancien mode, antérieur à la
+            génération IA) est masqué derrière SHOW_LEGACY_TEMPLATES, à false par défaut :
+            les nouveaux utilisateurs n'ont plus qu'un seul chemin de création. Rien n'est
+            supprimé pour autant — TemplateEditor.tsx et lib/site-templates.ts restent en
+            place, et le mode reste joignable par ?mode=template. Dans ce cas l'onglet
+            réapparaît (mode === "template"), sans quoi l'utilisateur arrivé par un lien
+            existant n'aurait plus aucun moyen de revenir à la génération IA.
+            Le sélecteur disparaît entièrement quand il ne reste qu'un seul mode : un
+            interrupteur à une seule position n'a rien à offrir. */}
+        {modesVisibles.length > 1 && (
+          <div className="flex justify-center mb-10">
+            <div className="inline-flex gap-1 p-1 rounded-xl bg-[var(--surface)] border border-[var(--border)]">
+              {modesVisibles.map((m) => (
+                <button
+                  key={m.id}
+                  onClick={() => setMode(m.id)}
+                  className={`px-4 py-2 rounded-lg text-xs font-semibold transition-all ${
+                    mode === m.id
+                      ? "bg-violet-600 text-white"
+                      : "text-[var(--text-faint)] hover:text-[var(--text-muted)]"
+                  }`}
+                >
+                  {m.label}
+                </button>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
 
         {mode === "template" && <TemplateEditor boutiqueDraft={boutiqueDraft} canExport={canExport} />}
 
@@ -604,6 +728,41 @@ function SiteBuilderContent() {
           ))}
         </div>
 
+        {/* Format d'export — placé au-dessus du formulaire parce qu'il vaut pour les deux
+            variantes de l'étape 1 (mode produit unique et mode boutique). Purement
+            déclaratif à ce stade : la génération est identique dans les deux cas, seul le
+            fichier produit à l'étape 3 change. */}
+        {step === 1 && (
+          <div className="mb-6 rounded-2xl bg-[var(--surface)] border border-[var(--border)] px-6 py-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex flex-col gap-1">
+              <span className="text-sm font-medium text-[var(--text-muted)]">Format d&apos;export</span>
+              <span className="text-xs text-[var(--text-faint)]">
+                Modifiable à tout moment depuis « Mes sites » — la page générée, elle, reste la même.
+              </span>
+            </div>
+            <div className="inline-flex gap-1 p-1 rounded-xl bg-[var(--bg)] border border-[var(--border-strong)] self-start sm:self-auto">
+              {(
+                [
+                  { id: "html", label: "📄 HTML" },
+                  { id: "liquid", label: "🛍 Liquid (Shopify)" },
+                ] as const
+              ).map((f) => (
+                <button
+                  key={f.id}
+                  onClick={() => setFormatExport(f.id)}
+                  className={`px-4 py-2 rounded-lg text-xs font-semibold transition-all ${
+                    formatExport === f.id
+                      ? "bg-violet-600 text-white"
+                      : "text-[var(--text-faint)] hover:text-[var(--text-muted)]"
+                  }`}
+                >
+                  {f.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Step 1 (mode boutique) : les produits s'éditent au-dessus (BoutiqueProduitsEditor,
             partagé avec le mode Éditeur) — ici juste l'erreur éventuelle + génération directe.
             Pas de bouton "génération automatique" : style="auto" n'est pas supporté pour ce
@@ -615,6 +774,8 @@ function SiteBuilderContent() {
                 {error}
               </div>
             )}
+            {champPrompt}
+            <InspirationStyle fiche={ficheStyle} onChange={setFicheStyle} />
             <button
               onClick={() => handleGenerate(false)}
               disabled={!canGenerate}
@@ -622,6 +783,7 @@ function SiteBuilderContent() {
             >
               Générer la landing page avec l&apos;IA
             </button>
+            {raisonPrompt}
           </div>
         )}
 
@@ -644,6 +806,8 @@ function SiteBuilderContent() {
                 {regenerateError}
               </div>
             )}
+
+            {champPrompt}
 
             {/* AliExpress import */}
             <div className="flex flex-col gap-2">
@@ -959,6 +1123,8 @@ function SiteBuilderContent() {
               />
             </div>
 
+            <InspirationStyle fiche={ficheStyle} onChange={setFicheStyle} />
+
             {/* CTA buttons */}
             <div className="mt-2 flex flex-col gap-3">
               <button
@@ -980,6 +1146,7 @@ function SiteBuilderContent() {
                 <span>🤖</span>
                 Génération automatique — l&apos;IA choisit le style
               </button>
+              {raisonPrompt}
             </div>
           </div>
         )}
@@ -1024,17 +1191,20 @@ function SiteBuilderContent() {
                 </button>
                 {canExport ? (
                   <>
+                    {/* Le format choisi à l'étape 1 devient le bouton principal ; l'autre
+                        reste accessible en secondaire. Les deux partent du même HTML — la
+                        conversion Liquid est faite à la demande, au clic. */}
                     <button
-                      onClick={handleDownloadLiquid}
+                      onClick={formatExport === "liquid" ? handleDownload : handleDownloadLiquid}
                       className="px-4 py-2 rounded-xl border border-emerald-500/30 bg-emerald-500/10 text-[var(--success)] text-xs font-semibold hover:bg-emerald-500/20 transition"
                     >
-                      ⬇ Fichier .liquid
+                      {formatExport === "liquid" ? "⬇ Fichier .html" : "⬇ Fichier .liquid"}
                     </button>
                     <button
-                      onClick={handleDownload}
+                      onClick={formatExport === "liquid" ? handleDownloadLiquid : handleDownload}
                       className="px-4 py-2 rounded-xl bg-gradient-to-r from-violet-600 to-blue-600 text-white text-xs font-semibold hover:from-violet-500 hover:to-blue-500 transition-all shadow-lg shadow-violet-900/40"
                     >
-                      ⬇ Télécharger le HTML
+                      {formatExport === "liquid" ? "⬇ Télécharger le .liquid" : "⬇ Télécharger le HTML"}
                     </button>
                   </>
                 ) : (
@@ -1060,13 +1230,17 @@ function SiteBuilderContent() {
               {/* L'aperçu est toujours rendu sur fond blanc (background: "#fff") quel que
                   soit le thème de l'app : c'est un aperçu fidèle de la landing page générée
                   telle qu'elle apparaîtra réellement, pas un élément de chrome de l'app. */}
-              <iframe
-                srcDoc={generatedHtml}
-                title="Landing page preview"
-                className="w-full"
-                style={{ height: "70vh", border: "none", background: "#fff" }}
-                sandbox="allow-same-origin"
-              />
+              {generatedPages ? (
+                <ApercuPages pages={generatedPages} />
+              ) : (
+                <iframe
+                  srcDoc={generatedHtml}
+                  title="Landing page preview"
+                  className="w-full"
+                  style={{ height: "70vh", border: "none", background: "#fff" }}
+                  sandbox="allow-same-origin"
+                />
+              )}
             </div>
 
             <div className="mt-6">

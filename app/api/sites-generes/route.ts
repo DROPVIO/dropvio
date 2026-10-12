@@ -1,6 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerUserAndPlan } from "@/lib/supabase-server";
 import { PLAN_LIMITS, planLabel, currentMonthKey } from "@/lib/plan-limits";
+import { estFormatExport } from "@/lib/format-export";
+
+// Code PostgreSQL « undefined_column », remonté tel quel par PostgREST tant qu'une migration
+// n'est pas appliquée — ici 039 (sites_generes.format_export).
+const UNDEFINED_COLUMN = "42703";
+
 
 export async function GET() {
   const { supabase, user } = await getServerUserAndPlan();
@@ -36,10 +42,32 @@ export async function GET() {
     .eq("user_id", user.id)
     .not("html_content_precedent", "is", null);
 
+  // Format d'export par site (voir 039_sites_generes_format_export.sql) — requête séparée
+  // pour la même raison que ci-dessus : l'ajouter au select principal ferait échouer TOUTE
+  // la liste (42703) tant que 039 n'est pas appliquée. Erreur volontairement ignorée : sans
+  // la colonne, chaque site retombe simplement sur « html » côté client.
+  const { data: formats } = await supabase
+    .from("sites_generes")
+    .select("id, format_export")
+    .eq("user_id", user.id);
+
   return NextResponse.json({
     sites: data ?? [],
     idsAnnulables: (annulables ?? []).map((s) => s.id),
+    formats: Object.fromEntries(
+      (formats ?? []).map((f) => [f.id, estFormatExport(f.format_export) ? f.format_export : "html"])
+    ),
   });
+}
+
+// Objet clé → HTML : clés en [a-z0-9-], valeurs chaînes non vides, au moins une page.
+function pagesValides(pages: unknown): pages is Record<string, string> {
+  if (!pages || typeof pages !== "object" || Array.isArray(pages)) return false;
+  const entrees = Object.entries(pages);
+  return (
+    entrees.length > 0 &&
+    entrees.every(([cle, html]) => /^[a-z0-9-]+$/.test(cle) && typeof html === "string" && html.trim() !== "")
+  );
 }
 
 export async function POST(request: NextRequest) {
@@ -62,6 +90,8 @@ export async function POST(request: NextRequest) {
     couleur_primary,
     couleur_secondary,
     couleur_accent,
+    format_export,
+    pages,
   } = await request.json();
 
   if (!nom_produit || !html_content) {
@@ -123,28 +153,50 @@ export async function POST(request: NextRequest) {
   // et app/site-builder/page.tsx ?regenerate=<id>) — tous optionnels : TemplateEditor.tsx (mode
   // Éditeur de templates) et le mode boutique n'envoient aucun de ces champs, ils restent null,
   // ce qui signale justement que le pré-remplissage n'est pas disponible pour ce site.
-  const { data, error } = await supabase
-    .from("sites_generes")
-    .insert({
-      user_id: user.id,
-      nom_produit,
-      html_content,
-      boutique_id: verifiedBoutiqueId,
-      description: description ?? null,
-      lien_aliexpress: lien_aliexpress ?? null,
-      image_url: image_url ?? null,
-      prix_vente: toNumberOrNull(prix_vente),
-      prix_original: toNumberOrNull(prix_original),
-      style_id: style_id ?? null,
-      couleur_primary: couleur_primary ?? null,
-      couleur_secondary: couleur_secondary ?? null,
-      couleur_accent: couleur_accent ?? null,
-    })
-    .select("id")
-    .single();
+  // format_export : validé ici plutôt que repris tel quel, et absent du payload si le client
+  // n'a rien envoyé — la colonne a son propre défaut ('html', voir la migration 039).
+  const payload: Record<string, unknown> = {
+    user_id: user.id,
+    nom_produit,
+    html_content,
+    boutique_id: verifiedBoutiqueId,
+    description: description ?? null,
+    lien_aliexpress: lien_aliexpress ?? null,
+    image_url: image_url ?? null,
+    prix_vente: toNumberOrNull(prix_vente),
+    prix_original: toNumberOrNull(prix_original),
+    style_id: style_id ?? null,
+    couleur_primary: couleur_primary ?? null,
+    couleur_secondary: couleur_secondary ?? null,
+    couleur_accent: couleur_accent ?? null,
+    ...(estFormatExport(format_export) && { format_export }),
+    // pages : site multi-pages (voir 040_sites_generes_pages.sql) — ignoré s'il n'a pas la
+    // forme attendue, html_content restant de toute façon la page d'accueil.
+    ...(pagesValides(pages) && { pages }),
+  };
 
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  let { data, error } = await supabase.from("sites_generes").insert(payload).select("id").single();
+
+  // Tant qu'une migration de colonne optionnelle n'est pas appliquée (039 format_export,
+  // 040 pages), l'insert entier échoue (42703). On réessaie sans la colonne manquante —
+  // celle que nomme l'erreur, sinon la plus récente : perdre le format ou les pages
+  // secondaires est acceptable, perdre le site généré ne l'est pas. Un 42703 qui persiste
+  // vient alors d'une autre migration manquante (032) et remonte tel quel.
+  const COLONNES_OPTIONNELLES: [string, string][] = [
+    ["pages", "040_sites_generes_pages.sql"],
+    ["format_export", "039_sites_generes_format_export.sql"],
+  ];
+  for (let essai = 0; essai < COLONNES_OPTIONNELLES.length && error?.code === UNDEFINED_COLUMN; essai++) {
+    const presentes = COLONNES_OPTIONNELLES.filter(([colonne]) => colonne in payload);
+    const manquante = presentes.find(([colonne]) => error?.message?.includes(colonne)) ?? presentes[0];
+    if (!manquante) break;
+    console.warn(`[sites-generes] ${manquante[0]} ignoré : applique la migration ${manquante[1]}.`);
+    delete payload[manquante[0]];
+    ({ data, error } = await supabase.from("sites_generes").insert(payload).select("id").single());
+  }
+
+  if (error || !data) {
+    return NextResponse.json({ error: error?.message ?? "Sauvegarde impossible." }, { status: 500 });
   }
   return NextResponse.json({ id: data.id }, { status: 201 });
 }

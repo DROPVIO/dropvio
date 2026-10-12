@@ -1,0 +1,211 @@
+import { NextRequest, NextResponse } from "next/server";
+import Anthropic from "@anthropic-ai/sdk";
+import sharp from "sharp";
+import { getServerUserPlanOnly } from "@/lib/supabase-server";
+import { logTokensUsage } from "@/lib/plan-limits";
+import { validerFicheStyle } from "@/lib/style-fiche";
+
+const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+
+// Captures d'inspiration (1 à 3) → fiche de style à valeurs fermées (lib/style-fiche.ts).
+// Chaque fichier est identifié par ses octets (jamais par son extension ni son type MIME
+// déclaré), converti en JPEG 1600 px max par sharp, et seule cette version convertie passe
+// par le bucket PRIVÉ « inspiration » (038_storage_inspiration.sql) avant d'être relue en
+// base64 pour un unique appel vision, puis supprimée : rien n'est servi par URL, et seule la
+// fiche validée ressort de cette route. Écriture et lecture avec le client de session (pas le
+// client admin) : les policies propriétaire de 038 s'appliquent et storage.objects.owner est
+// bien renseigné. Un fichier illisible n'invalide pas le lot : il est signalé à part.
+const BUCKET = "inspiration";
+const MAX_FICHIERS = 3;
+// Limite de sécurité côté serveur. En production (Vercel), une requête dépassant 4,5 Mo est
+// refusée avant d'arriver ici : le Site Builder réduit donc les images dans le navigateur
+// avant l'envoi (components/site-builder/InspirationStyle.tsx).
+const MAX_OCTETS = 15 * 1024 * 1024;
+const COTE_MAX = 1600;
+const QUALITE_JPEG = 85;
+const MODELE_VISION = "claude-sonnet-4-6";
+const MESSAGE_ILLISIBLE = "Cette image ne peut pas être lue. Essaie une capture d'écran ou un export JPEG.";
+
+type FormatImage = "jpeg" | "png" | "webp" | "gif" | "heic" | "avif" | "bmp" | "tiff";
+
+// Signature de fichier (magic bytes). HEIC/HEIF et AVIF partagent le conteneur ISO BMFF :
+// on lit la marque principale et les marques compatibles de la boîte ftyp.
+function detecterFormat(o: Buffer): FormatImage | null {
+  const ascii = (debut: number, fin: number) => o.subarray(debut, fin).toString("latin1");
+  if (o.length >= 3 && o[0] === 0xff && o[1] === 0xd8 && o[2] === 0xff) return "jpeg";
+  if (o.length >= 8 && o.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]))) return "png";
+  if (o.length >= 6 && (ascii(0, 6) === "GIF87a" || ascii(0, 6) === "GIF89a")) return "gif";
+  if (o.length >= 12 && ascii(0, 4) === "RIFF" && ascii(8, 12) === "WEBP") return "webp";
+  if (o.length >= 4 && (ascii(0, 4) === "II*\0" || ascii(0, 4) === "MM\0*")) return "tiff";
+  if (o.length >= 2 && ascii(0, 2) === "BM") return "bmp";
+  if (o.length >= 12 && ascii(4, 8) === "ftyp") {
+    const tailleBoite = Math.min(o.readUInt32BE(0), o.length);
+    const marques = [ascii(8, 12)];
+    for (let i = 16; i + 4 <= tailleBoite; i += 4) marques.push(ascii(i, i + 4));
+    if (marques.some((m) => m === "avif" || m === "avis")) return "avif";
+    if (marques.some((m) => ["heic", "heix", "hevc", "hevx", "heim", "heis", "mif1", "msf1"].includes(m))) return "heic";
+  }
+  return null;
+}
+
+// JPEG, plus grand côté ≤ 1600 px, qualité 85, orientation EXIF appliquée, transparence
+// aplatie sur blanc, métadonnées retirées (comportement par défaut de sharp). Première image
+// seulement pour un GIF animé ou un TIFF multipage. Lève si le format ne peut pas être décodé
+// (HEIC et BMP avec le sharp installé).
+async function convertirEnJpeg(o: Buffer): Promise<Buffer> {
+  return sharp(o)
+    .rotate()
+    .resize({ width: COTE_MAX, height: COTE_MAX, fit: "inside", withoutEnlargement: true })
+    .flatten({ background: "#ffffff" })
+    .jpeg({ quality: QUALITE_JPEG })
+    .toBuffer();
+}
+
+const PROMPT_SYSTEME = `Tu analyses 1 à 3 captures d'écran de sites web pour en extraire UNIQUEMENT des valeurs de style abstraites.
+
+Réponds EXCLUSIVEMENT par un objet JSON valide, sans texte avant ni après, sans balise markdown, de cette forme exacte :
+{"palette":{"fond":"#RRGGBB","encre":"#RRGGBB","accent":"#RRGGBB"},"typo":"serif|sans|mono","rayon":0|8|16|24|999,"densite":"aeree|normale|dense","banniere":"16/9|21/9|4/3|plein-écran","sections":["..."],"cartes":"plate|bordée|ombrée|flottante"}
+
+Règles :
+- palette : couleur de fond dominante, couleur du texte principal, couleur d'accent (boutons, liens), en hex #RRGGBB.
+- typo : style des titres (serif, sans ou mono).
+- rayon : arrondi dominant des cartes, boutons et images, choisi parmi 0, 8, 16, 24, 999 (999 = pilule).
+- densite : espacement vertical des sections (aeree, normale ou dense).
+- banniere : ratio du visuel principal en haut de page (16/9, 21/9, 4/3 ou plein-écran).
+- sections : formes de sections observées, dans l'ordre de la page, 5 au maximum, choisies UNIQUEMENT parmi : hero-centré, hero-split, grille-3, grille-2-alterne, bandeau-citation, pas-à-pas.
+- cartes : style dominant des cartes (plate, bordée, ombrée ou flottante).
+- Si plusieurs captures divergent, choisis la valeur dominante.
+
+INTERDIT : recopier ou résumer le moindre texte visible, nom de marque, logo, image, illustration ou mise en page détaillée des captures. Aucune autre clé, aucune autre valeur que celles listées.`;
+
+function extraireJson(texte: string): unknown {
+  const nettoye = texte.trim().replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/, "");
+  const debut = nettoye.indexOf("{");
+  const fin = nettoye.lastIndexOf("}");
+  if (debut === -1 || fin <= debut) throw new Error("aucun objet JSON");
+  return JSON.parse(nettoye.slice(debut, fin + 1));
+}
+
+export async function POST(request: NextRequest) {
+  const { supabase, user } = await getServerUserPlanOnly();
+  if (!user) {
+    return NextResponse.json({ error: "Connecte-toi pour analyser des captures." }, { status: 401 });
+  }
+
+  const form = await request.formData();
+  const fichiers = form.getAll("files");
+  if (fichiers.length === 0 || fichiers.length > MAX_FICHIERS) {
+    return NextResponse.json({ error: `Envoie entre 1 et ${MAX_FICHIERS} captures.` }, { status: 400 });
+  }
+
+  // Tri fichier par fichier : un fichier refusé est signalé dans erreursFichiers sans faire
+  // échouer les autres.
+  const erreursFichiers: { fichier: string; erreur: string }[] = [];
+  const convertis: { nom: string; jpeg: Buffer }[] = [];
+  for (const f of fichiers) {
+    if (!(f instanceof File)) {
+      erreursFichiers.push({ fichier: "?", erreur: "Fichier invalide." });
+      continue;
+    }
+    if (f.size > MAX_OCTETS) {
+      erreursFichiers.push({ fichier: f.name, erreur: "Image trop lourde (15 Mo maximum)." });
+      continue;
+    }
+    const octets = Buffer.from(await f.arrayBuffer());
+    if (!detecterFormat(octets)) {
+      erreursFichiers.push({ fichier: f.name, erreur: "Ce fichier n'est pas une image." });
+      continue;
+    }
+    try {
+      convertis.push({ nom: f.name, jpeg: await convertirEnJpeg(octets) });
+    } catch (err) {
+      console.warn("[inspiration] conversion", f.name, err instanceof Error ? err.message : err);
+      erreursFichiers.push({ fichier: f.name, erreur: MESSAGE_ILLISIBLE });
+    }
+  }
+  if (convertis.length === 0) {
+    return NextResponse.json({ error: "Aucune image n'a pu être lue.", erreursFichiers }, { status: 400 });
+  }
+
+  const chemins: string[] = [];
+  try {
+    for (const c of convertis) {
+      const chemin = `${user.id}/${crypto.randomUUID()}.jpg`;
+      const { error } = await supabase.storage
+        .from(BUCKET)
+        .upload(chemin, c.jpeg, { contentType: "image/jpeg", upsert: false });
+      if (error) {
+        console.error("[inspiration] upload", error.message);
+        return NextResponse.json(
+          { error: "Impossible d'enregistrer les captures (bucket « inspiration » absent ? voir 038_storage_inspiration.sql)." },
+          { status: 500 }
+        );
+      }
+      chemins.push(chemin);
+    }
+
+    const images: Anthropic.ImageBlockParam[] = [];
+    for (const chemin of chemins) {
+      const { data, error } = await supabase.storage.from(BUCKET).download(chemin);
+      if (error || !data) {
+        console.error("[inspiration] download", error?.message);
+        return NextResponse.json({ error: "Impossible de relire les captures." }, { status: 500 });
+      }
+      images.push({
+        type: "image",
+        source: {
+          type: "base64",
+          media_type: "image/jpeg",
+          data: Buffer.from(await data.arrayBuffer()).toString("base64"),
+        },
+      });
+    }
+
+    const reponse = await client.messages.create({
+      model: MODELE_VISION,
+      max_tokens: 1024,
+      system: PROMPT_SYSTEME,
+      messages: [
+        {
+          role: "user",
+          content: [...images, { type: "text", text: "Renvoie la fiche de style JSON de ces captures." }],
+        },
+      ],
+    });
+    await logTokensUsage(
+      supabase,
+      user.id,
+      "site_builder",
+      reponse.usage?.input_tokens ?? 0,
+      reponse.usage?.output_tokens ?? 0
+    );
+
+    const texte = reponse.content
+      .filter((b): b is Anthropic.TextBlock => b.type === "text")
+      .map((b) => b.text)
+      .join("");
+    let brut: unknown;
+    try {
+      brut = extraireJson(texte);
+    } catch {
+      console.error("[inspiration] réponse non JSON :", texte.slice(0, 300));
+      return NextResponse.json(
+        { error: "L'analyse n'a pas renvoyé de fiche exploitable. Réessaie.", erreursFichiers },
+        { status: 502 }
+      );
+    }
+
+    const { fiche, corrections } = validerFicheStyle(brut);
+    return NextResponse.json({ fiche, corrections, erreursFichiers });
+  } catch (err) {
+    console.error("[inspiration]", err instanceof Error ? err.message : err);
+    return NextResponse.json({ error: "Erreur lors de l'analyse des captures.", erreursFichiers }, { status: 500 });
+  } finally {
+    // Captures supprimées dès l'analyse terminée (réussie ou non) : elles ne servent qu'à
+    // cet appel. Un échec de suppression est seulement journalisé.
+    if (chemins.length > 0) {
+      const { error } = await supabase.storage.from(BUCKET).remove(chemins);
+      if (error) console.error("[inspiration] suppression", error.message);
+    }
+  }
+}

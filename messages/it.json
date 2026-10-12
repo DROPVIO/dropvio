@@ -510,7 +510,11 @@
       "errorFavorite": "Errore durante l'aggiornamento del preferito.",
       "errorPublish": "Impossibile pubblicare su Shopify.",
       "errorServer": "Impossibile contattare il server.",
-      "downloadOk": "File salvato nei tuoi Download: {nom}"
+      "downloadOk": "File salvato nei tuoi Download: {nom}",
+      "formatLabel": "Formato di esportazione",
+      "downloadLiquid": "Scarica il .liquid",
+      "formatChanged": "Formato di esportazione: {format}",
+      "errorFormat": "Impossibile cambiare il formato di esportazione."
     },
     "spy": {
       "badge": "Intelligence competitiva",
