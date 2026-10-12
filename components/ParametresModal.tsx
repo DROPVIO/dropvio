@@ -238,7 +238,7 @@ export default function ParametresModal({
       })
       .catch(() => setUsageError(t("usage.erreurReseau")))
       .finally(() => setUsageLoading(false));
-  }, []);
+  }, [t]);
 
   // Integrations — Shopify
   type ShopifyStatus = {
