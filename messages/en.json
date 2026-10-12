@@ -194,7 +194,9 @@
       "boutiqueProduits": "Products in \"{nom}\"",
       "metricAuditsIa": "AI audits",
       "metricSitesGeneres": "Generated sites",
-      "metricSimulationsMarge": "Saved margin simulations"
+      "metricSimulationsMarge": "Saved margin simulations",
+      "erreurChargement": "Unable to load your usage.",
+      "erreurReseau": "Unable to reach the server."
     },
     "integrations": {
       "title": "Integrations",
@@ -263,7 +265,9 @@
     }
   },
   "common": {
-    "unlimited": "Unlimited"
+    "unlimited": "Unlimited",
+    "fermerNotification": "Close the notification",
+    "metaDescription": "Find and launch your winning dropshipping products."
   },
   "dashboard": {
     "common": {
@@ -2075,6 +2079,78 @@
         "q": "Is Dropvio GDPR compliant?",
         "a": "Yes. You can request the export or deletion of your data at any time."
       }
+    }
+  },
+  "audit": {
+    "titre": "🔍 AI landing page audit",
+    "intro": "Analysis based on Nielsen Norman Group, Unbounce and McKinsey: score out of 100 across 9 criteria.",
+    "ceSite": "this site",
+    "chargementSite": "Loading the site to audit…",
+    "auditDuSite": "Audit of the site <strong>{nom}</strong>. The fixes can be applied to it directly.",
+    "siteMisAJour": "Site updated.",
+    "annuler": "Undo",
+    "correctionAnnulee": "Fix undone: the site is back to its previous version.",
+    "fichierTelecharge": "File saved to your Downloads: {fichier}",
+    "reauditLance": "New audit started on the fixed version.",
+    "score": {
+      "bon": "Good",
+      "passable": "Fair",
+      "faible": "Weak"
+    },
+    "saisie": {
+      "titre": "Your landing page HTML",
+      "effacer": "Clear",
+      "depotAria": "Drop or choose an HTML file",
+      "depot": "Drop your .html file",
+      "depotAide": "(by default in your Downloads folder)",
+      "autreFichier": "Drop another file to run the audit again",
+      "choisir": "or click to choose a file",
+      "url": "🔗 Analyze from a URL",
+      "facultatif": "(optional)",
+      "urlPlaceholder": "https://my-store.com",
+      "recuperer": "Fetch",
+      "htmlPlaceholder": "Paste the full HTML of your landing page here",
+      "caracteres": "{count, plural, one {{nombre} character} other {{nombre} characters}}",
+      "tronque": "· will be truncated to {max} characters",
+      "analyseEnCours": "AI analysis in progress…",
+      "analyser": "Analyze with AI →"
+    },
+    "resultats": {
+      "scoreGlobal": "Overall score",
+      "avisDesigner": "Designer's view",
+      "detail": "Detailed analysis: 9 criteria",
+      "corrections": "Fixes"
+    },
+    "corrige": {
+      "titre": "Fixed HTML",
+      "aide": "Our AI applies all the fixes and generates a ready-to-deploy file (~30 s).",
+      "dejaGenere": "Already generated: reused without a new call.",
+      "annulation": "Undoing…",
+      "application": "Applying…",
+      "annulerApplication": "↺ Undo the change",
+      "appliquer": "✓ Apply to the site",
+      "generation": "Generating…",
+      "telecharger": "⬇ Download the fixed HTML",
+      "reaudit": "Re-auditing…",
+      "reauditer": "↻ Audit the fixed version again"
+    },
+    "erreurs": {
+      "typeFichier": "This file type isn't accepted. Drop an .html or .htm file.",
+      "lectureFichier": "Unable to read this file. Check that it's a valid HTML file and try again.",
+      "siteIntrouvable": "This site can't be found, or it doesn't belong to your account.",
+      "chargementSite": "Unable to load this site. Try again in a moment.",
+      "htmlNonAccessible": "This site's HTML isn't available on your current plan. The AI audit is available on the Pro and Agency plans; you can also paste the HTML manually below.",
+      "reseauSite": "Unable to reach the server to load this site.",
+      "appliquer": "Unable to apply the fix to this site.",
+      "reseauAppliquer": "Network error: the fix wasn't applied.",
+      "annuler": "Unable to undo the fix.",
+      "reseauAnnuler": "Network error: the fix wasn't undone.",
+      "recupererUrl": "Unable to fetch this page.",
+      "audit": "The audit failed. Please try again.",
+      "reseau": "Network error. Check your connection and try again.",
+      "htmlCorrige": "Error while generating the fixed HTML.",
+      "htmlCorrigeVide": "The fixed HTML received is empty. Try again in a moment.",
+      "reseauHtmlCorrige": "Network error while generating the fixed HTML."
     }
   }
 }

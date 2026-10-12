@@ -4,8 +4,12 @@ import { getServerUserAndPlan } from "@/lib/supabase-server";
 import { PLAN_LIMITS, planLabel, getMonthlyUsage, incrementMonthlyUsage } from "@/lib/plan-limits";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { AUDIT_HTML_MAX_CHARS } from "@/lib/audit-config";
+import { langueSite } from "@/lib/site-textes";
+import type { AppLocale } from "@/lib/locale";
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+
+const NOMS_LANGUE: Record<AppLocale, string> = { fr: "français", en: "anglais", es: "espagnol", it: "italien" };
 
 const SYSTEM = `Tu es un expert senior en conversion rate optimization et UI/UX design pour l'e-commerce dropshipping, avec 15 ans d'expérience. Tu maîtrises les études Nielsen Norman Group, Unbounce et McKinsey sur les landing pages. Tu es direct, honnête, et tu donnes des feedbacks actionnables.
 
@@ -219,7 +223,10 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const { html, siteId } = await request.json();
+    const { html, siteId, langue: langueBrute } = await request.json();
+    // Langue de l'interface de l'utilisateur : celle des textes de l'audit (avis, résumé, noms
+    // des critères, points, corrections). Le JSON et ses clés restent identiques.
+    const langue = langueSite(langueBrute);
     // Rattachement optionnel à un site généré (app/audit/page.tsx ?site=<id>) : validé comme
     // un uuid ici plutôt que transmis tel quel. RLS fait le reste — la FK vers sites_generes
     // rejetterait de toute façon un id qui n'existe pas.
@@ -241,7 +248,7 @@ export async function POST(request: NextRequest) {
     const message = await client.messages.create({
       model: "claude-sonnet-4-6",
       max_tokens: 8192,
-      system: SYSTEM,
+      system: `${SYSTEM}\n\nLANGUE : rédige tous les textes du JSON (score_designer, resume_executif, nom de chaque critère, points_forts, points_faibles, corrections_specifiques) en ${NOMS_LANGUE[langue]}. Les clés et les id restent tels quels.`,
       messages: [{ role: "user", content: PROMPT + truncated }],
     });
 

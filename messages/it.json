@@ -194,7 +194,9 @@
       "boutiqueProduits": "Prodotti di «{nom}»",
       "metricAuditsIa": "Audit IA",
       "metricSitesGeneres": "Siti generati",
-      "metricSimulationsMarge": "Simulazioni di margine salvate"
+      "metricSimulationsMarge": "Simulazioni di margine salvate",
+      "erreurChargement": "Impossibile caricare il tuo utilizzo.",
+      "erreurReseau": "Impossibile contattare il server."
     },
     "integrations": {
       "title": "Integrazioni",
@@ -263,7 +265,9 @@
     }
   },
   "common": {
-    "unlimited": "Illimitato"
+    "unlimited": "Illimitato",
+    "fermerNotification": "Chiudi la notifica",
+    "metaDescription": "Trova e lancia i tuoi prodotti vincenti in dropshipping."
   },
   "dashboard": {
     "common": {
@@ -2075,6 +2079,78 @@
         "q": "Dropvio rispetta il GDPR?",
         "a": "Sì. Puoi richiedere l'esportazione o la cancellazione dei tuoi dati in qualsiasi momento."
       }
+    }
+  },
+  "audit": {
+    "titre": "🔍 Audit IA della landing page",
+    "intro": "Analisi basata su Nielsen Norman Group, Unbounce e McKinsey: punteggio su 100 in 9 criteri.",
+    "ceSite": "questo sito",
+    "chargementSite": "Caricamento del sito da analizzare…",
+    "auditDuSite": "Audit del sito <strong>{nom}</strong>. Le correzioni potranno essere applicate direttamente.",
+    "siteMisAJour": "Sito aggiornato.",
+    "annuler": "Annulla",
+    "correctionAnnulee": "Correzione annullata: il sito è tornato alla versione precedente.",
+    "fichierTelecharge": "File salvato nei tuoi Download: {fichier}",
+    "reauditLance": "Nuovo audit avviato sulla versione corretta.",
+    "score": {
+      "bon": "Buono",
+      "passable": "Discreto",
+      "faible": "Debole"
+    },
+    "saisie": {
+      "titre": "HTML della tua landing page",
+      "effacer": "Cancella",
+      "depotAria": "Trascina o scegli un file HTML",
+      "depot": "Trascina il tuo file .html",
+      "depotAide": "(di solito nella cartella Download)",
+      "autreFichier": "Trascina un altro file per rilanciare l'audit",
+      "choisir": "oppure clicca per scegliere un file",
+      "url": "🔗 Analizza da un URL",
+      "facultatif": "(facoltativo)",
+      "urlPlaceholder": "https://mio-negozio.com",
+      "recuperer": "Recupera",
+      "htmlPlaceholder": "Incolla qui l'HTML completo della tua landing page",
+      "caracteres": "{count, plural, one {{nombre} carattere} other {{nombre} caratteri}}",
+      "tronque": "· verrà troncato a {max} caratteri",
+      "analyseEnCours": "Analisi IA in corso…",
+      "analyser": "Analizza con l'IA →"
+    },
+    "resultats": {
+      "scoreGlobal": "Punteggio globale",
+      "avisDesigner": "Parere del designer",
+      "detail": "Analisi dettagliata: 9 criteri",
+      "corrections": "Correzioni"
+    },
+    "corrige": {
+      "titre": "HTML corretto",
+      "aide": "La nostra IA applica tutte le correzioni e genera un file pronto da pubblicare (~30 s).",
+      "dejaGenere": "Versione già generata: riutilizzata senza una nuova chiamata.",
+      "annulation": "Annullamento…",
+      "application": "Applicazione…",
+      "annulerApplication": "↺ Annulla l'applicazione",
+      "appliquer": "✓ Applica al sito",
+      "generation": "Generazione…",
+      "telecharger": "⬇ Scarica l'HTML corretto",
+      "reaudit": "Nuovo audit…",
+      "reauditer": "↻ Analizza di nuovo la versione corretta"
+    },
+    "erreurs": {
+      "typeFichier": "Questo tipo di file non è accettato. Trascina un file .html o .htm.",
+      "lectureFichier": "Impossibile leggere questo file. Verifica che sia un file HTML valido e riprova.",
+      "siteIntrouvable": "Questo sito non esiste o non appartiene al tuo account.",
+      "chargementSite": "Impossibile caricare questo sito. Riprova tra un attimo.",
+      "htmlNonAccessible": "L'HTML di questo sito non è disponibile con il tuo piano attuale. L'audit IA è riservato ai piani Pro e Agency; puoi anche incollare l'HTML a mano qui sotto.",
+      "reseauSite": "Impossibile contattare il server per caricare questo sito.",
+      "appliquer": "Impossibile applicare la correzione a questo sito.",
+      "reseauAppliquer": "Errore di rete: la correzione non è stata applicata.",
+      "annuler": "Impossibile annullare la correzione.",
+      "reseauAnnuler": "Errore di rete: la correzione non è stata annullata.",
+      "recupererUrl": "Impossibile recuperare questa pagina.",
+      "audit": "L'audit non è riuscito. Riprova.",
+      "reseau": "Errore di rete. Controlla la connessione e riprova.",
+      "htmlCorrige": "Errore durante la generazione dell'HTML corretto.",
+      "htmlCorrigeVide": "L'HTML corretto ricevuto è vuoto. Riprova tra un attimo.",
+      "reseauHtmlCorrige": "Errore di rete durante la generazione dell'HTML corretto."
     }
   }
 }

@@ -231,12 +231,12 @@ export default function ParametresModal({
       .then(async (res) => {
         const json = await res.json();
         if (!res.ok) {
-          setUsageError(json.error ?? "Impossible de charger ton utilisation.");
+          setUsageError(t("usage.erreurChargement"));
           return;
         }
         setUsage(json);
       })
-      .catch(() => setUsageError("Impossible de contacter le serveur."))
+      .catch(() => setUsageError(t("usage.erreurReseau")))
       .finally(() => setUsageLoading(false));
   }, []);
 

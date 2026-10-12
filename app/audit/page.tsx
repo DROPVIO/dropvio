@@ -4,6 +4,9 @@ import { useState, useRef, useCallback, useEffect } from "react";
 import { AUDIT_HTML_MAX_CHARS } from "@/lib/audit-config";
 import { nomFichierAudit, tailleLisible, telechargerTexte } from "@/lib/audit-download";
 import { ToastHost, useToast } from "@/components/Toast";
+import { useLocale, useTranslations } from "next-intl";
+import { useApiErrorMessage } from "@/lib/use-api-error";
+import { toIntlTag, type AppLocale } from "@/lib/locale";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -30,11 +33,12 @@ type AuditResult = {
 // style={{ color }} et comme attribut de présentation SVG (stroke=...), suit le thème
 // clair/sombre automatiquement.
 function ScoreCircle({ score }: { score: number }) {
+  const t = useTranslations("audit.score");
   const r = 54;
   const circ = 2 * Math.PI * r;
   const offset = circ * (1 - score / 100);
   const color = score >= 75 ? "var(--success)" : score >= 50 ? "var(--warning)" : "var(--danger)";
-  const label = score >= 75 ? "Bon" : score >= 50 ? "Passable" : "Faible";
+  const label = score >= 75 ? t("bon") : score >= 50 ? t("passable") : t("faible");
 
   return (
     <div className="relative flex items-center justify-center shrink-0" style={{ width: 152, height: 152 }}>
@@ -62,6 +66,7 @@ function ScoreCircle({ score }: { score: number }) {
 // ─── Category card ────────────────────────────────────────────────────────────
 
 function CategoryCard({ cat }: { cat: Category }) {
+  const t = useTranslations("audit.resultats");
   const pct = cat.score / cat.max;
   const barColor = pct >= 0.75 ? "var(--success)" : pct >= 0.5 ? "var(--warning)" : "var(--danger)";
 
@@ -110,7 +115,7 @@ function CategoryCard({ cat }: { cat: Category }) {
       {cat.corrections_specifiques.length > 0 && (
         <div className="border-t border-[var(--border)] pt-3 flex flex-col gap-1.5">
           <p className="text-[9px] font-bold uppercase tracking-widest text-[var(--text-faint)] mb-0.5">
-            Corrections
+            {t("corrections")}
           </p>
           {cat.corrections_specifiques.map((c, i) => (
             <div key={i} className="flex items-start gap-2 text-[11px] text-[var(--warning)] leading-relaxed">
@@ -127,6 +132,9 @@ function CategoryCard({ cat }: { cat: Category }) {
 // ─── Main page ────────────────────────────────────────────────────────────────
 
 export default function AuditPage() {
+  const t = useTranslations("audit");
+  const apiErrorMessage = useApiErrorMessage();
+  const locale = useLocale() as AppLocale;
   const [html,        setHtml]        = useState("");
   const [loading,     setLoading]     = useState(false);
   const [error,       setError]       = useState<string | null>(null);
@@ -159,7 +167,7 @@ export default function AuditPage() {
   const handleFile = useCallback((file: File) => {
     const nomOk = /\.html?$/i.test(file.name);
     if (!nomOk && file.type !== "text/html") {
-      setError("Ce type de fichier n'est pas accepté. Dépose un fichier .html ou .htm.");
+      setError(t("erreurs.typeFichier"));
       return;
     }
     const reader = new FileReader();
@@ -179,7 +187,7 @@ export default function AuditPage() {
     };
     // Sans ce handler, un échec de lecture (fichier corrompu, permission refusée...) restait
     // totalement silencieux : html ne changeait jamais et rien n'indiquait pourquoi.
-    reader.onerror = () => setError("Impossible de lire ce fichier. Vérifie qu'il s'agit bien d'un fichier HTML valide et réessaie.");
+    reader.onerror = () => setError(t("erreurs.lectureFichier"));
     reader.readAsText(file);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -201,28 +209,26 @@ export default function AuditPage() {
       .then(async (res) => {
         const data = await res.json().catch(() => ({}));
         if (res.status === 404) {
-          setError("Ce site est introuvable, ou il n'appartient pas à ton compte.");
+          setError(t("erreurs.siteIntrouvable"));
           return;
         }
         if (!res.ok) {
-          setError(data.error ?? "Impossible de charger ce site. Réessaie dans un instant.");
+          setError(apiErrorMessage(data, t("erreurs.chargementSite")));
           return;
         }
         if (typeof data.html_content !== "string" || !data.html_content.trim()) {
-          setError(
-            "Le HTML de ce site n'est pas accessible sur ton plan actuel. L'audit IA est réservé aux plans Pro et Agency — tu peux aussi coller le HTML à la main ci-dessous."
-          );
+          setError(t("erreurs.htmlNonAccessible"));
           if (typeof data.nom_produit === "string") setSourceLabel(data.nom_produit);
           return;
         }
         setHtml(data.html_content);
         setSourceLabel(typeof data.nom_produit === "string" ? data.nom_produit : "landing-page");
-        setSite({ id: siteId, nom: typeof data.nom_produit === "string" ? data.nom_produit : "ce site" });
+        setSite({ id: siteId, nom: typeof data.nom_produit === "string" ? data.nom_produit : t("ceSite") });
         setFileInfo(null);
         setError(null);
         void runAudit(data.html_content, siteId);
       })
-      .catch(() => setError("Impossible de contacter le serveur pour charger ce site."))
+      .catch(() => setError(t("erreurs.reseauSite")))
       .finally(() => setSiteLoading(false));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -242,13 +248,13 @@ export default function AuditPage() {
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        echec(data.error ?? "Impossible d'appliquer la correction à ce site.");
+        echec(apiErrorMessage(data, t("erreurs.appliquer")));
         return;
       }
       setAppliedAt(new Date().toISOString());
-      succes("Site mis à jour.", { label: "Annuler", onClick: () => void undoApplyToSite() });
+      succes(t("siteMisAJour"), { label: t("annuler"), onClick: () => void undoApplyToSite() });
     } catch {
-      echec("Erreur réseau : la correction n'a pas été appliquée.");
+      echec(t("erreurs.reseauAppliquer"));
     } finally {
       setApplying(false);
     }
@@ -265,13 +271,13 @@ export default function AuditPage() {
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        echec(data.error ?? "Impossible d'annuler la correction.");
+        echec(apiErrorMessage(data, t("erreurs.annuler")));
         return;
       }
       setAppliedAt(null);
-      succes("Correction annulée : le site est revenu à sa version précédente.");
+      succes(t("correctionAnnulee"));
     } catch {
-      echec("Erreur réseau : la correction n'a pas été annulée.");
+      echec(t("erreurs.reseauAnnuler"));
     } finally {
       setApplying(false);
     }
@@ -289,7 +295,7 @@ export default function AuditPage() {
       });
       const data = await res.json();
       if (!res.ok) {
-        setUrlError(data.error ?? "Impossible de récupérer cette page.");
+        setUrlError(apiErrorMessage(data, t("erreurs.recupererUrl")));
         return;
       }
       setHtml(data.html);
@@ -305,7 +311,7 @@ export default function AuditPage() {
         setSourceLabel("landing-page");
       }
     } catch {
-      setUrlError("Impossible de contacter le serveur.");
+      setUrlError(apiErrorMessage({ code: "network" }));
     } finally {
       setUrlLoading(false);
     }
@@ -326,11 +332,11 @@ export default function AuditPage() {
         headers: { "Content-Type": "application/json" },
         // siteId rattache l'audit enregistré au site audité (audits_realises.site_id) pour
         // que le Site Builder retrouve « les corrections du dernier audit de ce site ».
-        body: JSON.stringify({ html: cible, siteId: siteIdArg ?? site?.id ?? null }),
+        body: JSON.stringify({ html: cible, siteId: siteIdArg ?? site?.id ?? null, langue: locale }),
       });
       const data = await res.json();
       if (data.error) {
-        setError(data.error);
+        setError(apiErrorMessage(data, t("erreurs.audit")));
       } else {
         setResult(data as AuditResult);
         setTimeout(() => {
@@ -338,7 +344,7 @@ export default function AuditPage() {
         }, 100);
       }
     } catch {
-      setError("Erreur réseau. Vérifie ta connexion et réessaie.");
+      setError(t("erreurs.reseau"));
     } finally {
       setLoading(false);
     }
@@ -355,15 +361,15 @@ export default function AuditPage() {
       const res = await fetch("/api/audit-site/html", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ html, categories: result.categories }),
+        body: JSON.stringify({ html, categories: result.categories, langue: locale }),
       });
       if (!res.ok) {
         // La route répond en JSON sur erreur, mais on ne suppose rien : un 502 du proxy
         // renverrait du HTML et res.json() lèverait, ce qui masquait la vraie cause.
         const brut = await res.text();
-        let message = "Erreur lors de la génération du HTML corrigé.";
+        let message = t("erreurs.htmlCorrige");
         try {
-          message = (JSON.parse(brut) as { error?: string }).error ?? message;
+          message = apiErrorMessage(JSON.parse(brut), message);
         } catch {
           /* réponse non JSON : on garde le message générique */
         }
@@ -373,7 +379,7 @@ export default function AuditPage() {
       }
       const corrige = await res.text();
       if (!corrige.trim()) {
-        const message = "Le HTML corrigé reçu est vide. Réessaie dans un instant.";
+        const message = t("erreurs.htmlCorrigeVide");
         setError(message);
         echec(message);
         return null;
@@ -381,7 +387,7 @@ export default function AuditPage() {
       setCorrectedHtml(corrige);
       return corrige;
     } catch {
-      const message = "Erreur réseau lors de la génération du HTML corrigé.";
+      const message = t("erreurs.reseauHtmlCorrige");
       setError(message);
       echec(message);
       return null;
@@ -395,7 +401,7 @@ export default function AuditPage() {
     if (!corrige) return;
     const nom = nomFichierAudit(sourceLabel);
     telechargerTexte(corrige, nom);
-    succes(`Fichier enregistré dans vos Téléchargements : ${nom}`);
+    succes(t("fichierTelecharge", { fichier: nom }));
   }
 
   /** Relance l'audit sur la version corrigée, sans passer par un fichier. */
@@ -408,7 +414,7 @@ export default function AuditPage() {
       setCorrectedHtml(null);
       setFileInfo(null);
       await runAudit(corrige);
-      succes("Nouvel audit lancé sur la version corrigée.");
+      succes(t("reauditLance"));
     } finally {
       setReauditing(false);
     }
@@ -423,9 +429,9 @@ export default function AuditPage() {
 
         {/* ── Header ──────────────────────────────────────────────────── */}
         <div>
-          <h1 className="text-2xl font-bold text-[var(--text-primary)]">🔍 Audit de landing page IA</h1>
+          <h1 className="text-2xl font-bold text-[var(--text-primary)]">{t("titre")}</h1>
           <p className="text-[var(--text-faint)] text-sm mt-1.5">
-            Analyse basée sur Nielsen Norman Group, Unbounce et McKinsey — score sur 100 en 9 critères.
+            {t("intro")}
           </p>
         </div>
 
@@ -435,11 +441,10 @@ export default function AuditPage() {
             <span className="shrink-0">🌐</span>
             <p className="text-[var(--text-muted)]">
               {siteLoading ? (
-                "Chargement du site à auditer…"
+                t("chargementSite")
               ) : (
                 <>
-                  Audit du site <span className="font-semibold text-[var(--text-primary)]">{site!.nom}</span>. Les
-                  corrections pourront être appliquées directement dessus.
+                  {t.rich("auditDuSite", { nom: site!.nom, strong: (c) => <span className="font-semibold text-[var(--text-primary)]">{c}</span> })}
                 </>
               )}
             </p>
@@ -449,7 +454,7 @@ export default function AuditPage() {
         {/* ── Input ───────────────────────────────────────────────────── */}
         <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface-2)] p-6 flex flex-col gap-4">
           <div className="flex items-center justify-between flex-wrap gap-2">
-            <p className="text-sm font-medium text-[var(--text-muted)]">HTML de ta landing page</p>
+            <p className="text-sm font-medium text-[var(--text-muted)]">{t("saisie.titre")}</p>
             <div className="flex items-center gap-2">
               <input
                 type="file"
@@ -468,7 +473,7 @@ export default function AuditPage() {
                   onClick={() => { setHtml(""); setResult(null); setError(null); setCorrectedHtml(null); setFileInfo(null); }}
                   className="px-3 py-1.5 rounded-lg bg-[var(--surface-2)] border border-[var(--border)] text-xs text-[var(--text-faint)] hover:text-[var(--text-muted)] transition"
                 >
-                  Effacer
+                  {t("saisie.effacer")}
                 </button>
               )}
             </div>
@@ -478,7 +483,7 @@ export default function AuditPage() {
           <div
             role="button"
             tabIndex={0}
-            aria-label="Déposer ou choisir un fichier HTML"
+            aria-label={t("saisie.depotAria")}
             onClick={() => fileRef.current?.click()}
             onKeyDown={(e) => {
               if (e.key === "Enter" || e.key === " ") {
@@ -507,27 +512,27 @@ export default function AuditPage() {
               </p>
             ) : (
               <p className="text-sm text-[var(--text-muted)]">
-                Déposez votre fichier .html{" "}
-                <span className="text-[var(--text-faint)]">(par défaut dans le dossier Téléchargements)</span>
+                {t("saisie.depot")}{" "}
+                <span className="text-[var(--text-faint)]">{t("saisie.depotAide")}</span>
               </p>
             )}
             <p className="text-[11px] text-[var(--text-faint)] mt-1">
-              {fileInfo ? "Déposez un autre fichier pour relancer l'audit" : "ou cliquez pour choisir un fichier"}
+              {fileInfo ? t("saisie.autreFichier") : t("saisie.choisir")}
             </p>
           </div>
 
           {/* ── Analyser depuis une URL ─────────────────────────────────── */}
           <div className="flex flex-col gap-2">
             <label className="text-sm font-medium text-[var(--text-muted)]">
-              🔗 Analyser depuis une URL{" "}
-              <span className="text-[var(--text-faint)] font-normal">(optionnel)</span>
+              {t("saisie.url")}{" "}
+              <span className="text-[var(--text-faint)] font-normal">{t("saisie.facultatif")}</span>
             </label>
             <div className="flex gap-2">
               <input
                 type="url"
                 value={urlInput}
                 onChange={(e) => { setUrlInput(e.target.value); setUrlError(null); }}
-                placeholder="https://ma-boutique.com"
+                placeholder={t("saisie.urlPlaceholder")}
                 className="flex-1 bg-[var(--bg-sunken)] border border-[var(--border-strong)] rounded-xl px-4 py-3 text-sm text-[var(--text-primary)] placeholder-[var(--text-faint)] focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500/40 transition"
               />
               <button
@@ -535,7 +540,7 @@ export default function AuditPage() {
                 disabled={!urlInput.trim() || urlLoading}
                 className="px-4 py-3 rounded-xl bg-violet-600/20 border border-violet-500/30 text-[var(--accent)] text-sm font-semibold hover:bg-violet-600/30 transition disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap"
               >
-                {urlLoading ? "…" : "Récupérer"}
+                {urlLoading ? "…" : t("saisie.recuperer")}
               </button>
             </div>
             {urlError && <p className="text-xs text-[var(--danger)]">{urlError}</p>}
@@ -546,16 +551,16 @@ export default function AuditPage() {
           <textarea
             value={html}
             onChange={(e) => setHtml(e.target.value)}
-            placeholder={`<!DOCTYPE html>\n<html>\n  <body>\n    <!-- Colle ici le HTML complet de ta landing page -->\n  </body>\n</html>`}
+            placeholder={`<!DOCTYPE html>\n<html>\n  <body>\n    <!-- ${t("saisie.htmlPlaceholder")} -->\n  </body>\n</html>`}
             className="w-full bg-[var(--bg-sunken)] border border-[var(--border-strong)] rounded-xl px-4 py-3.5 text-[12px] text-[var(--text-muted)] placeholder-[var(--text-faint)] font-mono focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500/40 transition resize-none"
             rows={12}
           />
 
           {charCount > 0 && (
             <p className="text-[11px] text-[var(--text-faint)]">
-              {charCount.toLocaleString("fr-FR")} caractères
+              {t("saisie.caracteres", { count: charCount, nombre: charCount.toLocaleString(toIntlTag(locale)) })}
               {willTruncate && (
-                <span className="text-[var(--warning)] ml-2">· sera tronqué à {AUDIT_HTML_MAX_CHARS.toLocaleString("fr-FR")} chars</span>
+                <span className="text-[var(--warning)] ml-2">{t("saisie.tronque", { max: AUDIT_HTML_MAX_CHARS.toLocaleString(toIntlTag(locale)) })}</span>
               )}
             </p>
           )}
@@ -568,9 +573,9 @@ export default function AuditPage() {
             {loading ? (
               <span className="flex items-center justify-center gap-2">
                 <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                Analyse IA en cours…
+                {t("saisie.analyseEnCours")}
               </span>
-            ) : "Analyser avec l'IA →"}
+            ) : t("saisie.analyser")}
           </button>
         </div>
 
@@ -589,7 +594,7 @@ export default function AuditPage() {
             {/* Score global */}
             <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface-2)] p-6">
               <p className="text-[10px] font-semibold uppercase tracking-widest text-[var(--text-faint)] mb-5">
-                Score global
+                {t("resultats.scoreGlobal")}
               </p>
               <div className="flex flex-col sm:flex-row items-start gap-8">
                 <ScoreCircle score={result.score_global} />
@@ -600,7 +605,7 @@ export default function AuditPage() {
                   {/* Designer quote */}
                   <div className="rounded-xl border border-violet-500/20 bg-violet-500/[0.05] px-4 py-4">
                     <p className="text-[9px] font-bold uppercase tracking-widest text-[var(--accent)] mb-2">
-                      Avis designer
+                      {t("resultats.avisDesigner")}
                     </p>
                     <p className="text-[13px] text-[var(--text-muted)] leading-relaxed italic">
                       &ldquo;{result.score_designer}&rdquo;
@@ -613,7 +618,7 @@ export default function AuditPage() {
             {/* Category cards */}
             <div>
               <p className="text-[10px] font-semibold uppercase tracking-widest text-[var(--text-faint)] mb-4">
-                Analyse détaillée — 9 critères
+                {t("resultats.detail")}
               </p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {result.categories.map((cat) => (
@@ -625,10 +630,10 @@ export default function AuditPage() {
             {/* HTML corrigé : télécharger ou ré-auditer sans passer par un fichier */}
             <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface-2)] p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div>
-                <p className="text-sm font-semibold text-[var(--text-primary)]">HTML corrigé</p>
+                <p className="text-sm font-semibold text-[var(--text-primary)]">{t("corrige.titre")}</p>
                 <p className="text-[11px] text-[var(--text-faint)] mt-0.5">
-                  Notre IA applique toutes les corrections et génère un fichier prêt à déployer (~30 s).
-                  {correctedHtml && " Version déjà générée : réutilisée sans nouvel appel."}
+                  {t("corrige.aide")}
+                  {correctedHtml && ` ${t("corrige.dejaGenere")}`}
                 </p>
               </div>
               <div className="shrink-0 flex flex-wrap gap-2">
@@ -641,12 +646,12 @@ export default function AuditPage() {
                     {applying ? (
                       <>
                         <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                        {appliedAt ? "Annulation…" : "Application…"}
+                        {appliedAt ? t("corrige.annulation") : t("corrige.application")}
                       </>
                     ) : appliedAt ? (
-                      <>↺ Annuler l&apos;application</>
+                      <>{t("corrige.annulerApplication")}</>
                     ) : (
-                      <>✓ Appliquer au site</>
+                      <>{t("corrige.appliquer")}</>
                     )}
                   </button>
                 )}
@@ -658,10 +663,10 @@ export default function AuditPage() {
                   {htmlLoading && !reauditing ? (
                     <>
                       <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                      Génération…
+                      {t("corrige.generation")}
                     </>
                   ) : (
-                    <>⬇ Télécharger le HTML corrigé</>
+                    <>{t("corrige.telecharger")}</>
                   )}
                 </button>
                 <button
@@ -672,10 +677,10 @@ export default function AuditPage() {
                   {reauditing ? (
                     <>
                       <span className="w-4 h-4 border-2 border-[var(--text-faint)]/40 border-t-[var(--text-primary)] rounded-full animate-spin" />
-                      Ré-audit…
+                      {t("corrige.reaudit")}
                     </>
                   ) : (
-                    <>↻ Ré-auditer la version corrigée</>
+                    <>{t("corrige.reauditer")}</>
                   )}
                 </button>
               </div>

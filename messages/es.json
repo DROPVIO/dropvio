@@ -194,7 +194,9 @@
       "boutiqueProduits": "Productos de «{nom}»",
       "metricAuditsIa": "Auditorías IA",
       "metricSitesGeneres": "Sitios generados",
-      "metricSimulationsMarge": "Simulaciones de margen guardadas"
+      "metricSimulationsMarge": "Simulaciones de margen guardadas",
+      "erreurChargement": "No se puede cargar tu uso.",
+      "erreurReseau": "No se puede contactar con el servidor."
     },
     "integrations": {
       "title": "Integraciones",
@@ -263,7 +265,9 @@
     }
   },
   "common": {
-    "unlimited": "Ilimitado"
+    "unlimited": "Ilimitado",
+    "fermerNotification": "Cerrar la notificación",
+    "metaDescription": "Encuentra y lanza tus productos ganadores de dropshipping."
   },
   "dashboard": {
     "common": {
@@ -2075,6 +2079,78 @@
         "q": "¿Dropvio cumple el RGPD?",
         "a": "Sí. Puedes solicitar la exportación o la eliminación de tus datos en cualquier momento."
       }
+    }
+  },
+  "audit": {
+    "titre": "🔍 Auditoría de landing page con IA",
+    "intro": "Análisis basado en Nielsen Norman Group, Unbounce y McKinsey: puntuación sobre 100 en 9 criterios.",
+    "ceSite": "este sitio",
+    "chargementSite": "Cargando el sitio que se va a auditar…",
+    "auditDuSite": "Auditoría del sitio <strong>{nom}</strong>. Las correcciones se podrán aplicar directamente en él.",
+    "siteMisAJour": "Sitio actualizado.",
+    "annuler": "Deshacer",
+    "correctionAnnulee": "Corrección deshecha: el sitio ha vuelto a su versión anterior.",
+    "fichierTelecharge": "Archivo guardado en tus Descargas: {fichier}",
+    "reauditLance": "Nueva auditoría iniciada sobre la versión corregida.",
+    "score": {
+      "bon": "Bueno",
+      "passable": "Aceptable",
+      "faible": "Débil"
+    },
+    "saisie": {
+      "titre": "HTML de tu landing page",
+      "effacer": "Borrar",
+      "depotAria": "Suelta o elige un archivo HTML",
+      "depot": "Suelta tu archivo .html",
+      "depotAide": "(por defecto en la carpeta Descargas)",
+      "autreFichier": "Suelta otro archivo para volver a lanzar la auditoría",
+      "choisir": "o haz clic para elegir un archivo",
+      "url": "🔗 Analizar desde una URL",
+      "facultatif": "(opcional)",
+      "urlPlaceholder": "https://mi-tienda.com",
+      "recuperer": "Obtener",
+      "htmlPlaceholder": "Pega aquí el HTML completo de tu landing page",
+      "caracteres": "{count, plural, one {{nombre} carácter} other {{nombre} caracteres}}",
+      "tronque": "· se truncará a {max} caracteres",
+      "analyseEnCours": "Análisis con IA en curso…",
+      "analyser": "Analizar con IA →"
+    },
+    "resultats": {
+      "scoreGlobal": "Puntuación global",
+      "avisDesigner": "Opinión del diseñador",
+      "detail": "Análisis detallado: 9 criterios",
+      "corrections": "Correcciones"
+    },
+    "corrige": {
+      "titre": "HTML corregido",
+      "aide": "Nuestra IA aplica todas las correcciones y genera un archivo listo para publicar (~30 s).",
+      "dejaGenere": "Versión ya generada: se reutiliza sin una nueva llamada.",
+      "annulation": "Deshaciendo…",
+      "application": "Aplicando…",
+      "annulerApplication": "↺ Deshacer la aplicación",
+      "appliquer": "✓ Aplicar al sitio",
+      "generation": "Generando…",
+      "telecharger": "⬇ Descargar el HTML corregido",
+      "reaudit": "Nueva auditoría…",
+      "reauditer": "↻ Volver a auditar la versión corregida"
+    },
+    "erreurs": {
+      "typeFichier": "Este tipo de archivo no se acepta. Suelta un archivo .html o .htm.",
+      "lectureFichier": "No se puede leer este archivo. Comprueba que sea un archivo HTML válido e inténtalo de nuevo.",
+      "siteIntrouvable": "Este sitio no existe o no pertenece a tu cuenta.",
+      "chargementSite": "No se puede cargar este sitio. Inténtalo de nuevo en un momento.",
+      "htmlNonAccessible": "El HTML de este sitio no está disponible en tu plan actual. La auditoría IA está reservada a los planes Pro y Agency; también puedes pegar el HTML a mano abajo.",
+      "reseauSite": "No se puede contactar con el servidor para cargar este sitio.",
+      "appliquer": "No se puede aplicar la corrección a este sitio.",
+      "reseauAppliquer": "Error de red: no se ha aplicado la corrección.",
+      "annuler": "No se puede deshacer la corrección.",
+      "reseauAnnuler": "Error de red: no se ha deshecho la corrección.",
+      "recupererUrl": "No se puede obtener esta página.",
+      "audit": "La auditoría ha fallado. Inténtalo de nuevo.",
+      "reseau": "Error de red. Comprueba tu conexión e inténtalo de nuevo.",
+      "htmlCorrige": "Error al generar el HTML corregido.",
+      "htmlCorrigeVide": "El HTML corregido recibido está vacío. Inténtalo de nuevo en un momento.",
+      "reseauHtmlCorrige": "Error de red al generar el HTML corregido."
     }
   }
 }

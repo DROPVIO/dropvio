@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 
 /** action : bouton optionnel rendu dans le toast (ex. « Annuler » après l'application d'une
  *  correction IA). Le toast se ferme dès que l'action est déclenchée. */
@@ -33,6 +34,7 @@ export function useToast(dureeMs = 6000) {
 
 /** role="alert" pour une erreur (annonce immédiate), "status" pour un succès. */
 export function ToastHost({ toast, onClose }: { toast: ToastMessage | null; onClose: () => void }) {
+  const t = useTranslations("common");
   if (!toast) return null;
   return (
     <div
@@ -60,7 +62,7 @@ export function ToastHost({ toast, onClose }: { toast: ToastMessage | null; onCl
         )}
         <button
           onClick={onClose}
-          aria-label="Fermer la notification"
+          aria-label={t("fermerNotification")}
           className="ml-2 shrink-0 text-[var(--text-faint)] transition hover:text-[var(--text-muted)]"
         >
           ✕

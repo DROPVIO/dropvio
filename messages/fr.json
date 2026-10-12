@@ -194,7 +194,9 @@
       "boutiqueProduits": "Produits de « {nom} »",
       "metricAuditsIa": "Audits IA",
       "metricSitesGeneres": "Sites générés",
-      "metricSimulationsMarge": "Simulations de marge sauvegardées"
+      "metricSimulationsMarge": "Simulations de marge sauvegardées",
+      "erreurChargement": "Impossible de charger ton utilisation.",
+      "erreurReseau": "Impossible de contacter le serveur."
     },
     "integrations": {
       "title": "Intégrations",
@@ -263,7 +265,9 @@
     }
   },
   "common": {
-    "unlimited": "Illimité"
+    "unlimited": "Illimité",
+    "fermerNotification": "Fermer la notification",
+    "metaDescription": "Trouve et lance tes produits gagnants en dropshipping."
   },
   "dashboard": {
     "common": {
@@ -2075,6 +2079,78 @@
         "q": "Dropvio respecte-t-il le RGPD ?",
         "a": "Oui. Tu peux demander l'export ou la suppression de tes données à tout moment."
       }
+    }
+  },
+  "audit": {
+    "titre": "🔍 Audit de landing page IA",
+    "intro": "Analyse basée sur Nielsen Norman Group, Unbounce et McKinsey : score sur 100 en 9 critères.",
+    "ceSite": "ce site",
+    "chargementSite": "Chargement du site à auditer…",
+    "auditDuSite": "Audit du site <strong>{nom}</strong>. Les corrections pourront être appliquées directement dessus.",
+    "siteMisAJour": "Site mis à jour.",
+    "annuler": "Annuler",
+    "correctionAnnulee": "Correction annulée : le site est revenu à sa version précédente.",
+    "fichierTelecharge": "Fichier enregistré dans tes Téléchargements : {fichier}",
+    "reauditLance": "Nouvel audit lancé sur la version corrigée.",
+    "score": {
+      "bon": "Bon",
+      "passable": "Passable",
+      "faible": "Faible"
+    },
+    "saisie": {
+      "titre": "HTML de ta landing page",
+      "effacer": "Effacer",
+      "depotAria": "Déposer ou choisir un fichier HTML",
+      "depot": "Dépose ton fichier .html",
+      "depotAide": "(par défaut dans le dossier Téléchargements)",
+      "autreFichier": "Dépose un autre fichier pour relancer l'audit",
+      "choisir": "ou clique pour choisir un fichier",
+      "url": "🔗 Analyser depuis une URL",
+      "facultatif": "(facultatif)",
+      "urlPlaceholder": "https://ma-boutique.com",
+      "recuperer": "Récupérer",
+      "htmlPlaceholder": "Colle ici le HTML complet de ta landing page",
+      "caracteres": "{count, plural, one {{nombre} caractère} other {{nombre} caractères}}",
+      "tronque": "· sera tronqué à {max} caractères",
+      "analyseEnCours": "Analyse IA en cours…",
+      "analyser": "Analyser avec l'IA →"
+    },
+    "resultats": {
+      "scoreGlobal": "Score global",
+      "avisDesigner": "Avis designer",
+      "detail": "Analyse détaillée : 9 critères",
+      "corrections": "Corrections"
+    },
+    "corrige": {
+      "titre": "HTML corrigé",
+      "aide": "Notre IA applique toutes les corrections et génère un fichier prêt à déployer (~30 s).",
+      "dejaGenere": "Version déjà générée : réutilisée sans nouvel appel.",
+      "annulation": "Annulation…",
+      "application": "Application…",
+      "annulerApplication": "↺ Annuler l'application",
+      "appliquer": "✓ Appliquer au site",
+      "generation": "Génération…",
+      "telecharger": "⬇ Télécharger le HTML corrigé",
+      "reaudit": "Nouvel audit…",
+      "reauditer": "↻ Auditer de nouveau la version corrigée"
+    },
+    "erreurs": {
+      "typeFichier": "Ce type de fichier n'est pas accepté. Dépose un fichier .html ou .htm.",
+      "lectureFichier": "Impossible de lire ce fichier. Vérifie qu'il s'agit bien d'un fichier HTML valide et réessaie.",
+      "siteIntrouvable": "Ce site est introuvable, ou il n'appartient pas à ton compte.",
+      "chargementSite": "Impossible de charger ce site. Réessaie dans un instant.",
+      "htmlNonAccessible": "Le HTML de ce site n'est pas accessible sur ton plan actuel. L'audit IA est réservé aux plans Pro et Agency ; tu peux aussi coller le HTML à la main ci-dessous.",
+      "reseauSite": "Impossible de contacter le serveur pour charger ce site.",
+      "appliquer": "Impossible d'appliquer la correction à ce site.",
+      "reseauAppliquer": "Erreur réseau : la correction n'a pas été appliquée.",
+      "annuler": "Impossible d'annuler la correction.",
+      "reseauAnnuler": "Erreur réseau : la correction n'a pas été annulée.",
+      "recupererUrl": "Impossible de récupérer cette page.",
+      "audit": "L'audit a échoué. Réessaie.",
+      "reseau": "Erreur réseau. Vérifie ta connexion et réessaie.",
+      "htmlCorrige": "Erreur lors de la génération du HTML corrigé.",
+      "htmlCorrigeVide": "Le HTML corrigé reçu est vide. Réessaie dans un instant.",
+      "reseauHtmlCorrige": "Erreur réseau lors de la génération du HTML corrigé."
     }
   }
 }
