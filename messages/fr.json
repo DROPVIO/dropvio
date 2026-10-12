@@ -1156,7 +1156,8 @@
     "shopify_push_plan": "La publication sur Shopify est réservée aux plans Pro et Agency.",
     "shopify_not_configured": "L'intégration Shopify n'est pas encore configurée côté serveur.",
     "shopify_not_connected": "Connecte d'abord ta boutique Shopify dans les paramètres.",
-    "shopify_auth_expired": "L'accès à Shopify a expiré ou a été révoqué. Reconnecte ta boutique Shopify dans les paramètres."
+    "shopify_auth_expired": "L'accès à Shopify a expiré ou a été révoqué. Reconnecte ta boutique Shopify dans les paramètres.",
+    "generation_too_many_products": "Le plan {plan} permet au plus {max} produits par site boutique ({count} envoyés). Retire des produits avant de générer."
   },
   "siteBuilder": {
     "boutique": {

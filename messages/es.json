@@ -1156,7 +1156,8 @@
     "shopify_push_plan": "La publicación en Shopify está reservada a los planes Pro y Agency.",
     "shopify_not_configured": "La integración con Shopify aún no está configurada en el servidor.",
     "shopify_not_connected": "Conecta primero tu tienda Shopify en los ajustes.",
-    "shopify_auth_expired": "El acceso a Shopify ha caducado o se ha revocado. Vuelve a conectar tu tienda Shopify en los ajustes."
+    "shopify_auth_expired": "El acceso a Shopify ha caducado o se ha revocado. Vuelve a conectar tu tienda Shopify en los ajustes.",
+    "generation_too_many_products": "El plan {plan} permite como máximo {max} productos por sitio de tienda ({count} enviados). Quita productos antes de generar."
   },
   "siteBuilder": {
     "boutique": {

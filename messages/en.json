@@ -1156,7 +1156,8 @@
     "shopify_push_plan": "Publishing to Shopify is available on the Pro and Agency plans.",
     "shopify_not_configured": "The Shopify integration isn't configured on the server yet.",
     "shopify_not_connected": "Connect your Shopify store in the settings first.",
-    "shopify_auth_expired": "Shopify access has expired or been revoked. Reconnect your Shopify store in the settings."
+    "shopify_auth_expired": "Shopify access has expired or been revoked. Reconnect your Shopify store in the settings.",
+    "generation_too_many_products": "The {plan} plan allows at most {max} products per store site ({count} sent). Remove some products before generating."
   },
   "siteBuilder": {
     "boutique": {

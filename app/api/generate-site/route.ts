@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { getServerUserAndPlan } from "@/lib/supabase-server";
-import { PLAN_LIMITS, planLabel, currentMonthKey, logTokensUsage } from "@/lib/plan-limits";
+import { PLAN_LIMITS, planLabel, currentMonthKey, logTokensUsage, type Plan } from "@/lib/plan-limits";
+import { apiError } from "@/lib/api-errors";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { escapeHtml, grilleProduitsHtml, grilleStyles, produitsCheckoutScripts, type ProduitBoutique } from "@/lib/site-templates";
 import { blocConsignesStyle, validerFicheStyle } from "@/lib/style-fiche";
@@ -450,7 +451,7 @@ export async function POST(request: NextRequest) {
   // — payload distingué par la présence d'un tableau produits, branché ici avant la
   // validation productName/description (propre au mode produit unique, inchangée ci-dessous).
   if (Array.isArray(body.produits)) {
-    return handleGenerateBoutique(body, supabase, user.id);
+    return handleGenerateBoutique(body, supabase, user.id, plan);
   }
 
   const { productName, description, colorPrimary, colorSecondary, colorAccent, style, imageUrl, rating, orders, salePrice, originalPrice, corrections } = body;
@@ -679,7 +680,8 @@ async function handleGenerateBoutique(
   // Passés par le POST appelant : la consommation de tokens du mode boutique doit être
   // comptée sur le même compteur que celle du mode produit unique.
   supabase: SupabaseClient,
-  userId: string
+  userId: string,
+  plan: Plan
 ): Promise<NextResponse> {
   const { nomBoutique, descriptionBoutique, produits, colorPrimary, colorSecondary, colorAccent, style } = body;
   const promptUtilisateur = promptUtilisateurDe(body);
@@ -690,6 +692,18 @@ async function handleGenerateBoutique(
     return NextResponse.json(
       { error: "nomBoutique et au moins un produit sont requis" },
       { status: 400 }
+    );
+  }
+
+  // Même plafond que la limite de produits par boutique du plan (POST /api/boutiques/[id]/produits),
+  // déjà appliqué par le builder (BoutiqueDraft.limiteProduits) : le serveur ne s'y fie pas.
+  const maxProduits = PLAN_LIMITS[plan].produitsBoutiqueMax;
+  if (maxProduits !== null && produits.length > maxProduits) {
+    return apiError(
+      "generation_too_many_products",
+      400,
+      `Le plan ${planLabel(plan)} permet au plus ${maxProduits} produits par site boutique (${produits.length} envoyés).`,
+      { values: { max: maxProduits, count: produits.length, plan: planLabel(plan) } }
     );
   }
 
