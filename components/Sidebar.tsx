@@ -151,17 +151,20 @@ export default function Sidebar({
   // paramètres directement sur l'onglet Intégrations avec le résultat de la connexion.
   // openIntegrations=1 (sans shopifyConnected/shopifyError) : même mécanisme, déclenché par
   // un lien "Reconnecter" ailleurs dans l'app (ex: bannière Dashboard) — ouvre direct sur
-  // l'onglet Intégrations sans message de résultat.
+  // l'onglet Intégrations sans message de résultat. openPlan=1 ouvre la modale sur la section
+  // Plan (section par défaut), voir lib/plan-links.ts.
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const connected = params.get("shopifyConnected");
     const err = params.get("shopifyError");
     const openIntegrations = params.get("openIntegrations");
-    if (!connected && !err && !openIntegrations) return;
+    const openPlan = params.get("openPlan");
+    if (!connected && !err && !openIntegrations && !openPlan) return;
 
     params.delete("shopifyConnected");
     params.delete("shopifyError");
     params.delete("openIntegrations");
+    params.delete("openPlan");
     const query = params.toString();
     router.replace(query ? `${pathname}?${query}` : pathname);
 

@@ -8,6 +8,7 @@ import { slugFichier, telechargerTexte } from "@/lib/audit-download";
 import { htmlToLiquidSection } from "@/lib/html-to-liquid";
 import { FORMATS_EXPORT, LABEL_FORMAT, type FormatExport } from "@/lib/format-export";
 import { ToastHost, useToast } from "@/components/Toast";
+import { LIEN_CHANGER_DE_PLAN } from "@/lib/plan-links";
 
 type Site = {
   id: string;
@@ -359,7 +360,7 @@ export default function MesSitesPage() {
                       </button>
                     ) : (
                       <Link
-                        href="/#pricing"
+                        href={LIEN_CHANGER_DE_PLAN}
                         className="flex-1 py-2 rounded-xl bg-gradient-to-r from-violet-600 to-blue-600 text-white text-xs font-semibold hover:from-violet-500 hover:to-blue-500 transition-all text-center"
                       >
                         {t("lockPro")}
@@ -402,7 +403,7 @@ export default function MesSitesPage() {
                     </Link>
                   ) : (
                     <Link
-                      href="/#pricing"
+                      href={LIEN_CHANGER_DE_PLAN}
                       className="py-2 rounded-xl border border-[var(--border-strong)] text-[var(--text-muted)] text-xs font-medium text-center hover:border-[var(--accent)]/40 hover:text-[var(--text-primary)] transition"
                     >
                       {t("lockProAudit")}
@@ -419,7 +420,7 @@ export default function MesSitesPage() {
                   )}
                   {shopifyConnected && !canExport && (
                     <Link
-                      href="/#pricing"
+                      href={LIEN_CHANGER_DE_PLAN}
                       className="py-2 rounded-xl border border-[var(--border-strong)] text-[var(--text-muted)] text-xs font-medium text-center hover:border-[var(--accent)]/40 hover:text-[var(--text-primary)] transition"
                     >
                       {t("lockProShopify")}

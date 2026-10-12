@@ -17,6 +17,7 @@ import { useBoutiqueDraft } from "@/lib/site-builder-handoff";
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
 import { slugFichier, telechargerTexte } from "@/lib/audit-download";
 import { ToastHost, useToast } from "@/components/Toast";
+import { LIEN_CHANGER_DE_PLAN } from "@/lib/plan-links";
 
 type Step = 1 | 2 | 3;
 
@@ -1204,7 +1205,7 @@ function SiteBuilderContent() {
                   </>
                 ) : (
                   <Link
-                    href="/#pricing"
+                    href={LIEN_CHANGER_DE_PLAN}
                     className="px-4 py-2 rounded-xl bg-gradient-to-r from-violet-600 to-blue-600 text-white text-xs font-semibold hover:from-violet-500 hover:to-blue-500 transition-all shadow-lg shadow-violet-900/40"
                   >
                     🔒 Passe au plan Pro pour télécharger ton site
@@ -1273,7 +1274,7 @@ function SiteBuilderContent() {
               {!canExport ? (
                 <div className="rounded-xl bg-violet-500/10 border border-violet-500/20 px-4 py-3 text-xs text-[var(--text-muted)]">
                   🔒 La publication sur Shopify est réservée aux plans Pro et Agency.{" "}
-                  <Link href="/#pricing" className="text-[var(--accent)] font-semibold hover:underline">
+                  <Link href={LIEN_CHANGER_DE_PLAN} className="text-[var(--accent)] font-semibold hover:underline">
                     Passe au plan Pro →
                   </Link>
                 </div>

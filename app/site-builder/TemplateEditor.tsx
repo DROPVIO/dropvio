@@ -20,6 +20,7 @@ import { applyTokenOverrides } from "@/lib/color-tokens";
 import ColorTokenPanel from "@/components/site-builder/ColorTokenPanel";
 import { slugFichier, telechargerTexte } from "@/lib/audit-download";
 import { ToastHost, useToast } from "@/components/Toast";
+import { LIEN_CHANGER_DE_PLAN } from "@/lib/plan-links";
 
 type AuditLive = {
   score_global: number;
@@ -529,7 +530,7 @@ export default function TemplateEditor({
             ) : (
               <>
                 Sauvegardé dans « Mes sites ». Le téléchargement est réservé au plan Pro —{" "}
-                <Link href="/#pricing" className="text-[var(--accent)] font-semibold hover:underline">
+                <Link href={LIEN_CHANGER_DE_PLAN} className="text-[var(--accent)] font-semibold hover:underline">
                   passe au plan Pro →
                 </Link>
               </>

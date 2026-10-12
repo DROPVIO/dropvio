@@ -11,6 +11,7 @@ import PaletteEditor, { type Palette } from "@/app/components/PaletteEditor";
 import { writeBoutiqueDraft, type ProduitBoutiqueDraft } from "@/lib/site-builder-handoff";
 import { PLAN_LIMITS } from "@/lib/plan-limits";
 import BoutiqueReglages from "@/components/site-builder/BoutiqueReglages";
+import { LIEN_CHANGER_DE_PLAN } from "@/lib/plan-links";
 
 type Boutique = {
   id: string;
@@ -1308,7 +1309,7 @@ export default function BoutiqueBuilderDetailPage() {
               </button>
             ) : (
               <Link
-                href="/#pricing"
+                href={LIEN_CHANGER_DE_PLAN}
                 className="shrink-0 rounded-2xl bg-gradient-to-r from-violet-600 to-blue-600 px-5 py-3 text-sm font-semibold text-white transition hover:from-violet-500 hover:to-blue-500"
               >
                 🔒 Passe au plan Pro
