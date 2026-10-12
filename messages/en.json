@@ -1151,7 +1151,12 @@
     "category_slug_taken": "Another category in this store already uses this slug.",
     "category_not_found": "Category not found.",
     "boutique_product_limit_upgrade": "You've reached the {max}-product limit of the {plan} plan. Upgrade to {planSuperieur} for up to {maxSuperieur} products per store.",
-    "boutique_product_limit_max": "You've reached the maximum of {max} products per store."
+    "boutique_product_limit_max": "You've reached the maximum of {max} products per store.",
+    "shopify_push_failed": "Unable to push the store to Shopify.",
+    "shopify_push_plan": "Publishing to Shopify is available on the Pro and Agency plans.",
+    "shopify_not_configured": "The Shopify integration isn't configured on the server yet.",
+    "shopify_not_connected": "Connect your Shopify store in the settings first.",
+    "shopify_auth_expired": "Shopify access has expired or been revoked. Reconnect your Shopify store in the settings."
   },
   "siteBuilder": {
     "boutique": {
@@ -1195,6 +1200,25 @@
         "passer": "Upgrade to the {plan} plan for up to {max} products",
         "passerIllimite": "Upgrade to the {plan} plan for unlimited products",
         "voirPlans": "See plans"
+      },
+      "shopify": {
+        "titre": "Push to Shopify",
+        "reservePro": "Available on the Pro and Agency plans.",
+        "verification": "Checking the connection…",
+        "description": "Sends this store's products and categories to {domaine}.",
+        "nonConnecte": "Connect your Shopify store in the settings to enable this action.",
+        "pousser": "Push products and collections",
+        "recommencer": "Start over",
+        "reprendre": "Resume ({faits} already done)",
+        "envoi": "Sending…",
+        "demarrage": "Starting…",
+        "progression": "{faits} / {total} items sent…",
+        "repriseDisponible": "You can resume the push where it stopped.",
+        "succes": "Everything was pushed to Shopify successfully.",
+        "partiel": "Push finished with some errors: see the details below.",
+        "echec": "The push failed.",
+        "resets": "{count, plural, one {# item no longer existed on Shopify: it will be recreated on the next push.} other {# items no longer existed on Shopify: they will be recreated on the next push.}}",
+        "passerPro": "🔒 Upgrade to Pro"
       }
     }
   }

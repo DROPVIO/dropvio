@@ -11,7 +11,7 @@ import PaletteEditor, { type Palette } from "@/app/components/PaletteEditor";
 import { writeBoutiqueDraft, type ProduitBoutiqueDraft } from "@/lib/site-builder-handoff";
 import { PLAN_LIMITS } from "@/lib/plan-limits";
 import BoutiqueReglages from "@/components/site-builder/BoutiqueReglages";
-import { LIEN_CHANGER_DE_PLAN } from "@/lib/plan-links";
+import BoutiqueShopifyPush from "@/components/site-builder/BoutiqueShopifyPush";
 import { AlerteLimiteProduits, BandeauDepassementProduits, CompteurProduits, limiteProduitsAtteinte } from "@/components/site-builder/LimiteProduitsBoutique";
 import { useApiErrorMessage } from "@/lib/use-api-error";
 
@@ -152,15 +152,6 @@ export default function BoutiqueBuilderDetailPage() {
   const [bandeauError, setBandeauError] = useState<string | null>(null);
   const [bandeauSuccess, setBandeauSuccess] = useState(false);
 
-  const [shopifyConnected, setShopifyConnected] = useState<boolean | null>(null);
-  const [shopifyDomain, setShopifyDomain] = useState<string | null>(null);
-  const [shopifyPushing, setShopifyPushing] = useState(false);
-  const [shopifyPushError, setShopifyPushError] = useState<string | null>(null);
-  const [shopifyPushResult, setShopifyPushResult] = useState<{
-    status: "success" | "partial" | "error";
-    categories: { id: string; nom: string; status: string; error?: string }[];
-    products: { id: string; nom: string; status: string; error?: string }[];
-  } | null>(null);
 
   const categoryOptions = useMemo(
     () => [{ id: "", nom: "Aucune catégorie", slug: "" }, ...categories],
@@ -215,16 +206,6 @@ export default function BoutiqueBuilderDetailPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [params?.id]);
 
-  useEffect(() => {
-    fetch("/api/shopify/status")
-      .then((res) => res.json())
-      .then((json) => {
-        setShopifyConnected(Boolean(json.connected));
-        setShopifyDomain(json.shop_domain ?? null);
-      })
-      .catch(() => setShopifyConnected(false));
-  }, []);
-
   // Restriction plan free — export HTML boutique et publication Shopify réservés à
   // Pro/Agency (voir diagnostic "restriction export Site Builder", même règle que
   // app/site-builder/page.tsx). plan démarre à null tant que /api/plan n'a pas répondu.
@@ -247,26 +228,6 @@ export default function BoutiqueBuilderDetailPage() {
   // Ajout bloqué à la limite du plan (ou au-delà après un passage à un plan inférieur) ;
   // l'édition des produits existants reste possible.
   const ajoutBloque = plan !== null && limiteProduitsAtteinte(plan, produitsCount);
-
-  async function handlePushShopify() {
-    if (!params?.id) return;
-    setShopifyPushing(true);
-    setShopifyPushError(null);
-    setShopifyPushResult(null);
-    try {
-      const response = await fetch(`/api/boutiques/${params.id}/shopify-push`, { method: "POST" });
-      const json = await response.json();
-      if (!response.ok) {
-        setShopifyPushError(json.error || "Impossible de pousser la boutique vers Shopify.");
-        return;
-      }
-      setShopifyPushResult(json);
-    } catch {
-      setShopifyPushError("Impossible de contacter le serveur.");
-    } finally {
-      setShopifyPushing(false);
-    }
-  }
 
   async function fetchBoutique() {
     setGlobalError(null);
@@ -793,8 +754,9 @@ export default function BoutiqueBuilderDetailPage() {
         // Uniquement sur création : relie le produit boutique au catalogue quand il vient
         // d'un import AliExpress réussi, exploité par les suggestions de produits
         // complémentaires (voir components/ProduitsSuggeres.tsx).
-        ...(editingProductId ? {} : { source_produit_id: importedSourceId }),
-        meta: {},
+        // meta n'est envoyé qu'à la création : il porte aussi l'état de synchronisation Shopify
+        // (variant, images, collection poussés), qu'une modification ne doit pas effacer.
+        ...(editingProductId ? {} : { source_produit_id: importedSourceId, meta: {} }),
       };
 
       const url = editingProductId
@@ -1291,74 +1253,7 @@ export default function BoutiqueBuilderDetailPage() {
           )}
         </section>
 
-        {/* Push Shopify */}
-        <section id="shopify-push" className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-6 scroll-mt-24">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <p className="text-xs uppercase tracking-[0.3em] text-violet-400">Shopify</p>
-              <h3 className="mt-2 text-lg font-semibold text-[var(--text-primary)]">Pousser vers Shopify</h3>
-              <p className="mt-1 text-sm text-[var(--text-faint)]">
-                {!canExport
-                  ? "Réservé aux plans Pro et Agency."
-                  : shopifyConnected === null
-                  ? "Vérification de la connexion…"
-                  : shopifyConnected
-                  ? `Envoie les produits et catégories de cette boutique vers ${shopifyDomain}.`
-                  : "Connecte ta boutique Shopify dans les paramètres pour activer cette action."}
-              </p>
-            </div>
-            {canExport ? (
-              <button
-                type="button"
-                onClick={handlePushShopify}
-                disabled={!shopifyConnected || shopifyPushing}
-                className="shrink-0 rounded-2xl bg-gradient-to-r from-violet-600 to-blue-600 px-5 py-3 text-sm font-semibold text-white transition hover:from-violet-500 hover:to-blue-500 disabled:opacity-40 disabled:cursor-not-allowed"
-              >
-                {shopifyPushing ? "Envoi en cours…" : "Pousser produits & collections"}
-              </button>
-            ) : (
-              <Link
-                href={LIEN_CHANGER_DE_PLAN}
-                className="shrink-0 rounded-2xl bg-gradient-to-r from-violet-600 to-blue-600 px-5 py-3 text-sm font-semibold text-white transition hover:from-violet-500 hover:to-blue-500"
-              >
-                🔒 Passe au plan Pro
-              </Link>
-            )}
-          </div>
-
-          {shopifyPushError && (
-            <div className="mt-4 rounded-xl border border-[var(--danger)]/20 bg-[var(--danger)]/10 px-4 py-3 text-sm text-[var(--danger)]">
-              {shopifyPushError}
-            </div>
-          )}
-
-          {shopifyPushResult && (
-            <div className="mt-4 flex flex-col gap-3">
-              <div
-                className={`rounded-xl border px-4 py-3 text-sm ${
-                  shopifyPushResult.status === "success"
-                    ? "border-emerald-500/20 bg-emerald-500/10 text-[var(--success)]"
-                    : shopifyPushResult.status === "partial"
-                    ? "border-amber-500/20 bg-amber-500/10 text-[var(--warning)]"
-                    : "border-[var(--danger)]/20 bg-[var(--danger)]/10 text-[var(--danger)]"
-                }`}
-              >
-                {shopifyPushResult.status === "success"
-                  ? "Tout a été poussé avec succès sur Shopify."
-                  : shopifyPushResult.status === "partial"
-                  ? "Push terminé avec quelques erreurs — voir le détail ci-dessous."
-                  : "Le push a échoué."}
-              </div>
-              {[...shopifyPushResult.categories, ...shopifyPushResult.products]
-                .filter((item) => item.status === "error")
-                .map((item) => (
-                  <div key={item.id} className="rounded-lg border border-[var(--danger)]/10 bg-[var(--danger)]/[0.04] px-3 py-2 text-xs text-[var(--danger)]">
-                    <span className="font-semibold">{item.nom}</span> : {item.error}
-                  </div>
-                ))}
-            </div>
-          )}
-        </section>
+        {typeof params?.id === "string" ? <BoutiqueShopifyPush boutiqueId={params.id} canExport={canExport} /> : null}
 
         {typeof params?.id === "string" && (
           <ProduitsSuggeres

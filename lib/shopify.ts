@@ -419,6 +419,36 @@ export type BoutiqueCategoryRow = {
   shopify_collection_id: number | null;
 };
 
+// État de la dernière synchronisation Shopify d'un produit, rangé dans boutique_produits.meta
+// (jsonb existant) : il évite de réimporter les images et de recréer le variant à chaque push,
+// et permet de retirer le produit de l'ancienne collection quand sa catégorie change.
+export type ShopifySyncMeta = {
+  shopifyVariantId?: number;
+  shopifyImages?: string[];
+  shopifyCollectionId?: number | null;
+};
+
+export function lireMetaShopify(meta: unknown): ShopifySyncMeta {
+  if (typeof meta !== "object" || meta === null) return {};
+  const m = meta as Record<string, unknown>;
+  return {
+    shopifyVariantId: typeof m.shopifyVariantId === "number" ? m.shopifyVariantId : undefined,
+    shopifyImages: Array.isArray(m.shopifyImages) ? m.shopifyImages.filter((x): x is string => typeof x === "string") : undefined,
+    // undefined = jamais mémorisé (produit poussé avant ce suivi), null = aucune collection.
+    shopifyCollectionId:
+      "shopifyCollectionId" in m ? (typeof m.shopifyCollectionId === "number" ? m.shopifyCollectionId : null) : undefined,
+  };
+}
+
+function prix(valeur: number | string | null | undefined): string | null {
+  const n = Number(valeur);
+  return valeur == null || !Number.isFinite(n) ? null : n.toFixed(2);
+}
+
+function imagesDuProduit(p: BoutiqueProduitRow): string[] {
+  return (p.image_urls ?? []).filter(Boolean);
+}
+
 // stock/stock_status ne sont plus lus ici (voir historique : l'UI Dropvio qui les
 // pilotait a été retirée, ces colonnes ne sont donc plus jamais tenues à jour côté
 // dropvio). status reste toujours "active" plutôt que dépendre d'un stock_status
@@ -431,11 +461,11 @@ export function produitToShopifyPayload(p: BoutiqueProduitRow) {
       title: p.nom,
       body_html: p.description ?? "",
       status: "active",
-      images: (p.image_urls ?? []).filter(Boolean).map((src) => ({ src })),
+      images: imagesDuProduit(p).map((src) => ({ src })),
       variants: [
         {
-          price: p.prix_vente.toFixed(2),
-          compare_at_price: p.prix_original ? p.prix_original.toFixed(2) : null,
+          price: prix(p.prix_vente) ?? "0.00",
+          compare_at_price: p.prix_original ? prix(p.prix_original) : null,
           sku: p.id,
         },
       ],
@@ -449,6 +479,129 @@ export function categoryToShopifyPayload(c: BoutiqueCategoryRow) {
       title: c.nom,
       published: true,
     },
+  };
+}
+
+// Retire un produit d'une collection (supprime le « collect » qui les relie), s'il existe.
+// Une collection ou un produit déjà supprimé côté Shopify n'est pas une erreur.
+export async function retirerDeCollection(
+  shop: string,
+  accessToken: string,
+  productId: number,
+  collectionId: number
+): Promise<void> {
+  try {
+    const { collects } = await shopifyFetch<{ collects: { id: number }[] }>(
+      shop,
+      accessToken,
+      `/collects.json?product_id=${productId}&collection_id=${collectionId}`
+    );
+    for (const collect of collects ?? []) {
+      await shopifyFetch(shop, accessToken, `/collects/${collect.id}.json`, { method: "DELETE" });
+    }
+  } catch (err) {
+    if (err instanceof ShopifyApiError && err.code === "not_found") return;
+    throw err;
+  }
+}
+
+export type ResultatPushProduit =
+  | { status: "created" | "updated"; productId: number; meta: ShopifySyncMeta }
+  // Le produit n'existe plus côté Shopify (404) : l'appelant remet shopify_product_id à null,
+  // le produit sera recréé au push suivant.
+  | { status: "reset" };
+
+// Crée ou met à jour un produit boutique sur Shopify, puis aligne sa collection.
+// Mise à jour : le variant existant est modifié par son id (jamais recréé), et les images ne
+// sont renvoyées que si la liste d'URLs a changé depuis le dernier push (sinon Shopify les
+// réimporterait toutes). collectionCible : collection de la catégorie actuelle, ou null.
+export async function pousserProduitBoutique(
+  shop: string,
+  accessToken: string,
+  p: BoutiqueProduitRow,
+  metaBrute: unknown,
+  collectionCible: number | null
+): Promise<ResultatPushProduit> {
+  const meta = lireMetaShopify(metaBrute);
+  const images = imagesDuProduit(p);
+  let productId = p.shopify_product_id;
+  let variantId = meta.shopifyVariantId;
+  let cree = false;
+
+  try {
+    if (productId) {
+      if (!variantId) {
+        const { product } = await shopifyFetch<{ product: { variants: { id: number }[] } }>(
+          shop,
+          accessToken,
+          `/products/${productId}.json?fields=id,variants`
+        );
+        variantId = product.variants[0]?.id;
+      }
+      const imagesInchangees =
+        meta.shopifyImages !== undefined &&
+        meta.shopifyImages.length === images.length &&
+        meta.shopifyImages.every((src, i) => src === images[i]);
+      await shopifyFetch(shop, accessToken, `/products/${productId}.json`, {
+        method: "PUT",
+        body: JSON.stringify({
+          product: {
+            id: productId,
+            title: p.nom,
+            body_html: p.description ?? "",
+            status: "active",
+            ...(imagesInchangees ? {} : { images: images.map((src) => ({ src })) }),
+            ...(variantId && {
+              variants: [
+                {
+                  id: variantId,
+                  price: prix(p.prix_vente) ?? "0.00",
+                  compare_at_price: p.prix_original ? prix(p.prix_original) : null,
+                },
+              ],
+            }),
+          },
+        }),
+      });
+    } else {
+      const { product } = await shopifyFetch<{ product: { id: number; variants: { id: number }[] } }>(
+        shop,
+        accessToken,
+        "/products.json",
+        { method: "POST", body: JSON.stringify(produitToShopifyPayload(p)) }
+      );
+      productId = product.id;
+      variantId = product.variants[0]?.id;
+      cree = true;
+    }
+  } catch (err) {
+    if (err instanceof ShopifyApiError && err.code === "not_found" && p.shopify_product_id) {
+      return { status: "reset" };
+    }
+    throw err;
+  }
+
+  const collectionPrecedente = cree ? null : meta.shopifyCollectionId ?? null;
+  if (collectionPrecedente && collectionPrecedente !== collectionCible) {
+    await retirerDeCollection(shop, accessToken, productId, collectionPrecedente);
+  }
+  // Lien créé à la création, au changement de catégorie, ou quand rien n'a encore été mémorisé
+  // (produits poussés avant ce suivi) ; 422 = déjà lié.
+  if (collectionCible && (cree || meta.shopifyCollectionId !== collectionCible)) {
+    try {
+      await shopifyFetch(shop, accessToken, "/collects.json", {
+        method: "POST",
+        body: JSON.stringify({ collect: { product_id: productId, collection_id: collectionCible } }),
+      });
+    } catch (err) {
+      if (!(err instanceof ShopifyApiError && err.status === 422)) throw err;
+    }
+  }
+
+  return {
+    status: cree ? "created" : "updated",
+    productId,
+    meta: { shopifyVariantId: variantId, shopifyImages: images, shopifyCollectionId: collectionCible },
   };
 }
 

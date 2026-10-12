@@ -1151,7 +1151,12 @@
     "category_slug_taken": "Un'altra categoria di questo negozio usa già questo slug.",
     "category_not_found": "Categoria non trovata.",
     "boutique_product_limit_upgrade": "Hai raggiunto il limite di {max} prodotti del piano {plan}. Passa al piano {planSuperieur} per arrivare a {maxSuperieur} prodotti per negozio.",
-    "boutique_product_limit_max": "Hai raggiunto il massimo di {max} prodotti per negozio."
+    "boutique_product_limit_max": "Hai raggiunto il massimo di {max} prodotti per negozio.",
+    "shopify_push_failed": "Impossibile inviare il negozio a Shopify.",
+    "shopify_push_plan": "La pubblicazione su Shopify è riservata ai piani Pro e Agency.",
+    "shopify_not_configured": "L'integrazione Shopify non è ancora configurata sul server.",
+    "shopify_not_connected": "Collega prima il tuo negozio Shopify nelle impostazioni.",
+    "shopify_auth_expired": "L'accesso a Shopify è scaduto o è stato revocato. Ricollega il tuo negozio Shopify nelle impostazioni."
   },
   "siteBuilder": {
     "boutique": {
@@ -1195,6 +1200,25 @@
         "passer": "Passa al piano {plan} per arrivare a {max} prodotti",
         "passerIllimite": "Passa al piano {plan} per prodotti illimitati",
         "voirPlans": "Vedi i piani"
+      },
+      "shopify": {
+        "titre": "Invia a Shopify",
+        "reservePro": "Riservato ai piani Pro e Agency.",
+        "verification": "Verifica della connessione…",
+        "description": "Invia i prodotti e le categorie di questo negozio a {domaine}.",
+        "nonConnecte": "Collega il tuo negozio Shopify nelle impostazioni per attivare questa azione.",
+        "pousser": "Invia prodotti e collezioni",
+        "recommencer": "Ricomincia da capo",
+        "reprendre": "Riprendi ({faits} già elaborati)",
+        "envoi": "Invio in corso…",
+        "demarrage": "Avvio dell'invio…",
+        "progression": "{faits} / {total} elementi inviati…",
+        "repriseDisponible": "Puoi riprendere l'invio da dove si è interrotto.",
+        "succes": "Tutto è stato inviato correttamente a Shopify.",
+        "partiel": "Invio terminato con alcuni errori: vedi il dettaglio qui sotto.",
+        "echec": "L'invio non è riuscito.",
+        "resets": "{count, plural, one {# elemento non esisteva più su Shopify: verrà ricreato al prossimo invio.} other {# elementi non esistevano più su Shopify: verranno ricreati al prossimo invio.}}",
+        "passerPro": "🔒 Passa al piano Pro"
       }
     }
   }

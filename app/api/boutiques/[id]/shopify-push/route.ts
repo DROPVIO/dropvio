@@ -1,18 +1,32 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerUserAndPlan } from "@/lib/supabase-server";
+import { apiError } from "@/lib/api-errors";
 import {
   isShopifyConfigured,
   getShopifyConnection,
   shopifyFetch,
-  produitToShopifyPayload,
   categoryToShopifyPayload,
+  pousserProduitBoutique,
   ShopifyApiError,
   shopifyErrorToHttpStatus,
   type BoutiqueProduitRow,
   type BoutiqueCategoryRow,
 } from "@/lib/shopify";
 
-type ItemResult = { id: string; nom: string; status: "created" | "updated" | "error"; error?: string };
+// Un lot s'arrête après BUDGET_MS (ou MAX_PAR_LOT éléments) pour rester sous maxDuration : à
+// ~2 requêtes/s (limite REST Shopify), 200 produits ne tiennent pas dans un seul appel.
+export const maxDuration = 60;
+const BUDGET_MS = 45_000;
+const MAX_PAR_LOT = 25;
+
+type Etape = "categories" | "produits";
+type Curseur = { etape: Etape; apres: string | null };
+type ItemResult = {
+  id: string;
+  nom: string;
+  status: "created" | "updated" | "reset" | "error";
+  error?: string;
+};
 
 function errMessage(err: unknown): string {
   if (err instanceof ShopifyApiError) return err.message;
@@ -20,14 +34,26 @@ function errMessage(err: unknown): string {
   return "Erreur inconnue";
 }
 
-// Pousse les catégories (-> custom collections) et produits (-> products) d'une
-// boutique dropvio vers la boutique Shopify connectée. Idempotent : une catégorie/
-// produit déjà poussé (shopify_collection_id / shopify_product_id renseigné) est mis à
-// jour plutôt que recréé. Les erreurs par item n'interrompent pas le push global (un
-// produit avec une image cassée ne doit pas bloquer les 50 autres) — seule une erreur
-// d'authentification Shopify (token expiré/révoqué) arrête tout net, puisque toutes les
-// requêtes suivantes échoueraient de toute façon.
+function lireCurseur(valeur: unknown): Curseur {
+  if (typeof valeur === "object" && valeur !== null) {
+    const c = valeur as { etape?: unknown; apres?: unknown };
+    if ((c.etape === "categories" || c.etape === "produits") && (c.apres === null || typeof c.apres === "string")) {
+      return { etape: c.etape, apres: c.apres };
+    }
+  }
+  return { etape: "categories", apres: null };
+}
+
+// Pousse les catégories (-> custom collections) puis les produits (-> products) d'une
+// boutique dropvio vers la boutique Shopify connectée, par lots. Chaque réponse renvoie le
+// curseur du lot suivant (keyset sur l'id, stable si des produits sont ajoutés ou supprimés
+// entre deux lots) : le client enchaîne les appels et peut reprendre là où un lot s'est
+// arrêté. Idempotent : un élément déjà poussé est mis à jour plutôt que recréé. Les erreurs
+// par élément n'interrompent pas le push ; seule une erreur d'authentification Shopify
+// arrête tout. Un élément supprimé côté Shopify (404) perd son id Shopify et sera recréé au
+// push suivant (status "reset").
 export async function POST(request: NextRequest, context: { params: Promise<{ id: string }> }) {
+  const debut = Date.now();
   const { id } = await context.params;
   const { supabase, user, plan } = await getServerUserAndPlan();
   if (!user) {
@@ -38,18 +64,23 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
   // boutique entière sur Shopify est un export réel, réservé aux plans Pro/Agency. Vérifié
   // ici même si l'UI masque déjà l'action, pour ne jamais dépendre uniquement du frontend.
   if (plan === "free") {
-    return NextResponse.json(
-      { error: "La publication sur Shopify est réservée aux plans Pro et Agency. Passe au plan Pro pour publier cette boutique." },
-      { status: 403 }
+    return apiError(
+      "shopify_push_plan",
+      403,
+      "La publication sur Shopify est réservée aux plans Pro et Agency. Passe au plan Pro pour publier cette boutique."
     );
   }
 
   if (!isShopifyConfigured()) {
-    return NextResponse.json(
-      { error: "L'intégration Shopify n'est pas encore configurée côté serveur." },
-      { status: 500 }
-    );
+    return apiError("shopify_not_configured", 500, "L'intégration Shopify n'est pas encore configurée côté serveur.");
   }
+
+  const body = await request.json().catch(() => ({}));
+  const curseur = lireCurseur(body?.curseur);
+  const bilanPrecedent = {
+    total: Number(body?.bilan?.total) || 0,
+    erreurs: Number(body?.bilan?.erreurs) || 0,
+  };
 
   const { data: boutique, error: boutiqueError } = await supabase
     .from("boutiques")
@@ -61,130 +92,183 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
     return NextResponse.json({ error: boutiqueError.message }, { status: 500 });
   }
   if (!boutique) {
-    return NextResponse.json({ error: "Boutique introuvable." }, { status: 404 });
+    return apiError("boutique_not_found", 404, "Boutique introuvable.");
   }
 
   const connection = await getShopifyConnection(user.id);
   if (!connection) {
-    return NextResponse.json(
-      { error: "Connecte d'abord ta boutique Shopify dans les paramètres avant de pousser tes produits." },
-      { status: 400 }
+    return apiError(
+      "shopify_not_connected",
+      400,
+      "Connecte d'abord ta boutique Shopify dans les paramètres avant de pousser tes produits."
     );
   }
 
-  const [{ data: categories, error: categoriesError }, { data: produits, error: produitsError }] = await Promise.all([
-    supabase.from("boutique_categories").select("id, nom, shopify_collection_id").eq("boutique_id", id),
-    supabase
-      .from("boutique_produits")
-      .select("id, nom, description, image_urls, prix_vente, prix_original, category_id, shopify_product_id")
-      .eq("boutique_id", id),
+  const [{ count: nbCategories }, { count: nbProduits }] = await Promise.all([
+    supabase.from("boutique_categories").select("id", { count: "exact", head: true }).eq("boutique_id", id),
+    supabase.from("boutique_produits").select("id", { count: "exact", head: true }).eq("boutique_id", id),
   ]);
-  if (categoriesError) return NextResponse.json({ error: categoriesError.message }, { status: 500 });
-  if (produitsError) return NextResponse.json({ error: produitsError.message }, { status: 500 });
+  const totalElements = (nbCategories ?? 0) + (nbProduits ?? 0);
 
-  async function markConnectionDead(err: ShopifyApiError) {
+  async function enregistrerStatut(status: string, erreur: string | null) {
     await supabase
       .from("boutiques")
       .update({
         shopify_last_push_at: new Date().toISOString(),
-        shopify_last_push_status: "error",
-        shopify_last_push_error: err.message,
+        shopify_last_push_status: status,
+        shopify_last_push_error: erreur,
       })
       .eq("id", id);
-    return NextResponse.json({ error: err.message, code: err.code }, { status: shopifyErrorToHttpStatus(err) });
   }
 
+  async function connexionMorte(err: ShopifyApiError) {
+    await enregistrerStatut("error", err.message);
+    return NextResponse.json({ error: err.message, code: "shopify_auth_expired" }, { status: shopifyErrorToHttpStatus(err) });
+  }
+
+  const tempsEcoule = () => Date.now() - debut > BUDGET_MS;
   const categoryResults: ItemResult[] = [];
-  const collectionIdByCategoryId = new Map<string, number>();
-
-  for (const cat of (categories ?? []) as BoutiqueCategoryRow[] & { id: string }[]) {
-    try {
-      let collectionId = cat.shopify_collection_id;
-      const payload = categoryToShopifyPayload(cat);
-      if (collectionId) {
-        await shopifyFetch(connection.shop_domain, connection.access_token, `/custom_collections/${collectionId}.json`, {
-          method: "PUT",
-          body: JSON.stringify(payload),
-        });
-        categoryResults.push({ id: cat.id, nom: cat.nom, status: "updated" });
-      } else {
-        const res = await shopifyFetch<{ custom_collection: { id: number } }>(
-          connection.shop_domain,
-          connection.access_token,
-          "/custom_collections.json",
-          { method: "POST", body: JSON.stringify(payload) }
-        );
-        collectionId = res.custom_collection.id;
-        await supabase.from("boutique_categories").update({ shopify_collection_id: collectionId }).eq("id", cat.id);
-        categoryResults.push({ id: cat.id, nom: cat.nom, status: "created" });
-      }
-      collectionIdByCategoryId.set(cat.id, collectionId);
-    } catch (err) {
-      if (err instanceof ShopifyApiError && err.code === "auth_expired") {
-        return markConnectionDead(err);
-      }
-      categoryResults.push({ id: cat.id, nom: cat.nom, status: "error", error: errMessage(err) });
-    }
-  }
-
   const productResults: ItemResult[] = [];
+  let suivant: Curseur | null = curseur;
 
-  for (const p of (produits ?? []) as (BoutiqueProduitRow & { category_id: string | null })[]) {
-    try {
-      let productId = p.shopify_product_id;
-      const payload = produitToShopifyPayload(p);
-      let created = false;
-      if (productId) {
-        await shopifyFetch(connection.shop_domain, connection.access_token, `/products/${productId}.json`, {
-          method: "PUT",
-          body: JSON.stringify(payload),
-        });
-      } else {
-        const res = await shopifyFetch<{ product: { id: number } }>(
-          connection.shop_domain,
-          connection.access_token,
-          "/products.json",
-          { method: "POST", body: JSON.stringify(payload) }
-        );
-        productId = res.product.id;
-        created = true;
-        await supabase.from("boutique_produits").update({ shopify_product_id: productId }).eq("id", p.id);
+  if (suivant.etape === "categories") {
+    let query = supabase
+      .from("boutique_categories")
+      .select("id, nom, shopify_collection_id")
+      .eq("boutique_id", id)
+      .order("id", { ascending: true })
+      .limit(MAX_PAR_LOT);
+    if (suivant.apres) query = query.gt("id", suivant.apres);
+    const { data: categories, error } = await query;
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+    let dernier = suivant.apres;
+    let interrompu = false;
+    for (const cat of (categories ?? []) as BoutiqueCategoryRow[]) {
+      if (tempsEcoule()) {
+        interrompu = true;
+        break;
       }
-
-      const collectionId = p.category_id ? collectionIdByCategoryId.get(p.category_id) : undefined;
-      if (collectionId) {
-        try {
-          await shopifyFetch(connection.shop_domain, connection.access_token, "/collects.json", {
-            method: "POST",
-            body: JSON.stringify({ collect: { product_id: productId, collection_id: collectionId } }),
-          });
-        } catch (linkErr) {
-          // 422 = déjà lié à cette collection, pas une vraie erreur.
-          if (!(linkErr instanceof ShopifyApiError && linkErr.status === 422)) throw linkErr;
+      try {
+        const payload = categoryToShopifyPayload(cat);
+        if (cat.shopify_collection_id) {
+          try {
+            await shopifyFetch(connection.shop_domain, connection.access_token, `/custom_collections/${cat.shopify_collection_id}.json`, {
+              method: "PUT",
+              body: JSON.stringify(payload),
+            });
+            categoryResults.push({ id: cat.id, nom: cat.nom, status: "updated" });
+          } catch (err) {
+            if (!(err instanceof ShopifyApiError && err.code === "not_found")) throw err;
+            await supabase.from("boutique_categories").update({ shopify_collection_id: null }).eq("id", cat.id);
+            categoryResults.push({ id: cat.id, nom: cat.nom, status: "reset" });
+          }
+        } else {
+          const res = await shopifyFetch<{ custom_collection: { id: number } }>(
+            connection.shop_domain,
+            connection.access_token,
+            "/custom_collections.json",
+            { method: "POST", body: JSON.stringify(payload) }
+          );
+          await supabase.from("boutique_categories").update({ shopify_collection_id: res.custom_collection.id }).eq("id", cat.id);
+          categoryResults.push({ id: cat.id, nom: cat.nom, status: "created" });
         }
+      } catch (err) {
+        if (err instanceof ShopifyApiError && err.code === "auth_expired") return connexionMorte(err);
+        categoryResults.push({ id: cat.id, nom: cat.nom, status: "error", error: errMessage(err) });
       }
-
-      productResults.push({ id: p.id, nom: p.nom, status: created ? "created" : "updated" });
-    } catch (err) {
-      if (err instanceof ShopifyApiError && err.code === "auth_expired") {
-        return markConnectionDead(err);
-      }
-      productResults.push({ id: p.id, nom: p.nom, status: "error", error: errMessage(err) });
+      dernier = cat.id;
     }
+
+    const lotComplet = (categories ?? []).length === MAX_PAR_LOT;
+    suivant = interrompu || lotComplet ? { etape: "categories", apres: dernier } : { etape: "produits", apres: null };
   }
 
-  const allResults = [...categoryResults, ...productResults];
-  const failedCount = allResults.filter((r) => r.status === "error").length;
-  const status = failedCount === 0 ? "success" : failedCount === allResults.length ? "error" : "partial";
+  if (suivant.etape === "produits" && !tempsEcoule()) {
+    // Collections connues de chaque catégorie (relues à chaque lot : les ids créés par les lots
+    // précédents sont déjà enregistrés).
+    const { data: categories, error: catErr } = await supabase
+      .from("boutique_categories")
+      .select("id, shopify_collection_id")
+      .eq("boutique_id", id);
+    if (catErr) return NextResponse.json({ error: catErr.message }, { status: 500 });
+    const collectionParCategorie = new Map<string, number>();
+    for (const c of categories ?? []) {
+      if (c.shopify_collection_id) collectionParCategorie.set(c.id, c.shopify_collection_id);
+    }
 
-  await supabase
-    .from("boutiques")
-    .update({
-      shopify_last_push_at: new Date().toISOString(),
-      shopify_last_push_status: status,
-      shopify_last_push_error: failedCount > 0 ? `${failedCount} élément(s) en erreur sur ${allResults.length}.` : null,
-    })
-    .eq("id", id);
+    let query = supabase
+      .from("boutique_produits")
+      .select("id, nom, description, image_urls, prix_vente, prix_original, category_id, shopify_product_id, meta")
+      .eq("boutique_id", id)
+      .order("id", { ascending: true })
+      .limit(MAX_PAR_LOT);
+    if (suivant.apres) query = query.gt("id", suivant.apres);
+    const { data: produits, error } = await query;
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-  return NextResponse.json({ status, categories: categoryResults, products: productResults });
+    let dernier = suivant.apres;
+    let interrompu = false;
+    for (const p of (produits ?? []) as (BoutiqueProduitRow & { category_id: string | null; meta: unknown })[]) {
+      if (tempsEcoule()) {
+        interrompu = true;
+        break;
+      }
+      try {
+        const collection = p.category_id ? collectionParCategorie.get(p.category_id) ?? null : null;
+        const res = await pousserProduitBoutique(connection.shop_domain, connection.access_token, p, p.meta, collection);
+        const metaExistante = typeof p.meta === "object" && p.meta !== null ? (p.meta as Record<string, unknown>) : {};
+        if (res.status === "reset") {
+          const resteMeta = { ...metaExistante };
+          delete resteMeta.shopifyVariantId;
+          delete resteMeta.shopifyImages;
+          delete resteMeta.shopifyCollectionId;
+          await supabase.from("boutique_produits").update({ shopify_product_id: null, meta: resteMeta }).eq("id", p.id);
+          productResults.push({ id: p.id, nom: p.nom, status: "reset" });
+        } else {
+          await supabase
+            .from("boutique_produits")
+            .update({ shopify_product_id: res.productId, meta: { ...metaExistante, ...res.meta } })
+            .eq("id", p.id);
+          productResults.push({ id: p.id, nom: p.nom, status: res.status });
+        }
+      } catch (err) {
+        if (err instanceof ShopifyApiError && err.code === "auth_expired") return connexionMorte(err);
+        productResults.push({ id: p.id, nom: p.nom, status: "error", error: errMessage(err) });
+      }
+      dernier = p.id;
+    }
+
+    const lotComplet = (produits ?? []).length === MAX_PAR_LOT;
+    suivant = interrompu || lotComplet ? { etape: "produits", apres: dernier } : null;
+  }
+
+  const resultatsLot = [...categoryResults, ...productResults];
+  const bilan = {
+    total: bilanPrecedent.total + resultatsLot.length,
+    erreurs: bilanPrecedent.erreurs + resultatsLot.filter((r) => r.status === "error").length,
+  };
+
+  if (suivant) {
+    return NextResponse.json({
+      termine: false,
+      curseur: suivant,
+      bilan,
+      totalElements,
+      categories: categoryResults,
+      products: productResults,
+    });
+  }
+
+  const status = bilan.erreurs === 0 ? "success" : bilan.erreurs === bilan.total ? "error" : "partial";
+  await enregistrerStatut(status, bilan.erreurs > 0 ? `${bilan.erreurs} élément(s) en erreur sur ${bilan.total}.` : null);
+
+  return NextResponse.json({
+    termine: true,
+    status,
+    bilan,
+    totalElements,
+    categories: categoryResults,
+    products: productResults,
+  });
 }

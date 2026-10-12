@@ -1151,7 +1151,12 @@
     "category_slug_taken": "Une autre catégorie de cette boutique utilise déjà ce slug.",
     "category_not_found": "Catégorie introuvable.",
     "boutique_product_limit_upgrade": "Tu as atteint la limite de {max} produits du plan {plan}. Passe au plan {planSuperieur} pour aller jusqu'à {maxSuperieur} produits par boutique.",
-    "boutique_product_limit_max": "Tu as atteint la limite maximale de {max} produits par boutique."
+    "boutique_product_limit_max": "Tu as atteint la limite maximale de {max} produits par boutique.",
+    "shopify_push_failed": "Impossible de pousser la boutique vers Shopify.",
+    "shopify_push_plan": "La publication sur Shopify est réservée aux plans Pro et Agency.",
+    "shopify_not_configured": "L'intégration Shopify n'est pas encore configurée côté serveur.",
+    "shopify_not_connected": "Connecte d'abord ta boutique Shopify dans les paramètres.",
+    "shopify_auth_expired": "L'accès à Shopify a expiré ou a été révoqué. Reconnecte ta boutique Shopify dans les paramètres."
   },
   "siteBuilder": {
     "boutique": {
@@ -1195,6 +1200,25 @@
         "passer": "Passer au plan {plan} pour aller jusqu'à {max} produits",
         "passerIllimite": "Passer au plan {plan} pour des produits illimités",
         "voirPlans": "Voir les plans"
+      },
+      "shopify": {
+        "titre": "Pousser vers Shopify",
+        "reservePro": "Réservé aux plans Pro et Agency.",
+        "verification": "Vérification de la connexion…",
+        "description": "Envoie les produits et catégories de cette boutique vers {domaine}.",
+        "nonConnecte": "Connecte ta boutique Shopify dans les paramètres pour activer cette action.",
+        "pousser": "Pousser produits et collections",
+        "recommencer": "Tout recommencer",
+        "reprendre": "Reprendre ({faits} déjà traités)",
+        "envoi": "Envoi en cours…",
+        "demarrage": "Démarrage de l'envoi…",
+        "progression": "{faits} / {total} éléments envoyés…",
+        "repriseDisponible": "Tu peux reprendre l'envoi là où il s'est arrêté.",
+        "succes": "Tout a été poussé avec succès sur Shopify.",
+        "partiel": "Envoi terminé avec quelques erreurs : voir le détail ci-dessous.",
+        "echec": "L'envoi a échoué.",
+        "resets": "{count, plural, one {# élément n'existait plus sur Shopify : il sera recréé au prochain envoi.} other {# éléments n'existaient plus sur Shopify : ils seront recréés au prochain envoi.}}",
+        "passerPro": "🔒 Passe au plan Pro"
       }
     }
   }
