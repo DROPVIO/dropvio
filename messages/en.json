@@ -971,7 +971,7 @@
       "note": "No card required · Free plan with no time limit"
     },
     "mockup": {
-      "url": "app.dropvio.com/dashboard",
+      "url": "dropvio.vercel.app/dashboard",
       "dashboard": "Dashboard",
       "lastDays": "Last 30 days",
       "analyze": "+ Analyze a product",

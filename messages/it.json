@@ -971,7 +971,7 @@
       "note": "Nessuna carta richiesta · Piano gratuito senza limiti di tempo"
     },
     "mockup": {
-      "url": "app.dropvio.com/dashboard",
+      "url": "dropvio.vercel.app/dashboard",
       "dashboard": "Dashboard",
       "lastDays": "Ultimi 30 giorni",
       "analyze": "+ Analizza un prodotto",

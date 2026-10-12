@@ -971,7 +971,7 @@
       "note": "Aucune carte bancaire requise · Plan gratuit sans limite de temps"
     },
     "mockup": {
-      "url": "app.dropvio.com/dashboard",
+      "url": "dropvio.vercel.app/dashboard",
       "dashboard": "Tableau de bord",
       "lastDays": "30 derniers jours",
       "analyze": "+ Analyser un produit",
