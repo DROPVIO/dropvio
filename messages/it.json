@@ -1495,6 +1495,77 @@
     "apercu": {
       "pagesDuSite": "Pagine del sito",
       "titreIframe": "Anteprima: {page}"
+    },
+    "templates": {
+      "nomParDefautBoutique": "Negozio",
+      "nomParDefautLanding": "Landing page",
+      "fichierTelecharge": "File salvato nei tuoi Download: {fichier}",
+      "categorie": "Categoria di prodotto",
+      "categories": {
+        "tech": "Scuro, neon, layout a schermo diviso",
+        "maison": "Caldo, crema e terracotta, centrato",
+        "beaute": "Pastello, elegante, prima/dopo in evidenza",
+        "generique": "Neutro, universale, struttura classica"
+      },
+      "contenu": {
+        "titre": "Contenuto della pagina",
+        "reinitialiser": "↺ Ripristina i testi predefiniti",
+        "aide": "Testi precompilati per la categoria «{categorie}»: personalizzali con i veri punti di forza del tuo prodotto.",
+        "titrePrincipal": "Titolo principale",
+        "sousTitre": "Sottotitolo",
+        "description": "Descrizione",
+        "benefices": "Vantaggi (elenco puntato)",
+        "cta": "Testo del pulsante di acquisto",
+        "prixVente": "Prezzo di vendita",
+        "prixBarre": "Prezzo barrato (facoltativo)"
+      },
+      "preuve": {
+        "titre": "Riprova sociale (facoltativo)",
+        "aide": "Lascia vuoto se non hai ancora numeri reali: la sezione non verrà mostrata. Mai valori inventati.",
+        "note": "Voto (/5)",
+        "avis": "Numero di recensioni",
+        "ventes": "Vendite"
+      },
+      "photos": {
+        "titre": "Foto del prodotto",
+        "hero": "Foto principale (in evidenza)",
+        "galerie": "Galleria (fino a 3 foto)",
+        "avantApres": "Aggiungi foto prima / dopo",
+        "avant": "Prima",
+        "apres": "Dopo",
+        "ajouter": "Aggiungi una foto",
+        "retirer": "Rimuovi la foto"
+      },
+      "reassurance": {
+        "titre": "Blocchi di rassicurazione",
+        "aide": "Solo indicazioni generiche e fattuali: niente numeri inventati (numero di clienti, recensioni…).",
+        "livraison": "🚚 Spedizione",
+        "paiement": "🔒 Pagamento",
+        "retour": "↩ Soddisfatti o rimborsati"
+      },
+      "audit": {
+        "titre": "Punteggio audit IA",
+        "enCours": "Analisi in corso dopo le tue modifiche…",
+        "aRemplir": "Compila titolo e descrizione per avviare l'analisi."
+      },
+      "apercu": {
+        "direct": "Anteprima dal vivo",
+        "telecharger": "⬇ Scarica l'HTML",
+        "sauvegarderFree": "🔒 Salva (Pro per scaricare)",
+        "sauvegarde": "Salvato in «I miei siti».",
+        "sauvegardeFree": "Salvato in «I miei siti». Il download è riservato al piano Pro:",
+        "passerPro": "passa al piano Pro →",
+        "bureau": "Desktop",
+        "titreBureau": "Anteprima desktop della landing page",
+        "mobile": "📱 Anteprima mobile",
+        "titreMobile": "Anteprima mobile della landing page"
+      },
+      "erreurs": {
+        "upload": "Caricamento dell'immagine non riuscito.",
+        "sauvegarde": "Errore durante il salvataggio in «I miei siti».",
+        "reseauTelecharge": "Impossibile contattare il server: l'HTML è stato scaricato ma non salvato in «I miei siti».",
+        "reseauRien": "Impossibile contattare il server: non è stato salvato nulla in «I miei siti»."
+      }
     }
   },
   "boutique": {

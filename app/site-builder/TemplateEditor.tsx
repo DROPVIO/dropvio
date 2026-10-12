@@ -21,6 +21,8 @@ import ColorTokenPanel from "@/components/site-builder/ColorTokenPanel";
 import { slugFichier, telechargerTexte } from "@/lib/audit-download";
 import { ToastHost, useToast } from "@/components/Toast";
 import { LIEN_CHANGER_DE_PLAN } from "@/lib/plan-links";
+import { useTranslations } from "next-intl";
+import { useApiErrorMessage } from "@/lib/use-api-error";
 
 type AuditLive = {
   score_global: number;
@@ -35,6 +37,8 @@ export default function TemplateEditor({
   canExport: boolean;
 }) {
   const { toast, succes, fermer } = useToast();
+  const t = useTranslations("siteBuilder.templates");
+  const apiErrorMessage = useApiErrorMessage();
   // Préremplissage depuis "Créer un site pour cette boutique" (page de gestion boutique) —
   // mêmes query params que le mode IA (app/site-builder/page.tsx), lus ici directement
   // puisque ce composant n'a pas accès aux props du parent pour ce préremplissage.
@@ -167,12 +171,12 @@ export default function TemplateEditor({
       const res = await fetch("/api/upload-image", { method: "POST", body: form });
       const json = await res.json();
       if (!res.ok) {
-        setUploadErreur(json.error ?? "Échec de l'upload");
+        setUploadErreur(apiErrorMessage(json, t("erreurs.upload")));
         return;
       }
       onSuccess(json.url);
     } catch {
-      setUploadErreur("Impossible de contacter le serveur");
+      setUploadErreur(apiErrorMessage({ code: "network" }));
     } finally {
       setUploadEnCours(null);
     }
@@ -180,7 +184,7 @@ export default function TemplateEditor({
 
   async function handleDownload() {
     if (saving) return;
-    const nom = isBoutiqueMode ? boutiqueDraft?.nomBoutique || "Boutique" : contenu.titre || "Landing page";
+    const nom = isBoutiqueMode ? boutiqueDraft?.nomBoutique || t("nomParDefautBoutique") : contenu.titre || t("nomParDefautLanding");
 
     // Plan free : la sauvegarde dans "Mes sites" reste inconditionnelle (le travail n'est
     // jamais perdu, juste pas téléchargeable) — voir diagnostic "restriction export Site
@@ -190,7 +194,7 @@ export default function TemplateEditor({
       // contenir des accents, que l'ancien replace() sur les espaces laissait passer.
       const nomFichier = `${slugFichier(nom)}.html`;
       telechargerTexte(finalHtml, nomFichier);
-      succes(`Fichier enregistré dans vos Téléchargements : ${nomFichier}`);
+      succes(t("fichierTelecharge", { fichier: nomFichier }));
     }
 
     setSaving(true);
@@ -203,16 +207,12 @@ export default function TemplateEditor({
       });
       const data = await res.json();
       if (!res.ok) {
-        setSaveError(data.error ?? "Erreur lors de la sauvegarde dans « Mes sites ».");
+        setSaveError(apiErrorMessage(data, t("erreurs.sauvegarde")));
         return;
       }
       setSaved(true);
     } catch {
-      setSaveError(
-        canExport
-          ? "Impossible de contacter le serveur — le HTML a bien été téléchargé, mais pas sauvegardé dans « Mes sites »."
-          : "Impossible de contacter le serveur — rien n'a été sauvegardé dans « Mes sites »."
-      );
+      setSaveError(canExport ? t("erreurs.reseauTelecharge") : t("erreurs.reseauRien"));
     } finally {
       setSaving(false);
     }
@@ -222,7 +222,7 @@ export default function TemplateEditor({
     <div className="flex flex-col gap-6">
       {/* Sélecteur de catégorie / template */}
       <div className="rounded-2xl bg-[var(--surface)] border border-[var(--border)] p-6">
-        <p className="text-sm font-medium text-[var(--text-muted)] mb-3">Catégorie de produit</p>
+        <p className="text-sm font-medium text-[var(--text-muted)] mb-3">{t("categorie")}</p>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {CATEGORIES.map((cat) => {
             const active = categorie === cat.id;
@@ -241,7 +241,7 @@ export default function TemplateEditor({
                   <p className="text-sm font-semibold text-[var(--text-primary)]">{cat.label}</p>
                   {active && <span className="ml-auto w-1.5 h-1.5 rounded-full bg-violet-400 shrink-0" />}
                 </div>
-                <p className="text-[11px] text-[var(--text-faint)] leading-relaxed">{cat.desc}</p>
+                <p className="text-[11px] text-[var(--text-faint)] leading-relaxed">{t(`categories.${cat.id}`)}</p>
               </button>
             );
           })}
@@ -259,24 +259,24 @@ export default function TemplateEditor({
       {/* Formulaire de contenu */}
       <div className="rounded-2xl bg-[var(--surface)] border border-[var(--border)] p-6 flex flex-col gap-5">
         <div className="flex items-center justify-between">
-          <p className="text-sm font-medium text-[var(--text-muted)]">Contenu de la page</p>
+          <p className="text-sm font-medium text-[var(--text-muted)]">{t("contenu.titre")}</p>
           <button
             onClick={reinitialiserTextes}
             className="text-[11px] text-[var(--text-faint)] hover:text-[var(--accent)] transition"
           >
-            ↺ Réinitialiser les textes par défaut
+            {t("contenu.reinitialiser")}
           </button>
         </div>
         <p className="text-[11px] text-[var(--text-faint)] -mt-3">
-          Textes pré-remplis pour la catégorie « {CATEGORIES.find((c) => c.id === categorie)?.label} » — personnalise-les avec les vrais arguments de ton produit.
+          {t("contenu.aide", { categorie: CATEGORIES.find((c) => c.id === categorie)?.label ?? "" })}
         </p>
 
-        <Champ label="Titre principal" value={contenu.titre} onChange={(v) => setContenu((c) => ({ ...c, titre: v }))} />
-        <Champ label="Sous-titre" value={contenu.sousTitre} onChange={(v) => setContenu((c) => ({ ...c, sousTitre: v }))} />
-        <ChampArea label="Description" value={contenu.description} onChange={(v) => setContenu((c) => ({ ...c, description: v }))} />
+        <Champ label={t("contenu.titrePrincipal")} value={contenu.titre} onChange={(v) => setContenu((c) => ({ ...c, titre: v }))} />
+        <Champ label={t("contenu.sousTitre")} value={contenu.sousTitre} onChange={(v) => setContenu((c) => ({ ...c, sousTitre: v }))} />
+        <ChampArea label={t("contenu.description")} value={contenu.description} onChange={(v) => setContenu((c) => ({ ...c, description: v }))} />
 
         <div className="flex flex-col gap-2">
-          <label className="text-sm font-medium text-[var(--text-muted)]">Bénéfices (bullet points)</label>
+          <label className="text-sm font-medium text-[var(--text-muted)]">{t("contenu.benefices")}</label>
           {contenu.bullets.map((b, i) => (
             <input
               key={i}
@@ -288,11 +288,11 @@ export default function TemplateEditor({
           ))}
         </div>
 
-        <Champ label="Texte du bouton (CTA)" value={contenu.cta} onChange={(v) => setContenu((c) => ({ ...c, cta: v }))} />
+        <Champ label={t("contenu.cta")} value={contenu.cta} onChange={(v) => setContenu((c) => ({ ...c, cta: v }))} />
 
         <div className="flex gap-3">
           <div className="flex flex-col gap-2 flex-1">
-            <label className="text-sm font-medium text-[var(--text-muted)]">Prix de vente</label>
+            <label className="text-sm font-medium text-[var(--text-muted)]">{t("contenu.prixVente")}</label>
             <div className="relative">
               <input
                 type="number" min="0" step="0.01"
@@ -305,7 +305,7 @@ export default function TemplateEditor({
             </div>
           </div>
           <div className="flex flex-col gap-2 flex-1">
-            <label className="text-sm font-medium text-[var(--text-muted)]">Prix barré (optionnel)</label>
+            <label className="text-sm font-medium text-[var(--text-muted)]">{t("contenu.prixBarre")}</label>
             <div className="relative">
               <input
                 type="number" min="0" step="0.01"
@@ -322,13 +322,13 @@ export default function TemplateEditor({
 
       {/* Preuve sociale */}
       <div className="rounded-2xl bg-[var(--surface)] border border-[var(--border)] p-6 flex flex-col gap-4">
-        <p className="text-sm font-medium text-[var(--text-muted)]">Preuve sociale (optionnel)</p>
+        <p className="text-sm font-medium text-[var(--text-muted)]">{t("preuve.titre")}</p>
         <p className="text-[11px] text-[var(--text-faint)] -mt-2">
-          Laisse vide si tu n&apos;as pas encore de vrais chiffres — la section ne s&apos;affichera pas. Jamais de valeurs inventées.
+          {t("preuve.aide")}
         </p>
         <div className="grid grid-cols-3 gap-3">
           <div className="flex flex-col gap-2">
-            <label className="text-xs font-medium text-[var(--text-muted)]">Note (/5)</label>
+            <label className="text-xs font-medium text-[var(--text-muted)]">{t("preuve.note")}</label>
             <input
               type="number" min="0" max="5" step="0.1"
               value={contenu.noteMoyenne ?? ""}
@@ -338,7 +338,7 @@ export default function TemplateEditor({
             />
           </div>
           <div className="flex flex-col gap-2">
-            <label className="text-xs font-medium text-[var(--text-muted)]">Nombre d&apos;avis</label>
+            <label className="text-xs font-medium text-[var(--text-muted)]">{t("preuve.avis")}</label>
             <input
               type="number" min="0" step="1"
               value={contenu.nombreAvis ?? ""}
@@ -348,7 +348,7 @@ export default function TemplateEditor({
             />
           </div>
           <div className="flex flex-col gap-2">
-            <label className="text-xs font-medium text-[var(--text-muted)]">Ventes</label>
+            <label className="text-xs font-medium text-[var(--text-muted)]">{t("preuve.ventes")}</label>
             <input
               type="number" min="0" step="1"
               value={contenu.nombreCommandes ?? ""}
@@ -362,14 +362,14 @@ export default function TemplateEditor({
 
       {/* Photos */}
       <div className="rounded-2xl bg-[var(--surface)] border border-[var(--border)] p-6 flex flex-col gap-5">
-        <p className="text-sm font-medium text-[var(--text-muted)]">Photos du produit</p>
+        <p className="text-sm font-medium text-[var(--text-muted)]">{t("photos.titre")}</p>
 
         {uploadErreur && (
           <p className="text-xs text-[var(--danger)]">{uploadErreur}</p>
         )}
 
         <div>
-          <label className="text-xs text-[var(--text-faint)] mb-2 block">Photo héro (mise en avant)</label>
+          <label className="text-xs text-[var(--text-faint)] mb-2 block">{t("photos.hero")}</label>
           <SlotPhoto
             url={images.hero}
             loading={uploadEnCours === "hero"}
@@ -379,7 +379,7 @@ export default function TemplateEditor({
         </div>
 
         <div>
-          <label className="text-xs text-[var(--text-faint)] mb-2 block">Galerie (jusqu&apos;à 3 photos)</label>
+          <label className="text-xs text-[var(--text-faint)] mb-2 block">{t("photos.galerie")}</label>
           <div className="grid grid-cols-3 gap-3">
             {images.galerie.map((url, i) => (
               <SlotPhoto
@@ -419,12 +419,12 @@ export default function TemplateEditor({
               }}
               className="w-4 h-4 accent-violet-600"
             />
-            Ajouter des photos avant / après
+            {t("photos.avantApres")}
           </label>
           {avantApresActif && (
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <span className="text-[10px] text-[var(--text-faint)] uppercase tracking-widest">Avant</span>
+                <span className="text-[10px] text-[var(--text-faint)] uppercase tracking-widest">{t("photos.avant")}</span>
                 <SlotPhoto
                   compact
                   url={images.avant}
@@ -434,7 +434,7 @@ export default function TemplateEditor({
                 />
               </div>
               <div>
-                <span className="text-[10px] text-[var(--text-faint)] uppercase tracking-widest">Après</span>
+                <span className="text-[10px] text-[var(--text-faint)] uppercase tracking-widest">{t("photos.apres")}</span>
                 <SlotPhoto
                   compact
                   url={images.apres}
@@ -459,16 +459,16 @@ export default function TemplateEditor({
             onChange={(e) => setReassurance((r) => ({ ...r, actif: e.target.checked }))}
             className="w-4 h-4 accent-violet-600"
           />
-          Blocs de réassurance
+          {t("reassurance.titre")}
         </label>
         <p className="text-[11px] text-[var(--text-faint)] -mt-2">
-          Mentions génériques et factuelles uniquement — pas de chiffres inventés (nombre de clients, avis...).
+          {t("reassurance.aide")}
         </p>
         {reassurance.actif && (
           <div className="grid gap-3">
-            <Champ label="🚚 Livraison" value={reassurance.livraison} onChange={(v) => setReassurance((r) => ({ ...r, livraison: v }))} />
-            <Champ label="🔒 Paiement" value={reassurance.paiement} onChange={(v) => setReassurance((r) => ({ ...r, paiement: v }))} />
-            <Champ label="↩ Satisfait ou remboursé" value={reassurance.retour} onChange={(v) => setReassurance((r) => ({ ...r, retour: v }))} />
+            <Champ label={t("reassurance.livraison")} value={reassurance.livraison} onChange={(v) => setReassurance((r) => ({ ...r, livraison: v }))} />
+            <Champ label={t("reassurance.paiement")} value={reassurance.paiement} onChange={(v) => setReassurance((r) => ({ ...r, paiement: v }))} />
+            <Champ label={t("reassurance.retour")} value={reassurance.retour} onChange={(v) => setReassurance((r) => ({ ...r, retour: v }))} />
           </div>
         )}
       </div>
@@ -486,7 +486,7 @@ export default function TemplateEditor({
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-sm font-semibold text-[var(--text-primary)] flex items-center gap-2">
-            Score d&apos;audit IA
+            {t("audit.titre")}
             {auditLoading && (
               <span className="w-3 h-3 border-2 border-violet-500/40 border-t-violet-500 rounded-full animate-spin" />
             )}
@@ -495,8 +495,8 @@ export default function TemplateEditor({
             {auditResult
               ? auditResult.resume_executif
               : (isBoutiqueMode ? boutiqueDraft?.produits.length : contenu.titre.trim() && contenu.description.trim())
-              ? "Analyse en cours après tes modifications…"
-              : "Remplis le titre et la description pour lancer l'analyse."}
+              ? t("audit.enCours")
+              : t("audit.aRemplir")}
           </p>
         </div>
       </div>
@@ -504,14 +504,14 @@ export default function TemplateEditor({
       {/* Preview + téléchargement */}
       <div className="flex flex-col gap-4">
         <div className="flex items-center justify-between">
-          <p className="text-sm text-[var(--text-muted)]">Aperçu en direct</p>
+          <p className="text-sm text-[var(--text-muted)]">{t("apercu.direct")}</p>
           {canExport ? (
             <button
               onClick={handleDownload}
               disabled={saving}
               className="px-4 py-2 rounded-xl bg-gradient-to-r from-violet-600 to-blue-600 text-white text-xs font-semibold hover:from-violet-500 hover:to-blue-500 transition-all shadow-lg shadow-violet-900/40 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {saving ? "…" : "⬇ Télécharger le HTML"}
+              {saving ? "…" : t("apercu.telecharger")}
             </button>
           ) : (
             <button
@@ -519,19 +519,19 @@ export default function TemplateEditor({
               disabled={saving}
               className="px-4 py-2 rounded-xl bg-gradient-to-r from-violet-600 to-blue-600 text-white text-xs font-semibold hover:from-violet-500 hover:to-blue-500 transition-all shadow-lg shadow-violet-900/40 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {saving ? "…" : "🔒 Sauvegarder (Pro pour télécharger)"}
+              {saving ? "…" : t("apercu.sauvegarderFree")}
             </button>
           )}
         </div>
         {saved && (
           <p className="text-[11px] text-[var(--success)]">
             {canExport ? (
-              "Sauvegardé dans « Mes sites »."
+              t("apercu.sauvegarde")
             ) : (
               <>
-                Sauvegardé dans « Mes sites ». Le téléchargement est réservé au plan Pro —{" "}
+                {t("apercu.sauvegardeFree")}{" "}
                 <Link href={LIEN_CHANGER_DE_PLAN} className="text-[var(--accent)] font-semibold hover:underline">
-                  passe au plan Pro →
+                  {t("apercu.passerPro")}
                 </Link>
               </>
             )}
@@ -553,13 +553,13 @@ export default function TemplateEditor({
               <div className="w-2.5 h-2.5 rounded-full bg-red-500/60" />
               <div className="w-2.5 h-2.5 rounded-full bg-amber-500/60" />
               <div className="w-2.5 h-2.5 rounded-full bg-emerald-500/60" />
-              <span className="ml-2 text-[10px] text-[var(--text-faint)]">Bureau</span>
+              <span className="ml-2 text-[10px] text-[var(--text-faint)]">{t("apercu.bureau")}</span>
             </div>
             {/* Aperçu toujours rendu sur fond blanc, indépendamment du thème de l'app —
                 reflet fidèle du rendu réel de la landing page générée. */}
             <iframe
               srcDoc={finalHtml}
-              title="Aperçu bureau de la landing page"
+              title={t("apercu.titreBureau")}
               className="w-full"
               style={{ height: "70vh", border: "none", background: "#fff" }}
               sandbox="allow-same-origin"
@@ -568,12 +568,12 @@ export default function TemplateEditor({
 
           {/* Mobile — live, mise à jour à chaque frappe */}
           <div className="shrink-0 mx-auto lg:sticky lg:top-6">
-            <p className="text-center text-[10px] text-[var(--text-faint)] mb-2">📱 Aperçu mobile</p>
+            <p className="text-center text-[10px] text-[var(--text-faint)] mb-2">{t("apercu.mobile")}</p>
             <div className="rounded-[28px] border-4 border-[var(--border-strong)] bg-[var(--surface)] p-1.5 shadow-xl">
               <div className="rounded-[20px] overflow-hidden" style={{ width: 300, height: 620 }}>
                 <iframe
                   srcDoc={finalHtml}
-                  title="Aperçu mobile de la landing page"
+                  title={t("apercu.titreMobile")}
                   style={{ width: 300, height: 620, border: "none", background: "#fff" }}
                   sandbox="allow-same-origin"
                 />
@@ -629,6 +629,7 @@ function SlotPhoto({
   onRemove: () => void;
   compact?: boolean;
 }) {
+  const t = useTranslations("siteBuilder.templates");
   return (
     <div
       className={`relative rounded-xl border border-[var(--border-strong)] bg-[var(--bg)] overflow-hidden flex items-center justify-center ${
@@ -641,6 +642,7 @@ function SlotPhoto({
           <img src={url} alt="" className="w-full h-full object-cover" />
           <button
             onClick={onRemove}
+            aria-label={t("photos.retirer")}
             className="absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-black/60 text-white text-xs flex items-center justify-center hover:bg-black/80 transition"
           >
             ✕
@@ -653,7 +655,7 @@ function SlotPhoto({
           ) : (
             <>
               <span className={compact ? "text-lg" : "text-2xl"}>+</span>
-              {!compact && <span className="text-[11px]">Ajouter une photo</span>}
+              {!compact && <span className="text-[11px]">{t("photos.ajouter")}</span>}
             </>
           )}
           <input

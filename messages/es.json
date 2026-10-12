@@ -1495,6 +1495,77 @@
     "apercu": {
       "pagesDuSite": "Páginas del sitio",
       "titreIframe": "Vista previa: {page}"
+    },
+    "templates": {
+      "nomParDefautBoutique": "Tienda",
+      "nomParDefautLanding": "Landing page",
+      "fichierTelecharge": "Archivo guardado en tus Descargas: {fichier}",
+      "categorie": "Categoría de producto",
+      "categories": {
+        "tech": "Oscuro, neón, diseño de pantalla dividida",
+        "maison": "Cálido, crema y terracota, centrado",
+        "beaute": "Pastel, elegante, antes/después destacado",
+        "generique": "Neutro, universal, estructura clásica"
+      },
+      "contenu": {
+        "titre": "Contenido de la página",
+        "reinitialiser": "↺ Restablecer los textos predeterminados",
+        "aide": "Textos prerrellenados para la categoría «{categorie}»: personalízalos con los argumentos reales de tu producto.",
+        "titrePrincipal": "Título principal",
+        "sousTitre": "Subtítulo",
+        "description": "Descripción",
+        "benefices": "Beneficios (viñetas)",
+        "cta": "Texto del botón de compra",
+        "prixVente": "Precio de venta",
+        "prixBarre": "Precio tachado (opcional)"
+      },
+      "preuve": {
+        "titre": "Prueba social (opcional)",
+        "aide": "Déjalo vacío si aún no tienes cifras reales: la sección no se mostrará. Nunca uses valores inventados.",
+        "note": "Nota (/5)",
+        "avis": "Número de opiniones",
+        "ventes": "Ventas"
+      },
+      "photos": {
+        "titre": "Fotos del producto",
+        "hero": "Foto principal (destacada)",
+        "galerie": "Galería (hasta 3 fotos)",
+        "avantApres": "Añadir fotos de antes / después",
+        "avant": "Antes",
+        "apres": "Después",
+        "ajouter": "Añadir una foto",
+        "retirer": "Quitar la foto"
+      },
+      "reassurance": {
+        "titre": "Bloques de confianza",
+        "aide": "Solo menciones genéricas y factuales: nada de cifras inventadas (número de clientes, opiniones…).",
+        "livraison": "🚚 Envío",
+        "paiement": "🔒 Pago",
+        "retour": "↩ Satisfecho o reembolsado"
+      },
+      "audit": {
+        "titre": "Puntuación de auditoría IA",
+        "enCours": "Analizando tras tus cambios…",
+        "aRemplir": "Rellena el título y la descripción para iniciar el análisis."
+      },
+      "apercu": {
+        "direct": "Vista previa en directo",
+        "telecharger": "⬇ Descargar el HTML",
+        "sauvegarderFree": "🔒 Guardar (Pro para descargar)",
+        "sauvegarde": "Guardado en «Mis sitios».",
+        "sauvegardeFree": "Guardado en «Mis sitios». La descarga está reservada al plan Pro:",
+        "passerPro": "pasa al plan Pro →",
+        "bureau": "Escritorio",
+        "titreBureau": "Vista previa de escritorio de la landing page",
+        "mobile": "📱 Vista previa móvil",
+        "titreMobile": "Vista previa móvil de la landing page"
+      },
+      "erreurs": {
+        "upload": "Error al subir la imagen.",
+        "sauvegarde": "Error al guardar en «Mis sitios».",
+        "reseauTelecharge": "No se puede contactar con el servidor: el HTML se ha descargado, pero no se ha guardado en «Mis sitios».",
+        "reseauRien": "No se puede contactar con el servidor: no se ha guardado nada en «Mis sitios»."
+      }
     }
   },
   "boutique": {

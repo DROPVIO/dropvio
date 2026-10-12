@@ -1495,6 +1495,77 @@
     "apercu": {
       "pagesDuSite": "Pages du site",
       "titreIframe": "Aperçu : {page}"
+    },
+    "templates": {
+      "nomParDefautBoutique": "Boutique",
+      "nomParDefautLanding": "Landing page",
+      "fichierTelecharge": "Fichier enregistré dans tes Téléchargements : {fichier}",
+      "categorie": "Catégorie de produit",
+      "categories": {
+        "tech": "Sombre, néon, mise en page en écran partagé",
+        "maison": "Chaleureux, crème et terracotta, centré",
+        "beaute": "Pastel, élégant, avant/après mis en avant",
+        "generique": "Neutre, universel, structure classique"
+      },
+      "contenu": {
+        "titre": "Contenu de la page",
+        "reinitialiser": "↺ Réinitialiser les textes par défaut",
+        "aide": "Textes préremplis pour la catégorie « {categorie} » : personnalise-les avec les vrais arguments de ton produit.",
+        "titrePrincipal": "Titre principal",
+        "sousTitre": "Sous-titre",
+        "description": "Description",
+        "benefices": "Bénéfices (liste à puces)",
+        "cta": "Texte du bouton d'achat",
+        "prixVente": "Prix de vente",
+        "prixBarre": "Prix barré (facultatif)"
+      },
+      "preuve": {
+        "titre": "Preuve sociale (facultatif)",
+        "aide": "Laisse vide si tu n'as pas encore de vrais chiffres : la section ne s'affichera pas. Jamais de valeurs inventées.",
+        "note": "Note (/5)",
+        "avis": "Nombre d'avis",
+        "ventes": "Ventes"
+      },
+      "photos": {
+        "titre": "Photos du produit",
+        "hero": "Photo principale (mise en avant)",
+        "galerie": "Galerie (jusqu'à 3 photos)",
+        "avantApres": "Ajouter des photos avant / après",
+        "avant": "Avant",
+        "apres": "Après",
+        "ajouter": "Ajouter une photo",
+        "retirer": "Retirer la photo"
+      },
+      "reassurance": {
+        "titre": "Blocs de réassurance",
+        "aide": "Mentions génériques et factuelles uniquement : pas de chiffres inventés (nombre de clients, avis…).",
+        "livraison": "🚚 Livraison",
+        "paiement": "🔒 Paiement",
+        "retour": "↩ Satisfait ou remboursé"
+      },
+      "audit": {
+        "titre": "Score d'audit IA",
+        "enCours": "Analyse en cours après tes modifications…",
+        "aRemplir": "Remplis le titre et la description pour lancer l'analyse."
+      },
+      "apercu": {
+        "direct": "Aperçu en direct",
+        "telecharger": "⬇ Télécharger le HTML",
+        "sauvegarderFree": "🔒 Sauvegarder (Pro pour télécharger)",
+        "sauvegarde": "Sauvegardé dans « Mes sites ».",
+        "sauvegardeFree": "Sauvegardé dans « Mes sites ». Le téléchargement est réservé au plan Pro :",
+        "passerPro": "passe au plan Pro →",
+        "bureau": "Ordinateur",
+        "titreBureau": "Aperçu ordinateur de la landing page",
+        "mobile": "📱 Aperçu mobile",
+        "titreMobile": "Aperçu mobile de la landing page"
+      },
+      "erreurs": {
+        "upload": "Échec de l'envoi de l'image.",
+        "sauvegarde": "Erreur lors de la sauvegarde dans « Mes sites ».",
+        "reseauTelecharge": "Impossible de contacter le serveur : le HTML a bien été téléchargé, mais pas sauvegardé dans « Mes sites ».",
+        "reseauRien": "Impossible de contacter le serveur : rien n'a été sauvegardé dans « Mes sites »."
+      }
     }
   },
   "boutique": {

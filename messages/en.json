@@ -1495,6 +1495,77 @@
     "apercu": {
       "pagesDuSite": "Site pages",
       "titreIframe": "Preview: {page}"
+    },
+    "templates": {
+      "nomParDefautBoutique": "Store",
+      "nomParDefautLanding": "Landing page",
+      "fichierTelecharge": "File saved to your Downloads: {fichier}",
+      "categorie": "Product category",
+      "categories": {
+        "tech": "Dark, neon, split-screen layout",
+        "maison": "Warm, cream and terracotta, centered",
+        "beaute": "Pastel, elegant, before/after highlighted",
+        "generique": "Neutral, universal, classic structure"
+      },
+      "contenu": {
+        "titre": "Page content",
+        "reinitialiser": "↺ Reset to default texts",
+        "aide": "Prefilled texts for the “{categorie}” category: customize them with your product's real selling points.",
+        "titrePrincipal": "Main title",
+        "sousTitre": "Subtitle",
+        "description": "Description",
+        "benefices": "Benefits (bullet points)",
+        "cta": "Buy button text",
+        "prixVente": "Selling price",
+        "prixBarre": "Compare-at price (optional)"
+      },
+      "preuve": {
+        "titre": "Social proof (optional)",
+        "aide": "Leave empty if you don't have real figures yet: the section won't be shown. Never use made-up numbers.",
+        "note": "Rating (/5)",
+        "avis": "Number of reviews",
+        "ventes": "Sales"
+      },
+      "photos": {
+        "titre": "Product photos",
+        "hero": "Main photo (featured)",
+        "galerie": "Gallery (up to 3 photos)",
+        "avantApres": "Add before / after photos",
+        "avant": "Before",
+        "apres": "After",
+        "ajouter": "Add a photo",
+        "retirer": "Remove the photo"
+      },
+      "reassurance": {
+        "titre": "Trust badges",
+        "aide": "Generic, factual statements only: no made-up figures (number of customers, reviews…).",
+        "livraison": "🚚 Shipping",
+        "paiement": "🔒 Payment",
+        "retour": "↩ Money-back guarantee"
+      },
+      "audit": {
+        "titre": "AI audit score",
+        "enCours": "Analyzing after your changes…",
+        "aRemplir": "Fill in the title and description to start the analysis."
+      },
+      "apercu": {
+        "direct": "Live preview",
+        "telecharger": "⬇ Download the HTML",
+        "sauvegarderFree": "🔒 Save (Pro to download)",
+        "sauvegarde": "Saved to “My sites”.",
+        "sauvegardeFree": "Saved to “My sites”. Downloading is available on the Pro plan:",
+        "passerPro": "upgrade to Pro →",
+        "bureau": "Desktop",
+        "titreBureau": "Desktop preview of the landing page",
+        "mobile": "📱 Mobile preview",
+        "titreMobile": "Mobile preview of the landing page"
+      },
+      "erreurs": {
+        "upload": "Image upload failed.",
+        "sauvegarde": "Error while saving to “My sites”.",
+        "reseauTelecharge": "Unable to reach the server: the HTML was downloaded but not saved to “My sites”.",
+        "reseauRien": "Unable to reach the server: nothing was saved to “My sites”."
+      }
     }
   },
   "boutique": {
