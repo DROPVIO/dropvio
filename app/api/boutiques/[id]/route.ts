@@ -15,6 +15,9 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
     .from("boutiques")
     .select("id, nom, slug, description, theme, settings, mentions_legales, est_publique, created_at, updated_at")
     .eq("id", params.id)
+    // La policy select_public (014) rend lisibles les boutiques publiques des autres : ce
+    // endpoint de gestion ne doit renvoyer que les siennes.
+    .eq("user_id", user.id)
     .maybeSingle();
 
   if (error) {
