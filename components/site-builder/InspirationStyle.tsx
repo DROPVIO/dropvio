@@ -1,5 +1,8 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+import { useApiErrorMessage } from "@/lib/use-api-error";
+
 import { useState } from "react";
 import type { FicheStyle } from "@/lib/style-fiche";
 
@@ -47,17 +50,19 @@ export default function InspirationStyle({
   fiche: FicheStyle | null;
   onChange: (fiche: FicheStyle | null) => void;
 }) {
+  const t = useTranslations("siteBuilder.inspiration");
+  const apiErrorMessage = useApiErrorMessage();
   const [fichiers, setFichiers] = useState<File[]>([]);
   const [analyse, setAnalyse] = useState(false);
   const [erreur, setErreur] = useState<string | null>(null);
   const [corrections, setCorrections] = useState<string[]>([]);
-  const [erreursFichiers, setErreursFichiers] = useState<{ fichier: string; erreur: string }[]>([]);
+  const [erreursFichiers, setErreursFichiers] = useState<{ fichier: string; erreur: string; code?: string }[]>([]);
 
   function choisirFichiers(liste: FileList | null) {
     setErreur(null);
     const choisis = Array.from(liste ?? []);
     if (choisis.length > MAX_FICHIERS) {
-      setErreur(`${MAX_FICHIERS} captures maximum.`);
+      setErreur(t("maximum", { max: MAX_FICHIERS }));
       return;
     }
     setFichiers(choisis);
@@ -76,18 +81,13 @@ export default function InspirationStyle({
       const json = await res.json().catch(() => null);
       if (json && Array.isArray(json.erreursFichiers)) setErreursFichiers(json.erreursFichiers);
       if (!res.ok || !json) {
-        setErreur(
-          json?.error ??
-            (res.status === 413
-              ? "Images trop lourdes pour être envoyées. Essaie une capture d'écran ou un export JPEG."
-              : "Impossible d'analyser les captures.")
-        );
+        setErreur(apiErrorMessage(json, res.status === 413 ? t("tropLourdes") : t("erreurAnalyse")));
         return;
       }
       onChange(json.fiche as FicheStyle);
       setCorrections(Array.isArray(json.corrections) ? json.corrections : []);
     } catch {
-      setErreur("Impossible de contacter le serveur.");
+      setErreur(apiErrorMessage({ code: "network" }));
     } finally {
       setAnalyse(false);
     }
@@ -103,8 +103,8 @@ export default function InspirationStyle({
   return (
     <div className="flex flex-col gap-2">
       <label className="text-sm font-medium text-[var(--text-muted)]">
-        Inspiration{" "}
-        <span className="text-[var(--text-faint)] font-normal">(facultatif — 1 à 3 captures de sites que tu aimes)</span>
+        {t("titre")}{" "}
+        <span className="text-[var(--text-faint)] font-normal">{t("aide", { max: MAX_FICHIERS })}</span>
       </label>
 
       {!fiche ? (
@@ -123,26 +123,26 @@ export default function InspirationStyle({
             disabled={analyse || fichiers.length === 0}
             className="rounded-xl border border-[var(--border-strong)] px-4 py-2 text-xs font-semibold text-[var(--text-primary)] transition hover:border-violet-500/40 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {analyse ? "Analyse…" : "Analyser le style"}
+            {analyse ? t("analyse") : t("analyser")}
           </button>
         </div>
       ) : (
         <div className="rounded-xl border border-[var(--border)] bg-[var(--bg)] px-4 py-3 text-xs text-[var(--text-muted)] flex flex-col gap-2">
           <div className="flex flex-wrap gap-x-4 gap-y-1">
-            <span>Typo : <strong className="text-[var(--text-primary)]">{fiche.typo}</strong></span>
-            <span>Rayon : <strong className="text-[var(--text-primary)]">{fiche.rayon}</strong></span>
-            <span>Densité : <strong className="text-[var(--text-primary)]">{fiche.densite}</strong></span>
-            <span>Bannière : <strong className="text-[var(--text-primary)]">{fiche.banniere}</strong></span>
-            <span>Cartes : <strong className="text-[var(--text-primary)]">{fiche.cartes}</strong></span>
+            <span>{t("fiche.typo")} <strong className="text-[var(--text-primary)]">{fiche.typo}</strong></span>
+            <span>{t("fiche.rayon")} <strong className="text-[var(--text-primary)]">{fiche.rayon}</strong></span>
+            <span>{t("fiche.densite")} <strong className="text-[var(--text-primary)]">{fiche.densite}</strong></span>
+            <span>{t("fiche.banniere")} <strong className="text-[var(--text-primary)]">{fiche.banniere}</strong></span>
+            <span>{t("fiche.cartes")} <strong className="text-[var(--text-primary)]">{fiche.cartes}</strong></span>
           </div>
           <div>
-            Sections :{" "}
+            {t("fiche.sections")}{" "}
             <strong className="text-[var(--text-primary)]">
-              {fiche.sections.length > 0 ? fiche.sections.join(" → ") : "aucune reconnue"}
+              {fiche.sections.length > 0 ? fiche.sections.join(" → ") : t("fiche.aucuneSection")}
             </strong>
           </div>
           <div className="flex items-center gap-2">
-            Palette extraite (non appliquée) :
+            {t("fiche.palette")}
             {(["fond", "encre", "accent"] as const).map((k) =>
               fiche.palette[k] ? (
                 <span
@@ -166,7 +166,7 @@ export default function InspirationStyle({
             onClick={retirer}
             className="self-start text-[11px] text-[var(--accent)] hover:opacity-80 transition"
           >
-            Retirer la fiche
+            {t("retirer")}
           </button>
         </div>
       )}
@@ -175,7 +175,7 @@ export default function InspirationStyle({
         <ul className="list-disc pl-4 text-xs text-[var(--danger)]">
           {erreursFichiers.map((e, i) => (
             <li key={`${e.fichier}-${i}`}>
-              « {e.fichier} » : {e.erreur}
+              {t("fichierErreur", { fichier: e.fichier, erreur: t.has(`fichiers.${e.code}`) ? t(`fichiers.${e.code}`) : t("fichiers.invalide") })}
             </li>
           ))}
         </ul>

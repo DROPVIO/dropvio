@@ -1159,7 +1159,12 @@
     "shopify_not_connected": "Connect your Shopify store in the settings first.",
     "shopify_auth_expired": "Shopify access has expired or been revoked. Reconnect your Shopify store in the settings.",
     "generation_too_many_products": "The {plan} plan allows at most {max} products per store site ({count} sent). Remove some products before generating.",
-    "langue_migration_missing": "Language choice isn't enabled on the database yet."
+    "langue_migration_missing": "Language choice isn't enabled on the database yet.",
+    "inspiration_nombre": "Send between 1 and {max} screenshots.",
+    "inspiration_aucune_image": "None of the images could be read.",
+    "inspiration_stockage": "Unable to store the screenshots. Please try again later.",
+    "inspiration_fiche_invalide": "The analysis didn't return a usable result. Please try again.",
+    "inspiration_erreur": "Error while analyzing the screenshots."
   },
   "siteBuilder": {
     "boutique": {
@@ -1459,6 +1464,37 @@
         "siteSurface": "Card background",
         "siteBorder": "Borders"
       }
+    },
+    "inspiration": {
+      "titre": "Inspiration",
+      "aide": "(optional: 1 to {max} screenshots of sites you like)",
+      "maximum": "{max} screenshots at most.",
+      "tropLourdes": "Images too large to upload. Try a screenshot or a JPEG export.",
+      "erreurAnalyse": "Unable to analyze the screenshots.",
+      "analyse": "Analyzing…",
+      "analyser": "Analyze the style",
+      "retirer": "Remove the style sheet",
+      "fichierErreur": "“{fichier}”: {erreur}",
+      "fiche": {
+        "typo": "Typeface:",
+        "rayon": "Corner radius:",
+        "densite": "Density:",
+        "banniere": "Banner:",
+        "cartes": "Cards:",
+        "sections": "Sections:",
+        "aucuneSection": "none recognized",
+        "palette": "Extracted palette (not applied):"
+      },
+      "fichiers": {
+        "invalide": "invalid file.",
+        "tropLourde": "image too large (15 MB max).",
+        "pasUneImage": "this file isn't an image.",
+        "illisible": "this image can't be read. Try a screenshot or a JPEG export."
+      }
+    },
+    "apercu": {
+      "pagesDuSite": "Site pages",
+      "titreIframe": "Preview: {page}"
     }
   },
   "boutique": {

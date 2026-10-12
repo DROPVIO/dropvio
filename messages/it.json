@@ -1159,7 +1159,12 @@
     "shopify_not_connected": "Collega prima il tuo negozio Shopify nelle impostazioni.",
     "shopify_auth_expired": "L'accesso a Shopify è scaduto o è stato revocato. Ricollega il tuo negozio Shopify nelle impostazioni.",
     "generation_too_many_products": "Il piano {plan} consente al massimo {max} prodotti per sito negozio ({count} inviati). Rimuovi dei prodotti prima di generare.",
-    "langue_migration_missing": "La scelta della lingua non è ancora attiva nel database."
+    "langue_migration_missing": "La scelta della lingua non è ancora attiva nel database.",
+    "inspiration_nombre": "Invia da 1 a {max} screenshot.",
+    "inspiration_aucune_image": "Non è stato possibile leggere nessuna immagine.",
+    "inspiration_stockage": "Impossibile salvare gli screenshot. Riprova più tardi.",
+    "inspiration_fiche_invalide": "L'analisi non ha dato un risultato utilizzabile. Riprova.",
+    "inspiration_erreur": "Errore durante l'analisi degli screenshot."
   },
   "siteBuilder": {
     "boutique": {
@@ -1459,6 +1464,37 @@
         "siteSurface": "Sfondo delle schede",
         "siteBorder": "Bordi"
       }
+    },
+    "inspiration": {
+      "titre": "Ispirazione",
+      "aide": "(facoltativo: da 1 a {max} screenshot di siti che ti piacciono)",
+      "maximum": "Al massimo {max} screenshot.",
+      "tropLourdes": "Immagini troppo pesanti da inviare. Prova con uno screenshot o un'esportazione JPEG.",
+      "erreurAnalyse": "Impossibile analizzare gli screenshot.",
+      "analyse": "Analisi…",
+      "analyser": "Analizza lo stile",
+      "retirer": "Rimuovi la scheda",
+      "fichierErreur": "«{fichier}»: {erreur}",
+      "fiche": {
+        "typo": "Tipografia:",
+        "rayon": "Arrotondamento:",
+        "densite": "Densità:",
+        "banniere": "Banner:",
+        "cartes": "Schede:",
+        "sections": "Sezioni:",
+        "aucuneSection": "nessuna riconosciuta",
+        "palette": "Palette estratta (non applicata):"
+      },
+      "fichiers": {
+        "invalide": "file non valido.",
+        "tropLourde": "immagine troppo pesante (massimo 15 MB).",
+        "pasUneImage": "questo file non è un'immagine.",
+        "illisible": "questa immagine non può essere letta. Prova con uno screenshot o un'esportazione JPEG."
+      }
+    },
+    "apercu": {
+      "pagesDuSite": "Pagine del sito",
+      "titreIframe": "Anteprima: {page}"
     }
   },
   "boutique": {

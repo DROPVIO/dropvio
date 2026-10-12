@@ -95,36 +95,37 @@ export async function POST(request: NextRequest) {
   const form = await request.formData();
   const fichiers = form.getAll("files");
   if (fichiers.length === 0 || fichiers.length > MAX_FICHIERS) {
-    return NextResponse.json({ error: `Envoie entre 1 et ${MAX_FICHIERS} captures.` }, { status: 400 });
+    return NextResponse.json({ error: `Envoie entre 1 et ${MAX_FICHIERS} captures.`, code: "inspiration_nombre", values: { max: MAX_FICHIERS } }, { status: 400 });
   }
 
   // Tri fichier par fichier : un fichier refusé est signalé dans erreursFichiers sans faire
   // échouer les autres.
-  const erreursFichiers: { fichier: string; erreur: string }[] = [];
+  // code : clé traduite côté client (siteBuilder.inspiration.fichiers.*) ; erreur : texte pour les logs.
+  const erreursFichiers: { fichier: string; erreur: string; code: string }[] = [];
   const convertis: { nom: string; jpeg: Buffer }[] = [];
   for (const f of fichiers) {
     if (!(f instanceof File)) {
-      erreursFichiers.push({ fichier: "?", erreur: "Fichier invalide." });
+      erreursFichiers.push({ fichier: "?", erreur: "Fichier invalide.", code: "invalide" });
       continue;
     }
     if (f.size > MAX_OCTETS) {
-      erreursFichiers.push({ fichier: f.name, erreur: "Image trop lourde (15 Mo maximum)." });
+      erreursFichiers.push({ fichier: f.name, erreur: "Image trop lourde (15 Mo maximum).", code: "tropLourde" });
       continue;
     }
     const octets = Buffer.from(await f.arrayBuffer());
     if (!detecterFormat(octets)) {
-      erreursFichiers.push({ fichier: f.name, erreur: "Ce fichier n'est pas une image." });
+      erreursFichiers.push({ fichier: f.name, erreur: "Ce fichier n'est pas une image.", code: "pasUneImage" });
       continue;
     }
     try {
       convertis.push({ nom: f.name, jpeg: await convertirEnJpeg(octets) });
     } catch (err) {
       console.warn("[inspiration] conversion", f.name, err instanceof Error ? err.message : err);
-      erreursFichiers.push({ fichier: f.name, erreur: MESSAGE_ILLISIBLE });
+      erreursFichiers.push({ fichier: f.name, erreur: MESSAGE_ILLISIBLE, code: "illisible" });
     }
   }
   if (convertis.length === 0) {
-    return NextResponse.json({ error: "Aucune image n'a pu être lue.", erreursFichiers }, { status: 400 });
+    return NextResponse.json({ error: "Aucune image n'a pu être lue.", code: "inspiration_aucune_image", erreursFichiers }, { status: 400 });
   }
 
   const chemins: string[] = [];
@@ -137,7 +138,7 @@ export async function POST(request: NextRequest) {
       if (error) {
         console.error("[inspiration] upload", error.message);
         return NextResponse.json(
-          { error: "Impossible d'enregistrer les captures (bucket « inspiration » absent ? voir 038_storage_inspiration.sql)." },
+          { error: "Impossible d'enregistrer les captures (bucket « inspiration » absent ? voir 038_storage_inspiration.sql).", code: "inspiration_stockage" },
           { status: 500 }
         );
       }
@@ -149,7 +150,7 @@ export async function POST(request: NextRequest) {
       const { data, error } = await supabase.storage.from(BUCKET).download(chemin);
       if (error || !data) {
         console.error("[inspiration] download", error?.message);
-        return NextResponse.json({ error: "Impossible de relire les captures." }, { status: 500 });
+        return NextResponse.json({ error: "Impossible de relire les captures.", code: "inspiration_stockage" }, { status: 500 });
       }
       images.push({
         type: "image",
@@ -190,7 +191,7 @@ export async function POST(request: NextRequest) {
     } catch {
       console.error("[inspiration] réponse non JSON :", texte.slice(0, 300));
       return NextResponse.json(
-        { error: "L'analyse n'a pas renvoyé de fiche exploitable. Réessaie.", erreursFichiers },
+        { error: "L'analyse n'a pas renvoyé de fiche exploitable. Réessaie.", code: "inspiration_fiche_invalide", erreursFichiers },
         { status: 502 }
       );
     }
@@ -199,7 +200,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ fiche, corrections, erreursFichiers });
   } catch (err) {
     console.error("[inspiration]", err instanceof Error ? err.message : err);
-    return NextResponse.json({ error: "Erreur lors de l'analyse des captures.", erreursFichiers }, { status: 500 });
+    return NextResponse.json({ error: "Erreur lors de l'analyse des captures.", code: "inspiration_erreur", erreursFichiers }, { status: 500 });
   } finally {
     // Captures supprimées dès l'analyse terminée (réussie ou non) : elles ne servent qu'à
     // cet appel. Un échec de suppression est seulement journalisé.

@@ -1159,7 +1159,12 @@
     "shopify_not_connected": "Connecte d'abord ta boutique Shopify dans les paramètres.",
     "shopify_auth_expired": "L'accès à Shopify a expiré ou a été révoqué. Reconnecte ta boutique Shopify dans les paramètres.",
     "generation_too_many_products": "Le plan {plan} permet au plus {max} produits par site boutique ({count} envoyés). Retire des produits avant de générer.",
-    "langue_migration_missing": "Le choix de langue n'est pas encore activé sur la base de données."
+    "langue_migration_missing": "Le choix de langue n'est pas encore activé sur la base de données.",
+    "inspiration_nombre": "Envoie entre 1 et {max} captures.",
+    "inspiration_aucune_image": "Aucune image n'a pu être lue.",
+    "inspiration_stockage": "Impossible d'enregistrer les captures. Réessaie plus tard.",
+    "inspiration_fiche_invalide": "L'analyse n'a pas donné de résultat exploitable. Réessaie.",
+    "inspiration_erreur": "Erreur lors de l'analyse des captures."
   },
   "siteBuilder": {
     "boutique": {
@@ -1459,6 +1464,37 @@
         "siteSurface": "Fond des cartes",
         "siteBorder": "Bordures"
       }
+    },
+    "inspiration": {
+      "titre": "Inspiration",
+      "aide": "(facultatif : 1 à {max} captures de sites que tu aimes)",
+      "maximum": "{max} captures au maximum.",
+      "tropLourdes": "Images trop lourdes pour être envoyées. Essaie une capture d'écran ou un export JPEG.",
+      "erreurAnalyse": "Impossible d'analyser les captures.",
+      "analyse": "Analyse…",
+      "analyser": "Analyser le style",
+      "retirer": "Retirer la fiche",
+      "fichierErreur": "« {fichier} » : {erreur}",
+      "fiche": {
+        "typo": "Typo :",
+        "rayon": "Arrondi :",
+        "densite": "Densité :",
+        "banniere": "Bannière :",
+        "cartes": "Cartes :",
+        "sections": "Sections :",
+        "aucuneSection": "aucune reconnue",
+        "palette": "Palette extraite (non appliquée) :"
+      },
+      "fichiers": {
+        "invalide": "fichier invalide.",
+        "tropLourde": "image trop lourde (15 Mo maximum).",
+        "pasUneImage": "ce fichier n'est pas une image.",
+        "illisible": "cette image ne peut pas être lue. Essaie une capture d'écran ou un export JPEG."
+      }
+    },
+    "apercu": {
+      "pagesDuSite": "Pages du site",
+      "titreIframe": "Aperçu : {page}"
     }
   },
   "boutique": {

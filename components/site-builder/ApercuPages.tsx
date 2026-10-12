@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+
 import { useEffect, useMemo, useRef, useState } from "react";
 import { CLE_ACCUEIL, CLE_CATALOGUE, titrePageConnue } from "@/lib/site-builder-pages";
 
@@ -76,6 +78,7 @@ export default function ApercuPages({
   pages: Record<string, string>;
   hauteur?: string;
 }) {
+  const t = useTranslations("siteBuilder.apercu");
   const cles = useMemo(() => ordonner(Object.keys(pages)), [pages]);
   const [active, setActive] = useState<string>(CLE_ACCUEIL);
   const iframeRef = useRef<HTMLIFrameElement>(null);
@@ -112,7 +115,7 @@ export default function ApercuPages({
   return (
     <div ref={zoneRef} className="flex flex-col">
       <nav
-        aria-label="Pages du site"
+        aria-label={t("pagesDuSite")}
         className="flex gap-1 overflow-x-auto border-b border-[var(--border)] bg-[var(--surface-2)] px-3 py-2"
       >
         {cles.map((cle) => (
@@ -136,7 +139,7 @@ export default function ApercuPages({
         ref={iframeRef}
         key={cleAffichee}
         srcDoc={srcDoc}
-        title={`Aperçu — ${cleAffichee ? libellePage(cleAffichee) : ""}`}
+        title={t("titreIframe", { page: cleAffichee ? libellePage(cleAffichee) : "" })}
         className="w-full"
         style={{ height: hauteur, border: "none", background: "#fff" }}
         sandbox="allow-scripts"
