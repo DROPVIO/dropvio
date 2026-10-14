@@ -150,11 +150,11 @@ export default function MesSitesPage() {
         succes(t("downloadOk", { nom: nomFichier }));
         return;
       }
-      // Site multi-pages : un .zip de toutes les pages, pour que la navigation entre pages
-      // (Accueil, Catalogue, collections, pages légales) fonctionne hors de Dropvio.
+      // Site multi-pages : un seul fichier HTML qui contient toutes les pages, pour que la
+      // navigation (Accueil, Catalogue, collections, pages légales) fonctionne hors de Dropvio.
       const pages = pagesSiMultiples(json.pages);
       if (pages) {
-        succes(t("downloadZipOk", { nom: telechargerSiteMultiPages(pages, site.nom_produit) }));
+        succes(t("downloadSiteOk", { nom: telechargerSiteMultiPages(pages, site.nom_produit) }));
         return;
       }
       const nomFichier = `${slug}-landing.html`;

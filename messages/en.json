@@ -521,7 +521,7 @@
       "formatChanged": "Export format: {format}",
       "errorFormat": "Could not change the export format.",
       "regenerateBoutiqueIndisponible": "Regeneration isn't available yet for store sites: run “Create my site” again from the store.",
-      "downloadZipOk": "Site saved to your Downloads: {nom}. Open the folder, then index.html: the links between pages work."
+      "downloadSiteOk": "Full site saved to your Downloads: {nom}. Every page is in this file: open it and the navigation buttons work."
     },
     "spy": {
       "badge": "Competitive intelligence",
@@ -1721,9 +1721,7 @@
         "telechargerLiquid": "⬇ Download the .liquid",
         "telechargerHtml": "⬇ Download the HTML",
         "passerPro": "🔒 Upgrade to Pro to download your site",
-        "titreApercu": "Landing page preview",
-        "fichierZip": "⬇ Full site (.zip)",
-        "telechargerZip": "⬇ Download the site (.zip)"
+        "titreApercu": "Landing page preview"
       },
       "shopify": {
         "titre": "Publish to Shopify",
@@ -1775,7 +1773,7 @@
           "it": "Italiano"
         }
       },
-      "zipTelecharge": "Site saved to your Downloads: {fichier}. Open the folder, then index.html: the links between pages work."
+      "siteCompletTelecharge": "Full site saved to your Downloads: {fichier}. Every page is in this file: open it and the navigation buttons work."
     }
   },
   "boutique": {

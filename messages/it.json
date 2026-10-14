@@ -521,7 +521,7 @@
       "formatChanged": "Formato di esportazione: {format}",
       "errorFormat": "Impossibile cambiare il formato di esportazione.",
       "regenerateBoutiqueIndisponible": "La rigenerazione non è ancora disponibile per i siti negozio: rilancia «Crea il mio sito» dal negozio.",
-      "downloadZipOk": "Sito salvato nei tuoi Download: {nom}. Apri la cartella e poi index.html: i link tra le pagine funzionano."
+      "downloadSiteOk": "Sito completo salvato nei tuoi Download: {nom}. Tutte le pagine sono in questo file: aprilo e i pulsanti di navigazione funzionano."
     },
     "spy": {
       "badge": "Intelligence competitiva",
@@ -1721,9 +1721,7 @@
         "telechargerLiquid": "⬇ Scarica il .liquid",
         "telechargerHtml": "⬇ Scarica l'HTML",
         "passerPro": "🔒 Passa al piano Pro per scaricare il tuo sito",
-        "titreApercu": "Anteprima della landing page",
-        "fichierZip": "⬇ Sito completo (.zip)",
-        "telechargerZip": "⬇ Scarica il sito (.zip)"
+        "titreApercu": "Anteprima della landing page"
       },
       "shopify": {
         "titre": "Pubblica su Shopify",
@@ -1775,7 +1773,7 @@
           "it": "Italiano"
         }
       },
-      "zipTelecharge": "Sito salvato nei tuoi Download: {fichier}. Apri la cartella e poi index.html: i link tra le pagine funzionano."
+      "siteCompletTelecharge": "Sito completo salvato nei tuoi Download: {fichier}. Tutte le pagine sono in questo file: aprilo e i pulsanti di navigazione funzionano."
     }
   },
   "boutique": {

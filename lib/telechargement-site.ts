@@ -1,15 +1,12 @@
-import { CLE_ACCUEIL, fichierPage } from "@/lib/site-builder-pages";
-import { creerZip } from "@/lib/zip";
-import { slugFichier, telechargerBlob } from "@/lib/audit-download";
+import { siteEnUnFichier } from "@/lib/site-builder-pages";
+import { slugFichier, telechargerTexte } from "@/lib/audit-download";
 
-// Site multi-pages (accueil, catalogue, collections, pages légales) téléchargé en un .zip :
-// chaque page garde son nom de fichier (index.html, catalogue.html, collection-….html…), donc
-// les liens de navigation entre pages, relatifs, fonctionnent une fois le dossier décompressé
-// et index.html ouvert dans le navigateur. Renvoie le nom du fichier téléchargé.
+// Site multi-pages (accueil, catalogue, collections, pages légales) téléchargé en un seul
+// fichier HTML qui contient toutes les pages (voir siteEnUnFichier) : ouvert dans n'importe
+// quel navigateur, les boutons de navigation entre pages fonctionnent. Renvoie le nom du
+// fichier téléchargé.
 export function telechargerSiteMultiPages(pages: Record<string, string>, nomSite: string): string {
-  const cles = Object.keys(pages).sort((a, b) => (a === CLE_ACCUEIL ? -1 : b === CLE_ACCUEIL ? 1 : a.localeCompare(b)));
-  const zip = creerZip(cles.map((cle) => ({ nom: fichierPage(cle), contenu: pages[cle] })));
-  const nomFichier = `${slugFichier(nomSite) || "site"}.zip`;
-  telechargerBlob(zip, nomFichier);
+  const nomFichier = `${slugFichier(nomSite) || "site"}.html`;
+  telechargerTexte(siteEnUnFichier(pages), nomFichier);
   return nomFichier;
 }

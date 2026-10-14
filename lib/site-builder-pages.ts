@@ -333,3 +333,95 @@ export function assemblerPagesProduit(html: string, ctx: SiteCtx): PagesSite | n
   }
   return pages as PagesSite;
 }
+
+// ─── Site complet en un seul fichier HTML ───────────────────────────────────────────────
+// Le téléchargement « HTML » d'un site multi-pages doit tout contenir, pas seulement
+// l'accueil : ouvert depuis le disque dans n'importe quel navigateur, les boutons Accueil,
+// Catalogue, collections et pages légales doivent fonctionner. Toutes les pages partagent la
+// même coquille (head, navbar, footer, scripts) : on garde celle de l'accueil une seule fois
+// et on y place le contenu propre à chaque page (entre la navbar et le footer) dans un bloc
+// <div data-dv-page="clé">. Les liens vers « clé.html » deviennent « #dv-clé » et un petit
+// script affiche le bloc demandé (le bouton Retour du navigateur suit, via le hash).
+
+const PREFIXE_ANCRE = "dv-";
+
+// Contenu propre d'une page : entre la fin de la première <nav> et le dernier <footer>
+// (ou </body>). Sans <nav>, depuis <body>.
+function bornesContenu(html: string): { debut: number; fin: number } {
+  const bas = html.toLowerCase();
+  const body = /<body\b[^>]*>/i.exec(html);
+  const debutBody = body ? body.index + body[0].length : 0;
+  const finNav = bas.indexOf("</nav>", debutBody);
+  const debut = finNav === -1 ? debutBody : finNav + "</nav>".length;
+  const finBody = bas.lastIndexOf("</body>");
+  const limite = finBody === -1 ? html.length : finBody;
+  const footer = bas.lastIndexOf("<footer", limite);
+  const fin = footer >= debut ? footer : limite;
+  return { debut, fin };
+}
+
+function contenuDePage(html: string): string {
+  const { debut, fin } = bornesContenu(html);
+  return html.slice(debut, fin);
+}
+
+// Liens vers les fichiers de pages connues (index.html, catalogue.html…, avec ou sans ancre)
+// → ancre interne #dv-<clé>.
+function liensVersAncres(html: string, cles: Set<string>): string {
+  return html.replace(/\bhref=(["'])([a-z0-9-]+)\.html(?:#[^"']*)?\1/gi, (tout, guillemet: string, nom: string) => {
+    const cle = nom.toLowerCase() === "index" ? CLE_ACCUEIL : nom.toLowerCase();
+    return cles.has(cle) ? `href=${guillemet}#${PREFIXE_ANCRE}${cle}${guillemet}` : tout;
+  });
+}
+
+const SCRIPT_NAVIGATION = `<style>[data-dv-page][hidden]{display:none!important}</style>
+<script>
+(function(){
+  var pages = document.querySelectorAll('[data-dv-page]');
+  function afficher(){
+    var m = /^#${PREFIXE_ANCRE}([a-z0-9-]+)$/.exec(location.hash);
+    var cle = m && document.querySelector('[data-dv-page="' + m[1] + '"]') ? m[1] : null;
+    // Ancre ordinaire (#commander…) : afficher la page qui contient la cible, puis y défiler.
+    var cible = !m && location.hash.length > 1 ? document.getElementById(decodeURIComponent(location.hash.slice(1))) : null;
+    var bloc = cible && cible.closest ? cible.closest('[data-dv-page]') : null;
+    if (!cle) cle = bloc ? bloc.getAttribute('data-dv-page') : '${CLE_ACCUEIL}';
+    for (var i = 0; i < pages.length; i++) pages[i].hidden = pages[i].getAttribute('data-dv-page') !== cle;
+    var liens = document.querySelectorAll('a[href^="#${PREFIXE_ANCRE}"]');
+    for (var j = 0; j < liens.length; j++) {
+      if (liens[j].getAttribute('href') === '#${PREFIXE_ANCRE}' + cle) liens[j].setAttribute('aria-current', 'page');
+      else liens[j].removeAttribute('aria-current');
+    }
+    if (m) window.scrollTo(0, 0);
+    else if (cible) cible.scrollIntoView();
+  }
+  window.addEventListener('hashchange', afficher);
+  afficher();
+})();
+</script>`;
+
+export function siteEnUnFichier(pages: Record<string, string>): string {
+  const accueil = pages[CLE_ACCUEIL];
+  if (!accueil) return Object.values(pages)[0] ?? "";
+  const cles = new Set(Object.keys(pages));
+  const ordre = [CLE_ACCUEIL, ...Object.keys(pages).filter((c) => c !== CLE_ACCUEIL)];
+
+  const { debut, fin } = bornesContenu(accueil);
+  const contenuAccueil = accueil.slice(debut, fin);
+  const avant = accueil.slice(0, debut);
+  const apres = accueil.slice(fin);
+
+  const blocs = ordre
+    .map(
+      (cle) =>
+        `<div data-dv-page="${cle}"${cle === CLE_ACCUEIL ? "" : " hidden"}>${
+          cle === CLE_ACCUEIL ? contenuAccueil : contenuDePage(pages[cle])
+        }</div>`
+    )
+    .join("\n");
+
+  const html = liensVersAncres(`${avant}${blocs}${apres}`, cles);
+  const finBody = html.toLowerCase().lastIndexOf("</body>");
+  return finBody === -1
+    ? `${html}${SCRIPT_NAVIGATION}`
+    : `${html.slice(0, finBody)}${SCRIPT_NAVIGATION}\n${html.slice(finBody)}`;
+}
