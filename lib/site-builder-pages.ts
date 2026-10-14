@@ -22,7 +22,7 @@ export const CLE_CATALOGUE = "catalogue";
 export function pagesSiMultiples(pages: unknown): Record<string, string> | null {
   if (!pages || typeof pages !== "object" || Array.isArray(pages)) return null;
   const entrees = Object.entries(pages).filter(([, html]) => typeof html === "string" && html.trim() !== "");
-  return entrees.length > 1 ? (Object.fromEntries(entrees) as Record<string, string>) : null;
+  return entrees.length > 1 ? reparerPages(Object.fromEntries(entrees) as Record<string, string>) : null;
 }
 
 // Pages envoyées par le client : objet clé → HTML non vide, clés limitées à [a-z0-9-] (elles
@@ -61,6 +61,90 @@ function echapper(s: string): string {
   return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 }
 
+// ─── Structure d'une page : où commence et finit le contenu propre à la page ─────────────
+// Le découpage ne peut pas se faire au texte « </nav> » : la navbar est souvent imbriquée
+// (<header><div class="row">logo <nav>…</nav> bouton</div></header>), et couper juste après
+// </nav> laissait les </div></header> dans le contenu de l'accueil. Les autres pages
+// recevaient alors leur contenu et leur footer À L'INTÉRIEUR de l'en-tête (affichés à côté du
+// logo), et le fichier téléchargé fermait trop tôt le bloc de l'accueil. On reconstruit donc
+// l'arbre des éléments du <body> et on prend l'ancêtre commun le plus proche de la <nav> et
+// du <footer> : ses enfants qui contiennent la nav et le footer sont la « coquille » haute et
+// basse, et tout ce qui se trouve entre eux est le contenu de la page. Une page mal assemblée
+// par l'ancienne version (contenu resté dans l'en-tête) donne aussi le bon contenu : nav et
+// footer y ont pour ancêtre commun l'en-tête, et le contenu est entre les deux.
+
+type Noeud = { tag: string; debut: number; fin: number; parent: Noeud | null };
+
+const VIDES = new Set(["area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "param", "source", "track", "wbr"]);
+const JETON =
+  /<!--[\s\S]*?-->|<(script|style|template|textarea|noscript)\b[^>]*>[\s\S]*?<\/\1\s*>|<\/([a-zA-Z][\w:-]*)\s*>|<([a-zA-Z][\w:-]*)(?:\s(?:"[^"]*"|'[^']*'|[^'">])*)?(\/?)>/g;
+
+// Éléments du <body> (bornes absolues dans html), avec leur parent. Les éléments non fermés
+// se terminent à </body>, comme le fait le navigateur.
+function analyserCorps(html: string, debut: number, fin: number): Noeud[] {
+  const noeuds: Noeud[] = [];
+  const pile: Noeud[] = [];
+  const morceau = html.slice(debut, fin);
+  JETON.lastIndex = 0;
+  for (let m = JETON.exec(morceau); m; m = JETON.exec(morceau)) {
+    if (m[2]) {
+      const tag = m[2].toLowerCase();
+      const i = pile.map((n) => n.tag).lastIndexOf(tag);
+      if (i === -1) continue;
+      while (pile.length > i) pile.pop()!.fin = debut + m.index + m[0].length;
+    } else if (m[3]) {
+      const tag = m[3].toLowerCase();
+      const noeud: Noeud = { tag, debut: debut + m.index, fin: debut + m.index + m[0].length, parent: pile[pile.length - 1] ?? null };
+      noeuds.push(noeud);
+      if (!VIDES.has(tag) && m[4] !== "/") pile.push(noeud);
+    }
+  }
+  for (const n of pile) n.fin = fin;
+  return noeuds;
+}
+
+function ancetres(n: Noeud): Noeud[] {
+  const chaine: Noeud[] = [];
+  for (let a: Noeud | null = n; a; a = a.parent) chaine.unshift(a);
+  return chaine;
+}
+
+type StructurePage = {
+  debutBody: number; // juste après <body…>
+  finBody: number; // position de </body>
+  hautDebut: number; // début de la coquille haute (élément qui contient la nav)
+  hautFin: number; // fin de la coquille haute = début du contenu propre
+  basDebut: number; // fin du contenu propre = début de la coquille basse (footer)
+  basFin: number; // fin de la coquille basse
+};
+
+export function structurePage(html: string): StructurePage | null {
+  const body = /<body\b[^>]*>/i.exec(html);
+  if (!body) return null;
+  const debutBody = body.index + body[0].length;
+  const fermeture = html.toLowerCase().lastIndexOf("</body>");
+  const finBody = fermeture >= debutBody ? fermeture : html.length;
+  const noeuds = analyserCorps(html, debutBody, finBody);
+  const nav = noeuds.find((n) => n.tag === "nav");
+  if (!nav) return null;
+  const footers = noeuds.filter((n) => n.tag === "footer" && n.debut > nav.debut);
+  const footer = footers[footers.length - 1];
+
+  const cheminNav = ancetres(nav);
+  if (!footer) {
+    // Sans footer : la coquille haute est l'élément de premier niveau qui contient la nav.
+    const haut = cheminNav[0];
+    return { debutBody, finBody, hautDebut: haut.debut, hautFin: haut.fin, basDebut: finBody, basFin: finBody };
+  }
+  const cheminFooter = ancetres(footer);
+  let commun = 0;
+  while (commun < cheminNav.length && commun < cheminFooter.length && cheminNav[commun] === cheminFooter[commun]) commun++;
+  const haut = cheminNav[commun] ?? nav;
+  const bas = cheminFooter[commun] ?? footer;
+  if (bas.debut < haut.fin) return null;
+  return { debutBody, finBody, hautDebut: haut.debut, hautFin: haut.fin, basDebut: bas.debut, basFin: bas.fin };
+}
+
 type CoquilleDecoupee = {
   tete: string; // du début jusqu'à <body…> inclus
   avantNav: string; // entre <body> et <nav>
@@ -79,51 +163,35 @@ type CoquilleDecoupee = {
 // la section étant alors exclue de l'accueil. Renvoie null si body ou nav manque, ou si une
 // section #catalogue est présente sans son marqueur : l'appelant garde alors une seule page.
 export function decouperCoquille(html: string): CoquilleDecoupee | null {
-  const body = /<body\b[^>]*>/i.exec(html);
-  if (!body) return null;
-  const finTete = body.index + body[0].length;
+  const st = structurePage(html);
+  if (!st) return null;
+  const { debutBody, finBody, hautDebut, hautFin, basDebut, basFin } = st;
+  const aFooter = basFin > basDebut;
 
-  const navMatch = /<nav\b[\s\S]*?<\/nav>/i.exec(html.slice(finTete));
-  if (!navMatch) return null;
-  const debutNav = finTete + navMatch.index;
-  const finNav = debutNav + navMatch[0].length;
-
-  const finBody = html.toLowerCase().lastIndexOf("</body>");
-  if (finBody === -1 || finBody < finNav) return null;
-
-  const catalogue = /<section\b[^>]*\bid=["']catalogue["'][^>]*>/i.exec(html.slice(finNav));
-  let debutCatalogue: number;
-  let finCatalogue: number;
+  // Zone propre à la page : entre la coquille haute et la coquille basse.
+  const catalogue = /<section\b[^>]*\bid=["']catalogue["'][^>]*>/i.exec(html.slice(hautFin, basDebut));
+  let debutCatalogue = basDebut;
+  let finCatalogue = basDebut;
   if (catalogue) {
-    debutCatalogue = finNav + catalogue.index;
+    debutCatalogue = hautFin + catalogue.index;
     // La section #catalogue ne doit contenir que le marqueur : elle se ferme au premier
     // </section> qui le suit.
     const marqueur = html.indexOf("<!-- GRILLE_PRODUITS -->", debutCatalogue);
-    if (marqueur === -1) return null;
+    if (marqueur === -1 || marqueur > basDebut) return null;
     const fermetureSection = html.indexOf("</section>", marqueur);
     if (fermetureSection === -1) return null;
     finCatalogue = fermetureSection + "</section>".length;
-    if (finBody < finCatalogue) return null;
-  } else {
-    // Accueil seul : il s'étend jusqu'au footer (ou jusqu'à </body> sans footer).
-    const footerSeul = html.toLowerCase().lastIndexOf("<footer", finBody);
-    debutCatalogue = footerSeul >= finNav ? footerSeul : finBody;
-    finCatalogue = debutCatalogue;
+    if (basDebut < finCatalogue) return null;
   }
 
-  const debutFooter = html.toLowerCase().lastIndexOf("<footer", finBody);
-  const finFooterBalise = debutFooter >= finCatalogue ? html.toLowerCase().indexOf("</footer>", debutFooter) : -1;
-  const aFooter = debutFooter >= finCatalogue && finFooterBalise !== -1 && finFooterBalise < finBody;
-  const finFooter = aFooter ? finFooterBalise + "</footer>".length : finCatalogue;
-
   return {
-    tete: html.slice(0, finTete),
-    avantNav: html.slice(finTete, debutNav),
-    nav: html.slice(debutNav, finNav),
-    accueil: html.slice(finNav, debutCatalogue),
-    entre: html.slice(finCatalogue, aFooter ? debutFooter : finCatalogue),
-    footer: aFooter ? html.slice(debutFooter, finFooter) : "",
-    fin: html.slice(finFooter, finBody),
+    tete: html.slice(0, debutBody),
+    avantNav: html.slice(debutBody, hautDebut),
+    nav: html.slice(hautDebut, hautFin),
+    accueil: html.slice(hautFin, debutCatalogue),
+    entre: html.slice(finCatalogue, basDebut),
+    footer: aFooter ? html.slice(basDebut, basFin) : "",
+    fin: html.slice(aFooter ? basFin : basDebut, finBody),
     fermeture: html.slice(finBody),
   };
 }
@@ -182,7 +250,9 @@ export function navAvecPages(nav: string, pages: EntreeNav[], cleActive?: string
   });
   result = result.replace("<!-- NAV_COLLECTIONS -->", insere ? "" : nouveauxLiens);
   if (!insere && !nav.includes("<!-- NAV_COLLECTIONS -->")) {
-    result = result.replace(/<\/nav>\s*$/i, `${nouveauxLiens}\n</nav>`);
+    // Le segment peut englober la nav dans son en-tête (<header>…<nav>…</nav>…</header>).
+    const fin = result.toLowerCase().lastIndexOf("</nav>");
+    if (fin !== -1) result = `${result.slice(0, fin)}${nouveauxLiens}\n${result.slice(fin)}`;
   }
   return result;
 }
@@ -334,6 +404,33 @@ export function assemblerPagesProduit(html: string, ctx: SiteCtx): PagesSite | n
   return pages as PagesSite;
 }
 
+// ─── Réparation des pages enregistrées par l'ancienne découpe ─────────────────────────────
+// Reconstruit chaque page (sauf l'accueil, toujours correct) avec la coquille de l'accueil
+// (head, en-tête et navbar, footer, scripts) et le contenu propre à la page. Sans effet sur une
+// page déjà correcte : elle a la même coquille et le même contenu. Le lien de la page courante
+// porte aria-current ; sur les pages légales, les ancres de la coquille renvoient à l'accueil.
+export function reparerPages(pages: Record<string, string>): Record<string, string> {
+  const accueil = pages[CLE_ACCUEIL];
+  const st = accueil ? structurePage(accueil) : null;
+  if (!accueil || !st) return pages;
+  const haut = accueil.slice(0, st.hautFin).replace(/\saria-current=(["'])page\1/gi, "");
+  const bas = accueil.slice(st.basDebut);
+  const legales = new Set<string>(PAGES_LEGALES.map((p) => p.cle));
+  const resultat: Record<string, string> = { [CLE_ACCUEIL]: accueil };
+  for (const [cle, html] of Object.entries(pages)) {
+    if (cle === CLE_ACCUEIL) continue;
+    const { debut, fin } = bornesContenu(html);
+    const fichier = fichierPage(cle).replace(/[.]/g, "\\.");
+    const hautPage = haut.replace(
+      new RegExp(`(<a\\b[^>]*\\bhref=(["'])${fichier}\\2)`, "gi"),
+      '$1 aria-current="page"'
+    );
+    const page = `${hautPage}${html.slice(debut, fin)}${bas}`;
+    resultat[cle] = legales.has(cle) ? ancresVersAccueil(page) : page;
+  }
+  return resultat;
+}
+
 // ─── Site complet en un seul fichier HTML ───────────────────────────────────────────────
 // Le téléchargement « HTML » d'un site multi-pages doit tout contenir, pas seulement
 // l'accueil : ouvert depuis le disque dans n'importe quel navigateur, les boutons Accueil,
@@ -348,16 +445,12 @@ const PREFIXE_ANCRE = "dv-";
 // Contenu propre d'une page : entre la fin de la première <nav> et le dernier <footer>
 // (ou </body>). Sans <nav>, depuis <body>.
 function bornesContenu(html: string): { debut: number; fin: number } {
-  const bas = html.toLowerCase();
+  const st = structurePage(html);
+  if (st) return { debut: st.hautFin, fin: st.basDebut };
   const body = /<body\b[^>]*>/i.exec(html);
-  const debutBody = body ? body.index + body[0].length : 0;
-  const finNav = bas.indexOf("</nav>", debutBody);
-  const debut = finNav === -1 ? debutBody : finNav + "</nav>".length;
-  const finBody = bas.lastIndexOf("</body>");
-  const limite = finBody === -1 ? html.length : finBody;
-  const footer = bas.lastIndexOf("<footer", limite);
-  const fin = footer >= debut ? footer : limite;
-  return { debut, fin };
+  const debut = body ? body.index + body[0].length : 0;
+  const finBody = html.toLowerCase().lastIndexOf("</body>");
+  return { debut, fin: finBody === -1 ? html.length : finBody };
 }
 
 function contenuDePage(html: string): string {

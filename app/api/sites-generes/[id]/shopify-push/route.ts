@@ -10,7 +10,7 @@ import {
   updatePage,
 } from "@/lib/shopify";
 import { htmlToLiquidSection, slugifyForShopify } from "@/lib/html-to-liquid";
-import { CLE_ACCUEIL, fichierPage, titrePageConnue } from "@/lib/site-builder-pages";
+import { CLE_ACCUEIL, fichierPage, pagesSiMultiples, titrePageConnue } from "@/lib/site-builder-pages";
 import { chargerTextesSite, langueDuHtml, type TextesSite } from "@/lib/site-textes";
 
 type ShopifyPage = { id: number; handle: string };
@@ -18,14 +18,6 @@ type ShopifyTheme = { id: number; role: string };
 
 const UNDEFINED_COLUMN = "42703";
 const SLUG = /^[a-z0-9-]+$/;
-
-// Pages d'un site multi-pages (sites_generes.pages, 040_sites_generes_pages.sql) : seulement
-// si c'est un objet d'au moins deux pages HTML. Sinon null → publication d'une seule page.
-function pagesMultiples(pages: unknown): Record<string, string> | null {
-  if (!pages || typeof pages !== "object" || Array.isArray(pages)) return null;
-  const entrees = Object.entries(pages).filter(([, html]) => typeof html === "string" && html.trim() !== "");
-  return entrees.length > 1 ? (Object.fromEntries(entrees) as Record<string, string>) : null;
-}
 
 // Titre Shopify d'une page secondaire : « Nom du site — Catalogue », « — Mentions légales »,
 // « — Lampes »…, dans la langue du site.
@@ -243,7 +235,7 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
     shopify_section_key: string | null;
     pages?: unknown;
   };
-  const pagesSite = pagesMultiples(site.pages);
+  const pagesSite = pagesSiMultiples(site.pages);
 
   if (pagesSite && mode === "liquid") {
     return NextResponse.json(
