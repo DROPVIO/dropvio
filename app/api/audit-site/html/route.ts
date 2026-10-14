@@ -17,7 +17,8 @@ type Category = {
 // Le modèle ne réécrit plus la page : à 2 000 000 de caractères, elle dépasse de loin sa
 // sortie maximale. Il renvoie des remplacements ciblés (extrait exact → nouvel extrait),
 // appliqués ici sur la page complète. La sortie ne dépend plus de la taille de la page.
-const SORTIE_MAX = 32000;
+// Même plafond qu'avant : il est réservé dans le quota (pondéré × 5) avant l'appel.
+const SORTIE_MAX = 24000;
 
 type Modification = { avant: string; apres: string; raison: string };
 
