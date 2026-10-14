@@ -1182,7 +1182,7 @@
     "url_missing": "URL mancante.",
     "url_forbidden": "Questo URL non è consentito.",
     "page_unreachable": "Pagina non raggiungibile o URL non valido.",
-    "page_too_large": "Questa pagina è troppo pesante (oltre 2 MB).",
+    "page_too_large": "Questa pagina è troppo pesante (oltre 8 MB).",
     "page_no_html": "Contenuto HTML non trovato o troppo breve su questa pagina.",
     "html_invalid": "HTML non valido o troppo breve.",
     "title_too_short": "Titolo mancante o troppo breve.",
@@ -1223,7 +1223,9 @@
     "shopify_reconnect_fulfillment": "Ricollega il tuo negozio Shopify per attivare l'invio automatico del tracciamento.",
     "shopify_not_found": "Risorsa non trovata su Shopify: il negozio potrebbe aver disinstallato l'app o cambiato dominio.",
     "shopify_rate_limited": "Limite di richieste Shopify raggiunto. Riprova tra qualche istante.",
-    "shopify_unknown": "Errore sconosciuto durante l'invio a Shopify."
+    "shopify_unknown": "Errore sconosciuto durante l'invio a Shopify.",
+    "audit_too_large": "Questa pagina conta {tokens, number} token, più di quanti l'IA possa leggere in una volta ({max, number}).",
+    "audit_tokens_limit": "Questo audit richiede circa {besoin, number} token e te ne restano {restant, number} su {max, number} questo mese (piano {plan}). La quota si azzera il mese prossimo."
   },
   "siteBuilder": {
     "boutique": {
@@ -2170,7 +2172,6 @@
       "recuperer": "Recupera",
       "htmlPlaceholder": "Incolla qui l'HTML completo della tua landing page",
       "caracteres": "{count, plural, one {{nombre} carattere} other {{nombre} caratteri}}",
-      "tronque": "· verrà troncato a {max} caratteri",
       "analyseEnCours": "Analisi IA in corso…",
       "analyser": "Analizza con l'IA →"
     },

@@ -11,10 +11,15 @@ export const PLAN_LIMITS: Record<Plan, {
   sitesParMoisMax: number | null;
   auditsParMoisMax: number | null;
   alternativesParMoisMax: number | null;
+  // Tokens (entrée + sortie) de l'audit IA par mois, toutes pages confondues : remplace
+  // l'ancienne troncature à 100 000 caractères. Une page de 2 000 000 de caractères pèse
+  // environ 500 000 à 700 000 tokens (moins quand elle contient des images base64, retirées
+  // avant l'envoi — voir lib/audit-config.ts).
+  tokensAuditParMoisMax: number | null;
 }> = {
-  free:   { produitsMax: 1000, produitsBoutiqueMax: 10, simulationsMax: 2, sitesParMoisMax: 5, auditsParMoisMax: 0, alternativesParMoisMax: 5 },
-  pro:    { produitsMax: null, produitsBoutiqueMax: 200, simulationsMax: null, sitesParMoisMax: 20, auditsParMoisMax: 30, alternativesParMoisMax: null },
-  agency: { produitsMax: null, produitsBoutiqueMax: 200, simulationsMax: null, sitesParMoisMax: 50, auditsParMoisMax: 100, alternativesParMoisMax: null },
+  free:   { produitsMax: 1000, produitsBoutiqueMax: 10, simulationsMax: 2, sitesParMoisMax: 5, auditsParMoisMax: 0, alternativesParMoisMax: 5, tokensAuditParMoisMax: 0 },
+  pro:    { produitsMax: null, produitsBoutiqueMax: 200, simulationsMax: null, sitesParMoisMax: 20, auditsParMoisMax: 30, alternativesParMoisMax: null, tokensAuditParMoisMax: 15_000_000 },
+  agency: { produitsMax: null, produitsBoutiqueMax: 200, simulationsMax: null, sitesParMoisMax: 50, auditsParMoisMax: 100, alternativesParMoisMax: null, tokensAuditParMoisMax: 50_000_000 },
 };
 
 const PLAN_LABEL: Record<Plan, string> = { free: "Free", pro: "Pro", agency: "Agency" };
@@ -92,6 +97,24 @@ export async function incrementMonthlyUsage(
 // (tokens_entree / tokens_sortie sur usage_mensuel) n'est pas appliquée. Même traitement que
 // dans app/api/sites-generes/[id]/route.ts pour la migration 035.
 const UNDEFINED_COLUMN = "42703";
+
+/** Tokens (entrée + sortie) consommés ce mois-ci par une fonctionnalité. 0 tant que la
+ *  migration 037a n'est pas appliquée : le quota de tokens ne bloque alors personne. */
+export async function getMonthlyTokens(
+  supabase: SupabaseClient,
+  userId: string,
+  feature: UsageFeature
+): Promise<number> {
+  const { data, error } = await supabase
+    .from("usage_mensuel")
+    .select("tokens_entree, tokens_sortie")
+    .eq("user_id", userId)
+    .eq("feature", feature)
+    .eq("mois", currentMonthKey())
+    .maybeSingle();
+  if (error) return 0;
+  return (data?.tokens_entree ?? 0) + (data?.tokens_sortie ?? 0);
+}
 
 /** Ajoute la consommation de tokens d'un appel modèle au cumul du mois en cours.
  *

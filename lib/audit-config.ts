@@ -1,14 +1,76 @@
-// Limite de troncature du HTML envoyé à l'audit IA — partagée entre l'affichage client
-// (app/audit/page.tsx) et les deux routes qui appellent Claude (app/api/audit-site/route.ts
-// pour le scoring, app/api/audit-site/html/route.ts pour la correction), pour que ce que
-// l'UI annonce corresponde toujours exactement à ce qui est réellement envoyé.
-//
-// Portée à 100 000 (depuis 20 000) après mesure réelle : à ce plafond, la route de
-// correction a besoin de max_tokens: 24000 pour compléter naturellement (testé sur une
-// vraie page à 100 000 caractères — stop_reason: max_tokens et sortie tronquée à 16000,
-// stop_reason: end_turn et sortie complète à 20 480/24000 tokens). Le scoring
-// (max_tokens: 8192) n'a pas eu besoin d'être remonté : sa sortie ne grandit pas avec la
-// taille de l'entrée (mesuré entre 20k et 200k caractères plus tôt ce soir, ~3300-4244
-// tokens de sortie dans tous les cas), contrairement à la correction qui doit reproduire
-// une bonne partie du HTML d'origine.
-export const AUDIT_HTML_MAX_CHARS = 100_000;
+// HTML envoyé à l'audit IA (app/api/audit-site/route.ts pour le scoring,
+// app/api/audit-site/html/route.ts pour la correction). Plus aucune troncature : la page est
+// envoyée en entier et la limite est un quota mensuel de tokens par plan
+// (PLAN_LIMITS.tokensAuditParMoisMax, lib/plan-limits.ts), mesuré avant l'appel avec
+// messages.countTokens.
+import type Anthropic from "@anthropic-ai/sdk";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import { getMonthlyTokens, planLabel, PLAN_LIMITS, type Plan } from "@/lib/plan-limits";
+import { apiError } from "@/lib/api-errors";
+
+export const AUDIT_MODELE = "claude-sonnet-4-6";
+
+// Fenêtre de contexte de claude-sonnet-4-6 (1M tokens). Seule limite de taille restante :
+// une page plus grosse que ça ne peut pas être lue d'un bloc par le modèle, quel que soit le quota.
+export const AUDIT_CONTEXTE_MAX_TOKENS = 1_000_000;
+
+// Images et polices intégrées en base64 : souvent la majorité du poids d'une page exportée,
+// et rien d'auditable dedans (le modèle ne « voit » pas une image à travers son base64). On
+// remplace la charge utile par un repère unique, en gardant le type MIME (data:image/png;base64,)
+// pour que le modèle sache qu'une image est là. Réversible avec restaurerHtml.
+const DONNEES_BASE64 = /(data:[\w.+-]+\/[\w.+-]+(?:;[\w-]+=[\w.-]+)*;base64,)([A-Za-z0-9+/=\s]{200,})/g;
+
+export type HtmlCompacte = { html: string; blocs: string[] };
+
+export function compacterHtml(html: string): HtmlCompacte {
+  const blocs: string[] = [];
+  const compacte = html.replace(DONNEES_BASE64, (_, entete: string, donnees: string) => {
+    blocs.push(donnees);
+    return `${entete}__DV_DONNEES_${blocs.length - 1}__`;
+  });
+  return { html: compacte, blocs };
+}
+
+export function restaurerHtml(html: string, blocs: string[]): string {
+  return html.replace(/__DV_DONNEES_(\d+)__/g, (repere, i: string) => blocs[Number(i)] ?? repere);
+}
+
+/** Vérifie, avant l'appel facturé, que la requête tient dans le contexte du modèle et dans le
+ *  quota de tokens du mois. Renvoie une réponse d'erreur prête à renvoyer, ou null si c'est bon.
+ *  `sortieMax` (le max_tokens de l'appel) est réservé dans le quota : la consommation réelle
+ *  est ensuite enregistrée par logTokensUsage avec les chiffres exacts de usage. */
+export async function verifierBudgetAudit(
+  client: Anthropic,
+  supabase: SupabaseClient,
+  userId: string,
+  plan: Plan,
+  requete: Pick<Anthropic.MessageCountTokensParams, "system" | "messages">,
+  sortieMax: number
+) {
+  const { input_tokens: entree } = await client.messages.countTokens({ model: AUDIT_MODELE, ...requete });
+
+  if (entree + sortieMax > AUDIT_CONTEXTE_MAX_TOKENS) {
+    return apiError(
+      "audit_too_large",
+      413,
+      `Cette page représente ${entree.toLocaleString("fr-FR")} tokens, au-delà de ce que l'IA peut lire en une fois (${(AUDIT_CONTEXTE_MAX_TOKENS - sortieMax).toLocaleString("fr-FR")}).`,
+      { values: { tokens: entree, max: AUDIT_CONTEXTE_MAX_TOKENS - sortieMax } }
+    );
+  }
+
+  const quota = PLAN_LIMITS[plan].tokensAuditParMoisMax;
+  if (quota !== null) {
+    const utilises = await getMonthlyTokens(supabase, userId, "audit_ia");
+    const restant = Math.max(0, quota - utilises);
+    if (entree + sortieMax > restant) {
+      return apiError(
+        "audit_tokens_limit",
+        403,
+        `Cet audit demande environ ${(entree + sortieMax).toLocaleString("fr-FR")} tokens, il t'en reste ${restant.toLocaleString("fr-FR")} sur ${quota.toLocaleString("fr-FR")} ce mois-ci (plan ${planLabel(plan)}).`,
+        { values: { besoin: entree + sortieMax, restant, max: quota, plan: planLabel(plan) } }
+      );
+    }
+  }
+
+  return null;
+}

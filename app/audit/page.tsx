@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useRef, useCallback, useEffect } from "react";
-import { AUDIT_HTML_MAX_CHARS } from "@/lib/audit-config";
 import { nomFichierAudit, tailleLisible, telechargerTexte } from "@/lib/audit-download";
 import { ToastHost, useToast } from "@/components/Toast";
 import { useLocale, useTranslations } from "next-intl";
@@ -421,7 +420,6 @@ export default function AuditPage() {
   }
 
   const charCount = html.length;
-  const willTruncate = charCount > AUDIT_HTML_MAX_CHARS;
 
   return (
     <div className="min-h-screen bg-[var(--bg)] px-8 py-10">
@@ -559,9 +557,6 @@ export default function AuditPage() {
           {charCount > 0 && (
             <p className="text-[11px] text-[var(--text-faint)]">
               {t("saisie.caracteres", { count: charCount, nombre: charCount.toLocaleString(toIntlTag(locale)) })}
-              {willTruncate && (
-                <span className="text-[var(--warning)] ml-2">{t("saisie.tronque", { max: AUDIT_HTML_MAX_CHARS.toLocaleString(toIntlTag(locale)) })}</span>
-              )}
             </p>
           )}
 

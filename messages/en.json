@@ -1182,7 +1182,7 @@
     "url_missing": "Missing URL.",
     "url_forbidden": "This URL isn't allowed.",
     "page_unreachable": "Page unreachable or invalid URL.",
-    "page_too_large": "This page is too large (over 2 MB).",
+    "page_too_large": "This page is too large (over 8 MB).",
     "page_no_html": "No HTML content found on this page, or it's too short.",
     "html_invalid": "Invalid or too short HTML.",
     "title_too_short": "Title missing or too short.",
@@ -1223,7 +1223,9 @@
     "shopify_reconnect_fulfillment": "Reconnect your Shopify store to enable automatic tracking updates.",
     "shopify_not_found": "Resource not found on Shopify: the store may have uninstalled the app or changed domain.",
     "shopify_rate_limited": "Shopify request limit reached. Please try again shortly.",
-    "shopify_unknown": "Unknown error while sending to Shopify."
+    "shopify_unknown": "Unknown error while sending to Shopify.",
+    "audit_too_large": "This page is {tokens, number} tokens, more than the AI can read at once ({max, number}).",
+    "audit_tokens_limit": "This audit needs about {besoin, number} tokens and you have {restant, number} of {max, number} left this month ({plan} plan). The quota resets next month."
   },
   "siteBuilder": {
     "boutique": {
@@ -2170,7 +2172,6 @@
       "recuperer": "Fetch",
       "htmlPlaceholder": "Paste the full HTML of your landing page here",
       "caracteres": "{count, plural, one {{nombre} character} other {{nombre} characters}}",
-      "tronque": "· will be truncated to {max} characters",
       "analyseEnCours": "AI analysis in progress…",
       "analyser": "Analyze with AI →"
     },

@@ -3,9 +3,10 @@ import { getServerUserAndPlan } from "@/lib/supabase-server";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { isUrlAllowed, normalizeUrl } from "@/lib/ssrf-guard";
 
-const MAX_BYTES = 2 * 1024 * 1024; // 2 Mo — l'audit tronque de toute façon à 100 000 caractères
-// (AUDIT_HTML_MAX_CHARS, lib/audit-config.ts), ce plafond n'existe que pour éviter de
-// télécharger une réponse énorme avant d'en arriver là.
+// L'audit lit la page entière (plus de troncature, voir lib/audit-config.ts) : le plafond laisse
+// passer les pages autour de 2 000 000 de caractères avec de la marge, et n'existe que pour
+// éviter de télécharger une réponse démesurée.
+const MAX_BYTES = 8 * 1024 * 1024;
 const FETCH_TIMEOUT_MS = 10_000;
 
 // Récupère le HTML d'une URL fournie par l'utilisateur, protection SSRF identique au Spy
@@ -74,7 +75,7 @@ export async function POST(request: NextRequest) {
     if (totalBytes > MAX_BYTES) {
       await reader.cancel().catch(() => {});
       return NextResponse.json(
-        { error: "Cette page est trop volumineuse (> 2 Mo).", code: "page_too_large" },
+        { error: "Cette page est trop volumineuse (> 8 Mo).", code: "page_too_large" },
         { status: 413 }
       );
     }

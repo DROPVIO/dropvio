@@ -1,13 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { getServerUserAndPlan } from "@/lib/supabase-server";
-import { PLAN_LIMITS, planLabel, getMonthlyUsage, incrementMonthlyUsage } from "@/lib/plan-limits";
+import { PLAN_LIMITS, planLabel, getMonthlyUsage, incrementMonthlyUsage, logTokensUsage } from "@/lib/plan-limits";
 import { checkRateLimit } from "@/lib/rate-limit";
-import { AUDIT_HTML_MAX_CHARS } from "@/lib/audit-config";
+import { AUDIT_MODELE, compacterHtml, verifierBudgetAudit } from "@/lib/audit-config";
 import { langueSite } from "@/lib/site-textes";
 import type { AppLocale } from "@/lib/locale";
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+
+// Une page de 2 000 000 de caractères (~600 000 tokens) prend plusieurs dizaines de secondes
+// rien qu'en lecture côté modèle.
+export const maxDuration = 300;
+
+// La sortie (le JSON de scoring) ne grandit pas avec la taille de la page : ~3300-4244 tokens
+// mesurés entre 20k et 200k caractères.
+const SORTIE_MAX = 8192;
 
 const NOMS_LANGUE: Record<AppLocale, string> = { fr: "français", en: "anglais", es: "espagnol", it: "italien" };
 
@@ -240,17 +248,22 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "HTML invalide ou trop court.", code: "html_invalid" }, { status: 400 });
     }
 
-    const truncated =
-      html.length > AUDIT_HTML_MAX_CHARS
-        ? html.slice(0, AUDIT_HTML_MAX_CHARS) + `\n<!-- [tronqué à ${AUDIT_HTML_MAX_CHARS.toLocaleString("fr-FR")} chars] -->`
-        : html;
+    // Page entière, sans troncature : seules les données base64 (images, polices) sont
+    // remplacées par un repère, elles n'ont rien d'auditable. La taille est bornée par le
+    // quota de tokens du plan et la fenêtre de contexte du modèle (verifierBudgetAudit).
+    const requete = {
+      system: `${SYSTEM}\n\nLANGUE : rédige tous les textes du JSON (score_designer, resume_executif, nom de chaque critère, points_forts, points_faibles, corrections_specifiques) en ${NOMS_LANGUE[langue]}. Les clés et les id restent tels quels.\n\nLes données base64 intégrées ont été remplacées par __DV_DONNEES_n__ : l'image ou la police est bien présente dans la page.`,
+      messages: [{ role: "user" as const, content: PROMPT + compacterHtml(html).html }],
+    };
 
-    const message = await client.messages.create({
-      model: "claude-sonnet-4-6",
-      max_tokens: 8192,
-      system: `${SYSTEM}\n\nLANGUE : rédige tous les textes du JSON (score_designer, resume_executif, nom de chaque critère, points_forts, points_faibles, corrections_specifiques) en ${NOMS_LANGUE[langue]}. Les clés et les id restent tels quels.`,
-      messages: [{ role: "user", content: PROMPT + truncated }],
-    });
+    const refus = await verifierBudgetAudit(client, supabase, user.id, plan, requete, SORTIE_MAX);
+    if (refus) return refus;
+
+    // Streaming : sur une très grosse page, un appel non streamé risque le délai HTTP du SDK.
+    const message = await client.messages
+      .stream({ model: AUDIT_MODELE, max_tokens: SORTIE_MAX, ...requete })
+      .finalMessage();
+    await logTokensUsage(supabase, user.id, "audit_ia", message.usage.input_tokens, message.usage.output_tokens);
 
     let raw: string | undefined;
     for (const block of message.content) {
