@@ -1229,7 +1229,8 @@
     "tri_aucun_produit": "Add products to the store before sorting them.",
     "tri_aucune_collection": "Enter at least one collection to sort the products into.",
     "tri_echec": "Sorting failed. Try again in a moment.",
-    "reecriture_aucun_produit": "Add products to the store before rewriting them."
+    "reecriture_aucun_produit": "Add products to the store before rewriting them.",
+    "prix_aucun_produit": "Add products to the store before adjusting their prices."
   },
   "siteBuilder": {
     "boutique": {
@@ -1484,6 +1485,20 @@
           "ignores": "{count, plural, one {# product couldn't be rewritten and keeps its texts.} other {# products couldn't be rewritten and keep their texts.}}",
           "annuler": "Undo rewrite",
           "annulationEnCours": "Undoing…"
+        },
+        "prix": {
+          "bouton": "💶 Adjust prices to the market",
+          "enCours": "Adjusting…",
+          "patience": "The AI is estimating the market price of each product, this can take a minute.",
+          "confirmer": "Adjust the price of {count, plural, one {the product} other {the # products}} to the market price? No price will go below the suggested selling price in the Dropvio Finder. You can undo right after.",
+          "erreur": "Price adjustment failed. Try again.",
+          "erreurAnnulation": "Couldn't undo the adjustment. Try again.",
+          "resultat": "{count, plural, =0 {No price changed: they were already at the right level.} one {# price adjusted.} other {# prices adjusted.}}",
+          "auPrixFinder": "{count, plural, one {# product is at the Finder price, higher than the estimated market.} other {# products are at the Finder price, higher than the estimated market.}}",
+          "ignores": "{count, plural, one {# product couldn't be estimated and keeps its price.} other {# products couldn't be estimated and keep their price.}}",
+          "annuler": "Undo adjustment",
+          "annulationEnCours": "Undoing…",
+          "ancienPrix": "Previous price: {prix}"
         }
       },
       "liste": {

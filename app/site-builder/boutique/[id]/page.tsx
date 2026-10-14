@@ -14,7 +14,7 @@ import { PLAN_LIMITS } from "@/lib/plan-limits";
 import BoutiqueReglages from "@/components/site-builder/BoutiqueReglages";
 import BoutiqueShopifyPush from "@/components/site-builder/BoutiqueShopifyPush";
 import TriCollectionsIA from "@/components/site-builder/TriCollectionsIA";
-import ReecrireProduitsIA from "@/components/site-builder/ReecrireProduitsIA";
+import ActionProduitsIA from "@/components/site-builder/ActionProduitsIA";
 import { AlerteLimiteProduits, BandeauDepassementProduits, CompteurProduits, limiteProduitsAtteinte } from "@/components/site-builder/LimiteProduitsBoutique";
 import { useApiErrorMessage } from "@/lib/use-api-error";
 import type { AppLocale } from "@/lib/locale";
@@ -47,6 +47,8 @@ type BoutiqueProduct = {
   prix_vente: number;
   prix_original?: number | null;
   category_id?: string | null;
+  // prix_avant_ajustement : prix d'avant le dernier ajustement IA (route ajuster-prix).
+  meta?: { prix_avant_ajustement?: number } & Record<string, unknown>;
   boutique_categories?: { nom: string; slug: string } | null;
   position: number;
   created_at: string;
@@ -1289,11 +1291,17 @@ export default function BoutiqueBuilderDetailPage() {
             </div>
 
             {params?.id ? (
-              <ReecrireProduitsIA
-                boutiqueId={String(params.id)}
-                produitsCount={totalProduits}
-                onTermine={() => fetchProducts(productPage)}
-              />
+              <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-start">
+                {(["reecrire-produits", "ajuster-prix"] as const).map((action) => (
+                  <ActionProduitsIA
+                    key={action}
+                    action={action}
+                    boutiqueId={String(params.id)}
+                    produitsCount={totalProduits}
+                    onTermine={() => fetchProducts(productPage)}
+                  />
+                ))}
+              </div>
             ) : null}
 
             <div className="rounded-3xl border border-[var(--border)] bg-[var(--surface-2)] p-4">
@@ -1326,6 +1334,11 @@ export default function BoutiqueBuilderDetailPage() {
                           </td>
                           <td className="px-4 py-3 align-top text-sm text-[var(--text-primary)]">
                             {formatPrice(product.prix_vente, locale)}{product.prix_original ? ` · ${formatPrice(product.prix_original, locale)}` : ""}
+                            {typeof product.meta?.prix_avant_ajustement === "number" && product.meta.prix_avant_ajustement !== Number(product.prix_vente) ? (
+                              <div className="mt-1 text-xs text-[var(--text-faint)]">
+                                {t("prix.ancienPrix", { prix: formatPrice(product.meta.prix_avant_ajustement, locale) })}
+                              </div>
+                            ) : null}
                           </td>
                           <td className="px-4 py-3 align-top space-y-2">
                             <button

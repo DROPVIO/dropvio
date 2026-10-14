@@ -1229,7 +1229,8 @@
     "tri_aucun_produit": "Ajoute des produits à la boutique avant de les trier.",
     "tri_aucune_collection": "Indique au moins une collection dans laquelle trier les produits.",
     "tri_echec": "Le tri a échoué. Réessaie dans un instant.",
-    "reecriture_aucun_produit": "Ajoute des produits à la boutique avant de les réécrire."
+    "reecriture_aucun_produit": "Ajoute des produits à la boutique avant de les réécrire.",
+    "prix_aucun_produit": "Ajoute des produits à la boutique avant d'ajuster leurs prix."
   },
   "siteBuilder": {
     "boutique": {
@@ -1484,6 +1485,20 @@
           "ignores": "{count, plural, one {# produit n'a pas pu être réécrit et garde ses textes.} other {# produits n'ont pas pu être réécrits et gardent leurs textes.}}",
           "annuler": "Annuler la réécriture",
           "annulationEnCours": "Annulation…"
+        },
+        "prix": {
+          "bouton": "💶 Ajuster les prix au marché",
+          "enCours": "Ajustement en cours…",
+          "patience": "L'IA estime le prix du marché de chaque produit, cela peut prendre une minute.",
+          "confirmer": "Ajuster le prix {count, plural, one {du produit} other {des # produits}} au prix du marché ? Aucun prix ne descendra sous le prix de vente suggéré du Finder Dropvio. Tu pourras annuler juste après.",
+          "erreur": "L'ajustement des prix a échoué. Réessaie.",
+          "erreurAnnulation": "Impossible d'annuler l'ajustement. Réessaie.",
+          "resultat": "{count, plural, =0 {Aucun prix modifié : ils étaient déjà au bon niveau.} one {# prix ajusté.} other {# prix ajustés.}}",
+          "auPrixFinder": "{count, plural, one {# produit est au prix du Finder, plus élevé que le marché estimé.} other {# produits sont au prix du Finder, plus élevé que le marché estimé.}}",
+          "ignores": "{count, plural, one {# produit n'a pas pu être estimé et garde son prix.} other {# produits n'ont pas pu être estimés et gardent leur prix.}}",
+          "annuler": "Annuler l'ajustement",
+          "annulationEnCours": "Annulation…",
+          "ancienPrix": "Ancien prix : {prix}"
         }
       },
       "liste": {

@@ -1229,7 +1229,8 @@
     "tri_aucun_produit": "Añade productos a la tienda antes de ordenarlos.",
     "tri_aucune_collection": "Indica al menos una colección en la que ordenar los productos.",
     "tri_echec": "No se pudo ordenar. Inténtalo de nuevo en un momento.",
-    "reecriture_aucun_produit": "Añade productos a la tienda antes de reescribirlos."
+    "reecriture_aucun_produit": "Añade productos a la tienda antes de reescribirlos.",
+    "prix_aucun_produit": "Añade productos a la tienda antes de ajustar sus precios."
   },
   "siteBuilder": {
     "boutique": {
@@ -1484,6 +1485,20 @@
           "ignores": "{count, plural, one {# producto no se pudo reescribir y conserva sus textos.} other {# productos no se pudieron reescribir y conservan sus textos.}}",
           "annuler": "Deshacer la reescritura",
           "annulationEnCours": "Deshaciendo…"
+        },
+        "prix": {
+          "bouton": "💶 Ajustar los precios al mercado",
+          "enCours": "Ajustando…",
+          "patience": "La IA estima el precio de mercado de cada producto, puede tardar un minuto.",
+          "confirmer": "¿Ajustar el precio {count, plural, one {del producto} other {de los # productos}} al precio de mercado? Ningún precio bajará del precio de venta sugerido en el Finder de Dropvio. Podrás deshacerlo justo después.",
+          "erreur": "No se pudieron ajustar los precios. Inténtalo de nuevo.",
+          "erreurAnnulation": "No se pudo deshacer el ajuste. Inténtalo de nuevo.",
+          "resultat": "{count, plural, =0 {Ningún precio modificado: ya estaban al nivel correcto.} one {# precio ajustado.} other {# precios ajustados.}}",
+          "auPrixFinder": "{count, plural, one {# producto está al precio del Finder, más alto que el mercado estimado.} other {# productos están al precio del Finder, más alto que el mercado estimado.}}",
+          "ignores": "{count, plural, one {# producto no se pudo estimar y conserva su precio.} other {# productos no se pudieron estimar y conservan su precio.}}",
+          "annuler": "Deshacer el ajuste",
+          "annulationEnCours": "Deshaciendo…",
+          "ancienPrix": "Precio anterior: {prix}"
         }
       },
       "liste": {

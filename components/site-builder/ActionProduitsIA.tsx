@@ -4,21 +4,28 @@ import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { useApiErrorMessage } from "@/lib/use-api-error";
 
-type Ancien = { id: string; nom: string; description: string | null };
-type Resultat = { modifies: number; ignores: number; anciens: Ancien[] };
+// Valeurs d'avant l'action, renvoyées telles quelles à la route pour l'annuler.
+type Resultat = { modifies: number; ignores: number; auPrixFinder?: number; anciens: unknown[] };
 
 type Props = {
   boutiqueId: string;
   produitsCount: number;
-  // Recharge la liste des produits après la réécriture ou son annulation.
+  // reecrire-produits (titres et descriptions) ou ajuster-prix (prix du marché).
+  action: "reecrire-produits" | "ajuster-prix";
+  // Recharge la liste des produits après l'action ou son annulation.
   onTermine: () => Promise<void> | void;
 };
 
-// Bouton unique de la section Produits : réécrit par l'IA le titre et la description de tous
-// les produits (route /api/boutiques/[id]/reecrire-produits). La dernière réécriture peut être
-// annulée tant que la page reste ouverte.
-export default function ReecrireProduitsIA({ boutiqueId, produitsCount, onTermine }: Props) {
-  const t = useTranslations("siteBuilder.boutique.gestion.reecriture");
+const NAMESPACES = {
+  "reecrire-produits": "siteBuilder.boutique.gestion.reecriture",
+  "ajuster-prix": "siteBuilder.boutique.gestion.prix",
+} as const;
+
+// Bouton de la section Produits qui applique une action IA à tous les produits de la boutique
+// (route /api/boutiques/[id]/<action>). POST applique et renvoie les anciennes valeurs, PATCH
+// avec ces valeurs annule : la dernière action reste annulable tant que la page est ouverte.
+export default function ActionProduitsIA({ boutiqueId, produitsCount, action, onTermine }: Props) {
+  const t = useTranslations(NAMESPACES[action]);
   const apiErrorMessage = useApiErrorMessage();
 
   const [enCours, setEnCours] = useState(false);
@@ -33,7 +40,7 @@ export default function ReecrireProduitsIA({ boutiqueId, produitsCount, onTermin
     setErreur(null);
     setResultat(null);
     try {
-      const res = await fetch(`/api/boutiques/${boutiqueId}/reecrire-produits`, { method: "POST" });
+      const res = await fetch(`/api/boutiques/${boutiqueId}/${action}`, { method: "POST" });
       const json = await res.json();
       if (!res.ok) {
         setErreur(apiErrorMessage(json, t("erreur")));
@@ -53,7 +60,7 @@ export default function ReecrireProduitsIA({ boutiqueId, produitsCount, onTermin
     setAnnulation(true);
     setErreur(null);
     try {
-      const res = await fetch(`/api/boutiques/${boutiqueId}/reecrire-produits`, {
+      const res = await fetch(`/api/boutiques/${boutiqueId}/${action}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ anciens: resultat.anciens }),
@@ -73,7 +80,7 @@ export default function ReecrireProduitsIA({ boutiqueId, produitsCount, onTermin
   }
 
   return (
-    <div className="mb-6 space-y-3">
+    <div className="space-y-3">
       <button
         type="button"
         onClick={() => void reecrire()}
@@ -88,6 +95,7 @@ export default function ReecrireProduitsIA({ boutiqueId, produitsCount, onTermin
         <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-[var(--border)] bg-[var(--surface-2)] p-3 text-sm">
           <p className="text-[var(--text-primary)]">
             {t("resultat", { count: resultat.modifies })}
+            {resultat.auPrixFinder ? ` ${t("auPrixFinder", { count: resultat.auPrixFinder })}` : ""}
             {resultat.ignores > 0 ? ` ${t("ignores", { count: resultat.ignores })}` : ""}
           </p>
           <button
