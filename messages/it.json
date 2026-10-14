@@ -1225,7 +1225,10 @@
     "shopify_rate_limited": "Limite di richieste Shopify raggiunto. Riprova tra qualche istante.",
     "shopify_unknown": "Errore sconosciuto durante l'invio a Shopify.",
     "audit_too_large": "Questa pagina conta {tokens, number} token, più di quanti l'IA possa leggere in una volta ({max, number}).",
-    "audit_tokens_limit": "Questo audit richiede circa {besoin, number} token e te ne restano {restant, number} su {max, number} questo mese (piano {plan}). La quota si azzera il mese prossimo."
+    "audit_tokens_limit": "Questo audit richiede circa {besoin, number} token e te ne restano {restant, number} su {max, number} questo mese (piano {plan}). La quota si azzera il mese prossimo.",
+    "tri_aucun_produit": "Aggiungi prodotti al negozio prima di ordinarli.",
+    "tri_aucune_collection": "Indica almeno una collezione in cui ordinare i prodotti.",
+    "tri_echec": "Ordinamento non riuscito. Riprova tra un attimo."
   },
   "siteBuilder": {
     "boutique": {
@@ -1448,6 +1451,26 @@
           "creerCategorie": "Impossibile creare la categoria.",
           "renommerCategorie": "Impossibile rinominare la categoria.",
           "supprimerCategorie": "Impossibile eliminare la categoria."
+        },
+        "tri": {
+          "titre": "Ordina i miei prodotti con l'IA",
+          "aide": "Inserisci il nome di una collezione, e una descrizione se vuoi precisare cosa contiene: l'IA mette ogni prodotto nella collezione che lo descrive, in base al titolo. Le collezioni che non esistono ancora vengono create.",
+          "nom": "Nome della collezione",
+          "nomPlaceholder": "Es.: Lampade",
+          "description": "Descrizione (facoltativa)",
+          "descriptionPlaceholder": "Es.: lampade da comodino, luci notturne e catene luminose",
+          "retirer": "Rimuovi questa collezione",
+          "ajouter": "+ Aggiungi una collezione",
+          "inclureExistantes": "Usa anche le mie collezioni esistenti: {noms}",
+          "trier": "Ordina i miei prodotti",
+          "enCours": "Ordinamento in corso…",
+          "erreur": "Ordinamento non riuscito. Riprova.",
+          "erreurAnnulation": "Impossibile annullare l'ordinamento. Riprova.",
+          "resultat": "{count, plural, =0 {Nessun prodotto spostato: erano già ordinati.} one {# prodotto ordinato.} other {# prodotti ordinati.}}",
+          "parCollection": "{nom}: {count, plural, =0 {nessun prodotto} one {# prodotto} other {# prodotti}}",
+          "sansCollection": "{count, plural, one {# prodotto non corrisponde a nessuna collezione: mantiene la sua.} other {# prodotti non corrispondono a nessuna collezione: mantengono la loro.}}",
+          "annulerTri": "Annulla questo ordinamento",
+          "annulationEnCours": "Annullamento…"
         }
       },
       "liste": {

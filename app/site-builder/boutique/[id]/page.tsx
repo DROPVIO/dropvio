@@ -13,6 +13,7 @@ import { writeBoutiqueDraft, type ProduitBoutiqueDraft } from "@/lib/site-builde
 import { PLAN_LIMITS } from "@/lib/plan-limits";
 import BoutiqueReglages from "@/components/site-builder/BoutiqueReglages";
 import BoutiqueShopifyPush from "@/components/site-builder/BoutiqueShopifyPush";
+import TriCollectionsIA from "@/components/site-builder/TriCollectionsIA";
 import { AlerteLimiteProduits, BandeauDepassementProduits, CompteurProduits, limiteProduitsAtteinte } from "@/components/site-builder/LimiteProduitsBoutique";
 import { useApiErrorMessage } from "@/lib/use-api-error";
 import type { AppLocale } from "@/lib/locale";
@@ -1585,6 +1586,16 @@ export default function BoutiqueBuilderDetailPage() {
                 {creatingCategory ? t("categories.creation") : t("categories.creer")}
               </button>
             </form>
+
+            {params?.id ? (
+              <TriCollectionsIA
+                boutiqueId={String(params.id)}
+                categories={categories}
+                onTermine={async () => {
+                  await Promise.all([fetchCategories(), fetchProducts(1)]);
+                }}
+              />
+            ) : null}
 
             {categoriesLoading ? (
               <p className="mt-6 text-sm text-[var(--text-muted)]">{t("categories.chargement")}</p>
