@@ -1,4 +1,4 @@
-import { siteEnUnFichier } from "@/lib/site-builder-pages";
+import { liensInternesSansNouvelOnglet, siteEnUnFichier } from "@/lib/site-builder-pages";
 import { slugFichier, telechargerTexte } from "@/lib/audit-download";
 
 // Site multi-pages (accueil, catalogue, collections, pages légales) téléchargé en un seul
@@ -9,4 +9,9 @@ export function telechargerSiteMultiPages(pages: Record<string, string>, nomSite
   const nomFichier = `${slugFichier(nomSite) || "site"}.html`;
   telechargerTexte(siteEnUnFichier(pages), nomFichier);
   return nomFichier;
+}
+
+// Site d'une seule page : même nettoyage des liens internes que pour un site multi-pages.
+export function telechargerPageSeule(html: string, nomFichier: string): void {
+  telechargerTexte(liensInternesSansNouvelOnglet(html), nomFichier);
 }

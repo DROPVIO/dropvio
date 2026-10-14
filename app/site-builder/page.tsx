@@ -16,7 +16,7 @@ import { SHOW_LEGACY_TEMPLATES } from "@/lib/flags";
 import { useBoutiqueDraft } from "@/lib/site-builder-handoff";
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
 import { slugFichier, telechargerTexte } from "@/lib/audit-download";
-import { telechargerSiteMultiPages } from "@/lib/telechargement-site";
+import { telechargerPageSeule, telechargerSiteMultiPages } from "@/lib/telechargement-site";
 import { ToastHost, useToast } from "@/components/Toast";
 import { LIEN_CHANGER_DE_PLAN } from "@/lib/plan-links";
 import { useLocale, useTranslations } from "next-intl";
@@ -46,8 +46,11 @@ const STYLES: Array<{
 // (app/api/generate-site/route.ts), qui refuse aussi la génération en dessous.
 const PROMPT_MIN_CARACTERES = 20;
 
+// Liens externes (http/https) ouverts dans un nouvel onglet. Les liens internes (#ancre,
+// pages du site) restent tels quels : avec target="_blank", chaque clic sur « Commander » ou
+// sur la navigation ouvrait un nouvel onglet dans le fichier téléchargé.
 function addTargetBlank(html: string): string {
-  return html.replace(/<a(\s)/gi, '<a target="_blank" rel="noopener noreferrer"$1');
+  return html.replace(/<a(\s[^>]*?\bhref=["']https?:)/gi, '<a target="_blank" rel="noopener noreferrer"$1');
 }
 
 // Palette initiale passée par « Créer mon site » (page boutique) via ?colorPrimary=…
@@ -537,7 +540,7 @@ function SiteBuilderContent() {
     // slugFichier() : nom vient de l'utilisateur (nom de produit ou de boutique) et peut
     // contenir des accents, que l'ancien replace() sur les espaces laissait passer.
     const nomFichier = `${slugFichier(nom)}-landing.html`;
-    telechargerTexte(generatedHtml, nomFichier);
+    telechargerPageSeule(generatedHtml, nomFichier);
     succes(t("fichierTelecharge", { fichier: nomFichier }));
   }
 

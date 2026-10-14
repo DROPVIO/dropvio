@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
 import { toIntlTag, type AppLocale } from "@/lib/locale";
 import { slugFichier, telechargerTexte } from "@/lib/audit-download";
-import { telechargerSiteMultiPages } from "@/lib/telechargement-site";
+import { telechargerPageSeule, telechargerSiteMultiPages } from "@/lib/telechargement-site";
 import { pagesSiMultiples } from "@/lib/site-builder-pages";
 import { htmlToLiquidSection } from "@/lib/html-to-liquid";
 import { FORMATS_EXPORT, LABEL_FORMAT, type FormatExport } from "@/lib/format-export";
@@ -158,7 +158,7 @@ export default function MesSitesPage() {
         return;
       }
       const nomFichier = `${slug}-landing.html`;
-      telechargerTexte(json.html_content, nomFichier);
+      telechargerPageSeule(json.html_content, nomFichier);
       succes(t("downloadOk", { nom: nomFichier }));
     } catch {
       echec(t("errorDownload"));

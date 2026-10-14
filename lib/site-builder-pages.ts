@@ -374,32 +374,81 @@ function liensVersAncres(html: string, cles: Set<string>): string {
   });
 }
 
+// Les pages générées ont presque toujours leur propre script de défilement doux, qui
+// intercepte tous les liens « #… » et bloque leur action par défaut : un simple écouteur de
+// hashchange ne voyait alors jamais le clic. Le clic est donc intercepté ici en phase de
+// capture (avant tous les scripts de la page) et la page change sans dépendre du hash. Chaque
+// bloc porte aussi l'id « dv-<clé> » : un script de défilement qui cherche la cible du lien la
+// trouve, désormais visible, au lieu d'échouer.
 const SCRIPT_NAVIGATION = `<style>[data-dv-page][hidden]{display:none!important}</style>
 <script>
 (function(){
   var pages = document.querySelectorAll('[data-dv-page]');
-  function afficher(){
-    var m = /^#${PREFIXE_ANCRE}([a-z0-9-]+)$/.exec(location.hash);
-    var cle = m && document.querySelector('[data-dv-page="' + m[1] + '"]') ? m[1] : null;
-    // Ancre ordinaire (#commander…) : afficher la page qui contient la cible, puis y défiler.
-    var cible = !m && location.hash.length > 1 ? document.getElementById(decodeURIComponent(location.hash.slice(1))) : null;
-    var bloc = cible && cible.closest ? cible.closest('[data-dv-page]') : null;
-    if (!cle) cle = bloc ? bloc.getAttribute('data-dv-page') : '${CLE_ACCUEIL}';
+  function bloc(cle){ return document.querySelector('[data-dv-page="' + cle + '"]'); }
+  function montrer(cle){
+    if (!bloc(cle)) cle = '${CLE_ACCUEIL}';
     for (var i = 0; i < pages.length; i++) pages[i].hidden = pages[i].getAttribute('data-dv-page') !== cle;
     var liens = document.querySelectorAll('a[href^="#${PREFIXE_ANCRE}"]');
     for (var j = 0; j < liens.length; j++) {
       if (liens[j].getAttribute('href') === '#${PREFIXE_ANCRE}' + cle) liens[j].setAttribute('aria-current', 'page');
       else liens[j].removeAttribute('aria-current');
     }
-    if (m) window.scrollTo(0, 0);
-    else if (cible) cible.scrollIntoView();
   }
-  window.addEventListener('hashchange', afficher);
-  afficher();
+  // Page demandée par l'adresse (#dv-clé, ou ancre d'un élément d'une page).
+  function depuisAdresse(defiler){
+    var h = decodeURIComponent(location.hash.slice(1));
+    var m = /^${PREFIXE_ANCRE}([a-z0-9-]+)$/.exec(h);
+    if (m && bloc(m[1])) { montrer(m[1]); if (defiler) window.scrollTo(0, 0); return; }
+    var cible = h ? document.getElementById(h) : null;
+    var b = cible && cible.closest ? cible.closest('[data-dv-page]') : null;
+    montrer(b ? b.getAttribute('data-dv-page') : '${CLE_ACCUEIL}');
+    if (cible && defiler) cible.scrollIntoView();
+  }
+  function memoriser(hash){
+    try { history.pushState(null, '', hash); } catch (err) { /* fichier ouvert hors http : l'adresse ne change pas */ }
+  }
+  document.addEventListener('click', function(e){
+    var a = e.target && e.target.closest ? e.target.closest('a[href^="#"]') : null;
+    if (!a) return;
+    var h = decodeURIComponent((a.getAttribute('href') || '').slice(1));
+    var m = /^${PREFIXE_ANCRE}([a-z0-9-]+)$/.exec(h);
+    if (m && bloc(m[1])) {
+      e.preventDefault();
+      montrer(m[1]);
+      memoriser('#' + h);
+      window.scrollTo(0, 0);
+      return;
+    }
+    // Ancre vers un élément d'une page masquée (ex. « Commander » depuis une page légale).
+    var cible = h ? document.getElementById(h) : null;
+    var b = cible && cible.closest ? cible.closest('[data-dv-page]') : null;
+    if (b && b.hidden) {
+      e.preventDefault();
+      montrer(b.getAttribute('data-dv-page'));
+      memoriser('#' + h);
+      cible.scrollIntoView();
+    }
+  }, true);
+  window.addEventListener('popstate', function(){ depuisAdresse(true); });
+  window.addEventListener('hashchange', function(){ depuisAdresse(true); });
+  depuisAdresse(location.hash.length > 1);
 })();
 </script>`;
 
-export function siteEnUnFichier(pages: Record<string, string>): string {
+// Retire le target="_blank" que l'ancien Site Builder ajoutait à TOUS les liens des pages
+// enregistrées (y compris « #commander » et la navigation) : sans cela, chaque clic dans le
+// fichier téléchargé ouvrait un nouvel onglet. Les liens externes le gardent.
+export function liensInternesSansNouvelOnglet(html: string): string {
+  return html.replace(
+    /<a target="_blank" rel="noopener noreferrer"(\s[^>]*?\bhref=["'](?:#|[a-z0-9-]+\.html)[^>]*>)/gi,
+    "<a$1"
+  );
+}
+
+export function siteEnUnFichier(pagesBrutes: Record<string, string>): string {
+  const pages = Object.fromEntries(
+    Object.entries(pagesBrutes).map(([cle, html]) => [cle, liensInternesSansNouvelOnglet(html)])
+  );
   const accueil = pages[CLE_ACCUEIL];
   if (!accueil) return Object.values(pages)[0] ?? "";
   const cles = new Set(Object.keys(pages));
@@ -413,7 +462,7 @@ export function siteEnUnFichier(pages: Record<string, string>): string {
   const blocs = ordre
     .map(
       (cle) =>
-        `<div data-dv-page="${cle}"${cle === CLE_ACCUEIL ? "" : " hidden"}>${
+        `<div id="${PREFIXE_ANCRE}${cle}" data-dv-page="${cle}"${cle === CLE_ACCUEIL ? "" : " hidden"}>${
           cle === CLE_ACCUEIL ? contenuAccueil : contenuDePage(pages[cle])
         }</div>`
     )
