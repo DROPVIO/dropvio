@@ -1228,7 +1228,8 @@
     "audit_tokens_limit": "This audit needs about {besoin, number} tokens and you have {restant, number} of {max, number} left this month ({plan} plan). The quota resets next month.",
     "tri_aucun_produit": "Add products to the store before sorting them.",
     "tri_aucune_collection": "Enter at least one collection to sort the products into.",
-    "tri_echec": "Sorting failed. Try again in a moment."
+    "tri_echec": "Sorting failed. Try again in a moment.",
+    "reecriture_aucun_produit": "Add products to the store before rewriting them."
   },
   "siteBuilder": {
     "boutique": {
@@ -1470,6 +1471,18 @@
           "parCollection": "{nom}: {count, plural, =0 {no products} one {# product} other {# products}}",
           "sansCollection": "{count, plural, one {# product matches no collection: it keeps its current one.} other {# products match no collection: they keep their current one.}}",
           "annulerTri": "Undo this sort",
+          "annulationEnCours": "Undoing…"
+        },
+        "reecriture": {
+          "bouton": "✨ Rewrite all titles and descriptions",
+          "enCours": "Rewriting…",
+          "patience": "The AI is rewriting each product, this can take a minute.",
+          "confirmer": "Rewrite the title and description of {count, plural, one {the product} other {the # products}} in the store? Current texts will be replaced (you can undo right after).",
+          "erreur": "Rewriting failed. Try again.",
+          "erreurAnnulation": "Couldn't undo the rewrite. Try again.",
+          "resultat": "{count, plural, one {# product rewritten.} other {# products rewritten.}}",
+          "ignores": "{count, plural, one {# product couldn't be rewritten and keeps its texts.} other {# products couldn't be rewritten and keep their texts.}}",
+          "annuler": "Undo rewrite",
           "annulationEnCours": "Undoing…"
         }
       },

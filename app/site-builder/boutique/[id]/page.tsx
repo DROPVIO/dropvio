@@ -14,6 +14,7 @@ import { PLAN_LIMITS } from "@/lib/plan-limits";
 import BoutiqueReglages from "@/components/site-builder/BoutiqueReglages";
 import BoutiqueShopifyPush from "@/components/site-builder/BoutiqueShopifyPush";
 import TriCollectionsIA from "@/components/site-builder/TriCollectionsIA";
+import ReecrireProduitsIA from "@/components/site-builder/ReecrireProduitsIA";
 import { AlerteLimiteProduits, BandeauDepassementProduits, CompteurProduits, limiteProduitsAtteinte } from "@/components/site-builder/LimiteProduitsBoutique";
 import { useApiErrorMessage } from "@/lib/use-api-error";
 import type { AppLocale } from "@/lib/locale";
@@ -1286,6 +1287,14 @@ export default function BoutiqueBuilderDetailPage() {
               </div>
               {plan !== null ? <CompteurProduits plan={plan} count={produitsCount} /> : null}
             </div>
+
+            {params?.id ? (
+              <ReecrireProduitsIA
+                boutiqueId={String(params.id)}
+                produitsCount={totalProduits}
+                onTermine={() => fetchProducts(productPage)}
+              />
+            ) : null}
 
             <div className="rounded-3xl border border-[var(--border)] bg-[var(--surface-2)] p-4">
               {productsLoading ? (

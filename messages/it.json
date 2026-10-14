@@ -1228,7 +1228,8 @@
     "audit_tokens_limit": "Questo audit richiede circa {besoin, number} token e te ne restano {restant, number} su {max, number} questo mese (piano {plan}). La quota si azzera il mese prossimo.",
     "tri_aucun_produit": "Aggiungi prodotti al negozio prima di ordinarli.",
     "tri_aucune_collection": "Indica almeno una collezione in cui ordinare i prodotti.",
-    "tri_echec": "Ordinamento non riuscito. Riprova tra un attimo."
+    "tri_echec": "Ordinamento non riuscito. Riprova tra un attimo.",
+    "reecriture_aucun_produit": "Aggiungi prodotti al negozio prima di riscriverli."
   },
   "siteBuilder": {
     "boutique": {
@@ -1470,6 +1471,18 @@
           "parCollection": "{nom}: {count, plural, =0 {nessun prodotto} one {# prodotto} other {# prodotti}}",
           "sansCollection": "{count, plural, one {# prodotto non corrisponde a nessuna collezione: mantiene la sua.} other {# prodotti non corrispondono a nessuna collezione: mantengono la loro.}}",
           "annulerTri": "Annulla questo ordinamento",
+          "annulationEnCours": "Annullamento…"
+        },
+        "reecriture": {
+          "bouton": "✨ Riscrivi tutti i titoli e le descrizioni",
+          "enCours": "Riscrittura in corso…",
+          "patience": "L'IA riscrive ogni prodotto, può richiedere un minuto.",
+          "confirmer": "Riscrivere il titolo e la descrizione {count, plural, one {del prodotto} other {dei # prodotti}} del negozio? I testi attuali saranno sostituiti (potrai annullare subito dopo).",
+          "erreur": "Riscrittura non riuscita. Riprova.",
+          "erreurAnnulation": "Impossibile annullare la riscrittura. Riprova.",
+          "resultat": "{count, plural, one {# prodotto riscritto.} other {# prodotti riscritti.}}",
+          "ignores": "{count, plural, one {# prodotto non è stato riscritto e mantiene i suoi testi.} other {# prodotti non sono stati riscritti e mantengono i loro testi.}}",
+          "annuler": "Annulla la riscrittura",
           "annulationEnCours": "Annullamento…"
         }
       },

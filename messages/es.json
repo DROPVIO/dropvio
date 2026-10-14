@@ -1228,7 +1228,8 @@
     "audit_tokens_limit": "Esta auditoría requiere unos {besoin, number} tokens y te quedan {restant, number} de {max, number} este mes (plan {plan}). La cuota se reinicia el mes que viene.",
     "tri_aucun_produit": "Añade productos a la tienda antes de ordenarlos.",
     "tri_aucune_collection": "Indica al menos una colección en la que ordenar los productos.",
-    "tri_echec": "No se pudo ordenar. Inténtalo de nuevo en un momento."
+    "tri_echec": "No se pudo ordenar. Inténtalo de nuevo en un momento.",
+    "reecriture_aucun_produit": "Añade productos a la tienda antes de reescribirlos."
   },
   "siteBuilder": {
     "boutique": {
@@ -1470,6 +1471,18 @@
           "parCollection": "{nom}: {count, plural, =0 {ningún producto} one {# producto} other {# productos}}",
           "sansCollection": "{count, plural, one {# producto no corresponde a ninguna colección: conserva la suya.} other {# productos no corresponden a ninguna colección: conservan la suya.}}",
           "annulerTri": "Deshacer este orden",
+          "annulationEnCours": "Deshaciendo…"
+        },
+        "reecriture": {
+          "bouton": "✨ Reescribir todos los títulos y descripciones",
+          "enCours": "Reescribiendo…",
+          "patience": "La IA reescribe cada producto, puede tardar un minuto.",
+          "confirmer": "¿Reescribir el título y la descripción {count, plural, one {del producto} other {de los # productos}} de la tienda? Los textos actuales se reemplazarán (podrás deshacerlo justo después).",
+          "erreur": "No se pudo reescribir. Inténtalo de nuevo.",
+          "erreurAnnulation": "No se pudo deshacer la reescritura. Inténtalo de nuevo.",
+          "resultat": "{count, plural, one {# producto reescrito.} other {# productos reescritos.}}",
+          "ignores": "{count, plural, one {# producto no se pudo reescribir y conserva sus textos.} other {# productos no se pudieron reescribir y conservan sus textos.}}",
+          "annuler": "Deshacer la reescritura",
           "annulationEnCours": "Deshaciendo…"
         }
       },
