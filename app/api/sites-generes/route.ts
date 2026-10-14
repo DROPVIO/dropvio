@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerUserAndPlan } from "@/lib/supabase-server";
 import { PLAN_LIMITS, planLabel, currentMonthKey } from "@/lib/plan-limits";
 import { estFormatExport } from "@/lib/format-export";
+import { pagesValides } from "@/lib/site-builder-pages";
 
 // Code PostgreSQL « undefined_column », remonté tel quel par PostgREST tant qu'une migration
 // n'est pas appliquée — ici 039 (sites_generes.format_export).
@@ -60,15 +61,6 @@ export async function GET() {
   });
 }
 
-// Objet clé → HTML : clés en [a-z0-9-], valeurs chaînes non vides, au moins une page.
-function pagesValides(pages: unknown): pages is Record<string, string> {
-  if (!pages || typeof pages !== "object" || Array.isArray(pages)) return false;
-  const entrees = Object.entries(pages);
-  return (
-    entrees.length > 0 &&
-    entrees.every(([cle, html]) => /^[a-z0-9-]+$/.test(cle) && typeof html === "string" && html.trim() !== "")
-  );
-}
 
 export async function POST(request: NextRequest) {
   const { supabase, user, plan } = await getServerUserAndPlan();

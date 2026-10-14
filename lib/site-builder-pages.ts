@@ -25,6 +25,17 @@ export function pagesSiMultiples(pages: unknown): Record<string, string> | null 
   return entrees.length > 1 ? (Object.fromEntries(entrees) as Record<string, string>) : null;
 }
 
+// Pages envoyées par le client : objet clé → HTML non vide, clés limitées à [a-z0-9-] (elles
+// deviennent des noms de fichiers et des handles Shopify).
+export function pagesValides(pages: unknown): pages is Record<string, string> {
+  if (!pages || typeof pages !== "object" || Array.isArray(pages)) return false;
+  const entrees = Object.entries(pages);
+  return (
+    entrees.length > 0 &&
+    entrees.every(([cle, html]) => /^[a-z0-9-]+$/.test(cle) && typeof html === "string" && html.trim() !== "")
+  );
+}
+
 // Nom de fichier d'une page : index.html pour l'accueil (servi par défaut par tout
 // hébergement statique), <clé>.html sinon.
 export function fichierPage(cle: string): string {

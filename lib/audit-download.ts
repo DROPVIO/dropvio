@@ -36,7 +36,11 @@ export function telechargerTexte(
   nomFichier: string,
   mime = "text/html;charset=utf-8"
 ): void {
-  const blob = new Blob([contenu], { type: mime });
+  telechargerBlob(new Blob([contenu], { type: mime }), nomFichier);
+}
+
+/** Télécharge un Blob comme fichier (mêmes précautions que telechargerTexte ci-dessus). */
+export function telechargerBlob(blob: Blob, nomFichier: string): void {
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;

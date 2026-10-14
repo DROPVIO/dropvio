@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseServerClient, getServerUserPlanOnly } from "@/lib/supabase-server";
 import { estFormatExport } from "@/lib/format-export";
+import { pagesValides } from "@/lib/site-builder-pages";
 
 // Le select inclut les champs de pré-remplissage (description, lien_aliexpress, image_url,
 // prix_vente, prix_original, style_id, couleur_*, voir 032_sites_generes_regeneration_fields.sql)
@@ -39,7 +40,10 @@ export async function GET(
     });
   }
 
-  return NextResponse.json(data);
+  // Pages du site multi-pages (040_sites_generes_pages.sql), lues à part : sans la migration,
+  // la colonne n'existe pas (42703) et le site reste une seule page (html_content).
+  const { data: avecPages } = await supabase.from("sites_generes").select("pages").eq("id", id).maybeSingle();
+  return NextResponse.json({ ...data, pages: avecPages?.pages ?? null });
 }
 
 // Code d'erreur PostgreSQL « undefined_column », remonté tel quel par PostgREST quand une
@@ -125,6 +129,11 @@ export async function PATCH(
   if (typeof body.html_content === "string" && body.html_content) {
     updates.html_content = body.html_content;
   }
+  // Toutes les pages d'un site multi-pages, envoyées avec html_content quand une modification
+  // (couleurs) les touche toutes : sans elles, le téléchargement .zip mélangerait les versions.
+  if (pagesValides(body.pages)) {
+    updates.pages = body.pages;
+  }
   if (typeof body.est_favori === "boolean") {
     updates.est_favori = body.est_favori;
   }
@@ -167,12 +176,18 @@ export async function PATCH(
   // indistinguable d'un succès. Vaut pour tous les appelants de cette route, pas seulement
   // pour « Appliquer au site » : le toggle favori et la sauvegarde des couleurs du Site
   // Builder confirmaient eux aussi une écriture qui n'avait pas eu lieu.
-  const { data, error } = await supabase
+  let { data, error } = await supabase
     .from("sites_generes")
     .update(updates)
     .eq("id", id)
     .select("id")
     .maybeSingle();
+
+  // Migration 040 absente : on enregistre le reste sans les pages plutôt que d'échouer.
+  if (error?.code === UNDEFINED_COLUMN && "pages" in updates) {
+    delete updates.pages;
+    ({ data, error } = await supabase.from("sites_generes").update(updates).eq("id", id).select("id").maybeSingle());
+  }
 
   if (error) {
     // 501 plutôt que 500 quand la cause est une migration non appliquée : le message dit quoi

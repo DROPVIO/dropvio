@@ -5,6 +5,8 @@ import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
 import { toIntlTag, type AppLocale } from "@/lib/locale";
 import { slugFichier, telechargerTexte } from "@/lib/audit-download";
+import { telechargerSiteMultiPages } from "@/lib/telechargement-site";
+import { pagesSiMultiples } from "@/lib/site-builder-pages";
 import { htmlToLiquidSection } from "@/lib/html-to-liquid";
 import { FORMATS_EXPORT, LABEL_FORMAT, type FormatExport } from "@/lib/format-export";
 import { ToastHost, useToast } from "@/components/Toast";
@@ -146,6 +148,13 @@ export default function MesSitesPage() {
           "text/plain;charset=utf-8"
         );
         succes(t("downloadOk", { nom: nomFichier }));
+        return;
+      }
+      // Site multi-pages : un .zip de toutes les pages, pour que la navigation entre pages
+      // (Accueil, Catalogue, collections, pages légales) fonctionne hors de Dropvio.
+      const pages = pagesSiMultiples(json.pages);
+      if (pages) {
+        succes(t("downloadZipOk", { nom: telechargerSiteMultiPages(pages, site.nom_produit) }));
         return;
       }
       const nomFichier = `${slug}-landing.html`;

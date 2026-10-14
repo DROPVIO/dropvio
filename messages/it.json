@@ -520,7 +520,8 @@
       "downloadLiquid": "Scarica il .liquid",
       "formatChanged": "Formato di esportazione: {format}",
       "errorFormat": "Impossibile cambiare il formato di esportazione.",
-      "regenerateBoutiqueIndisponible": "La rigenerazione non è ancora disponibile per i siti negozio: rilancia «Crea il mio sito» dal negozio."
+      "regenerateBoutiqueIndisponible": "La rigenerazione non è ancora disponibile per i siti negozio: rilancia «Crea il mio sito» dal negozio.",
+      "downloadZipOk": "Sito salvato nei tuoi Download: {nom}. Apri la cartella e poi index.html: i link tra le pagine funzionano."
     },
     "spy": {
       "badge": "Intelligence competitiva",
@@ -1720,7 +1721,9 @@
         "telechargerLiquid": "⬇ Scarica il .liquid",
         "telechargerHtml": "⬇ Scarica l'HTML",
         "passerPro": "🔒 Passa al piano Pro per scaricare il tuo sito",
-        "titreApercu": "Anteprima della landing page"
+        "titreApercu": "Anteprima della landing page",
+        "fichierZip": "⬇ Sito completo (.zip)",
+        "telechargerZip": "⬇ Scarica il sito (.zip)"
       },
       "shopify": {
         "titre": "Pubblica su Shopify",
@@ -1771,7 +1774,8 @@
           "es": "Español",
           "it": "Italiano"
         }
-      }
+      },
+      "zipTelecharge": "Sito salvato nei tuoi Download: {fichier}. Apri la cartella e poi index.html: i link tra le pagine funzionano."
     }
   },
   "boutique": {

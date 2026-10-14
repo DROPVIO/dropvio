@@ -16,6 +16,7 @@ import { SHOW_LEGACY_TEMPLATES } from "@/lib/flags";
 import { useBoutiqueDraft } from "@/lib/site-builder-handoff";
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
 import { slugFichier, telechargerTexte } from "@/lib/audit-download";
+import { telechargerSiteMultiPages } from "@/lib/telechargement-site";
 import { ToastHost, useToast } from "@/components/Toast";
 import { LIEN_CHANGER_DE_PLAN } from "@/lib/plan-links";
 import { useLocale, useTranslations } from "next-intl";
@@ -527,6 +528,12 @@ function SiteBuilderContent() {
 
   function handleDownload() {
     const nom = boutiqueDraft ? boutiqueDraft.nomBoutique : productName;
+    // Site multi-pages : toutes les pages dans un .zip, pour que les liens Accueil, Catalogue,
+    // collections et pages légales fonctionnent une fois le dossier ouvert dans le navigateur.
+    if (generatedPages) {
+      succes(t("zipTelecharge", { fichier: telechargerSiteMultiPages(generatedPages, nom) }));
+      return;
+    }
     // slugFichier() : nom vient de l'utilisateur (nom de produit ou de boutique) et peut
     // contenir des accents, que l'ancien replace() sur les espaces laissait passer.
     const nomFichier = `${slugFichier(nom)}-landing.html`;
@@ -554,7 +561,7 @@ function SiteBuilderContent() {
       const response = await fetch(`/api/sites-generes/${savedSiteId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ html_content: generatedHtml }),
+        body: JSON.stringify({ html_content: generatedHtml, ...(generatedPages && { pages: generatedPages }) }),
       });
       const json = await response.json();
       if (!response.ok) {
@@ -1239,13 +1246,13 @@ function SiteBuilderContent() {
                       onClick={formatExport === "liquid" ? handleDownload : handleDownloadLiquid}
                       className="px-4 py-2 rounded-xl border border-emerald-500/30 bg-emerald-500/10 text-[var(--success)] text-xs font-semibold hover:bg-emerald-500/20 transition"
                     >
-                      {formatExport === "liquid" ? t("resultat.fichierHtml") : t("resultat.fichierLiquid")}
+                      {formatExport === "liquid" ? (generatedPages ? t("resultat.fichierZip") : t("resultat.fichierHtml")) : t("resultat.fichierLiquid")}
                     </button>
                     <button
                       onClick={formatExport === "liquid" ? handleDownloadLiquid : handleDownload}
                       className="px-4 py-2 rounded-xl bg-gradient-to-r from-violet-600 to-blue-600 text-white text-xs font-semibold hover:from-violet-500 hover:to-blue-500 transition-all shadow-lg shadow-violet-900/40"
                     >
-                      {formatExport === "liquid" ? t("resultat.telechargerLiquid") : t("resultat.telechargerHtml")}
+                      {formatExport === "liquid" ? t("resultat.telechargerLiquid") : generatedPages ? t("resultat.telechargerZip") : t("resultat.telechargerHtml")}
                     </button>
                   </>
                 ) : (
@@ -1289,6 +1296,12 @@ function SiteBuilderContent() {
                 html={generatedHtml}
                 onTokenChange={(name, value) => {
                   setGeneratedHtml((prev) => applyTokenValue(prev, name, value));
+                  // Même couleur sur toutes les pages du site (téléchargement .zip, aperçu).
+                  setGeneratedPages((prev) =>
+                    prev
+                      ? Object.fromEntries(Object.entries(prev).map(([cle, html]) => [cle, applyTokenValue(html, name, value)]))
+                      : prev
+                  );
                   setColorsDirty(true);
                 }}
                 onSave={handleSaveColors}
