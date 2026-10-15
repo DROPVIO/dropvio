@@ -19,6 +19,15 @@ export const AI_BUDGET_EUR_PAR_PLAN: Record<Plan, number> = {
   agency: 28,
 };
 
+// Limites glissantes, à la manière de Claude : part du budget mensuel utilisable sur les
+// dernières 24 heures et sur les 7 derniers jours (lib/ai-budget.ts). Elles répartissent le
+// budget sur tout le mois : au rythme maximal, le budget mensuel tient environ 3 semaines et
+// demie (0,30 par semaine) et jamais moins de 7 jours d'utilisation (0,15 par jour).
+// Contrairement au budget mensuel, ce sont des limites souples : une génération ou un audit
+// démarre tant que la limite n'est pas encore atteinte, même s'il la dépasse un peu.
+export const AI_BUDGET_PART_JOUR = 0.15;
+export const AI_BUDGET_PART_SEMAINE = 0.3;
+
 // null = illimité
 export const PLAN_LIMITS: Record<Plan, {
   produitsMax: number | null;

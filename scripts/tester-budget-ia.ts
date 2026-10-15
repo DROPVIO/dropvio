@@ -1,9 +1,18 @@
 // Vérifie le budget IA mensuel (lib/ai-budget.ts) sans base ni appel Anthropic : un faux
 // client Supabase renvoie une consommation du mois qui vaut 5,90 € pour un utilisateur Pro
 // (budget 6 €). Un appel estimé à 0,20 € doit être refusé, un appel à 0,05 € accepté.
+// Vérifie aussi les limites glissantes sur 24 heures et 7 jours.
 // Usage : npx tsx scripts/tester-budget-ia.ts (code de sortie 1 en cas d'échec).
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { assertBudgetDisponible, BudgetIaDepasse, getBudgetUsedEuros, SuiviBudgetIa } from "../lib/ai-budget";
+import {
+  assertBudgetDisponible,
+  assertFenetresDisponibles,
+  BudgetIaDepasse,
+  etatFenetres,
+  getBudgetUsedEuros,
+  LimiteIaFenetre,
+  SuiviBudgetIa,
+} from "../lib/ai-budget";
 import { coutEuros, PRIX_EUR_PAR_MILLION } from "../lib/ai-pricing";
 import { AI_BUDGET_EUR_PAR_PLAN } from "../lib/plan-limits";
 
@@ -16,14 +25,25 @@ const lignes = [
   { feature: "audit_ia", tokens_entree: tokensPour(4, PRIX_EUR_PAR_MILLION["claude-sonnet-4-6"].entree), tokens_sortie: 0 },
 ];
 
-// Faux client : from(...).select(...).eq(...).eq(...) se résout en { data, error }.
+// Journal des dépenses (limites glissantes) : rempli par chaque scénario.
+let journal: { cout_eur: number; created_at: string }[] = [];
+const ilYA = (heures: number) => new Date(Date.now() - heures * 3_600_000).toISOString();
+
+// Faux client : from(table).select(...).eq(...)…  se résout en { data, error } selon la table.
 function fauxSupabase(): SupabaseClient {
-  const requete = {
-    select: () => requete,
-    eq: () => requete,
-    then: (resoudre: (v: { data: typeof lignes; error: null }) => void) => resoudre({ data: lignes, error: null }),
-  };
-  return { from: () => requete } as unknown as SupabaseClient;
+  return {
+    from: (table: string) => {
+      const requete = {
+        select: () => requete,
+        eq: () => requete,
+        gte: () => requete,
+        order: () => requete,
+        then: (resoudre: (v: { data: unknown[]; error: null }) => void) =>
+          resoudre({ data: table === "usage_ia_journal" ? journal : lignes, error: null }),
+      };
+      return requete;
+    },
+  } as unknown as SupabaseClient;
 }
 
 let echecs = 0;
@@ -65,6 +85,47 @@ async function main() {
   relais.ajouter("claude-opus-4-8", { input_tokens: 1_000, output_tokens: 1_000 });
   const attendu = coutEuros("claude-opus-4-8", 1_000, 1_000);
   verifier(Math.abs(relais.coutEngageEuros - attendu) < 1e-4, `relais claude-opus-4-8 compté à ${relais.coutEngageEuros.toFixed(4)} € (attendu ${attendu.toFixed(4)} €)`);
+
+  // Limites glissantes, plan Pro : 15 % de 6 € = 0,90 € sur 24 h, 30 % = 1,80 € sur 7 jours.
+  journal = [
+    { cout_eur: 0.5, created_at: ilYA(30) },
+    { cout_eur: 0.6, created_at: ilYA(5) },
+    { cout_eur: 0.35, created_at: ilYA(1) },
+  ];
+  const etat = await etatFenetres(fauxSupabase(), "utilisateur-test", "pro");
+  verifier(Math.abs(etat!.jour.utilise - 0.95) < 1e-9 && Math.abs(etat!.jour.max - 0.9) < 1e-9, "24 h : 0,95 € utilisés sur 0,90 €");
+  verifier(Math.abs(etat!.semaine.utilise - 1.45) < 1e-9 && Math.abs(etat!.semaine.max - 1.8) < 1e-9, "7 jours : 1,45 € utilisés sur 1,80 €");
+  const repriseAttendue = Date.now() - 5 * 3_600_000 + 24 * 3_600_000;
+  verifier(Math.abs((etat!.jour.reprise ?? 0) - repriseAttendue) < 5_000, "24 h : se libère quand la dépense d'il y a 5 h sort de la fenêtre (dans 19 h)");
+  let fenetreRefusee: string | null = null;
+  try {
+    await assertFenetresDisponibles(fauxSupabase(), "utilisateur-test", "pro");
+  } catch (err) {
+    if (err instanceof LimiteIaFenetre) fenetreRefusee = err.fenetre;
+  }
+  verifier(fenetreRefusee === "jour", "limite des 24 h atteinte : création de site et audit refusés");
+
+  journal = [{ cout_eur: 0.8, created_at: ilYA(2) }];
+  let accepteSouple = true;
+  try {
+    await assertFenetresDisponibles(fauxSupabase(), "utilisateur-test", "pro");
+  } catch {
+    accepteSouple = false;
+  }
+  verifier(accepteSouple, "0,80 € sur 0,90 € en 24 h : l'appel suivant démarre encore (limite souple)");
+
+  journal = [
+    { cout_eur: 1.0, created_at: ilYA(100) },
+    { cout_eur: 0.85, created_at: ilYA(50) },
+  ];
+  fenetreRefusee = null;
+  try {
+    await assertFenetresDisponibles(fauxSupabase(), "utilisateur-test", "pro");
+  } catch (err) {
+    if (err instanceof LimiteIaFenetre) fenetreRefusee = err.fenetre;
+  }
+  verifier(fenetreRefusee === "semaine", "1,85 € sur 7 jours (rien dans les 24 h) : limite de la semaine atteinte");
+  journal = [];
 
   if (echecs > 0) {
     console.error(`${echecs} vérification(s) en échec.`);

@@ -145,7 +145,7 @@ ${compacte}`,
       ],
     };
 
-    const suivi = new SuiviBudgetIa(supabase, user.id, plan, "audit_ia");
+    const suivi = new SuiviBudgetIa(supabase, user.id, plan, "audit_ia", { fenetres: true });
     const refus = await verifierBudgetAudit(client, suivi, requete, SORTIE_MAX);
     if (refus) return refus;
 

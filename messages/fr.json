@@ -119,7 +119,11 @@
       },
       "budgetIa": "Budget IA du mois : {utilise} / {max}",
       "budgetIaAide": "Couvre toutes les fonctions IA (sites, audits, boutique, textes). Remis à zéro le 1er de chaque mois.",
-      "budgetIaAtteint": "Budget IA du mois atteint. Il sera remis à zéro le 1er du mois prochain."
+      "budgetIaAtteint": "Budget IA du mois atteint. Il sera remis à zéro le 1er du mois prochain.",
+      "limiteJour": "Dernières 24 heures : {utilise} / {max}",
+      "limiteSemaine": "7 derniers jours : {utilise} / {max}",
+      "limitesAide": "Comme pour Claude, ton budget est réparti dans le temps : au plus 15 % sur 24 heures et 30 % sur 7 jours, pour pouvoir créer des sites et faire des audits tout le mois. Ces limites se libèrent au fil des heures.",
+      "limiteReprise": "Se libère le {reprise, date, short} à {reprise, time, short}"
     },
     "profil": {
       "title": "Profil",
@@ -1233,7 +1237,9 @@
     "tri_echec": "Le tri a échoué. Réessaie dans un instant.",
     "reecriture_aucun_produit": "Ajoute des produits à la boutique avant de les réécrire.",
     "prix_aucun_produit": "Ajoute des produits à la boutique avant d'ajuster leurs prix.",
-    "budget_ia_depasse": "Budget IA du mois atteint. Il sera remis à zéro le 1er du mois prochain."
+    "budget_ia_depasse": "Budget IA du mois atteint. Il sera remis à zéro le 1er du mois prochain.",
+    "limite_ia_jour": "Limite IA des dernières 24 heures atteinte. Elle se libère progressivement : réessaie le {reprise, date, short} à {reprise, time, short}.",
+    "limite_ia_semaine": "Limite IA des 7 derniers jours atteinte. Elle se libère progressivement : réessaie le {reprise, date, short} à {reprise, time, short}."
   },
   "siteBuilder": {
     "boutique": {

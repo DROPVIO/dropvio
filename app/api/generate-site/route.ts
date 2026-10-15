@@ -3,7 +3,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { getServerUserAndPlan } from "@/lib/supabase-server";
 import { PLAN_LIMITS, planLabel, currentMonthKey, type Plan } from "@/lib/plan-limits";
-import { BudgetIaDepasse, reponseBudgetDepasse, SuiviBudgetIa, tokensEstimes } from "@/lib/ai-budget";
+import { reponseLimiteIa, SuiviBudgetIa, tokensEstimes } from "@/lib/ai-budget";
 import { apiError } from "@/lib/api-errors";
 import { contexteSite, langueSite, prixSite, type SiteCtx } from "@/lib/site-textes";
 import { avecRepliLangue, langueBoutique } from "@/lib/boutique-langue";
@@ -644,7 +644,7 @@ ${RAPPEL_PRIORITES}
 
 Réponds UNIQUEMENT avec le code HTML, sans explication ni balise markdown.`;
 
-  const suivi = new SuiviBudgetIa(supabase, user.id, plan, "site_builder");
+  const suivi = new SuiviBudgetIa(supabase, user.id, plan, "site_builder", { fenetres: true });
   try {
     const resultat = await generateHtmlViaClaude(prompt, suivi);
     // Enregistré avant de répondre ; en cas d'échec, par le finally (jamais d'exception).
@@ -655,7 +655,8 @@ Réponds UNIQUEMENT avec le code HTML, sans explication ni balise markdown.`;
     const pages = assemblerPagesProduit(html, ctx);
     return NextResponse.json(pages ? { html: pages.accueil, pages } : { html });
   } catch (err) {
-    if (err instanceof BudgetIaDepasse) return reponseBudgetDepasse(err);
+    const refus = reponseLimiteIa(err);
+    if (refus) return refus;
     // HTML incomplet : on ne renvoie PAS la page, donc le client n'a rien à sauvegarder
     // dans « Mes sites ». 502 et non 500 : l'échec vient de la réponse du modèle, pas d'un
     // bug local.
@@ -845,7 +846,7 @@ ${consignesStyle}${RAPPEL_PRIORITES}
 
 Réponds UNIQUEMENT avec le code HTML, sans explication ni balise markdown.`;
 
-  const suivi = new SuiviBudgetIa(supabase, userId, plan, "site_builder");
+  const suivi = new SuiviBudgetIa(supabase, userId, plan, "site_builder", { fenetres: true });
   try {
     const resultat = await generateHtmlViaClaude(prompt, suivi);
     await suivi.enregistrer();
@@ -868,7 +869,8 @@ Réponds UNIQUEMENT avec le code HTML, sans explication ni balise markdown.`;
     const html = injectProductGrid(ctx, accueilSeul, produits, "var(--site-accent)", categories);
     return NextResponse.json({ html, ...avertissements });
   } catch (err) {
-    if (err instanceof BudgetIaDepasse) return reponseBudgetDepasse(err);
+    const refus = reponseLimiteIa(err);
+    if (refus) return refus;
     if (err instanceof HtmlTronqueError) {
       console.error("[generate-site] (mode boutique)", err.message);
       return NextResponse.json({ error: ERREUR_HTML_TRONQUE, code: "generation_truncated" }, { status: 502 });

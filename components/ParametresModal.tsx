@@ -225,7 +225,12 @@ export default function ParametresModal({
     catalogue: { max: number | null };
     boutiques: BoutiqueUsage[];
     // Absent si /api/usage vient d'une version antérieure : la barre n'est alors pas affichée.
-    budgetIa?: { utilise: number; max: number };
+    budgetIa?: {
+      utilise: number;
+      max: number;
+      jour?: { utilise: number; max: number; reprise: number | null } | null;
+      semaine?: { utilise: number; max: number; reprise: number | null } | null;
+    };
   };
   const [usage, setUsage] = useState<UsageData | null>(null);
   const [usageLoading, setUsageLoading] = useState(true);
@@ -477,6 +482,27 @@ export default function ParametresModal({
               <div className={`h-full rounded-full transition-all ${couleur}`} style={{ width: `${ratio * 100}%` }} />
             </div>
             <p className="text-[11px] text-[var(--text-faint)]">{t(ratio >= 1 ? "plan.budgetIaAtteint" : "plan.budgetIaAide")}</p>
+            {usage.budgetIa.jour && usage.budgetIa.semaine ? (
+              <div className="mt-2 flex flex-col gap-2 border-t border-[var(--border)] pt-3">
+                {([["limiteJour", usage.budgetIa.jour], ["limiteSemaine", usage.budgetIa.semaine]] as const).map(([cle, f]) => {
+                  const r = f.max > 0 ? Math.min(1, f.utilise / f.max) : 1;
+                  return (
+                    <div key={cle} className="flex flex-col gap-1">
+                      <div className={ROW}>
+                        <p className="text-xs text-[var(--text-muted)]">{t(`plan.${cle}`, { utilise: euros.format(f.utilise), max: euros.format(f.max) })}</p>
+                        {r >= 1 && f.reprise ? (
+                          <p className="text-[11px] text-[var(--warning)]">{t("plan.limiteReprise", { reprise: f.reprise })}</p>
+                        ) : null}
+                      </div>
+                      <div className="h-1 rounded-full bg-[var(--surface-3)] overflow-hidden">
+                        <div className={`h-full rounded-full ${r >= 1 ? "bg-[var(--warning)]" : "bg-violet-400"}`} style={{ width: `${r * 100}%` }} />
+                      </div>
+                    </div>
+                  );
+                })}
+                <p className="text-[11px] text-[var(--text-faint)]">{t("plan.limitesAide")}</p>
+              </div>
+            ) : null}
           </div>
         );
       })() : null}

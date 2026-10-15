@@ -119,7 +119,11 @@
       },
       "budgetIa": "Budget IA del mese: {utilise} / {max}",
       "budgetIaAide": "Copre tutte le funzioni IA (siti, audit, negozio, testi). Si azzera il 1° di ogni mese.",
-      "budgetIaAtteint": "Budget IA del mese raggiunto. Verrà azzerato il 1° del mese prossimo."
+      "budgetIaAtteint": "Budget IA del mese raggiunto. Verrà azzerato il 1° del mese prossimo.",
+      "limiteJour": "Ultime 24 ore: {utilise} / {max}",
+      "limiteSemaine": "Ultimi 7 giorni: {utilise} / {max}",
+      "limitesAide": "Come in Claude, il tuo budget è distribuito nel tempo: al massimo il 15% in 24 ore e il 30% in 7 giorni, per poter creare siti e fare audit per tutto il mese. Questi limiti si liberano con il passare delle ore.",
+      "limiteReprise": "Si libera il {reprise, date, short} alle {reprise, time, short}"
     },
     "profil": {
       "title": "Profilo",
@@ -1233,7 +1237,9 @@
     "tri_echec": "Ordinamento non riuscito. Riprova tra un attimo.",
     "reecriture_aucun_produit": "Aggiungi prodotti al negozio prima di riscriverli.",
     "prix_aucun_produit": "Aggiungi prodotti al negozio prima di adeguarne i prezzi.",
-    "budget_ia_depasse": "Budget IA del mese raggiunto. Verrà azzerato il 1° del mese prossimo."
+    "budget_ia_depasse": "Budget IA del mese raggiunto. Verrà azzerato il 1° del mese prossimo.",
+    "limite_ia_jour": "Limite IA delle ultime 24 ore raggiunto. Si libera gradualmente: riprova il {reprise, date, short} alle {reprise, time, short}.",
+    "limite_ia_semaine": "Limite IA degli ultimi 7 giorni raggiunto. Si libera gradualmente: riprova il {reprise, date, short} alle {reprise, time, short}."
   },
   "siteBuilder": {
     "boutique": {

@@ -10,7 +10,15 @@
 // Anthropic, ajouter(...) après chaque réponse, et enregistrer() dans un finally pour que les
 // tokens consommés soient comptés même si la suite de la route échoue.
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { AI_BUDGET_EUR_PAR_PLAN, currentMonthKey, logTokensUsage, type Plan, type UsageFeature } from "@/lib/plan-limits";
+import {
+  AI_BUDGET_EUR_PAR_PLAN,
+  AI_BUDGET_PART_JOUR,
+  AI_BUDGET_PART_SEMAINE,
+  currentMonthKey,
+  logTokensUsage,
+  type Plan,
+  type UsageFeature,
+} from "@/lib/plan-limits";
 import { coutEuros, prixEuros, type ModeleIa } from "@/lib/ai-pricing";
 import { apiError } from "@/lib/api-errors";
 
@@ -102,6 +110,123 @@ export async function assertBudgetDisponible(
   }
 }
 
+// ─── Limites glissantes (24 heures, 7 jours) ────────────────────────────────────────────
+// Comme les limites d'usage de Claude : une part du budget mensuel par fenêtre glissante,
+// calculée depuis usage_ia_journal (migration 044). Limite souple : un appel est refusé
+// seulement si la fenêtre est DÉJÀ pleine ; il peut donc la dépasser d'un appel, le budget
+// mensuel (strict, estimé avant l'appel) restant la garantie de coût. La limite se libère au
+// fil de l'eau, quand les dépenses les plus anciennes sortent de la fenêtre.
+
+export type FenetreIa = "jour" | "semaine";
+
+const DUREE_FENETRE_MS: Record<FenetreIa, number> = {
+  jour: 24 * 3_600_000,
+  semaine: 7 * 24 * 3_600_000,
+};
+
+export function plafondFenetre(plan: Plan, fenetre: FenetreIa): number {
+  return AI_BUDGET_EUR_PAR_PLAN[plan] * (fenetre === "jour" ? AI_BUDGET_PART_JOUR : AI_BUDGET_PART_SEMAINE);
+}
+
+export type EtatFenetre = {
+  utilise: number;
+  max: number;
+  // Moment où la fenêtre repasse sous sa limite, si elle est atteinte (ms depuis l'epoch).
+  reprise: number | null;
+};
+
+export const MESSAGE_LIMITE_FENETRE: Record<FenetreIa, string> = {
+  jour: "Limite IA des dernières 24 heures atteinte.",
+  semaine: "Limite IA des 7 derniers jours atteinte.",
+};
+
+export class LimiteIaFenetre extends Error {
+  constructor(
+    readonly fenetre: FenetreIa,
+    readonly reprise: number | null
+  ) {
+    super(MESSAGE_LIMITE_FENETRE[fenetre]);
+    this.name = "LimiteIaFenetre";
+  }
+}
+
+/** Dépenses des 7 derniers jours, de la plus ancienne à la plus récente. null si le journal
+ *  est illisible (migration 044 absente) : les limites glissantes ne s'appliquent alors pas. */
+async function lireJournal(supabase: SupabaseClient, userId: string): Promise<{ cout: number; date: number }[] | null> {
+  const depuis = new Date(Date.now() - DUREE_FENETRE_MS.semaine).toISOString();
+  const { data, error } = await supabase
+    .from("usage_ia_journal")
+    .select("cout_eur, created_at")
+    .eq("user_id", userId)
+    .gte("created_at", depuis)
+    .order("created_at", { ascending: true });
+  if (error) {
+    console.warn("[ai-budget] Journal IA illisible (migration 044 appliquée ?) :", error.message);
+    return null;
+  }
+  return ((data ?? []) as { cout_eur: number | string; created_at: string }[]).map((l) => ({
+    cout: Number(l.cout_eur),
+    date: new Date(l.created_at).getTime(),
+  }));
+}
+
+function etatDepuisJournal(journal: { cout: number; date: number }[], plan: Plan, fenetre: FenetreIa, maintenant: number): EtatFenetre {
+  const duree = DUREE_FENETRE_MS[fenetre];
+  const dans = journal.filter((l) => l.date > maintenant - duree);
+  const max = plafondFenetre(plan, fenetre);
+  let utilise = dans.reduce((total, l) => total + l.cout, 0);
+  const total = utilise;
+  let reprise: number | null = null;
+  if (utilise >= max) {
+    // Les dépenses sortent de la fenêtre dans l'ordre : la limite se libère quand assez
+    // d'entre elles sont sorties pour repasser sous le plafond.
+    for (const l of dans) {
+      utilise -= l.cout;
+      if (utilise < max) {
+        reprise = l.date + duree;
+        break;
+      }
+    }
+  }
+  return { utilise: total, max, reprise };
+}
+
+/** État des deux limites glissantes, ou null si le journal est indisponible. */
+export async function etatFenetres(supabase: SupabaseClient, userId: string, plan: Plan): Promise<Record<FenetreIa, EtatFenetre> | null> {
+  const journal = await lireJournal(supabase, userId);
+  if (!journal) return null;
+  const maintenant = Date.now();
+  return {
+    jour: etatDepuisJournal(journal, plan, "jour", maintenant),
+    semaine: etatDepuisJournal(journal, plan, "semaine", maintenant),
+  };
+}
+
+/** Lève LimiteIaFenetre si la limite des 24 heures ou des 7 jours est déjà atteinte. */
+export async function assertFenetresDisponibles(supabase: SupabaseClient, userId: string, plan: Plan, dejaEngageEuros = 0): Promise<void> {
+  const etat = await etatFenetres(supabase, userId, plan);
+  if (!etat) return;
+  for (const fenetre of ["semaine", "jour"] as const) {
+    if (etat[fenetre].utilise + dejaEngageEuros >= etat[fenetre].max) {
+      throw new LimiteIaFenetre(fenetre, etat[fenetre].reprise ?? Date.now() + DUREE_FENETRE_MS[fenetre]);
+    }
+  }
+}
+
+export function reponseLimiteFenetre(err: LimiteIaFenetre) {
+  return apiError(err.fenetre === "jour" ? "limite_ia_jour" : "limite_ia_semaine", 429, MESSAGE_LIMITE_FENETRE[err.fenetre], {
+    values: { reprise: err.reprise ?? Date.now() },
+  });
+}
+
+/** Réponse à renvoyer pour une erreur de budget ou de limite glissante ; null pour toute
+ *  autre erreur (à traiter par l'appelant). */
+export function reponseLimiteIa(err: unknown) {
+  if (err instanceof BudgetIaDepasse) return reponseBudgetDepasse(err);
+  if (err instanceof LimiteIaFenetre) return reponseLimiteFenetre(err);
+  return null;
+}
+
 /** Tokens d'un modèle convertis en tokens du modèle `vers`, pour le même coût. */
 function convertir(de: string, vers: ModeleIa, entree: number, sortie: number): [number, number] {
   if (de === vers) return [entree, sortie];
@@ -116,11 +241,14 @@ export class SuiviBudgetIa {
   private sortie = 0;
   readonly modele: ModeleIa;
 
+  /** `options.fenetres` : applique aussi les limites sur 24 heures et 7 jours (création de
+   *  site et audit). Toutes les fonctions sont de toute façon comptées dans ces limites. */
   constructor(
     private readonly supabase: SupabaseClient,
     private readonly userId: string,
     private readonly plan: Plan,
-    readonly fonction: UsageFeature
+    readonly fonction: UsageFeature,
+    private readonly options: { fenetres?: boolean } = {}
   ) {
     const modele = MODELE_PAR_FONCTION[fonction];
     if (!modele) throw new Error(`Aucun modèle IA associé à la fonction ${fonction}.`);
@@ -132,8 +260,11 @@ export class SuiviBudgetIa {
     return coutEuros(this.modele, this.entree, this.sortie);
   }
 
-  /** À appeler avant chaque appel Anthropic. Lève BudgetIaDepasse si l'appel ne tient pas. */
+  /** À appeler avant chaque appel Anthropic. Lève LimiteIaFenetre si une limite glissante est
+   *  atteinte (seulement avec options.fenetres), BudgetIaDepasse si l'appel ne tient pas dans
+   *  le budget du mois. */
   async verifier(coutEstimeEuros: number): Promise<void> {
+    if (this.options.fenetres) await assertFenetresDisponibles(this.supabase, this.userId, this.plan, this.coutEngageEuros);
     await assertBudgetDisponible(this.supabase, this.userId, this.plan, coutEstimeEuros, this.coutEngageEuros);
   }
 
@@ -154,10 +285,18 @@ export class SuiviBudgetIa {
   async enregistrer(): Promise<void> {
     const entree = this.entree;
     const sortie = this.sortie;
+    const cout = this.coutEngageEuros;
     this.entree = 0;
     this.sortie = 0;
     if (entree === 0 && sortie === 0) return;
     try {
+      // Journal horodaté des limites glissantes (migration 044). Indépendant de usage_mensuel :
+      // l'un peut échouer sans l'autre.
+      const { error: journalErr } = await this.supabase
+        .from("usage_ia_journal")
+        .insert({ user_id: this.userId, fonction: this.fonction, cout_eur: Number(cout.toFixed(6)) });
+      if (journalErr) console.warn("[ai-budget] Journal IA non écrit (migration 044 appliquée ?) :", journalErr.message);
+
       const ok = await logTokensUsage(this.supabase, this.userId, this.fonction, entree, sortie);
       if (ok || !FONCTIONS_MIGRATION_043.includes(this.fonction)) return;
       // Migration 043 absente : la fonction n'est pas encore acceptée par la contrainte.

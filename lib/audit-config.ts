@@ -4,7 +4,7 @@
 // vérifié avant l'appel avec le nombre exact de tokens d'entrée (messages.countTokens).
 import type Anthropic from "@anthropic-ai/sdk";
 import { apiError } from "@/lib/api-errors";
-import { BudgetIaDepasse, reponseBudgetDepasse, type SuiviBudgetIa } from "@/lib/ai-budget";
+import { reponseLimiteIa, type SuiviBudgetIa } from "@/lib/ai-budget";
 
 export const AUDIT_MODELE = "claude-sonnet-4-6";
 
@@ -33,8 +33,8 @@ export function restaurerHtml(html: string, blocs: string[]): string {
   return html.replace(/__DV_DONNEES_(\d+)__/g, (repere, i: string) => blocs[Number(i)] ?? repere);
 }
 
-/** Vérifie, avant l'appel facturé, que la requête tient dans le contexte du modèle et dans le
- *  budget IA du mois (lib/ai-budget.ts). Renvoie une réponse d'erreur prête à renvoyer, ou
+/** Vérifie, avant l'appel facturé, que la requête tient dans le contexte du modèle, dans les
+ *  limites IA des 24 heures et 7 jours, et dans le budget IA du mois (lib/ai-budget.ts). Renvoie une réponse d'erreur prête à renvoyer, ou
  *  null si c'est bon. L'entrée est comptée exactement (countTokens) ; `sortieMax` (le
  *  max_tokens de l'appel) est compté comme entièrement consommé. La consommation réelle est
  *  ensuite ajoutée au suivi et enregistrée par la route. */
@@ -58,7 +58,8 @@ export async function verifierBudgetAudit(
   try {
     await suivi.verifier(suivi.estimer(entree, sortieMax));
   } catch (err) {
-    if (err instanceof BudgetIaDepasse) return reponseBudgetDepasse(err);
+    const refus = reponseLimiteIa(err);
+    if (refus) return refus;
     throw err;
   }
   return null;

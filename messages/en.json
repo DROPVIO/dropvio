@@ -119,7 +119,11 @@
       },
       "budgetIa": "AI budget this month: {utilise} / {max}",
       "budgetIaAide": "Covers every AI feature (sites, audits, store, texts). Resets on the 1st of each month.",
-      "budgetIaAtteint": "This month's AI budget has been reached. It will reset on the 1st of next month."
+      "budgetIaAtteint": "This month's AI budget has been reached. It will reset on the 1st of next month.",
+      "limiteJour": "Last 24 hours: {utilise} / {max}",
+      "limiteSemaine": "Last 7 days: {utilise} / {max}",
+      "limitesAide": "As with Claude, your budget is spread over time: at most 15% over 24 hours and 30% over 7 days, so you can create sites and run audits all month. These limits free up as the hours pass.",
+      "limiteReprise": "Frees up on {reprise, date, short} at {reprise, time, short}"
     },
     "profil": {
       "title": "Profile",
@@ -1233,7 +1237,9 @@
     "tri_echec": "Sorting failed. Try again in a moment.",
     "reecriture_aucun_produit": "Add products to the store before rewriting them.",
     "prix_aucun_produit": "Add products to the store before adjusting their prices.",
-    "budget_ia_depasse": "This month's AI budget has been reached. It will reset on the 1st of next month."
+    "budget_ia_depasse": "This month's AI budget has been reached. It will reset on the 1st of next month.",
+    "limite_ia_jour": "AI limit for the last 24 hours reached. It frees up gradually: try again on {reprise, date, short} at {reprise, time, short}.",
+    "limite_ia_semaine": "AI limit for the last 7 days reached. It frees up gradually: try again on {reprise, date, short} at {reprise, time, short}."
   },
   "siteBuilder": {
     "boutique": {
