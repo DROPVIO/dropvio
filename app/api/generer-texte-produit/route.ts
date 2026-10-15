@@ -3,6 +3,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { getServerUserAndPlan } from "@/lib/supabase-server";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { containsExcludedBrand } from "@/lib/brand-exclusions";
+import { BudgetIaDepasse, reponseBudgetDepasse, SuiviBudgetIa, tokensEstimes } from "@/lib/ai-budget";
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
@@ -40,7 +41,7 @@ const MAX_TOKENS: Record<"nom" | "description", number> = {
 };
 
 export async function POST(request: NextRequest) {
-  const { user } = await getServerUserAndPlan();
+  const { supabase, user, plan } = await getServerUserAndPlan();
   if (!user) {
     return NextResponse.json({ error: "Connecte-toi pour utiliser la génération de texte.", code: "auth_required" }, { status: 401 });
   }
@@ -62,13 +63,17 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Titre manquant ou trop court.", code: "title_too_short" }, { status: 400 });
   }
 
+  const suivi = new SuiviBudgetIa(supabase, user.id, plan, "textes_ia");
+  const contenu = PROMPTS[champ](titre.trim().slice(0, 2000));
   try {
+    await suivi.verifier(suivi.estimer(tokensEstimes(SYSTEM_PROMPT + contenu), MAX_TOKENS[champ]));
     const message = await client.messages.create({
       model: "claude-haiku-4-5",
       max_tokens: MAX_TOKENS[champ],
       system: SYSTEM_PROMPT,
-      messages: [{ role: "user", content: PROMPTS[champ](titre.trim()) }],
+      messages: [{ role: "user", content: contenu }],
     });
+    suivi.ajouter(message.model, message.usage);
 
     let texte: string | undefined;
     for (const block of message.content) {
@@ -94,7 +99,10 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ texte });
   } catch (err) {
+    if (err instanceof BudgetIaDepasse) return reponseBudgetDepasse(err);
     console.error("[generer-texte-produit]", err);
     return NextResponse.json({ error: "Erreur lors de la génération. Réessaie.", code: "generation_failed" }, { status: 500 });
+  } finally {
+    await suivi.enregistrer();
   }
 }

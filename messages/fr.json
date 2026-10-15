@@ -1225,12 +1225,12 @@
     "shopify_rate_limited": "Limite de requêtes Shopify atteinte. Réessaie dans quelques instants.",
     "shopify_unknown": "Erreur inconnue lors de l'envoi à Shopify.",
     "audit_too_large": "Cette page fait {tokens, number} tokens : c'est plus que ce que l'IA peut lire en une fois ({max, number}).",
-    "audit_tokens_limit": "Cet audit demande environ {besoin, number} tokens et il t'en reste {restant, number} sur {max, number} ce mois-ci (plan {plan}). Le quota se réinitialise le mois prochain.",
     "tri_aucun_produit": "Ajoute des produits à la boutique avant de les trier.",
     "tri_aucune_collection": "Indique au moins une collection dans laquelle trier les produits.",
     "tri_echec": "Le tri a échoué. Réessaie dans un instant.",
     "reecriture_aucun_produit": "Ajoute des produits à la boutique avant de les réécrire.",
-    "prix_aucun_produit": "Ajoute des produits à la boutique avant d'ajuster leurs prix."
+    "prix_aucun_produit": "Ajoute des produits à la boutique avant d'ajuster leurs prix.",
+    "budget_ia_depasse": "Budget IA du mois atteint. Il sera remis à zéro le 1er du mois prochain."
   },
   "siteBuilder": {
     "boutique": {

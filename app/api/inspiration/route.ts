@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import sharp from "sharp";
 import { getServerUserPlanOnly } from "@/lib/supabase-server";
-import { logTokensUsage } from "@/lib/plan-limits";
+import { BudgetIaDepasse, reponseBudgetDepasse, SuiviBudgetIa, tokensEstimes } from "@/lib/ai-budget";
 import { validerFicheStyle } from "@/lib/style-fiche";
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
@@ -24,6 +24,8 @@ const MAX_OCTETS = 15 * 1024 * 1024;
 const COTE_MAX = 1600;
 const QUALITE_JPEG = 85;
 const MODELE_VISION = "claude-sonnet-4-6";
+const MAX_TOKENS_FICHE = 1024;
+const TOKENS_PAR_IMAGE_MAX = 3200;
 const MESSAGE_ILLISIBLE = "Cette image ne peut pas être lue. Essaie une capture d'écran ou un export JPEG.";
 
 type FormatImage = "jpeg" | "png" | "webp" | "gif" | "heic" | "avif" | "bmp" | "tiff";
@@ -87,7 +89,7 @@ function extraireJson(texte: string): unknown {
 }
 
 export async function POST(request: NextRequest) {
-  const { supabase, user } = await getServerUserPlanOnly();
+  const { supabase, user, plan } = await getServerUserPlanOnly();
   if (!user) {
     return NextResponse.json({ error: "Connecte-toi pour analyser des captures.", code: "auth_required" }, { status: 401 });
   }
@@ -128,6 +130,17 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Aucune image n'a pu être lue.", code: "inspiration_aucune_image", erreursFichiers }, { status: 400 });
   }
 
+  // Budget IA vérifié avant tout envoi au stockage et à Claude. Une image JPEG de 1600 px au
+  // plus coûte au maximum ~1 600 tokens une fois redimensionnée par l'API ; on en compte le
+  // double par prudence.
+  const suivi = new SuiviBudgetIa(supabase, user.id, plan, "inspiration_ia");
+  try {
+    await suivi.verifier(suivi.estimer(tokensEstimes(PROMPT_SYSTEME) + convertis.length * TOKENS_PAR_IMAGE_MAX + 50, MAX_TOKENS_FICHE));
+  } catch (err) {
+    if (err instanceof BudgetIaDepasse) return reponseBudgetDepasse(err);
+    throw err;
+  }
+
   const chemins: string[] = [];
   try {
     for (const c of convertis) {
@@ -164,7 +177,7 @@ export async function POST(request: NextRequest) {
 
     const reponse = await client.messages.create({
       model: MODELE_VISION,
-      max_tokens: 1024,
+      max_tokens: MAX_TOKENS_FICHE,
       system: PROMPT_SYSTEME,
       messages: [
         {
@@ -173,13 +186,8 @@ export async function POST(request: NextRequest) {
         },
       ],
     });
-    await logTokensUsage(
-      supabase,
-      user.id,
-      "site_builder",
-      reponse.usage?.input_tokens ?? 0,
-      reponse.usage?.output_tokens ?? 0
-    );
+    suivi.ajouter(reponse.model, reponse.usage);
+    await suivi.enregistrer();
 
     const texte = reponse.content
       .filter((b): b is Anthropic.TextBlock => b.type === "text")

@@ -4,6 +4,7 @@ import { getServerUserPlanOnly } from "@/lib/supabase-server";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { containsExcludedBrand } from "@/lib/brand-exclusions";
 import { nicheLabel } from "@/lib/niches";
+import { BudgetIaDepasse, reponseBudgetDepasse, SuiviBudgetIa, tokensEstimes } from "@/lib/ai-budget";
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
@@ -41,7 +42,7 @@ ${champJson}`;
 
 export async function POST(request: NextRequest, context: { params: Promise<{ id: string }> }) {
   const params = await context.params;
-  const { supabase, user } = await getServerUserPlanOnly();
+  const { supabase, user, plan } = await getServerUserPlanOnly();
   if (!user) {
     return NextResponse.json({ error: "Connecte-toi pour générer le contenu de ta boutique.", code: "auth_required" }, { status: 401 });
   }
@@ -82,13 +83,16 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
     needsDescription,
   });
 
+  const suivi = new SuiviBudgetIa(supabase, user.id, plan, "textes_ia");
   try {
+    await suivi.verifier(suivi.estimer(tokensEstimes(SYSTEM_PROMPT + prompt), 400));
     const message = await client.messages.create({
       model: "claude-haiku-4-5",
       max_tokens: 400,
       system: SYSTEM_PROMPT,
       messages: [{ role: "user", content: prompt }],
     });
+    suivi.ajouter(message.model, message.usage);
 
     let raw: string | undefined;
     for (const block of message.content) {
@@ -128,7 +132,10 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
 
     return NextResponse.json({ description, palette });
   } catch (err) {
+    if (err instanceof BudgetIaDepasse) return reponseBudgetDepasse(err);
     console.error("[boutiques/generer-contenu]", err);
     return NextResponse.json({ error: "Erreur lors de la génération. Réessaie.", code: "generation_failed" }, { status: 500 });
+  } finally {
+    await suivi.enregistrer();
   }
 }

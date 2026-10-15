@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { getServerUserAndPlan } from "@/lib/supabase-server";
-import { PLAN_LIMITS, planLabel, getMonthlyUsage, incrementMonthlyUsage, logTokensUsage } from "@/lib/plan-limits";
+import { PLAN_LIMITS, planLabel, getMonthlyUsage, incrementMonthlyUsage } from "@/lib/plan-limits";
+import { SuiviBudgetIa } from "@/lib/ai-budget";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { AUDIT_MODELE, compacterHtml, restaurerHtml, verifierBudgetAudit } from "@/lib/audit-config";
 
@@ -17,7 +18,7 @@ type Category = {
 // Le modèle ne réécrit plus la page : à 2 000 000 de caractères, elle dépasse de loin sa
 // sortie maximale. Il renvoie des remplacements ciblés (extrait exact → nouvel extrait),
 // appliqués ici sur la page complète. La sortie ne dépend plus de la taille de la page.
-// Même plafond qu'avant : il est réservé dans le quota (pondéré × 5) avant l'appel.
+// Compté comme entièrement consommé dans l'estimation du budget IA avant l'appel.
 const SORTIE_MAX = 24000;
 
 type Modification = { avant: string; apres: string; raison: string };
@@ -144,7 +145,8 @@ ${compacte}`,
       ],
     };
 
-    const refus = await verifierBudgetAudit(client, supabase, user.id, plan, requete, SORTIE_MAX);
+    const suivi = new SuiviBudgetIa(supabase, user.id, plan, "audit_ia");
+    const refus = await verifierBudgetAudit(client, suivi, requete, SORTIE_MAX);
     if (refus) return refus;
 
     const message = await client.messages
@@ -155,7 +157,8 @@ ${compacte}`,
         ...requete,
       })
       .finalMessage();
-    await logTokensUsage(supabase, user.id, "audit_ia", message.usage.input_tokens, message.usage.output_tokens);
+    suivi.ajouter(message.model, message.usage);
+    await suivi.enregistrer();
 
     let modifications: Modification[] = [];
     for (const block of message.content) {

@@ -3,6 +3,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { getServerUserAndPlan } from "@/lib/supabase-server";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { apiError } from "@/lib/api-errors";
+import { BudgetIaDepasse, reponseBudgetDepasse, SuiviBudgetIa, tokensEstimes } from "@/lib/ai-budget";
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
@@ -67,8 +68,11 @@ const SCHEMA = {
   additionalProperties: false,
 };
 
-/** Prix de marché estimé pour chaque produit du lot, ou null. */
-async function estimer(produits: Produit[], finder: Map<string, Finder>): Promise<(number | null)[]> {
+// Sortie bornée à la taille du lot (~15 tokens par prix, plus la réflexion) : garde
+// l'estimation du budget IA proche du coût réel.
+const maxTokensLot = (produits: number) => Math.min(8000, 1500 + produits * 40);
+
+function contenuLot(produits: Produit[], finder: Map<string, Finder>): string {
   const liste = produits
     .map((p, i) => {
       const f = p.source_produit_id ? finder.get(p.source_produit_id) : undefined;
@@ -78,16 +82,21 @@ async function estimer(produits: Produit[], finder: Map<string, Finder>): Promis
       return lignes.join("\n");
     })
     .join("\n\n");
+  return `PRODUITS :\n\n${liste}`;
+}
 
+/** Prix de marché estimé pour chaque produit du lot, ou null. */
+async function estimer(produits: Produit[], finder: Map<string, Finder>, suivi: SuiviBudgetIa): Promise<(number | null)[]> {
   const message = await client.beta.messages.create({
     model: "claude-opus-5-5",
-    max_tokens: 8000,
+    max_tokens: maxTokensLot(produits.length),
     betas: ["server-side-fallback-2026-06-01"],
     fallbacks: [{ model: "claude-opus-4-8" }],
     output_config: { effort: "low", format: { type: "json_schema", schema: SCHEMA } },
     system: SYSTEM,
-    messages: [{ role: "user", content: `PRODUITS :\n\n${liste}` }],
+    messages: [{ role: "user", content: contenuLot(produits, finder) }],
   });
+  suivi.ajouter(message.model, message.usage);
 
   const resultat: (number | null)[] = produits.map(() => null);
   if (message.stop_reason === "refusal" || message.stop_reason === "max_tokens") {
@@ -137,7 +146,7 @@ async function ecrire(
 
 export async function POST(_request: NextRequest, context: { params: Promise<{ id: string }> }) {
   const { id: boutiqueId } = await context.params;
-  const { supabase, user } = await getServerUserAndPlan();
+  const { supabase, user, plan } = await getServerUserAndPlan();
   if (!user) {
     return NextResponse.json({ error: "Connecte-toi pour ajuster tes prix.", code: "auth_required" }, { status: 401 });
   }
@@ -180,15 +189,23 @@ export async function POST(_request: NextRequest, context: { params: Promise<{ i
 
   const lots: Produit[][] = [];
   for (let i = 0; i < produits.length; i += PRODUITS_PAR_APPEL) lots.push(produits.slice(i, i + PRODUITS_PAR_APPEL));
+  // Budget IA vérifié une fois pour tous les lots, avant le premier appel.
+  const suivi = new SuiviBudgetIa(supabase, user.id, plan, "boutique_ia");
   const estimations: (number | null)[] = [];
   try {
+    await suivi.verifier(
+      lots.reduce((total, lot) => total + suivi.estimer(tokensEstimes(SYSTEM + contenuLot(lot, finder)), maxTokensLot(lot.length)), 0)
+    );
     for (let i = 0; i < lots.length; i += APPELS_SIMULTANES) {
-      const vague = await Promise.all(lots.slice(i, i + APPELS_SIMULTANES).map((lot) => estimer(lot, finder)));
+      const vague = await Promise.all(lots.slice(i, i + APPELS_SIMULTANES).map((lot) => estimer(lot, finder, suivi)));
       for (const lot of vague) estimations.push(...lot);
     }
   } catch (err) {
+    if (err instanceof BudgetIaDepasse) return reponseBudgetDepasse(err);
     console.error("[ajuster-prix]", err);
     return NextResponse.json({ error: "Erreur lors de la génération. Réessaie.", code: "generation_failed" }, { status: 500 });
+  } finally {
+    await suivi.enregistrer();
   }
 
   const anciens: AncienPrix[] = [];

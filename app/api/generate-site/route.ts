@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { getServerUserAndPlan } from "@/lib/supabase-server";
-import { PLAN_LIMITS, planLabel, currentMonthKey, logTokensUsage, type Plan } from "@/lib/plan-limits";
+import { PLAN_LIMITS, planLabel, currentMonthKey, type Plan } from "@/lib/plan-limits";
+import { BudgetIaDepasse, reponseBudgetDepasse, SuiviBudgetIa, tokensEstimes } from "@/lib/ai-budget";
 import { apiError } from "@/lib/api-errors";
 import { contexteSite, langueSite, prixSite, type SiteCtx } from "@/lib/site-textes";
 import { avecRepliLangue, langueBoutique } from "@/lib/boutique-langue";
@@ -84,9 +85,10 @@ type ResultatGeneration = {
 
 // Appelle Claude avec relance automatique si la réponse est tronquée (max_tokens) — logique
 // partagée entre le mode produit unique et le mode boutique, seul le prompt initial diffère.
-// Renvoie aussi la consommation cumulée de tokens : c'est le seul endroit qui la connaît, et
-// elle est enregistrée par l'appelant (voir logTokensGeneration).
-async function generateHtmlViaClaude(prompt: string): Promise<ResultatGeneration> {
+// Renvoie aussi la consommation cumulée de tokens. Le budget IA est vérifié avant CHAQUE appel
+// (la relance coûte autant que le premier appel) et chaque réponse est ajoutée au suivi, que
+// l'appelant enregistre même si la génération échoue ensuite (HTML tronqué).
+async function generateHtmlViaClaude(prompt: string, suivi: SuiviBudgetIa): Promise<ResultatGeneration> {
   type Msg = { role: "user" | "assistant"; content: string };
   const msgs: Msg[] = [{ role: "user", content: prompt }];
   let html = "";
@@ -95,6 +97,8 @@ async function generateHtmlViaClaude(prompt: string): Promise<ResultatGeneration
   let appels = 0;
 
   for (let attempt = 0; attempt < MAX_APPELS_GENERATION; attempt++) {
+    const entreeEstimee = tokensEstimes(msgs.map((m) => m.content).join(""));
+    await suivi.verifier(suivi.estimer(entreeEstimee, MAX_TOKENS_GENERATION));
     const stream = client.messages.stream({
       model: MODELE_GENERATION,
       max_tokens: MAX_TOKENS_GENERATION,
@@ -108,6 +112,7 @@ async function generateHtmlViaClaude(prompt: string): Promise<ResultatGeneration
     });
 
     const finalMessage = await stream.finalMessage();
+    suivi.ajouter(finalMessage.model, finalMessage.usage);
     html += chunk;
     appels += 1;
     // output_tokens inclut les tokens de réflexion : c'est bien ce qui est facturé, donc
@@ -639,17 +644,18 @@ ${RAPPEL_PRIORITES}
 
 Réponds UNIQUEMENT avec le code HTML, sans explication ni balise markdown.`;
 
+  const suivi = new SuiviBudgetIa(supabase, user.id, plan, "site_builder");
   try {
-    const resultat = await generateHtmlViaClaude(prompt);
-    // Enregistré avant de répondre, mais sans await bloquant la réponse en cas d'échec :
-    // logTokensUsage n'escalade jamais (voir lib/plan-limits.ts).
-    await logTokensUsage(supabase, user.id, "site_builder", resultat.tokensEntree, resultat.tokensSortie);
+    const resultat = await generateHtmlViaClaude(prompt, suivi);
+    // Enregistré avant de répondre ; en cas d'échec, par le finally (jamais d'exception).
+    await suivi.enregistrer();
     const html = injectColorTokens(resultat.html, colorTokens);
     // Pages légales vierges (mentions légales, CGV, confidentialité) à côté de la page : le
     // site devient multi-pages ; html reste la page d'accueil. Page non découpable : seule.
     const pages = assemblerPagesProduit(html, ctx);
     return NextResponse.json(pages ? { html: pages.accueil, pages } : { html });
   } catch (err) {
+    if (err instanceof BudgetIaDepasse) return reponseBudgetDepasse(err);
     // HTML incomplet : on ne renvoie PAS la page, donc le client n'a rien à sauvegarder
     // dans « Mes sites ». 502 et non 500 : l'échec vient de la réponse du modèle, pas d'un
     // bug local.
@@ -669,6 +675,8 @@ Réponds UNIQUEMENT avec le code HTML, sans explication ni balise markdown.`;
       { error: "Erreur lors de la génération de la landing page", code: "generation_failed" },
       { status: 500 }
     );
+  } finally {
+    await suivi.enregistrer();
   }
 }
 
@@ -837,9 +845,10 @@ ${consignesStyle}${RAPPEL_PRIORITES}
 
 Réponds UNIQUEMENT avec le code HTML, sans explication ni balise markdown.`;
 
+  const suivi = new SuiviBudgetIa(supabase, userId, plan, "site_builder");
   try {
-    const resultat = await generateHtmlViaClaude(prompt);
-    await logTokensUsage(supabase, userId, "site_builder", resultat.tokensEntree, resultat.tokensSortie);
+    const resultat = await generateHtmlViaClaude(prompt, suivi);
+    await suivi.enregistrer();
     const htmlWithTokens = injectColorTokens(resultat.html, colorTokens);
     const categories = categoriesValides(body.categories);
     const { html: accueilSeul, retraits } = nettoyerCoquilleAccueil(htmlWithTokens);
@@ -859,6 +868,7 @@ Réponds UNIQUEMENT avec le code HTML, sans explication ni balise markdown.`;
     const html = injectProductGrid(ctx, accueilSeul, produits, "var(--site-accent)", categories);
     return NextResponse.json({ html, ...avertissements });
   } catch (err) {
+    if (err instanceof BudgetIaDepasse) return reponseBudgetDepasse(err);
     if (err instanceof HtmlTronqueError) {
       console.error("[generate-site] (mode boutique)", err.message);
       return NextResponse.json({ error: ERREUR_HTML_TRONQUE, code: "generation_truncated" }, { status: 502 });
@@ -872,5 +882,7 @@ Réponds UNIQUEMENT avec le code HTML, sans explication ni balise markdown.`;
       { error: "Erreur lors de la génération du site boutique", code: "generation_failed" },
       { status: 500 }
     );
+  } finally {
+    await suivi.enregistrer();
   }
 }

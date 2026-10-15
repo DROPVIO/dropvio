@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { getServerUserAndPlan } from "@/lib/supabase-server";
-import { PLAN_LIMITS, planLabel, getMonthlyUsage, incrementMonthlyUsage, logTokensUsage } from "@/lib/plan-limits";
+import { PLAN_LIMITS, planLabel, getMonthlyUsage, incrementMonthlyUsage } from "@/lib/plan-limits";
+import { SuiviBudgetIa } from "@/lib/ai-budget";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { AUDIT_MODELE, compacterHtml, verifierBudgetAudit } from "@/lib/audit-config";
 import { langueSite } from "@/lib/site-textes";
@@ -256,14 +257,16 @@ export async function POST(request: NextRequest) {
       messages: [{ role: "user" as const, content: PROMPT + compacterHtml(html).html }],
     };
 
-    const refus = await verifierBudgetAudit(client, supabase, user.id, plan, requete, SORTIE_MAX);
+    const suivi = new SuiviBudgetIa(supabase, user.id, plan, "audit_ia");
+    const refus = await verifierBudgetAudit(client, suivi, requete, SORTIE_MAX);
     if (refus) return refus;
 
     // Streaming : sur une très grosse page, un appel non streamé risque le délai HTTP du SDK.
     const message = await client.messages
       .stream({ model: AUDIT_MODELE, max_tokens: SORTIE_MAX, ...requete })
       .finalMessage();
-    await logTokensUsage(supabase, user.id, "audit_ia", message.usage.input_tokens, message.usage.output_tokens);
+    suivi.ajouter(message.model, message.usage);
+    await suivi.enregistrer();
 
     let raw: string | undefined;
     for (const block of message.content) {

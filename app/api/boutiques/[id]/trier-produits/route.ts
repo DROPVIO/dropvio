@@ -4,6 +4,7 @@ import { getServerUserAndPlan } from "@/lib/supabase-server";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { apiError } from "@/lib/api-errors";
 import { slugify } from "@/lib/slugify";
+import { BudgetIaDepasse, reponseBudgetDepasse, SuiviBudgetIa, tokensEstimes } from "@/lib/ai-budget";
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
@@ -70,27 +71,30 @@ function lireCollections(valeur: unknown): CollectionDemandee[] | null {
   return collections;
 }
 
-/** Renvoie, pour chaque produit du lot, l'indice de sa collection ou null. */
-async function classer(collections: Collection[], produits: Produit[]): Promise<(number | null)[] | null> {
+// Sortie bornée à la taille du lot (~15 tokens par affectation, plus la réflexion) : garde
+// l'estimation du budget IA proche du coût réel.
+const maxTokensLot = (produits: number) => Math.min(16000, 1500 + produits * 40);
+
+function contenuLot(collections: Collection[], produits: Produit[]): string {
   const listeCollections = collections
     .map((c, i) => `C${i + 1}. ${c.nom}${c.description ? ` — ${c.description}` : ""}`)
     .join("\n");
   const listeProduits = produits.map((p, i) => `${i + 1}. ${p.nom.slice(0, 200)}`).join("\n");
+  return `COLLECTIONS (numéro de collection = le nombre après C) :\n${listeCollections}\n\nPRODUITS :\n${listeProduits}`;
+}
 
+/** Renvoie, pour chaque produit du lot, l'indice de sa collection ou null. */
+async function classer(collections: Collection[], produits: Produit[], suivi: SuiviBudgetIa): Promise<(number | null)[] | null> {
   const message = await client.beta.messages.create({
     model: "claude-opus-5-5",
-    max_tokens: 16000,
+    max_tokens: maxTokensLot(produits.length),
     betas: ["server-side-fallback-2026-06-01"],
     fallbacks: [{ model: "claude-opus-4-8" }],
     output_config: { effort: "low", format: { type: "json_schema", schema: SCHEMA } },
     system: SYSTEM,
-    messages: [
-      {
-        role: "user",
-        content: `COLLECTIONS (numéro de collection = le nombre après C) :\n${listeCollections}\n\nPRODUITS :\n${listeProduits}`,
-      },
-    ],
+    messages: [{ role: "user", content: contenuLot(collections, produits) }],
   });
+  suivi.ajouter(message.model, message.usage);
 
   if (message.stop_reason === "refusal" || message.stop_reason === "max_tokens") {
     console.error("[trier-produits] stop_reason:", message.stop_reason);
@@ -119,7 +123,7 @@ async function classer(collections: Collection[], produits: Produit[]): Promise<
 
 export async function POST(request: NextRequest, context: { params: Promise<{ id: string }> }) {
   const { id: boutiqueId } = await context.params;
-  const { supabase, user } = await getServerUserAndPlan();
+  const { supabase, user, plan } = await getServerUserAndPlan();
   if (!user) {
     return NextResponse.json({ error: "Connecte-toi pour trier tes produits.", code: "auth_required" }, { status: 401 });
   }
@@ -176,19 +180,29 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
     return apiError("tri_aucune_collection", 400, "Indique au moins une collection dans laquelle trier les produits.");
   }
 
-  // Classement avant toute écriture : si l'IA échoue, rien n'est créé ni déplacé.
+  // Classement avant toute écriture : si l'IA échoue, rien n'est créé ni déplacé. Le budget
+  // IA est vérifié une fois pour tous les lots, avant le premier appel.
+  const lots: Produit[][] = [];
+  for (let i = 0; i < produits.length; i += PRODUITS_PAR_APPEL) lots.push(produits.slice(i, i + PRODUITS_PAR_APPEL));
+  const suivi = new SuiviBudgetIa(supabase, user.id, plan, "boutique_ia");
   const affectations: (number | null)[] = [];
   try {
-    for (let i = 0; i < produits.length; i += PRODUITS_PAR_APPEL) {
-      const lot = await classer(collections, produits.slice(i, i + PRODUITS_PAR_APPEL));
+    await suivi.verifier(
+      lots.reduce((total, lot) => total + suivi.estimer(tokensEstimes(SYSTEM + contenuLot(collections, lot)), maxTokensLot(lot.length)), 0)
+    );
+    for (const produitsLot of lots) {
+      const lot = await classer(collections, produitsLot, suivi);
       if (!lot) {
         return NextResponse.json({ error: "Réponse invalide. Réessaie.", code: "ai_invalid_response" }, { status: 500 });
       }
       affectations.push(...lot);
     }
   } catch (err) {
+    if (err instanceof BudgetIaDepasse) return reponseBudgetDepasse(err);
     console.error("[trier-produits]", err);
     return NextResponse.json({ error: "Erreur lors du tri. Réessaie.", code: "tri_echec" }, { status: 500 });
+  } finally {
+    await suivi.enregistrer();
   }
 
   // Création des collections nouvelles, avec un slug libre dans la boutique.

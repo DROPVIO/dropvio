@@ -1,12 +1,10 @@
 // HTML envoyé à l'audit IA (app/api/audit-site/route.ts pour le scoring,
 // app/api/audit-site/html/route.ts pour la correction). Plus aucune troncature : la page est
-// envoyée en entier et la limite est un quota mensuel de tokens par plan
-// (PLAN_LIMITS.tokensAuditParMoisMax, lib/plan-limits.ts), calé sur le coût maximal de
-// l'ancien quota en nombre d'audits et vérifié avant l'appel avec messages.countTokens.
+// envoyée en entier ; ce qui la limite est le budget IA mensuel du plan (lib/ai-budget.ts),
+// vérifié avant l'appel avec le nombre exact de tokens d'entrée (messages.countTokens).
 import type Anthropic from "@anthropic-ai/sdk";
-import type { SupabaseClient } from "@supabase/supabase-js";
-import { getMonthlyTokensPonderes, planLabel, PLAN_LIMITS, POIDS_TOKENS_SORTIE, type Plan } from "@/lib/plan-limits";
 import { apiError } from "@/lib/api-errors";
+import { BudgetIaDepasse, reponseBudgetDepasse, type SuiviBudgetIa } from "@/lib/ai-budget";
 
 export const AUDIT_MODELE = "claude-sonnet-4-6";
 
@@ -36,15 +34,13 @@ export function restaurerHtml(html: string, blocs: string[]): string {
 }
 
 /** Vérifie, avant l'appel facturé, que la requête tient dans le contexte du modèle et dans le
- *  quota de tokens du mois. Renvoie une réponse d'erreur prête à renvoyer, ou null si c'est bon.
- *  `sortieMax` (le max_tokens de l'appel) est réservé dans le quota, pondéré comme la sortie
- *  facturée (POIDS_TOKENS_SORTIE) : la consommation réelle
- *  est ensuite enregistrée par logTokensUsage avec les chiffres exacts de usage. */
+ *  budget IA du mois (lib/ai-budget.ts). Renvoie une réponse d'erreur prête à renvoyer, ou
+ *  null si c'est bon. L'entrée est comptée exactement (countTokens) ; `sortieMax` (le
+ *  max_tokens de l'appel) est compté comme entièrement consommé. La consommation réelle est
+ *  ensuite ajoutée au suivi et enregistrée par la route. */
 export async function verifierBudgetAudit(
   client: Anthropic,
-  supabase: SupabaseClient,
-  userId: string,
-  plan: Plan,
+  suivi: SuiviBudgetIa,
   requete: Pick<Anthropic.MessageCountTokensParams, "system" | "messages">,
   sortieMax: number
 ) {
@@ -59,20 +55,11 @@ export async function verifierBudgetAudit(
     );
   }
 
-  const quota = PLAN_LIMITS[plan].tokensAuditParMoisMax;
-  if (quota !== null) {
-    const utilises = await getMonthlyTokensPonderes(supabase, userId, "audit_ia");
-    const restant = Math.max(0, quota - utilises);
-    const besoin = entree + POIDS_TOKENS_SORTIE * sortieMax;
-    if (besoin > restant) {
-      return apiError(
-        "audit_tokens_limit",
-        403,
-        `Cet audit demande environ ${besoin.toLocaleString("fr-FR")} tokens, il t'en reste ${restant.toLocaleString("fr-FR")} sur ${quota.toLocaleString("fr-FR")} ce mois-ci (plan ${planLabel(plan)}).`,
-        { values: { besoin, restant, max: quota, plan: planLabel(plan) } }
-      );
-    }
+  try {
+    await suivi.verifier(suivi.estimer(entree, sortieMax));
+  } catch (err) {
+    if (err instanceof BudgetIaDepasse) return reponseBudgetDepasse(err);
+    throw err;
   }
-
   return null;
 }

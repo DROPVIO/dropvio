@@ -1225,12 +1225,12 @@
     "shopify_rate_limited": "Shopify request limit reached. Please try again shortly.",
     "shopify_unknown": "Unknown error while sending to Shopify.",
     "audit_too_large": "This page is {tokens, number} tokens, more than the AI can read at once ({max, number}).",
-    "audit_tokens_limit": "This audit needs about {besoin, number} tokens and you have {restant, number} of {max, number} left this month ({plan} plan). The quota resets next month.",
     "tri_aucun_produit": "Add products to the store before sorting them.",
     "tri_aucune_collection": "Enter at least one collection to sort the products into.",
     "tri_echec": "Sorting failed. Try again in a moment.",
     "reecriture_aucun_produit": "Add products to the store before rewriting them.",
-    "prix_aucun_produit": "Add products to the store before adjusting their prices."
+    "prix_aucun_produit": "Add products to the store before adjusting their prices.",
+    "budget_ia_depasse": "This month's AI budget has been reached. It will reset on the 1st of next month."
   },
   "siteBuilder": {
     "boutique": {

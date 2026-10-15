@@ -1225,12 +1225,12 @@
     "shopify_rate_limited": "Se ha alcanzado el límite de solicitudes de Shopify. Inténtalo de nuevo en unos instantes.",
     "shopify_unknown": "Error desconocido al enviar a Shopify.",
     "audit_too_large": "Esta página tiene {tokens, number} tokens, más de lo que la IA puede leer de una vez ({max, number}).",
-    "audit_tokens_limit": "Esta auditoría requiere unos {besoin, number} tokens y te quedan {restant, number} de {max, number} este mes (plan {plan}). La cuota se reinicia el mes que viene.",
     "tri_aucun_produit": "Añade productos a la tienda antes de ordenarlos.",
     "tri_aucune_collection": "Indica al menos una colección en la que ordenar los productos.",
     "tri_echec": "No se pudo ordenar. Inténtalo de nuevo en un momento.",
     "reecriture_aucun_produit": "Añade productos a la tienda antes de reescribirlos.",
-    "prix_aucun_produit": "Añade productos a la tienda antes de ajustar sus precios."
+    "prix_aucun_produit": "Añade productos a la tienda antes de ajustar sus precios.",
+    "budget_ia_depasse": "Se ha alcanzado el presupuesto de IA del mes. Se reiniciará el día 1 del mes que viene."
   },
   "siteBuilder": {
     "boutique": {

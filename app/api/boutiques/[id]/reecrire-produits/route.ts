@@ -6,6 +6,7 @@ import { apiError } from "@/lib/api-errors";
 import { containsExcludedBrand } from "@/lib/brand-exclusions";
 import { avecRepliLangue, langueBoutique } from "@/lib/boutique-langue";
 import type { AppLocale } from "@/lib/locale";
+import { BudgetIaDepasse, reponseBudgetDepasse, SuiviBudgetIa, tokensEstimes } from "@/lib/ai-budget";
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
@@ -64,24 +65,32 @@ const SCHEMA = {
   additionalProperties: false,
 };
 
-/** Nouveaux textes du lot, dans l'ordre ; null pour un produit sans résultat exploitable. */
-async function reecrire(produits: Produit[], langue: AppLocale): Promise<(Texte | null)[]> {
+// Sortie bornée à la taille du lot (~200 tokens par produit, plus la réflexion) : garde
+// l'estimation du budget IA proche du coût réel.
+const maxTokensLot = (produits: number) => Math.min(16000, 1500 + produits * 300);
+
+function contenuLot(produits: Produit[]): string {
   const liste = produits
     .map((p, i) => {
       const description = p.description?.trim() ? `\n   Description d'origine : ${p.description.trim().slice(0, 1500)}` : "";
       return `${i + 1}. Titre d'origine : ${p.nom.slice(0, 500)}${description}`;
     })
     .join("\n\n");
+  return `PRODUITS :\n\n${liste}`;
+}
 
+/** Nouveaux textes du lot, dans l'ordre ; null pour un produit sans résultat exploitable. */
+async function reecrire(produits: Produit[], langue: AppLocale, suivi: SuiviBudgetIa): Promise<(Texte | null)[]> {
   const message = await client.beta.messages.create({
     model: "claude-opus-5-5",
-    max_tokens: 16000,
+    max_tokens: maxTokensLot(produits.length),
     betas: ["server-side-fallback-2026-06-01"],
     fallbacks: [{ model: "claude-opus-4-8" }],
     output_config: { effort: "low", format: { type: "json_schema", schema: SCHEMA } },
     system: system(langue),
-    messages: [{ role: "user", content: `PRODUITS :\n\n${liste}` }],
+    messages: [{ role: "user", content: contenuLot(produits) }],
   });
+  suivi.ajouter(message.model, message.usage);
 
   const resultat: (Texte | null)[] = produits.map(() => null);
   if (message.stop_reason === "refusal" || message.stop_reason === "max_tokens") {
@@ -134,7 +143,7 @@ async function mettreAJour(
 
 export async function POST(_request: NextRequest, context: { params: Promise<{ id: string }> }) {
   const { id: boutiqueId } = await context.params;
-  const { supabase, user } = await getServerUserAndPlan();
+  const { supabase, user, plan } = await getServerUserAndPlan();
   if (!user) {
     return NextResponse.json({ error: "Connecte-toi pour réécrire tes produits.", code: "auth_required" }, { status: 401 });
   }
@@ -171,15 +180,23 @@ export async function POST(_request: NextRequest, context: { params: Promise<{ i
   // Lots traités APPELS_SIMULTANES à la fois : 200 produits = 10 lots, environ 3 vagues.
   const lots: Produit[][] = [];
   for (let i = 0; i < produits.length; i += PRODUITS_PAR_APPEL) lots.push(produits.slice(i, i + PRODUITS_PAR_APPEL));
+  // Budget IA vérifié une fois pour tous les lots, avant le premier appel.
+  const suivi = new SuiviBudgetIa(supabase, user.id, plan, "boutique_ia");
   const textes: (Texte | null)[] = [];
   try {
+    await suivi.verifier(
+      lots.reduce((total, lot) => total + suivi.estimer(tokensEstimes(system(langue) + contenuLot(lot)), maxTokensLot(lot.length)), 0)
+    );
     for (let i = 0; i < lots.length; i += APPELS_SIMULTANES) {
-      const vague = await Promise.all(lots.slice(i, i + APPELS_SIMULTANES).map((lot) => reecrire(lot, langue)));
+      const vague = await Promise.all(lots.slice(i, i + APPELS_SIMULTANES).map((lot) => reecrire(lot, langue, suivi)));
       for (const lot of vague) textes.push(...lot);
     }
   } catch (err) {
+    if (err instanceof BudgetIaDepasse) return reponseBudgetDepasse(err);
     console.error("[reecrire-produits]", err);
     return NextResponse.json({ error: "Erreur lors de la génération. Réessaie.", code: "generation_failed" }, { status: 500 });
+  } finally {
+    await suivi.enregistrer();
   }
 
   const modifies = produits.flatMap((p, i) => (textes[i] ? [{ id: p.id, ...textes[i]! }] : []));
