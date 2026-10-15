@@ -1091,46 +1091,62 @@
     },
     "pricing": {
       "eyebrow": "Pricing",
-      "title": "Start free. Move up when your store justifies it.",
+      "title": "Start for free. Upgrade when your store makes it worth it.",
       "free": "Free",
       "pro": "Pro",
       "agency": "Agency",
       "recommended": "Recommended",
-      "perMonth": "/mo",
-      "free0": "$0",
-      "freeNote": "Free, with no time limit and no card",
-      "proNote": "Not available yet",
-      "agencyNote": "Not available yet",
-      "freeF1": "First 1,000 products in the catalog",
-      "freeF2": "5 generated pages per month",
-      "freeF3": "2 saved margin simulations",
-      "freeF4": "Margin calculator, 10 countries",
-      "freeF5": "AI sales page audit",
-      "freeF6": "HTML download & Shopify publishing",
-      "freeF7": "Reliable supplier alternatives",
-      "proF1": "Full product catalog, no cap",
-      "proF2": "20 generated pages per month",
-      "proF3": "30 AI sales page audits / month",
-      "proF4": "Download the corrected HTML",
-      "proF5": "Unlimited margin simulations",
-      "proF6": "HTML export & publish to Shopify",
-      "proF7": "Multi-product stores (up to 200 products)",
-      "proF8": "Shopify order & tracking sync",
-      "agencyF1": "Everything in Pro",
-      "agencyF2": "50 generated pages per month",
-      "agencyF3": "100 AI audits per month",
-      "agencyF4": "Priority support within 24h",
+      "perMonth": "/month",
+      "prix": {
+        "free": "€0",
+        "pro": "€29",
+        "agency": "€59"
+      },
+      "note": {
+        "free": "Free, with no time limit and no credit card",
+        "pro": "Not available yet",
+        "agency": "Not available yet"
+      },
+      "budgetCarte": "AI budget included: {budget} per month",
+      "features": {
+        "free": [
+          "First 1,000 products in the catalog",
+          "5 generated sites per month, saved in “My sites”",
+          "Stores with up to 10 products",
+          "AI collection sorting, listing rewrites and market pricing",
+          "Margin calculator for 10 countries, and 2 saved simulations"
+        ],
+        "pro": [
+          "Full product catalog",
+          "20 generated sites per month, full HTML download and Shopify publishing",
+          "30 AI audits per month, on the whole page, with corrected HTML",
+          "Stores with up to 200 products: sorting, rewriting and market pricing in one click",
+          "Shopify order and tracking sync",
+          "Unlimited margin simulations"
+        ],
+        "agency": [
+          "Everything in Pro",
+          "50 generated sites per month",
+          "100 AI audits per month",
+          "The largest AI budget, to run store after store",
+          "Priority support within 24 h"
+        ]
+      },
       "ctaFree": "Create a free account",
-      "note": "The Free plan is available right now, with no card and no time limit. The Pro and Agency plans are opening soon."
+      "bientot": "Coming soon",
+      "budgetTitre": "One AI budget for every feature",
+      "budgetTexte": "Each plan includes a monthly AI budget that covers site creation, audits and the store's AI tools. A typical action costs a few cents: about €0.10 to generate a site, €0.15 to audit a regular page, under €0.20 to rewrite every listing of a 70-product store. The budget resets on the 1st of each month.",
+      "limitesTitre": "Spread over the whole month",
+      "limitesTexte": "For sites and audits, usage is smoothed over time: at most {jour}% of the budget over 24 hours and {semaine}% over 7 days. That way you can create and audit every week without using it all in one day. These limits free up as the hours pass, and your usage is always visible in settings."
     },
     "faq": {
       "title": "Questions",
       "q1": "Does the Free plan cost anything?",
       "a1": "No. The Free account is free, with no time limit, and signing up doesn't ask for a card.",
       "q2": "What's the difference between Free, Pro and Agency?",
-      "a2": "Free: the first 1,000 products in the catalog, 5 generated pages per month, 2 margin simulations, no AI audit. Pro ($29/mo): the full catalog and 30 AI audits per month. Agency ($59/mo): like Pro, with 100 AI audits per month. Pro and Agency are not open yet. The Free plan is available now, without a card.",
+      "a2": "Free (€0): 1,000 catalog products, 5 sites per month, stores with up to 10 products and a €0.50 monthly AI budget; AI audits are not included. Pro (€29/month): full catalog, 20 sites and 30 AI audits per month, stores with up to 200 products and a €6 AI budget. Agency (€59/month): everything in Pro, with 50 sites, 100 audits and a €28 AI budget per month. The Pro and Agency plans are not open yet.",
       "q3": "What happens when I hit my plan's limit?",
-      "a3": "A clear message tells you which limit you reached (this month's audits, for example) and offers the next plan up if you need it. Nothing blocks without an explanation.",
+      "a3": "A clear message tells you which limit you reached: the monthly quota (sites, audits), the monthly AI budget, or the 24-hour or 7-day limit, along with when you can continue. Your usage is visible at any time in settings. Nothing gets blocked without an explanation.",
       "q4": "Does the margin calculator really include taxes?",
       "a4": "Yes: 10 countries are supported, each with its own rules — URSSAF contributions and VAT in France, state sales tax in the US, VAT in the UK — plus Stripe fees and a manual mode for anything else.",
       "q5": "Is my data shared with other users?",
@@ -2164,9 +2180,9 @@
       },
       "differences": {
         "q": "What's the difference between Free, Pro and Agency?",
-        "free": "Free (€0): limited access to each tool, AI audit not included",
-        "pro": "Pro (€29/month): full access to the finder and the calculator, 30 AI audits per month",
-        "agency": "Agency (€59/month): like Pro, with 100 AI audits per month",
+        "free": "Free (€0): limited access to each tool, 5 sites per month, stores with up to 10 products, €0.50 AI budget per month, no AI audits",
+        "pro": "Pro (€29/month): full catalog, 20 sites and 30 AI audits per month, stores with up to 200 products, €6 AI budget per month",
+        "agency": "Agency (€59/month): like Pro, with 50 sites, 100 AI audits and a €28 AI budget per month",
         "fin": "Only the Free plan is open for now: the Pro and Agency plans are coming soon. In the meantime, contact <email>{adresse}</email>."
       },
       "changerPlan": {
@@ -2174,7 +2190,7 @@
       },
       "limite": {
         "q": "What happens if I reach my plan's limit?",
-        "a": "A clear message tells you which limit you've reached (for example, the month's audits) and suggests upgrading if needed. Nothing is ever blocked without an explanation."
+        "a": "A clear message tells you which limit you reached (sites or audits for the month, the monthly AI budget, or the 24-hour or 7-day limit, with when you can continue). Your usage is visible in settings. Nothing gets blocked without an explanation."
       },
       "finder": {
         "q": "How does the product finder work?",

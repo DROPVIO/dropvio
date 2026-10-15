@@ -1097,40 +1097,56 @@
       "agency": "Agency",
       "recommended": "Consigliato",
       "perMonth": "/mese",
-      "free0": "0€",
-      "freeNote": "Gratis, senza limiti di tempo e senza carta",
-      "proNote": "Non ancora disponibile",
-      "agencyNote": "Non ancora disponibile",
-      "freeF1": "I primi 1.000 prodotti del catalogo",
-      "freeF2": "5 pagine generate al mese",
-      "freeF3": "2 simulazioni di margine salvate",
-      "freeF4": "Calcolatore di margine, 10 paesi",
-      "freeF5": "Audit IA della pagina di vendita",
-      "freeF6": "Download dell'HTML e pubblicazione su Shopify",
-      "freeF7": "Alternative fornitore affidabili",
-      "proF1": "Catalogo prodotti completo, senza tetto",
-      "proF2": "20 pagine generate al mese",
-      "proF3": "30 audit IA al mese",
-      "proF4": "Download dell'HTML corretto",
-      "proF5": "Simulazioni di margine illimitate",
-      "proF6": "Export HTML e pubblicazione su Shopify",
-      "proF7": "Negozi multi-prodotto (fino a 200 prodotti)",
-      "proF8": "Sincronizzazione ordini e tracking Shopify",
-      "agencyF1": "Tutto il piano Pro",
-      "agencyF2": "50 pagine generate al mese",
-      "agencyF3": "100 audit IA al mese",
-      "agencyF4": "Supporto prioritario entro 24 h",
+      "prix": {
+        "free": "0 €",
+        "pro": "29 €",
+        "agency": "59 €"
+      },
+      "note": {
+        "free": "Gratis, senza limiti di tempo e senza carta di credito",
+        "pro": "Non ancora disponibile",
+        "agency": "Non ancora disponibile"
+      },
+      "budgetCarte": "Budget IA incluso: {budget} al mese",
+      "features": {
+        "free": [
+          "Primi 1.000 prodotti del catalogo",
+          "5 siti generati al mese, salvati in «I miei siti»",
+          "Negozi fino a 10 prodotti",
+          "Ordinamento delle collezioni, riscrittura delle schede e prezzi di mercato con l'IA",
+          "Calcolatore di margine per 10 paesi e 2 simulazioni salvate"
+        ],
+        "pro": [
+          "Catalogo prodotti completo",
+          "20 siti generati al mese, download HTML completo e pubblicazione su Shopify",
+          "30 audit IA al mese, sull'intera pagina, con HTML corretto",
+          "Negozi fino a 200 prodotti: ordinamento, riscrittura e prezzi di mercato in un clic",
+          "Sincronizzazione di ordini e tracking Shopify",
+          "Simulazioni di margine illimitate"
+        ],
+        "agency": [
+          "Tutto il piano Pro",
+          "50 siti generati al mese",
+          "100 audit IA al mese",
+          "Il budget IA più ampio, per lanciare un negozio dopo l'altro",
+          "Supporto prioritario entro 24 h"
+        ]
+      },
       "ctaFree": "Crea un account gratuito",
-      "note": "Il piano Free è disponibile da subito, senza carta e senza limiti di tempo. I piani Pro e Agency apriranno prossimamente."
+      "bientot": "Presto disponibile",
+      "budgetTitre": "Un budget IA per tutte le funzioni",
+      "budgetTexte": "Ogni piano include un budget IA mensile che copre la creazione di siti, gli audit e gli strumenti IA del negozio. Un'azione tipica costa pochi centesimi: circa 0,10 € per generare un sito, 0,15 € per l'audit di una pagina normale, meno di 0,20 € per riscrivere tutte le schede di un negozio da 70 prodotti. Il budget si azzera il 1° di ogni mese.",
+      "limitesTitre": "Distribuito su tutto il mese",
+      "limitesTexte": "Per i siti e gli audit, l'uso è distribuito nel tempo: al massimo il {jour}% del budget in 24 ore e il {semaine}% in 7 giorni. Così puoi creare e fare audit ogni settimana senza consumare tutto in un giorno. Questi limiti si liberano con il passare delle ore e il tuo utilizzo è sempre visibile nelle impostazioni."
     },
     "faq": {
       "title": "Domande",
       "q1": "Il piano Free costa qualcosa?",
       "a1": "No. L'account Free è gratuito, senza limiti di tempo, e la creazione dell'account non chiede alcuna carta.",
       "q2": "Che differenza c'è tra Free, Pro e Agency?",
-      "a2": "Free: i primi 1.000 prodotti del catalogo, 5 pagine generate al mese, 2 simulazioni di margine, nessun audit IA. Pro (29€/mese): catalogo completo e 30 audit IA al mese. Agency (59€/mese): come Pro, con 100 audit IA al mese. I piani Pro e Agency non sono ancora aperti. Il piano Free è disponibile subito, senza carta.",
+      "a2": "Free (0 €): 1.000 prodotti del catalogo, 5 siti al mese, negozi fino a 10 prodotti e 0,50 € di budget IA al mese; l'audit IA non è incluso. Pro (29 €/mese): catalogo completo, 20 siti e 30 audit IA al mese, negozi fino a 200 prodotti e 6 € di budget IA. Agency (59 €/mese): tutto Pro, con 50 siti, 100 audit e 28 € di budget IA al mese. I piani Pro e Agency non sono ancora aperti.",
       "q3": "Cosa succede se raggiungo il limite del mio piano?",
-      "a3": "Un messaggio chiaro ti indica il limite raggiunto (per esempio gli audit del mese) e ti propone il piano superiore se ti serve. Niente si blocca senza spiegazione.",
+      "a3": "Un messaggio chiaro indica il limite raggiunto: quota del mese (siti, audit), budget IA del mese, oppure limite delle 24 ore o dei 7 giorni, con il momento in cui potrai riprendere. Il tuo utilizzo è sempre visibile nelle impostazioni. Niente si blocca senza spiegazione.",
       "q4": "Il calcolatore di margine include davvero le imposte?",
       "a4": "Sì: sono supportati 10 paesi, ciascuno con le sue regole — contributi URSSAF e IVA in Francia, sales tax per stato negli USA, VAT nel Regno Unito — più le commissioni Stripe e una modalità manuale per gli altri casi.",
       "q5": "I miei dati sono condivisi con altri utenti?",
@@ -2164,9 +2180,9 @@
       },
       "differences": {
         "q": "Che differenza c'è tra Free, Pro e Agency?",
-        "free": "Free (0 €): accesso limitato a ogni strumento, audit IA non incluso",
-        "pro": "Pro (29 €/mese): accesso completo al finder e al calcolatore, 30 audit IA al mese",
-        "agency": "Agency (59 €/mese): come Pro, con 100 audit IA al mese",
+        "free": "Free (0 €): accesso limitato a ogni strumento, 5 siti al mese, negozi fino a 10 prodotti, 0,50 € di budget IA al mese, audit IA non incluso",
+        "pro": "Pro (29 €/mese): catalogo completo, 20 siti e 30 audit IA al mese, negozi fino a 200 prodotti, 6 € di budget IA al mese",
+        "agency": "Agency (59 €/mese): come Pro, con 50 siti, 100 audit IA e 28 € di budget IA al mese",
         "fin": "Per ora è aperto solo il piano Free: i piani Pro e Agency arriveranno presto. Nel frattempo, contatta <email>{adresse}</email>."
       },
       "changerPlan": {
@@ -2174,7 +2190,7 @@
       },
       "limite": {
         "q": "Cosa succede se raggiungo il limite del mio piano?",
-        "a": "Un messaggio chiaro ti indica il limite raggiunto (ad esempio, gli audit del mese) e ti propone di passare al piano superiore se serve. Niente viene bloccato senza spiegazione."
+        "a": "Un messaggio chiaro ti indica il limite raggiunto (siti o audit del mese, budget IA del mese, oppure limite delle 24 ore o dei 7 giorni, con l'ora in cui potrai riprendere). Il tuo utilizzo è visibile nelle impostazioni. Niente si blocca senza spiegazione."
       },
       "finder": {
         "q": "Come funziona il finder di prodotti?",

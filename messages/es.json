@@ -1097,40 +1097,56 @@
       "agency": "Agency",
       "recommended": "Recomendado",
       "perMonth": "/mes",
-      "free0": "0€",
-      "freeNote": "Gratis, sin límite de tiempo y sin tarjeta",
-      "proNote": "Aún no disponible",
-      "agencyNote": "Aún no disponible",
-      "freeF1": "Los 1 000 primeros productos del catálogo",
-      "freeF2": "5 páginas generadas al mes",
-      "freeF3": "2 simulaciones de margen guardadas",
-      "freeF4": "Calculadora de margen, 10 países",
-      "freeF5": "Auditoría IA de página de venta",
-      "freeF6": "Descarga del HTML y publicación en Shopify",
-      "freeF7": "Alternativas de proveedor fiables",
-      "proF1": "Catálogo de productos completo, sin tope",
-      "proF2": "20 páginas generadas al mes",
-      "proF3": "30 auditorías IA al mes",
-      "proF4": "Descarga del HTML corregido",
-      "proF5": "Simulaciones de margen ilimitadas",
-      "proF6": "Exportación HTML y publicación en Shopify",
-      "proF7": "Tiendas multiproducto (hasta 200 productos)",
-      "proF8": "Sincronización de pedidos y seguimiento Shopify",
-      "agencyF1": "Todo el plan Pro",
-      "agencyF2": "50 páginas generadas al mes",
-      "agencyF3": "100 auditorías IA al mes",
-      "agencyF4": "Soporte prioritario en 24 h",
+      "prix": {
+        "free": "0 €",
+        "pro": "29 €",
+        "agency": "59 €"
+      },
+      "note": {
+        "free": "Gratis, sin límite de tiempo y sin tarjeta bancaria",
+        "pro": "Aún no disponible",
+        "agency": "Aún no disponible"
+      },
+      "budgetCarte": "Presupuesto de IA incluido: {budget} al mes",
+      "features": {
+        "free": [
+          "Los primeros 1000 productos del catálogo",
+          "5 sitios generados al mes, guardados en «Mis sitios»",
+          "Tiendas de hasta 10 productos",
+          "Orden de colecciones, reescritura de fichas y precios de mercado con IA",
+          "Calculadora de margen para 10 países y 2 simulaciones guardadas"
+        ],
+        "pro": [
+          "Catálogo de productos completo",
+          "20 sitios generados al mes, descarga HTML completa y publicación en Shopify",
+          "30 auditorías de IA al mes, de la página entera, con HTML corregido",
+          "Tiendas de hasta 200 productos: orden, reescritura y precios de mercado en un clic",
+          "Sincronización de pedidos y seguimiento de Shopify",
+          "Simulaciones de margen ilimitadas"
+        ],
+        "agency": [
+          "Todo el plan Pro",
+          "50 sitios generados al mes",
+          "100 auditorías de IA al mes",
+          "El mayor presupuesto de IA, para encadenar tiendas",
+          "Soporte prioritario en 24 h"
+        ]
+      },
       "ctaFree": "Crear una cuenta gratis",
-      "note": "El plan Free está disponible ya, sin tarjeta y sin límite de tiempo. Los planes Pro y Agency se abrirán próximamente."
+      "bientot": "Próximamente",
+      "budgetTitre": "Un presupuesto de IA para todas las funciones",
+      "budgetTexte": "Cada plan incluye un presupuesto mensual de IA que cubre la creación de sitios, las auditorías y las herramientas de IA de la tienda. Una acción habitual cuesta unos céntimos: unos 0,10 € por generar un sitio, 0,15 € por auditar una página normal, menos de 0,20 € por reescribir todas las fichas de una tienda de 70 productos. El presupuesto se reinicia el día 1 de cada mes.",
+      "limitesTitre": "Repartido a lo largo del mes",
+      "limitesTexte": "Para los sitios y las auditorías, el uso se reparte en el tiempo: como máximo un {jour} % del presupuesto en 24 horas y un {semaine} % en 7 días. Así puedes crear y auditar cada semana sin gastarlo todo en un día. Estos límites se liberan con las horas, y tu uso siempre está visible en los ajustes."
     },
     "faq": {
       "title": "Preguntas",
       "q1": "¿El plan Free cuesta algo?",
       "a1": "No. La cuenta Free es gratuita, sin límite de tiempo, y crear la cuenta no pide ninguna tarjeta bancaria.",
       "q2": "¿Qué diferencia hay entre Free, Pro y Agency?",
-      "a2": "Free: los 1 000 primeros productos del catálogo, 5 páginas generadas al mes, 2 simulaciones de margen, sin auditoría IA. Pro (29€/mes): catálogo completo y 30 auditorías IA al mes. Agency (59€/mes): como Pro, con 100 auditorías IA al mes. Los planes Pro y Agency aún no están abiertos. El plan Free está disponible ahora, sin tarjeta.",
+      "a2": "Free (0 €): 1000 productos del catálogo, 5 sitios al mes, tiendas de hasta 10 productos y 0,50 € de presupuesto de IA al mes; la auditoría de IA no está incluida. Pro (29 €/mes): catálogo completo, 20 sitios y 30 auditorías de IA al mes, tiendas de hasta 200 productos y 6 € de presupuesto de IA. Agency (59 €/mes): todo Pro, con 50 sitios, 100 auditorías y 28 € de presupuesto de IA al mes. Los planes Pro y Agency aún no están abiertos.",
       "q3": "¿Qué pasa si alcanzo el límite de mi plan?",
-      "a3": "Un mensaje claro te indica el límite alcanzado (por ejemplo las auditorías del mes) y te propone pasar al plan superior si lo necesitas. Nada se bloquea sin explicación.",
+      "a3": "Un mensaje claro indica el límite alcanzado: cuota del mes (sitios, auditorías), presupuesto de IA del mes, o límite de 24 horas o de 7 días, con el momento en que podrás continuar. Tu uso está visible en todo momento en los ajustes. Nada se bloquea sin explicación.",
       "q4": "¿La calculadora de margen incluye realmente los impuestos?",
       "a4": "Sí: admite 10 países, cada uno con sus reglas propias — cotizaciones URSSAF e IVA en Francia, sales tax por estado en EE. UU., VAT en el Reino Unido — más las comisiones de Stripe y un modo manual para los demás casos.",
       "q5": "¿Mis datos se comparten con otros usuarios?",
@@ -2164,9 +2180,9 @@
       },
       "differences": {
         "q": "¿Qué diferencia hay entre Free, Pro y Agency?",
-        "free": "Free (0 €): acceso limitado a cada herramienta, auditoría IA no incluida",
-        "pro": "Pro (29 €/mes): acceso completo al buscador y a la calculadora, 30 auditorías IA al mes",
-        "agency": "Agency (59 €/mes): como Pro, con 100 auditorías IA al mes",
+        "free": "Free (0 €): acceso limitado a cada herramienta, 5 sitios al mes, tiendas de hasta 10 productos, 0,50 € de presupuesto de IA al mes, sin auditoría de IA",
+        "pro": "Pro (29 €/mes): catálogo completo, 20 sitios y 30 auditorías de IA al mes, tiendas de hasta 200 productos, 6 € de presupuesto de IA al mes",
+        "agency": "Agency (59 €/mes): como Pro, con 50 sitios, 100 auditorías de IA y 28 € de presupuesto de IA al mes",
         "fin": "Por ahora solo está abierto el plan Free: los planes Pro y Agency llegarán pronto. Mientras tanto, escribe a <email>{adresse}</email>."
       },
       "changerPlan": {
@@ -2174,7 +2190,7 @@
       },
       "limite": {
         "q": "¿Qué pasa si alcanzo el límite de mi plan?",
-        "a": "Un mensaje claro te indica el límite alcanzado (por ejemplo, las auditorías del mes) y te propone pasar al plan superior si lo necesitas. Nada se bloquea sin explicación."
+        "a": "Un mensaje claro te indica el límite alcanzado (sitios o auditorías del mes, presupuesto de IA del mes, o límite de 24 horas o de 7 días, con la hora en que podrás continuar). Tu uso está visible en los ajustes. Nada se bloquea sin explicación."
       },
       "finder": {
         "q": "¿Cómo funciona el buscador de productos?",

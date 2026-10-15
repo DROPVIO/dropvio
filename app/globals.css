@@ -463,8 +463,12 @@ footer.lp-cta p { color: var(--text-2); margin-bottom: 32px; }
   min-width: 320px;
 }
 
-.dv-home a { color: #111; text-decoration: none; }
-.dv-home a:hover { color: #7c3aed; }
+/* Dans @layer base : hors couche, ces règles battaient les utilitaires Tailwind (text-white des
+   boutons violets), dont le texte s'affichait alors en #111 sur fond violet. */
+@layer base {
+  .dv-home a { color: #111; text-decoration: none; }
+  .dv-home a:hover { color: #7c3aed; }
+}
 .dv-home .dv-mono { font-family: var(--font-geist-mono), ui-monospace, SFMono-Regular, monospace; }
 
 /* Scrollbar discrète des zones défilantes sombres (fenêtre de démo). */

@@ -7,6 +7,7 @@ import ChaineSection from "@/components/landing/ChaineSection";
 import DemoAudit from "@/components/landing/DemoAudit";
 import FaqAccordion from "@/components/landing/FaqAccordion";
 import HeroDevices from "@/components/landing/HeroDevices";
+import TarifsSection from "@/components/landing/TarifsSection";
 import { useReveal } from "@/components/landing/useReveal";
 import { SUPPORT_EMAIL } from "@/lib/contact";
 
@@ -20,7 +21,7 @@ import { SUPPORT_EMAIL } from "@/lib/contact";
  * exactement un écran, et une nav collante mangerait cette hauteur.
  *
  * Toute la copie passe par le namespace `landing` des 4 locales. Les chiffres annoncés
- * viennent de lib/plan-limits.ts, et aucun texte ne promet d'essai ni de résiliation : il n'y
+ * viennent de lib/plan-limits.ts (quotas, budget IA et limites sur 24 h / 7 jours), et aucun texte ne promet d'essai ni de résiliation : il n'y
  * a aujourd'hui ni abonnement Stripe ni parcours d'essai dans le code. */
 
 export default function LandingPage() {
@@ -82,6 +83,9 @@ export default function LandingPage() {
               >
                 {t("hero.ctaPrimary")}
               </Link>
+              <Link href="#tarifs" className="text-[15px] font-semibold text-[#111] underline-offset-4 hover:underline">
+                {t("hero.ctaSecondary")}
+              </Link>
             </div>
             <p className="dv-hero-terms leading-[1.45] text-[#444]">{t("hero.note")}</p>
           </div>
@@ -94,6 +98,7 @@ export default function LandingPage() {
 
       <DemoAudit />
       <ChaineSection />
+      <TarifsSection />
       <FaqAccordion />
 
       {/* ── CTA final ────────────────────────────────────────────────── */}
