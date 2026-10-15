@@ -1,7 +1,23 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 export type Plan = "free" | "pro" | "agency";
-export type UsageFeature = "audit_ia" | "site_builder" | "finder_alternatives";
+// inspiration_ia, boutique_ia et textes_ia : migration 043 (contrainte usage_mensuel_feature_check).
+export type UsageFeature =
+  | "audit_ia"
+  | "site_builder"
+  | "finder_alternatives"
+  | "inspiration_ia"
+  | "boutique_ia"
+  | "textes_ia";
+
+// Budget IA mensuel en euros par plan : plafonne le coût de toutes les fonctions IA réunies
+// (calculé depuis usage_mensuel.tokens_entree / tokens_sortie, voir lib/ai-budget.ts). Les
+// quotas par fonction ci-dessous (sites, audits) restent en place ; le budget s'ajoute à eux.
+export const AI_BUDGET_EUR_PAR_PLAN: Record<Plan, number> = {
+  free: 0.5,
+  pro: 6,
+  agency: 28,
+};
 
 // Tokens de sortie facturés 5 fois les tokens d'entrée (claude-sonnet-4-6 : 3 $ / 15 $ par
 // million). Le quota d'audit compte en « tokens pondérés » (entrée + 5 × sortie), donc en coût réel.
@@ -138,15 +154,16 @@ export async function getMonthlyTokensPonderes(
  *  erreur parce que la comptabilité a échoué. En particulier, tant que 037a n'est pas
  *  appliquée, les deux colonnes n'existent pas (42703) et on se contente d'un avertissement
  *  dans les logs — sinon l'ajout de ce compteur casserait toute la génération, exactement
- *  comme la migration 032 non appliquée casse aujourd'hui la sauvegarde des sites. */
+ *  comme la migration 032 non appliquée casse aujourd'hui la sauvegarde des sites.
+ *  Renvoie false si rien n'a été enregistré (lib/ai-budget.ts s'en sert pour se replier). */
 export async function logTokensUsage(
   supabase: SupabaseClient,
   userId: string,
   feature: UsageFeature,
   tokensEntree: number,
   tokensSortie: number
-): Promise<void> {
-  if (tokensEntree <= 0 && tokensSortie <= 0) return;
+): Promise<boolean> {
+  if (tokensEntree <= 0 && tokensSortie <= 0) return true;
 
   const mois = currentMonthKey();
 
@@ -166,7 +183,7 @@ export async function logTokensUsage(
     } else {
       console.warn("[plan-limits] Lecture des tokens échouée :", error.message);
     }
-    return;
+    return false;
   }
 
   // upsert en merge-duplicates : seules les colonnes envoyées sont écrites, donc `compteur`
@@ -185,5 +202,7 @@ export async function logTokensUsage(
 
   if (ecritureErr) {
     console.warn("[plan-limits] Écriture des tokens échouée :", ecritureErr.message);
+    return false;
   }
+  return true;
 }
