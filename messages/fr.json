@@ -116,7 +116,10 @@
           "100 audits IA par mois",
           "Support prioritaire sous 24h"
         ]
-      }
+      },
+      "budgetIa": "Budget IA du mois : {utilise} / {max}",
+      "budgetIaAide": "Couvre toutes les fonctions IA (sites, audits, boutique, textes). Remis à zéro le 1er de chaque mois.",
+      "budgetIaAtteint": "Budget IA du mois atteint. Il sera remis à zéro le 1er du mois prochain."
     },
     "profil": {
       "title": "Profil",

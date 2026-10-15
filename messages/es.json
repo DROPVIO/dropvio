@@ -116,7 +116,10 @@
           "100 auditorías IA al mes",
           "Soporte prioritario en 24h"
         ]
-      }
+      },
+      "budgetIa": "Presupuesto de IA del mes: {utilise} / {max}",
+      "budgetIaAide": "Cubre todas las funciones de IA (sitios, auditorías, tienda, textos). Se reinicia el día 1 de cada mes.",
+      "budgetIaAtteint": "Se ha alcanzado el presupuesto de IA del mes. Se reiniciará el día 1 del mes que viene."
     },
     "profil": {
       "title": "Perfil",

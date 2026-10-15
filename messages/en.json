@@ -116,7 +116,10 @@
           "100 AI audits per month",
           "Priority support within 24h"
         ]
-      }
+      },
+      "budgetIa": "AI budget this month: {utilise} / {max}",
+      "budgetIaAide": "Covers every AI feature (sites, audits, store, texts). Resets on the 1st of each month.",
+      "budgetIaAtteint": "This month's AI budget has been reached. It will reset on the 1st of next month."
     },
     "profil": {
       "title": "Profile",

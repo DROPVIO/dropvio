@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import type { User } from "@supabase/supabase-js";
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
 import { useOnboarding } from "./onboarding/OnboardingProvider";
@@ -173,6 +173,7 @@ export default function ParametresModal({
   initialShopifyMessage?: { ok: boolean; text: string } | null;
 }) {
   const t = useTranslations("parametres");
+  const locale = useLocale();
   const apiErrorMessage = useApiErrorMessage();
   const supabase = createSupabaseBrowserClient();
   const router = useRouter();
@@ -223,6 +224,8 @@ export default function ParametresModal({
     total: UsageMetric[];
     catalogue: { max: number | null };
     boutiques: BoutiqueUsage[];
+    // Absent si /api/usage vient d'une version antérieure : la barre n'est alors pas affichée.
+    budgetIa?: { utilise: number; max: number };
   };
   const [usage, setUsage] = useState<UsageData | null>(null);
   const [usageLoading, setUsageLoading] = useState(true);
@@ -456,6 +459,27 @@ export default function ParametresModal({
           </button>
         </div>
       </div>
+
+      {/* Budget IA du mois */}
+      {usage?.budgetIa ? (() => {
+        const { utilise, max } = usage.budgetIa;
+        const euros = new Intl.NumberFormat(toIntlTag(isAppLocale(locale) ? locale : "fr"), { style: "currency", currency: "EUR" });
+        const ratio = max > 0 ? Math.min(1, utilise / max) : 1;
+        const couleur = ratio >= 1 ? "bg-[var(--danger)]" : ratio >= 0.8 ? "bg-[var(--warning)]" : "bg-violet-500";
+        return (
+          <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-3.5 flex flex-col gap-2">
+            <div className={ROW}>
+              <p className="text-sm font-medium text-[var(--text-primary)]">
+                {t("plan.budgetIa", { utilise: euros.format(utilise), max: euros.format(max) })}
+              </p>
+            </div>
+            <div className="h-1.5 rounded-full bg-[var(--surface-3)] overflow-hidden">
+              <div className={`h-full rounded-full transition-all ${couleur}`} style={{ width: `${ratio * 100}%` }} />
+            </div>
+            <p className="text-[11px] text-[var(--text-faint)]">{t(ratio >= 1 ? "plan.budgetIaAtteint" : "plan.budgetIaAide")}</p>
+          </div>
+        );
+      })() : null}
 
       {/* Plan comparison */}
       <div className="grid grid-cols-3 gap-3">

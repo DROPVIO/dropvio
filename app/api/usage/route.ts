@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getServerUserAndPlan } from "@/lib/supabase-server";
-import { PLAN_LIMITS, currentMonthKey, getMonthlyUsage } from "@/lib/plan-limits";
+import { AI_BUDGET_EUR_PAR_PLAN, PLAN_LIMITS, currentMonthKey, getMonthlyUsage } from "@/lib/plan-limits";
+import { arrondiCentime, getBudgetUsedEuros } from "@/lib/ai-budget";
 
 // Agrège, pour l'utilisateur connecté, l'usage réel de chaque limite définie dans
 // PLAN_LIMITS — utilisé par la section "Utilisation" des paramètres. Chaque limite a
@@ -17,7 +18,7 @@ export async function GET() {
   const limits = PLAN_LIMITS[plan];
   const debutMois = `${currentMonthKey()}T00:00:00.000Z`;
 
-  const [auditsUsed, sitesCount, simulationsCount, boutiques] = await Promise.all([
+  const [auditsUsed, sitesCount, simulationsCount, boutiques, budgetUtilise] = await Promise.all([
     getMonthlyUsage(supabase, user.id, "audit_ia"),
     supabase
       .from("sites_generes")
@@ -26,6 +27,7 @@ export async function GET() {
       .gte("created_at", debutMois),
     supabase.from("simulations_marge").select("id", { count: "exact", head: true }).eq("user_id", user.id),
     supabase.from("boutiques").select("id, nom").eq("user_id", user.id).order("nom"),
+    getBudgetUsedEuros(supabase, user.id),
   ]);
 
   const boutiqueRows = boutiques.data ?? [];
@@ -50,5 +52,8 @@ export async function GET() {
     ],
     catalogue: { max: limits.produitsMax },
     boutiques: boutiqueUsage,
+    // Budget IA du mois en euros (lib/ai-budget.ts) : la limite qui s'applique à toutes les
+    // fonctions IA, en plus des quotas ci-dessus.
+    budgetIa: { utilise: arrondiCentime(budgetUtilise), max: AI_BUDGET_EUR_PAR_PLAN[plan] },
   });
 }
