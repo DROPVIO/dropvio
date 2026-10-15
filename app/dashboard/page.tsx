@@ -21,6 +21,20 @@ const DashboardActiviteChart = dynamic(() => import("@/components/DashboardActiv
   ),
 });
 
+// Même chargement à la demande pour le tableau des ventes et les camemberts (recharts).
+const chargementGraphique = (hauteur: number) => {
+  function Chargement() {
+    return (
+      <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-6 flex items-center justify-center" style={{ height: hauteur }}>
+        <div className="w-5 h-5 rounded-full border-2 border-[var(--accent)] border-t-transparent animate-spin" />
+      </div>
+    );
+  }
+  return Chargement;
+};
+const VentesDashboard = dynamic(() => import("@/components/dashboard/VentesDashboard"), { ssr: false, loading: chargementGraphique(220) });
+const RepartitionDashboard = dynamic(() => import("@/components/dashboard/RepartitionDashboard"), { ssr: false, loading: chargementGraphique(300) });
+
 type Profile = { nom_complet: string | null; plan: string };
 
 type ShopifyStatus = {
@@ -296,8 +310,8 @@ export default function DashboardPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-[var(--bg)] px-8 py-10">
-      <div className="max-w-4xl mx-auto flex flex-col gap-8">
+    <div className="min-h-screen bg-[var(--bg)] px-4 py-10 sm:px-8">
+      <div className="max-w-6xl mx-auto flex flex-col gap-8">
 
         {loading ? (
           <div className="flex items-center justify-center py-20">
@@ -359,7 +373,13 @@ export default function DashboardPage() {
             Position JSX fixe, jamais dans une branche conditionnelle liée à
             "loading" : sinon React démonte/remonte le composant quand loading
             change, ce qui relance son fetch (incidents Shopify) pour rien. */}
+        {/* Ventes Shopify : chiffres clés, par produit, courbes zoomables. */}
+        <VentesDashboard />
+
         <DashboardActiviteChart chartData={chartData} />
+
+        {/* Répartition de toute l'activité Dropvio et du budget IA, en camemberts. */}
+        <RepartitionDashboard chartData={chartData} />
 
         {loading ? null : (
         <>

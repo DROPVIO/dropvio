@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getServerUserAndPlan } from "@/lib/supabase-server";
 import { AI_BUDGET_EUR_PAR_PLAN, PLAN_LIMITS, currentMonthKey, getMonthlyUsage } from "@/lib/plan-limits";
-import { arrondiCentime, etatFenetres, getBudgetUsedEuros, type EtatFenetre } from "@/lib/ai-budget";
+import { arrondiCentime, etatFenetres, getBudgetParFonction, type EtatFenetre } from "@/lib/ai-budget";
 
 // Agrège, pour l'utilisateur connecté, l'usage réel de chaque limite définie dans
 // PLAN_LIMITS — utilisé par la section "Utilisation" des paramètres. Chaque limite a
@@ -18,7 +18,7 @@ export async function GET() {
   const limits = PLAN_LIMITS[plan];
   const debutMois = `${currentMonthKey()}T00:00:00.000Z`;
 
-  const [auditsUsed, sitesCount, simulationsCount, boutiques, budgetUtilise, fenetres] = await Promise.all([
+  const [auditsUsed, sitesCount, simulationsCount, boutiques, budgetParFonction, fenetres] = await Promise.all([
     getMonthlyUsage(supabase, user.id, "audit_ia"),
     supabase
       .from("sites_generes")
@@ -27,7 +27,7 @@ export async function GET() {
       .gte("created_at", debutMois),
     supabase.from("simulations_marge").select("id", { count: "exact", head: true }).eq("user_id", user.id),
     supabase.from("boutiques").select("id, nom").eq("user_id", user.id).order("nom"),
-    getBudgetUsedEuros(supabase, user.id),
+    getBudgetParFonction(supabase, user.id),
     etatFenetres(supabase, user.id, plan),
   ]);
   const fenetre = (e: EtatFenetre) => ({ utilise: arrondiCentime(e.utilise), max: arrondiCentime(e.max), reprise: e.reprise });
@@ -58,10 +58,12 @@ export async function GET() {
     // fonctions IA, en plus des quotas ci-dessus.
     // jour / semaine : limites glissantes sur 24 heures et 7 jours (null sans la migration 044).
     budgetIa: {
-      utilise: arrondiCentime(budgetUtilise),
+      utilise: arrondiCentime(Object.values(budgetParFonction).reduce((total, euros) => total + euros, 0)),
       max: AI_BUDGET_EUR_PAR_PLAN[plan],
       jour: fenetres ? fenetre(fenetres.jour) : null,
       semaine: fenetres ? fenetre(fenetres.semaine) : null,
+      // Coût du mois par fonction (site_builder, audit_ia, …), pour le camembert du dashboard.
+      parFonction: Object.fromEntries(Object.entries(budgetParFonction).map(([f, euros]) => [f, Math.round(euros * 10_000) / 10_000])),
     },
   });
 }

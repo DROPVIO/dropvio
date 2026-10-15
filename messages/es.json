@@ -880,6 +880,75 @@
       "added": "✓ Añadido",
       "adding": "Añadiendo…",
       "add": "Añadir a la tienda"
+    },
+    "ventes": {
+      "titre": "Ventas de Shopify",
+      "aide": "Haz zoom con la rueda sobre una curva o arrastra para seleccionar un intervalo. La barra inferior mueve el periodo; cuanto más amplías, más fino es el paso (hasta la hora).",
+      "periodes": {
+        "24h": "24 h",
+        "7j": "7 d",
+        "30j": "30 d",
+        "90j": "90 d",
+        "1an": "1 año",
+        "tout": "Todo"
+      },
+      "vide": "Aún no hay ventas de Shopify. Conecta tu tienda: cada pedido aparecerá aquí, con tu facturación por producto.",
+      "connecter": "Conectar Shopify",
+      "ca": "Facturación",
+      "unites": "Unidades vendidas",
+      "unitesAide": "Artículos vendidos en el periodo",
+      "caParProduit": "Facturación por producto",
+      "unitesParProduit": "Unidades por producto",
+      "panier": "Pedido medio {montant}",
+      "nbCommandes": "{count, plural, =0 {ningún pedido} one {# pedido} other {# pedidos}}",
+      "vsAvant": "vs periodo anterior",
+      "nouveau": "Nuevo en el periodo",
+      "aucuneVente": "No hay ventas en este periodo.",
+      "caDansLeTemps": "Facturación en el tiempo",
+      "plage": "Del {debut} al {fin}",
+      "pas": {
+        "heure": "por hora",
+        "jour": "por día",
+        "semaine": "por semana",
+        "mois": "por mes"
+      },
+      "total": "Total",
+      "parProduit": "Por producto",
+      "commandes": "Pedidos",
+      "autres": "Otros productos",
+      "ensemble": "Vista general: mueve o redimensiona la zona para cambiar de periodo",
+      "semaineDu": "Semana del {date}"
+    },
+    "repartition": {
+      "titre": "Reparto",
+      "aide": "Toda tu actividad en Dropvio y tu presupuesto de IA del mes de un vistazo. Pasa el ratón por una porción para ver el detalle.",
+      "periodes": {
+        "7j": "7 d",
+        "30j": "30 d",
+        "90j": "90 d",
+        "tout": "Todo"
+      },
+      "activiteTitre": "Tu actividad",
+      "iaTitre": "Presupuesto de IA del mes por función",
+      "actions": "acciones",
+      "surBudget": "de {max}",
+      "aucuneActivite": "Sin actividad en este periodo.",
+      "aucuneDepense": "Ningún gasto de IA este mes.",
+      "chargement": "Cargando…",
+      "activites": {
+        "sites": "Sitios generados",
+        "audits": "Auditorías de IA",
+        "simulations": "Simulaciones de margen",
+        "produits": "Productos añadidos a tiendas",
+        "incidents": "Incidencias de Shopify"
+      },
+      "fonctions": {
+        "site_builder": "Creación de sitios",
+        "audit_ia": "Auditorías de IA",
+        "inspiration_ia": "Análisis de inspiración",
+        "boutique_ia": "Herramientas de IA de la tienda",
+        "textes_ia": "Textos de producto y tienda"
+      }
     }
   },
   "niches": {

@@ -880,6 +880,75 @@
       "added": "✓ Ajouté",
       "adding": "Ajout…",
       "add": "Ajouter à la boutique"
+    },
+    "ventes": {
+      "titre": "Ventes Shopify",
+      "aide": "Zoome à la molette sur une courbe, ou glisse pour sélectionner une plage. La barre du bas déplace la période ; plus tu zoomes, plus le pas est fin (jusqu'à l'heure).",
+      "periodes": {
+        "24h": "24 h",
+        "7j": "7 j",
+        "30j": "30 j",
+        "90j": "90 j",
+        "1an": "1 an",
+        "tout": "Tout"
+      },
+      "vide": "Aucune vente Shopify pour l'instant. Connecte ta boutique : chaque commande apparaîtra ici, avec ton chiffre d'affaires par produit.",
+      "connecter": "Connecter Shopify",
+      "ca": "Chiffre d'affaires",
+      "unites": "Unités vendues",
+      "unitesAide": "Articles vendus sur la période",
+      "caParProduit": "CA par produit",
+      "unitesParProduit": "Unités par produit",
+      "panier": "Panier moyen {montant}",
+      "nbCommandes": "{count, plural, =0 {aucune commande} one {# commande} other {# commandes}}",
+      "vsAvant": "vs période précédente",
+      "nouveau": "Nouveau sur la période",
+      "aucuneVente": "Aucune vente sur cette période.",
+      "caDansLeTemps": "Chiffre d'affaires dans le temps",
+      "plage": "Du {debut} au {fin}",
+      "pas": {
+        "heure": "par heure",
+        "jour": "par jour",
+        "semaine": "par semaine",
+        "mois": "par mois"
+      },
+      "total": "Total",
+      "parProduit": "Par produit",
+      "commandes": "Commandes",
+      "autres": "Autres produits",
+      "ensemble": "Vue d'ensemble : déplace ou redimensionne la zone pour changer de période",
+      "semaineDu": "Semaine du {date}"
+    },
+    "repartition": {
+      "titre": "Répartition",
+      "aide": "Toute ton activité Dropvio et ton budget IA du mois, en un coup d'œil. Survole une part pour le détail.",
+      "periodes": {
+        "7j": "7 j",
+        "30j": "30 j",
+        "90j": "90 j",
+        "tout": "Tout"
+      },
+      "activiteTitre": "Ton activité",
+      "iaTitre": "Budget IA du mois par fonction",
+      "actions": "actions",
+      "surBudget": "sur {max}",
+      "aucuneActivite": "Pas d'activité sur cette période.",
+      "aucuneDepense": "Aucune dépense IA ce mois-ci.",
+      "chargement": "Chargement…",
+      "activites": {
+        "sites": "Sites générés",
+        "audits": "Audits IA",
+        "simulations": "Simulations de marge",
+        "produits": "Produits ajoutés en boutique",
+        "incidents": "Incidents Shopify"
+      },
+      "fonctions": {
+        "site_builder": "Création de sites",
+        "audit_ia": "Audits IA",
+        "inspiration_ia": "Analyse d'inspiration",
+        "boutique_ia": "Outils IA de la boutique",
+        "textes_ia": "Textes produit et boutique"
+      }
     }
   },
   "niches": {

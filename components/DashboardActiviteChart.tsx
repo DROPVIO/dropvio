@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { toIntlTag, type AppLocale } from "@/lib/locale";
+import { useIsLightTheme } from "@/components/dashboard/useIsLightTheme";
 import {
   LineChart,
   Line,
@@ -132,23 +133,6 @@ function ActiviteTooltip({
       })}
     </div>
   );
-}
-
-// recharts dessine ses axes/légende/brush en SVG avec des valeurs de couleur littérales
-// (fill/stroke), qui ne résolvent pas var(--token) de façon fiable — contrairement au
-// reste du composant (classNames Tailwind), ces quelques couleurs doivent être recalculées
-// en JS quand le thème change. Observe l'attribut data-theme plutôt que de dupliquer l'état
-// du toggle (posé dans ParametresModal, lu ici indépendamment via le DOM).
-function useIsLightTheme(): boolean {
-  const [isLight, setIsLight] = useState(false);
-  useEffect(() => {
-    const read = () => setIsLight(document.documentElement.getAttribute("data-theme") === "light");
-    read();
-    const observer = new MutationObserver(read);
-    observer.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
-    return () => observer.disconnect();
-  }, []);
-  return isLight;
 }
 
 export default function DashboardActiviteChart({ chartData }: { chartData: DashboardChartData | null }) {

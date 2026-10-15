@@ -75,6 +75,12 @@ export function estimationEuros(modele: ModeleIa, tokensEntree: number, maxToken
 
 /** Coût IA consommé ce mois-ci par l'utilisateur, toutes fonctions confondues. */
 export async function getBudgetUsedEuros(supabase: SupabaseClient, userId: string): Promise<number> {
+  const parFonction = await getBudgetParFonction(supabase, userId);
+  return Object.values(parFonction).reduce((total, euros) => total + euros, 0);
+}
+
+/** Coût IA consommé ce mois-ci, fonction par fonction (fonctions sans dépense absentes). */
+export async function getBudgetParFonction(supabase: SupabaseClient, userId: string): Promise<Partial<Record<UsageFeature, number>>> {
   const { data, error } = await supabase
     .from("usage_mensuel")
     .select("feature, tokens_entree, tokens_sortie")
@@ -84,14 +90,16 @@ export async function getBudgetUsedEuros(supabase: SupabaseClient, userId: strin
     // Sans 037a (colonnes de tokens), le coût ne peut pas être calculé : on le signale et on
     // compte 0 plutôt que de bloquer toutes les fonctions IA.
     console.warn("[ai-budget] Lecture de usage_mensuel échouée :", error.message);
-    return 0;
+    return {};
   }
-  let total = 0;
+  const parFonction: Partial<Record<UsageFeature, number>> = {};
   for (const ligne of (data ?? []) as { feature: UsageFeature; tokens_entree: number | null; tokens_sortie: number | null }[]) {
     const modele = MODELE_PAR_FONCTION[ligne.feature];
-    if (modele) total += coutEuros(modele, ligne.tokens_entree ?? 0, ligne.tokens_sortie ?? 0);
+    if (!modele) continue;
+    const euros = coutEuros(modele, ligne.tokens_entree ?? 0, ligne.tokens_sortie ?? 0);
+    if (euros > 0) parFonction[ligne.feature] = (parFonction[ligne.feature] ?? 0) + euros;
   }
-  return total;
+  return parFonction;
 }
 
 /** Lève BudgetIaDepasse si le coût déjà consommé ce mois-ci (+ `dejaEngageEuros`, consommé par
