@@ -1,20 +1,17 @@
 "use client";
 
 import Link from "next/link";
-import { useLocale, useTranslations } from "next-intl";
-import { isAppLocale, toIntlTag } from "@/lib/locale";
-import { AI_BUDGET_EUR_PAR_PLAN, AI_BUDGET_PART_JOUR, AI_BUDGET_PART_SEMAINE, type Plan } from "@/lib/plan-limits";
+import { useTranslations } from "next-intl";
+import { AI_BUDGET_PART_JOUR, AI_BUDGET_PART_SEMAINE, type Plan } from "@/lib/plan-limits";
 
 const PLANS: Plan[] = ["free", "pro", "agency"];
 
-/** Tarifs de la landing. Les chiffres des cartes (sites, audits, produits, budget IA) suivent
- *  lib/plan-limits.ts ; le budget IA et ses limites glissantes sont lus directement dans les
+/** Tarifs de la landing. Les chiffres des cartes (sites, audits, produits) suivent
+ *  lib/plan-limits.ts ; les limites glissantes du budget IA sont lues directement dans les
  *  constantes pour ne jamais diverger du code. Pro et Agency ne sont pas encore ouverts : la
  *  carte le dit, et aucun texte ne promet d'essai ni de résiliation. */
 export default function TarifsSection() {
   const t = useTranslations("landing.pricing");
-  const locale = useLocale();
-  const euros = (montant: number) => montant.toLocaleString(toIntlTag(isAppLocale(locale) ? locale : "fr"), { style: "currency", currency: "EUR", minimumFractionDigits: montant % 1 ? 2 : 0 });
 
   return (
     <section
@@ -48,10 +45,6 @@ export default function TarifsSection() {
                 <span className="text-sm text-[#666]">{t("perMonth")}</span>
               </p>
               <p className="m-0 mt-1 text-[13px] text-[#666]">{t(`note.${plan}`)}</p>
-
-              <p className="m-0 mt-5 rounded-xl bg-[#f6f3ff] px-3.5 py-2.5 text-sm text-[#3b2a6b]">
-                {t("budgetCarte", { budget: euros(AI_BUDGET_EUR_PAR_PLAN[plan]) })}
-              </p>
 
               <ul className="m-0 mt-5 flex list-none flex-col gap-2.5 p-0 text-sm leading-[1.45] text-[#333]">
                 {(t.raw(`features.${plan}`) as string[]).map((f) => (
