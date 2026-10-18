@@ -1926,8 +1926,8 @@
       "siteCompletTelecharge": "Sito completo salvato nei tuoi Download: {fichier}. Tutte le pagine sono in questo file: aprilo e i pulsanti di navigazione funzionano."
     },
     "modifier": {
-      "titre": "Modifica il sito con l'IA",
-      "aide": "Descrivi cosa vuoi cambiare: testi, titoli, sezioni, colori, layout, intestazione o piè di pagina. La modifica si applica a tutte le pagine o a quella che scegli.",
+      "titre": "Modifica il sito senza ricominciare",
+      "aide": "Incolla cosa vuoi cambiare e l'IA lo applica al sito già creato: testi, titoli, sezioni, colori, layout, intestazione o piè di pagina, su tutte le pagine o su una sola. Il resto del sito non cambia.",
       "cible": "Pagine da modificare",
       "toutesLesPages": "Tutte le pagine ({count})",
       "placeholder": "Es.: Aggiungi una fascia «Spedizione gratuita da 50 €» in cima a tutte le pagine e metti i titoli delle collezioni in maiuscolo.",
@@ -1939,7 +1939,8 @@
       "pagesModifiees": "Pagine modificate: {pages}",
       "enregistre": "Salvato in I miei siti.",
       "nonEnregistre": "Non ancora salvato in I miei siti: la modifica è visibile qui e sarà inclusa nel download.",
-      "annuler": "Annulla questa modifica"
+      "annuler": "Annulla questa modifica",
+      "raccourci": "Invio per applicare · Maiusc + Invio per andare a capo"
     }
   },
   "boutique": {

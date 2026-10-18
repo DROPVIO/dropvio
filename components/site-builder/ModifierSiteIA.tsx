@@ -122,8 +122,15 @@ export default function ModifierSiteIA({ html, pages, siteId, onChange }: Props)
       <textarea
         value={demande}
         onChange={(e) => setDemande(e.target.value)}
+        onKeyDown={(e) => {
+          // Entrée envoie, Maj + Entrée va à la ligne.
+          if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {
+            e.preventDefault();
+            void appliquer();
+          }
+        }}
         maxLength={2000}
-        rows={4}
+        rows={3}
         placeholder={t("placeholder")}
         className="w-full bg-[var(--bg)] border border-[var(--border-strong)] rounded-xl px-4 py-3 text-sm text-[var(--text-primary)] placeholder-[var(--text-faint)] focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 resize-y"
       />
@@ -137,7 +144,7 @@ export default function ModifierSiteIA({ html, pages, siteId, onChange }: Props)
         >
           {enCours ? t("enCours") : t("appliquer")}
         </button>
-        {enCours ? <p className="text-xs text-[var(--text-faint)]">{t("patience")}</p> : null}
+        <p className="text-xs text-[var(--text-faint)]">{enCours ? t("patience") : t("raccourci")}</p>
       </div>
 
       {erreur ? <p className="text-sm text-[var(--danger)]">{erreur}</p> : null}

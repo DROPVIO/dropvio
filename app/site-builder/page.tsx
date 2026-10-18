@@ -1298,6 +1298,18 @@ function SiteBuilderContent() {
               </div>
             </div>
 
+            {/* Modifier le site sans le regénérer : en premier, au-dessus de l'aperçu, pour qu'il
+                suffise de coller ce qu'on veut changer. */}
+            <ModifierSiteIA
+              html={generatedHtml}
+              pages={generatedPages}
+              siteId={savedSiteId}
+              onChange={({ html, pages }) => {
+                setGeneratedHtml(html);
+                setGeneratedPages(pages);
+              }}
+            />
+
             <div className="rounded-2xl border border-[var(--border-strong)] overflow-hidden">
               <div className="flex items-center gap-1.5 px-4 py-3 bg-[var(--surface)] border-b border-[var(--border)]">
                 <div className="w-2.5 h-2.5 rounded-full bg-red-500/60" />
@@ -1321,18 +1333,6 @@ function SiteBuilderContent() {
                   sandbox="allow-same-origin"
                 />
               )}
-            </div>
-
-            <div className="mt-6">
-              <ModifierSiteIA
-                html={generatedHtml}
-                pages={generatedPages}
-                siteId={savedSiteId}
-                onChange={({ html, pages }) => {
-                  setGeneratedHtml(html);
-                  setGeneratedPages(pages);
-                }}
-              />
             </div>
 
             <div className="mt-6">

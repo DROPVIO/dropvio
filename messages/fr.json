@@ -1926,8 +1926,8 @@
       "siteCompletTelecharge": "Site complet enregistré dans tes Téléchargements : {fichier}. Toutes les pages sont dans ce fichier : ouvre-le, les boutons de navigation fonctionnent."
     },
     "modifier": {
-      "titre": "Modifier le site avec l'IA",
-      "aide": "Décris ce que tu veux changer : textes, titres, sections, couleurs, mise en page, en-tête ou pied de page. La modification s'applique à toutes les pages, ou à celle que tu choisis.",
+      "titre": "Modifier le site sans le recommencer",
+      "aide": "Colle ce que tu veux changer, l'IA l'applique au site déjà créé : textes, titres, sections, couleurs, mise en page, en-tête ou pied de page, sur toutes les pages ou une seule. Le reste du site ne bouge pas.",
       "cible": "Pages à modifier",
       "toutesLesPages": "Toutes les pages ({count})",
       "placeholder": "Ex. : Ajoute un bandeau « Livraison offerte dès 50 € » en haut de toutes les pages, et mets les titres des collections en majuscules.",
@@ -1939,7 +1939,8 @@
       "pagesModifiees": "Pages modifiées : {pages}",
       "enregistre": "Enregistré dans Mes sites.",
       "nonEnregistre": "Pas encore enregistré dans Mes sites : la modification est visible ici et sera incluse au téléchargement.",
-      "annuler": "Annuler cette modification"
+      "annuler": "Annuler cette modification",
+      "raccourci": "Entrée pour appliquer · Maj + Entrée pour aller à la ligne"
     }
   },
   "boutique": {

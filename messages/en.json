@@ -1926,8 +1926,8 @@
       "siteCompletTelecharge": "Full site saved to your Downloads: {fichier}. Every page is in this file: open it and the navigation buttons work."
     },
     "modifier": {
-      "titre": "Edit the site with AI",
-      "aide": "Describe what you want to change: text, headings, sections, colors, layout, header or footer. The change applies to every page, or to the one you pick.",
+      "titre": "Edit the site without starting over",
+      "aide": "Paste what you want to change and the AI applies it to the site you already built: text, headings, sections, colors, layout, header or footer, on every page or just one. The rest of the site stays as it is.",
       "cible": "Pages to edit",
       "toutesLesPages": "All pages ({count})",
       "placeholder": "E.g. Add a “Free shipping over €50” banner at the top of every page, and make the collection titles uppercase.",
@@ -1939,7 +1939,8 @@
       "pagesModifiees": "Pages changed: {pages}",
       "enregistre": "Saved in My sites.",
       "nonEnregistre": "Not saved in My sites yet: the change is visible here and will be included in the download.",
-      "annuler": "Undo this change"
+      "annuler": "Undo this change",
+      "raccourci": "Enter to apply · Shift + Enter for a new line"
     }
   },
   "boutique": {

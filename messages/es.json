@@ -1926,8 +1926,8 @@
       "siteCompletTelecharge": "Sitio completo guardado en tus Descargas: {fichier}. Todas las páginas están en este archivo: ábrelo y los botones de navegación funcionan."
     },
     "modifier": {
-      "titre": "Modificar el sitio con IA",
-      "aide": "Describe lo que quieres cambiar: textos, títulos, secciones, colores, diseño, cabecera o pie de página. El cambio se aplica a todas las páginas o a la que elijas.",
+      "titre": "Modificar el sitio sin empezar de nuevo",
+      "aide": "Pega lo que quieres cambiar y la IA lo aplica al sitio ya creado: textos, títulos, secciones, colores, diseño, cabecera o pie de página, en todas las páginas o en una sola. El resto del sitio no cambia.",
       "cible": "Páginas a modificar",
       "toutesLesPages": "Todas las páginas ({count})",
       "placeholder": "Ej.: Añade una franja «Envío gratis a partir de 50 €» arriba de todas las páginas y pon los títulos de las colecciones en mayúsculas.",
@@ -1939,7 +1939,8 @@
       "pagesModifiees": "Páginas modificadas: {pages}",
       "enregistre": "Guardado en Mis sitios.",
       "nonEnregistre": "Aún no está guardado en Mis sitios: el cambio se ve aquí y se incluirá en la descarga.",
-      "annuler": "Deshacer este cambio"
+      "annuler": "Deshacer este cambio",
+      "raccourci": "Intro para aplicar · Mayús + Intro para saltar de línea"
     }
   },
   "boutique": {
