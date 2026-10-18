@@ -125,7 +125,13 @@ export function structurePage(html: string): StructurePage | null {
   const fermeture = html.toLowerCase().lastIndexOf("</body>");
   const finBody = fermeture >= debutBody ? fermeture : html.length;
   const noeuds = analyserCorps(html, debutBody, finBody);
-  const nav = noeuds.find((n) => n.tag === "nav");
+  // La navigation du site : la première <nav> hors d'un <footer>, sinon le premier <header>
+  // hors d'un <footer>. Une <nav> de pied de page (liens légaux) n'est jamais la navigation :
+  // la prendre faisait de tout ce qui la précède (en-tête ET contenu de l'accueil) une partie
+  // commune, recopiée en tête du catalogue et de chaque collection.
+  const dansFooter = (n: Noeud) => ancetres(n).slice(0, -1).some((a) => a.tag === "footer");
+  const nav =
+    noeuds.find((n) => n.tag === "nav" && !dansFooter(n)) ?? noeuds.find((n) => n.tag === "header" && !dansFooter(n));
   if (!nav) return null;
   const footers = noeuds.filter((n) => n.tag === "footer" && n.debut > nav.debut);
   const footer = footers[footers.length - 1];
@@ -229,15 +235,19 @@ export function navAvecPages(nav: string, pages: EntreeNav[], cleActive?: string
   const liens = nav.match(LIEN) ?? [];
   const versAccueil = (h?: string) => h === "#accueil" || h === "index.html";
   const versCatalogue = (h?: string) => h === "#catalogue" || h === "catalogue.html";
-  const lienAccueil = liens.find((l) => versAccueil(href(l)));
-  const classe = classeDe(lienAccueil ?? liens.find((l) => versCatalogue(href(l))) ?? "");
+  const versCollection = (h?: string) => /^(#collection-[a-z0-9-]+|collection-[a-z0-9-]+\.html)$/i.test(h ?? "");
+  // Classe des liens du menu : celle d'un lien Accueil ou Catalogue qui n'est ni le logo ni
+  // un bouton. Le logo (souvent un lien vers index.html) et le bouton CTA « Voir les
+  // produits » restent en place ; avant, le logo donnait sa classe aux liens de collections.
+  const pasLogoNiBouton = (l: string) => !/\b(logo|brand|btn|button|cta)\b/i.test(classeDe(l) ?? "");
+  const lienMenu =
+    liens.find((l) => (versAccueil(href(l)) || versCatalogue(href(l))) && pasLogoNiBouton(l)) ??
+    liens.find((l) => versCollection(href(l)) && pasLogoNiBouton(l));
+  const classe = lienMenu ? classeDe(lienMenu) : undefined;
   const aRetirer = (l: string) => {
     const h = href(l);
-    return (
-      versAccueil(h) ||
-      /^(#collection-[a-z0-9-]+|collection-[a-z0-9-]+\.html)$/i.test(h ?? "") ||
-      (versCatalogue(h) && classeDe(l) === classe)
-    );
+    if (versCollection(h)) return true;
+    return (versAccueil(h) || versCatalogue(h)) && pasLogoNiBouton(l) && classeDe(l) === classe;
   };
 
   let insere = false;
@@ -276,6 +286,9 @@ export type ContenusBoutique = {
   scripts: string;
   // Textes déjà renseignés pour les pages légales (voir PAGES_LEGALES).
   legales?: ContenusLegaux;
+  // Rangée de liens « Tous les produits · collection · … » en tête du catalogue et de chaque
+  // collection : chaque collection reste accessible même quand le menu est replié (mobile).
+  liensCollections?: { tous: string; aria: string };
 };
 
 // Pages légales de tout site généré (boutique et produit unique), produites par le code et
@@ -374,6 +387,17 @@ export function assemblerPagesBoutique(coquille: string, contenus: ContenusBouti
   }
 
   const nav: EntreeNav[] = corps.filter((p) => !p.legale).map(({ cle, titre }) => ({ cle, titre }));
+  const pagesCollections = corps.slice(2).filter((p) => !p.legale);
+  if (contenus.liensCollections && pagesCollections.length > 0) {
+    const { tous, aria } = contenus.liensCollections;
+    const rangee = (cleActive: string) =>
+      `<div class="dv-collections" role="navigation" aria-label="${echapper(aria)}">${[{ cle: CLE_CATALOGUE, titre: tous }, ...pagesCollections]
+        .map((p) => `<a href="${fichierPage(p.cle)}" class="dv-collection-lien"${p.cle === cleActive ? ' aria-current="page"' : ""}>${echapper(p.titre)}</a>`)
+        .join("")}</div>`;
+    for (const p of [corps[1], ...pagesCollections]) {
+      p.contenu = p.contenu.replace(/(<div class="wrap">)/, `$1${rangee(p.cle)}`);
+    }
+  }
   const cles = new Set(corps.map((p) => p.cle));
   const footer = footerAvecPagesLegales(d.footer, ctx.t.pages);
   const pages: Record<string, string> = {};
@@ -409,7 +433,65 @@ export function assemblerPagesProduit(html: string, ctx: SiteCtx): PagesSite | n
 // (head, en-tête et navbar, footer, scripts) et le contenu propre à la page. Sans effet sur une
 // page déjà correcte : elle a la même coquille et le même contenu. Le lien de la page courante
 // porte aria-current ; sur les pages légales, les ancres de la coquille renvoient à l'accueil.
-export function reparerPages(pages: Record<string, string>): Record<string, string> {
+// Section propre à la page (<section id="clé">, telle que l'assemblage la produit), quand le
+// contenu trouvé entre l'en-tête et le pied de page ne la contient pas : c'est le cas des pages
+// enregistrées quand une <nav> de pied de page était prise pour la navigation (l'accueil entier
+// y précède la section). null si la page n'a pas ce défaut.
+function sectionPropre(html: string, cle: string): { debut: number; fin: number } | null {
+  const { debut, fin } = bornesContenu(html);
+  const ouverture = new RegExp(`<section\\b[^>]*\\bid=["']${cle.replace(/[^a-z0-9-]/gi, "")}["']`, "i");
+  if (ouverture.test(html.slice(debut, fin))) return null;
+  const m = ouverture.exec(html);
+  if (!m) return null;
+  const body = /<body\b[^>]*>/i.exec(html);
+  const noeud = analyserCorps(html, body ? body.index + body[0].length : 0, html.length).find((n) => n.debut === m.index);
+  return noeud ? { debut: noeud.debut, fin: noeud.fin } : null;
+}
+
+// Texte d'un lien vers `fichier` dans `html` (premier lien qui n'est ni le logo ni un bouton).
+function texteLien(html: string, fichier: string): string | undefined {
+  for (const l of html.match(LIEN) ?? []) {
+    if (href(l) !== fichier || /\b(logo|brand|btn|button|cta)\b/i.test(classeDe(l) ?? "")) continue;
+    const texte = l.replace(/<[^>]*>/g, "").replace(/\s+/g, " ").trim();
+    if (texte) return texte;
+  }
+  return undefined;
+}
+
+// Menu de l'accueil sans aucun lien vers les collections alors que leurs pages existent (sites
+// enregistrés quand une <nav> de pied de page était prise pour la navigation) : les liens
+// Accueil, Catalogue et collections y sont remis, avec la classe des liens du menu.
+function menuAvecCollections(accueil: string, pages: Record<string, string>): string {
+  const st = structurePage(accueil);
+  const collections = Object.keys(pages).filter((c) => c.startsWith("collection-"));
+  if (!st || collections.length === 0) return accueil;
+  // Liens de pages ajoutés avec la classe du logo par l'ancienne version (le logo leur donnait
+  // sa classe) : retirés, sauf le premier lien logo, pour que le menu soit refait proprement.
+  let logos = 0;
+  const segment = accueil.slice(st.hautDebut, st.hautFin).replace(LIEN, (l) => {
+    if (!/\b(logo|brand)\b/i.test(classeDe(l) ?? "")) return l;
+    logos++;
+    const h = href(l) ?? "";
+    return logos > 1 && (h === fichierPage(CLE_CATALOGUE) || /^collection-[a-z0-9-]+\.html$/i.test(h)) ? "" : l;
+  });
+  if (collections.some((c) => segment.includes(fichierPage(c)))) return accueil;
+  const titreCollection = (cle: string) => {
+    const h2 = new RegExp(`<section\\b[^>]*\\bid=["']${cle}["'][^>]*>[\\s\\S]*?<h2[^>]*>([\\s\\S]*?)<\\/h2>`, "i").exec(pages[cle]);
+    const brut = h2?.[1].replace(/<[^>]*>/g, "").trim() || cle.replace(/^collection-/, "").replace(/-/g, " ");
+    return brut.charAt(0).toUpperCase() + brut.slice(1);
+  };
+  const entrees: EntreeNav[] = [
+    { cle: CLE_ACCUEIL, titre: texteLien(segment, fichierPage(CLE_ACCUEIL)) ?? "Accueil" },
+    ...(pages[CLE_CATALOGUE] ? [{ cle: CLE_CATALOGUE, titre: texteLien(segment, fichierPage(CLE_CATALOGUE)) ?? "Catalogue" }] : []),
+    ...collections.map((cle) => ({ cle, titre: titreCollection(cle) })),
+  ];
+  return `${accueil.slice(0, st.hautDebut)}${navAvecPages(segment, entrees, CLE_ACCUEIL)}${accueil.slice(st.hautFin)}`;
+}
+
+export function reparerPages(pagesInitiales: Record<string, string>): Record<string, string> {
+  const pages = pagesInitiales[CLE_ACCUEIL]
+    ? { ...pagesInitiales, [CLE_ACCUEIL]: menuAvecCollections(pagesInitiales[CLE_ACCUEIL], pagesInitiales) }
+    : pagesInitiales;
   const accueil = pages[CLE_ACCUEIL];
   const st = accueil ? structurePage(accueil) : null;
   if (!accueil || !st) return pages;
@@ -419,7 +501,7 @@ export function reparerPages(pages: Record<string, string>): Record<string, stri
   const resultat: Record<string, string> = { [CLE_ACCUEIL]: accueil };
   for (const [cle, html] of Object.entries(pages)) {
     if (cle === CLE_ACCUEIL) continue;
-    const { debut, fin } = bornesContenu(html);
+    const { debut, fin } = sectionPropre(html, cle) ?? bornesContenu(html);
     const fichier = fichierPage(cle).replace(/[.]/g, "\\.");
     const hautPage = haut.replace(
       new RegExp(`(<a\\b[^>]*\\bhref=(["'])${fichier}\\2)`, "gi"),

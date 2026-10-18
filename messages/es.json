@@ -2137,7 +2137,9 @@
       "voirNosProduits": "Ver nuestros productos",
       "voirLesProduits": "Ver los productos",
       "commander": "Pedir",
-      "photoAAjouter": "Foto pendiente"
+      "photoAAjouter": "Foto pendiente",
+      "tousLesProduits": "Todos los productos",
+      "collections": "Colecciones"
     },
     "pages": {
       "accueil": "Inicio",

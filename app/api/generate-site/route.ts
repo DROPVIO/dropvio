@@ -269,7 +269,11 @@ function pagesBoutique(
   const ctaLabel = ctx.t.boutique.commander;
   const css = `${grilleStyles(accent, "var(--site-surface)", "var(--site-border)", "var(--site-text)", "var(--site-text-muted)")}
   #catalogue, .collection { padding:80px 0; }
-  #catalogue > .wrap, .collection > .wrap { max-width:1200px; margin:0 auto; padding:0 24px; }`;
+  #catalogue > .wrap, .collection > .wrap { max-width:1200px; margin:0 auto; padding:0 24px; }
+  .dv-collections { display:flex; flex-wrap:wrap; gap:8px; margin:0 0 28px; }
+  .dv-collection-lien { display:inline-flex; align-items:center; padding:8px 16px; border-radius:999px; border:1px solid var(--site-border); color:var(--site-text); background:var(--site-surface); text-decoration:none; font-size:14px; font-weight:600; transition:border-color .2s, color .2s; }
+  .dv-collection-lien:hover { border-color:${accent}; color:${accent}; }
+  .dv-collection-lien[aria-current="page"] { background:${accent}; border-color:${accent}; color:#fff; }`;
   const avecCss = coquille.includes("/* GRILLE_PRODUITS_CSS */")
     ? coquille.replace("/* GRILLE_PRODUITS_CSS */", css)
     : coquille.replace("</style>", `${css}\n</style>`);
@@ -293,6 +297,7 @@ function pagesBoutique(
       ...collections.map((c, k) => produitsCheckoutScripts(ctx, c.produits, `c${k}`)),
     ].join("\n"),
     legales,
+    liensCollections: { tous: ctx.t.boutique.tousLesProduits, aria: ctx.t.boutique.collections },
   }, ctx);
 }
 

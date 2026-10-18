@@ -2137,7 +2137,9 @@
       "voirNosProduits": "See our products",
       "voirLesProduits": "See the products",
       "commander": "Order",
-      "photoAAjouter": "Photo to add"
+      "photoAAjouter": "Photo to add",
+      "tousLesProduits": "All products",
+      "collections": "Collections"
     },
     "pages": {
       "accueil": "Home",
