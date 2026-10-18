@@ -528,7 +528,8 @@
       "formatChanged": "Formato di esportazione: {format}",
       "errorFormat": "Impossibile cambiare il formato di esportazione.",
       "regenerateBoutiqueIndisponible": "La rigenerazione non è ancora disponibile per i siti negozio: rilancia «Crea il mio sito» dal negozio.",
-      "downloadSiteOk": "Sito completo salvato nei tuoi Download: {nom}. Tutte le pagine sono in questo file: aprilo e i pulsanti di navigazione funzionano."
+      "downloadSiteOk": "Sito completo salvato nei tuoi Download: {nom}. Tutte le pagine sono in questo file: aprilo e i pulsanti di navigazione funzionano.",
+      "modifier": "Modifica"
     },
     "spy": {
       "badge": "Intelligence competitiva",
@@ -1324,7 +1325,8 @@
     "prix_aucun_produit": "Aggiungi prodotti al negozio prima di adeguarne i prezzi.",
     "budget_ia_depasse": "Budget IA del mese raggiunto. Verrà azzerato il 1° del mese prossimo.",
     "limite_ia_jour": "Limite IA delle ultime 24 ore raggiunto. Si libera gradualmente: riprova il {reprise, date, short} alle {reprise, time, short}.",
-    "limite_ia_semaine": "Limite IA degli ultimi 7 giorni raggiunto. Si libera gradualmente: riprova il {reprise, date, short} alle {reprise, time, short}."
+    "limite_ia_semaine": "Limite IA degli ultimi 7 giorni raggiunto. Si libera gradualmente: riprova il {reprise, date, short} alle {reprise, time, short}.",
+    "modification_echec": "Non è stato possibile applicare la modifica. Riformula la richiesta o dividila in più parti."
   },
   "siteBuilder": {
     "boutique": {
@@ -1907,7 +1909,8 @@
         "sauvegarde": "Questa pagina non è stata salvata in «I miei siti».",
         "sauvegardeReseau": "Questa pagina non è stata salvata in «I miei siti» (server non raggiungibile).",
         "sauvegardeEnCours": "Il salvataggio iniziale del sito non è ancora terminato: riprova tra un attimo.",
-        "couleurs": "Impossibile salvare questi colori."
+        "couleurs": "Impossibile salvare questi colori.",
+        "modifierPlan": "Questo sito non può essere aperto per la modifica con il piano Free: passa a Pro per modificare i siti salvati."
       },
       "langueSite": {
         "titre": "Lingua del sito",
@@ -1921,6 +1924,22 @@
         }
       },
       "siteCompletTelecharge": "Sito completo salvato nei tuoi Download: {fichier}. Tutte le pagine sono in questo file: aprilo e i pulsanti di navigazione funzionano."
+    },
+    "modifier": {
+      "titre": "Modifica il sito con l'IA",
+      "aide": "Descrivi cosa vuoi cambiare: testi, titoli, sezioni, colori, layout, intestazione o piè di pagina. La modifica si applica a tutte le pagine o a quella che scegli.",
+      "cible": "Pagine da modificare",
+      "toutesLesPages": "Tutte le pagine ({count})",
+      "placeholder": "Es.: Aggiungi una fascia «Spedizione gratuita da 50 €» in cima a tutte le pagine e metti i titoli delle collezioni in maiuscolo.",
+      "appliquer": "Applica la modifica",
+      "enCours": "Modifica in corso…",
+      "patience": "L'IA rilegge le pagine interessate, può richiedere un minuto.",
+      "erreur": "Modifica non riuscita. Riprova.",
+      "succes": "Modifica applicata.",
+      "pagesModifiees": "Pagine modificate: {pages}",
+      "enregistre": "Salvato in I miei siti.",
+      "nonEnregistre": "Non ancora salvato in I miei siti: la modifica è visibile qui e sarà inclusa nel download.",
+      "annuler": "Annulla questa modifica"
     }
   },
   "boutique": {

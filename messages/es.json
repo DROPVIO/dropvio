@@ -528,7 +528,8 @@
       "formatChanged": "Formato de exportación: {format}",
       "errorFormat": "No se ha podido cambiar el formato de exportación.",
       "regenerateBoutiqueIndisponible": "La regeneración aún no está disponible para los sitios de tienda: vuelve a usar «Crear mi sitio» desde la tienda.",
-      "downloadSiteOk": "Sitio completo guardado en tus Descargas: {nom}. Todas las páginas están en este archivo: ábrelo y los botones de navegación funcionan."
+      "downloadSiteOk": "Sitio completo guardado en tus Descargas: {nom}. Todas las páginas están en este archivo: ábrelo y los botones de navegación funcionan.",
+      "modifier": "Modificar"
     },
     "spy": {
       "badge": "Inteligencia competitiva",
@@ -1324,7 +1325,8 @@
     "prix_aucun_produit": "Añade productos a la tienda antes de ajustar sus precios.",
     "budget_ia_depasse": "Se ha alcanzado el presupuesto de IA del mes. Se reiniciará el día 1 del mes que viene.",
     "limite_ia_jour": "Se ha alcanzado el límite de IA de las últimas 24 horas. Se libera poco a poco: vuelve a intentarlo el {reprise, date, short} a las {reprise, time, short}.",
-    "limite_ia_semaine": "Se ha alcanzado el límite de IA de los últimos 7 días. Se libera poco a poco: vuelve a intentarlo el {reprise, date, short} a las {reprise, time, short}."
+    "limite_ia_semaine": "Se ha alcanzado el límite de IA de los últimos 7 días. Se libera poco a poco: vuelve a intentarlo el {reprise, date, short} a las {reprise, time, short}.",
+    "modification_echec": "No se pudo aplicar el cambio. Reformula tu petición o divídela en varias."
   },
   "siteBuilder": {
     "boutique": {
@@ -1907,7 +1909,8 @@
         "sauvegarde": "Esta página no se ha podido guardar en «Mis sitios».",
         "sauvegardeReseau": "Esta página no se ha podido guardar en «Mis sitios» (servidor inaccesible).",
         "sauvegardeEnCours": "El guardado inicial del sitio aún no ha terminado: vuelve a intentarlo en un momento.",
-        "couleurs": "No se pueden guardar estos colores."
+        "couleurs": "No se pueden guardar estos colores.",
+        "modifierPlan": "Este sitio no se puede abrir para modificarlo con el plan Free: pásate a Pro para modificar tus sitios guardados."
       },
       "langueSite": {
         "titre": "Idioma del sitio",
@@ -1921,6 +1924,22 @@
         }
       },
       "siteCompletTelecharge": "Sitio completo guardado en tus Descargas: {fichier}. Todas las páginas están en este archivo: ábrelo y los botones de navegación funcionan."
+    },
+    "modifier": {
+      "titre": "Modificar el sitio con IA",
+      "aide": "Describe lo que quieres cambiar: textos, títulos, secciones, colores, diseño, cabecera o pie de página. El cambio se aplica a todas las páginas o a la que elijas.",
+      "cible": "Páginas a modificar",
+      "toutesLesPages": "Todas las páginas ({count})",
+      "placeholder": "Ej.: Añade una franja «Envío gratis a partir de 50 €» arriba de todas las páginas y pon los títulos de las colecciones en mayúsculas.",
+      "appliquer": "Aplicar el cambio",
+      "enCours": "Modificando…",
+      "patience": "La IA revisa las páginas afectadas, puede tardar un minuto.",
+      "erreur": "No se pudo aplicar el cambio. Inténtalo de nuevo.",
+      "succes": "Cambio aplicado.",
+      "pagesModifiees": "Páginas modificadas: {pages}",
+      "enregistre": "Guardado en Mis sitios.",
+      "nonEnregistre": "Aún no está guardado en Mis sitios: el cambio se ve aquí y se incluirá en la descarga.",
+      "annuler": "Deshacer este cambio"
     }
   },
   "boutique": {

@@ -376,6 +376,16 @@ export default function MesSitesPage() {
                         {t("regenerate")}
                       </a>
                     )}
+                    {/* Modifier avec l'IA (toutes les pages) : rouvre le site dans le Site Builder.
+                        Réservé aux plans qui ont accès au HTML enregistré, comme le téléchargement. */}
+                    {canExport ? (
+                      <a
+                        href={`/site-builder?modifier=${site.id}`}
+                        className="flex-1 py-2 rounded-xl border border-violet-500/40 text-[var(--accent)] text-xs font-semibold text-center hover:bg-violet-500/10 transition"
+                      >
+                        {t("modifier")}
+                      </a>
+                    ) : null}
                     {canExport ? (
                       <button
                         onClick={() => handleDownload(site)}

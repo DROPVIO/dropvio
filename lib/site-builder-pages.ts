@@ -453,7 +453,7 @@ function bornesContenu(html: string): { debut: number; fin: number } {
   return { debut, fin: finBody === -1 ? html.length : finBody };
 }
 
-function contenuDePage(html: string): string {
+export function contenuDePage(html: string): string {
   const { debut, fin } = bornesContenu(html);
   return html.slice(debut, fin);
 }

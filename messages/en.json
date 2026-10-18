@@ -528,7 +528,8 @@
       "formatChanged": "Export format: {format}",
       "errorFormat": "Could not change the export format.",
       "regenerateBoutiqueIndisponible": "Regeneration isn't available yet for store sites: run “Create my site” again from the store.",
-      "downloadSiteOk": "Full site saved to your Downloads: {nom}. Every page is in this file: open it and the navigation buttons work."
+      "downloadSiteOk": "Full site saved to your Downloads: {nom}. Every page is in this file: open it and the navigation buttons work.",
+      "modifier": "Edit"
     },
     "spy": {
       "badge": "Competitive intelligence",
@@ -1324,7 +1325,8 @@
     "prix_aucun_produit": "Add products to the store before adjusting their prices.",
     "budget_ia_depasse": "This month's AI budget has been reached. It will reset on the 1st of next month.",
     "limite_ia_jour": "AI limit for the last 24 hours reached. It frees up gradually: try again on {reprise, date, short} at {reprise, time, short}.",
-    "limite_ia_semaine": "AI limit for the last 7 days reached. It frees up gradually: try again on {reprise, date, short} at {reprise, time, short}."
+    "limite_ia_semaine": "AI limit for the last 7 days reached. It frees up gradually: try again on {reprise, date, short} at {reprise, time, short}.",
+    "modification_echec": "The change couldn't be applied. Rephrase your request or split it into several."
   },
   "siteBuilder": {
     "boutique": {
@@ -1907,7 +1909,8 @@
         "sauvegarde": "This page couldn't be saved to “My sites”.",
         "sauvegardeReseau": "This page couldn't be saved to “My sites” (server unreachable).",
         "sauvegardeEnCours": "The site's initial save isn't finished yet: try again in a moment.",
-        "couleurs": "Unable to save these colors."
+        "couleurs": "Unable to save these colors.",
+        "modifierPlan": "This site can't be opened for editing on the Free plan: upgrade to Pro to edit your saved sites."
       },
       "langueSite": {
         "titre": "Site language",
@@ -1921,6 +1924,22 @@
         }
       },
       "siteCompletTelecharge": "Full site saved to your Downloads: {fichier}. Every page is in this file: open it and the navigation buttons work."
+    },
+    "modifier": {
+      "titre": "Edit the site with AI",
+      "aide": "Describe what you want to change: text, headings, sections, colors, layout, header or footer. The change applies to every page, or to the one you pick.",
+      "cible": "Pages to edit",
+      "toutesLesPages": "All pages ({count})",
+      "placeholder": "E.g. Add a “Free shipping over €50” banner at the top of every page, and make the collection titles uppercase.",
+      "appliquer": "Apply the change",
+      "enCours": "Editing…",
+      "patience": "The AI is reading the pages involved, this can take a minute.",
+      "erreur": "The change failed. Try again.",
+      "succes": "Change applied.",
+      "pagesModifiees": "Pages changed: {pages}",
+      "enregistre": "Saved in My sites.",
+      "nonEnregistre": "Not saved in My sites yet: the change is visible here and will be included in the download.",
+      "annuler": "Undo this change"
     }
   },
   "boutique": {

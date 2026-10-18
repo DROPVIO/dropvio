@@ -8,6 +8,7 @@ import BoutiqueProduitsEditor from "@/components/site-builder/BoutiqueProduitsEd
 import ColorTokenPanel from "@/components/site-builder/ColorTokenPanel";
 import InspirationStyle from "@/components/site-builder/InspirationStyle";
 import ApercuPages from "@/components/site-builder/ApercuPages";
+import ModifierSiteIA from "@/components/site-builder/ModifierSiteIA";
 import { pagesSiMultiples } from "@/lib/site-builder-pages";
 import type { FicheStyle } from "@/lib/style-fiche";
 import { applyTokenValue } from "@/lib/color-tokens";
@@ -240,6 +241,34 @@ function SiteBuilderContent() {
   const [error, setError] = useState<string | null>(null);
   const [saveWarning, setSaveWarning] = useState<string | null>(null);
   const [savedSiteId, setSavedSiteId] = useState<string | null>(null);
+
+  // ?modifier=<id> (lien « Modifier » de Mes sites) : rouvre un site enregistré directement à
+  // l'étape résultat, pour le modifier avec l'IA, changer ses couleurs ou le publier.
+  const modifierId = searchParams.get("modifier") ?? undefined;
+  const modifierLu = useRef(false);
+  useEffect(() => {
+    if (modifierLu.current || !modifierId) return;
+    modifierLu.current = true;
+    fetch(`/api/sites-generes/${modifierId}`)
+      .then(async (res) => {
+        const json = await res.json();
+        if (!res.ok) {
+          setError(apiErrorMessage(json, t("erreurs.chargementSite")));
+          return;
+        }
+        // Plan Free : la route ne renvoie pas le HTML enregistré (voir sites-generes/[id]).
+        if (typeof json.html_content !== "string" || !json.html_content) {
+          setError(t("erreurs.modifierPlan"));
+          return;
+        }
+        if (typeof json.nom_produit === "string") setProductName(json.nom_produit);
+        setGeneratedHtml(json.html_content);
+        setGeneratedPages(pagesSiMultiples(json.pages));
+        setSavedSiteId(modifierId);
+        setStep(3);
+      })
+      .catch(() => setError(apiErrorMessage({ code: "network" })));
+  }, [modifierId, apiErrorMessage, t]);
 
   // Personnalisation post-génération (couleurs, voir ColorTokenPanel) — sauvegarde la
   // version modifiée dans sites_generes (PATCH), possible seulement une fois savedSiteId
@@ -1292,6 +1321,18 @@ function SiteBuilderContent() {
                   sandbox="allow-same-origin"
                 />
               )}
+            </div>
+
+            <div className="mt-6">
+              <ModifierSiteIA
+                html={generatedHtml}
+                pages={generatedPages}
+                siteId={savedSiteId}
+                onChange={({ html, pages }) => {
+                  setGeneratedHtml(html);
+                  setGeneratedPages(pages);
+                }}
+              />
             </div>
 
             <div className="mt-6">

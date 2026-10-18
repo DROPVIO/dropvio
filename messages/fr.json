@@ -528,7 +528,8 @@
       "formatChanged": "Format d'export : {format}",
       "errorFormat": "Impossible de changer le format d'export.",
       "regenerateBoutiqueIndisponible": "Régénération pas encore disponible pour les sites boutique : relance « Créer mon site » depuis la boutique.",
-      "downloadSiteOk": "Site complet enregistré dans tes Téléchargements : {nom}. Toutes les pages sont dans ce fichier : ouvre-le, les boutons de navigation fonctionnent."
+      "downloadSiteOk": "Site complet enregistré dans tes Téléchargements : {nom}. Toutes les pages sont dans ce fichier : ouvre-le, les boutons de navigation fonctionnent.",
+      "modifier": "Modifier"
     },
     "spy": {
       "badge": "Intelligence concurrentielle",
@@ -1324,7 +1325,8 @@
     "prix_aucun_produit": "Ajoute des produits à la boutique avant d'ajuster leurs prix.",
     "budget_ia_depasse": "Budget IA du mois atteint. Il sera remis à zéro le 1er du mois prochain.",
     "limite_ia_jour": "Limite IA des dernières 24 heures atteinte. Elle se libère progressivement : réessaie le {reprise, date, short} à {reprise, time, short}.",
-    "limite_ia_semaine": "Limite IA des 7 derniers jours atteinte. Elle se libère progressivement : réessaie le {reprise, date, short} à {reprise, time, short}."
+    "limite_ia_semaine": "Limite IA des 7 derniers jours atteinte. Elle se libère progressivement : réessaie le {reprise, date, short} à {reprise, time, short}.",
+    "modification_echec": "La modification n'a pas pu être appliquée. Reformule ta demande ou découpe-la en plusieurs."
   },
   "siteBuilder": {
     "boutique": {
@@ -1907,7 +1909,8 @@
         "sauvegarde": "Cette page n'a pas pu être sauvegardée dans « Mes sites ».",
         "sauvegardeReseau": "Cette page n'a pas pu être sauvegardée dans « Mes sites » (serveur injoignable).",
         "sauvegardeEnCours": "La sauvegarde initiale du site n'est pas encore terminée : réessaie dans un instant.",
-        "couleurs": "Impossible d'enregistrer ces couleurs."
+        "couleurs": "Impossible d'enregistrer ces couleurs.",
+        "modifierPlan": "Ce site ne peut pas être ouvert pour modification sur le plan Free : passe Pro pour modifier tes sites enregistrés."
       },
       "langueSite": {
         "titre": "Langue du site",
@@ -1921,6 +1924,22 @@
         }
       },
       "siteCompletTelecharge": "Site complet enregistré dans tes Téléchargements : {fichier}. Toutes les pages sont dans ce fichier : ouvre-le, les boutons de navigation fonctionnent."
+    },
+    "modifier": {
+      "titre": "Modifier le site avec l'IA",
+      "aide": "Décris ce que tu veux changer : textes, titres, sections, couleurs, mise en page, en-tête ou pied de page. La modification s'applique à toutes les pages, ou à celle que tu choisis.",
+      "cible": "Pages à modifier",
+      "toutesLesPages": "Toutes les pages ({count})",
+      "placeholder": "Ex. : Ajoute un bandeau « Livraison offerte dès 50 € » en haut de toutes les pages, et mets les titres des collections en majuscules.",
+      "appliquer": "Appliquer la modification",
+      "enCours": "Modification en cours…",
+      "patience": "L'IA relit les pages concernées, cela peut prendre une minute.",
+      "erreur": "La modification a échoué. Réessaie.",
+      "succes": "Modification appliquée.",
+      "pagesModifiees": "Pages modifiées : {pages}",
+      "enregistre": "Enregistré dans Mes sites.",
+      "nonEnregistre": "Pas encore enregistré dans Mes sites : la modification est visible ici et sera incluse au téléchargement.",
+      "annuler": "Annuler cette modification"
     }
   },
   "boutique": {

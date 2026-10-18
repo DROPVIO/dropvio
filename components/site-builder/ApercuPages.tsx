@@ -19,7 +19,7 @@ const SOURCE_MESSAGE = "dropvio-apercu-pages";
 
 // Libellé d'onglet tiré de la clé, dans la langue de l'interface : accueil, catalogue et pages
 // légales ont un libellé traduit ; collection-x-y → X y.
-function libellePage(cle: string, tPages: (cle: string) => string | undefined): string {
+export function libellePage(cle: string, tPages: (cle: string) => string | undefined): string {
   const connu = tPages(cle);
   if (connu) return connu;
   const brut = cle.replace(/^collection-/, "").replace(/-/g, " ").trim() || cle;
@@ -27,7 +27,7 @@ function libellePage(cle: string, tPages: (cle: string) => string | undefined): 
 }
 
 // Ordre de la barre : accueil, catalogue, puis les autres clés dans l'ordre reçu.
-function ordonner(cles: string[]): string[] {
+export function ordonner(cles: string[]): string[] {
   return [
     ...cles.filter((c) => c === CLE_ACCUEIL),
     ...cles.filter((c) => c === CLE_CATALOGUE),
