@@ -922,7 +922,7 @@
     },
     "repartition": {
       "titre": "Répartition",
-      "aide": "Toute ton activité Dropvio et ton budget IA du mois, en un coup d'œil. Survole une part pour le détail.",
+      "aide": "Toute ton activité Dropvio en un coup d'œil. Survole une part pour le détail.",
       "periodes": {
         "7j": "7 j",
         "30j": "30 j",
@@ -930,11 +930,8 @@
         "tout": "Tout"
       },
       "activiteTitre": "Ton activité",
-      "iaTitre": "Budget IA du mois par fonction",
       "actions": "actions",
-      "surBudget": "sur {max}",
       "aucuneActivite": "Pas d'activité sur cette période.",
-      "aucuneDepense": "Aucune dépense IA ce mois-ci.",
       "chargement": "Chargement…",
       "activites": {
         "sites": "Sites générés",
@@ -942,13 +939,6 @@
         "simulations": "Simulations de marge",
         "produits": "Produits ajoutés en boutique",
         "incidents": "Incidents Shopify"
-      },
-      "fonctions": {
-        "site_builder": "Création de sites",
-        "audit_ia": "Audits IA",
-        "inspiration_ia": "Analyse d'inspiration",
-        "boutique_ia": "Outils IA de la boutique",
-        "textes_ia": "Textes produit et boutique"
       }
     }
   },

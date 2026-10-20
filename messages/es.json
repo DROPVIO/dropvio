@@ -922,7 +922,7 @@
     },
     "repartition": {
       "titre": "Reparto",
-      "aide": "Toda tu actividad en Dropvio y tu presupuesto de IA del mes de un vistazo. Pasa el ratón por una porción para ver el detalle.",
+      "aide": "Toda tu actividad en Dropvio de un vistazo. Pasa el ratón por una porción para ver el detalle.",
       "periodes": {
         "7j": "7 d",
         "30j": "30 d",
@@ -930,11 +930,8 @@
         "tout": "Todo"
       },
       "activiteTitre": "Tu actividad",
-      "iaTitre": "Presupuesto de IA del mes por función",
       "actions": "acciones",
-      "surBudget": "de {max}",
       "aucuneActivite": "Sin actividad en este periodo.",
-      "aucuneDepense": "Ningún gasto de IA este mes.",
       "chargement": "Cargando…",
       "activites": {
         "sites": "Sitios generados",
@@ -942,13 +939,6 @@
         "simulations": "Simulaciones de margen",
         "produits": "Productos añadidos a tiendas",
         "incidents": "Incidencias de Shopify"
-      },
-      "fonctions": {
-        "site_builder": "Creación de sitios",
-        "audit_ia": "Auditorías de IA",
-        "inspiration_ia": "Análisis de inspiración",
-        "boutique_ia": "Herramientas de IA de la tienda",
-        "textes_ia": "Textos de producto y tienda"
       }
     }
   },

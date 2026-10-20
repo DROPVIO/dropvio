@@ -62,8 +62,6 @@ export async function GET() {
       max: AI_BUDGET_EUR_PAR_PLAN[plan],
       jour: fenetres ? fenetre(fenetres.jour) : null,
       semaine: fenetres ? fenetre(fenetres.semaine) : null,
-      // Coût du mois par fonction (site_builder, audit_ia, …), pour le camembert du dashboard.
-      parFonction: Object.fromEntries(Object.entries(budgetParFonction).map(([f, euros]) => [f, Math.round(euros * 10_000) / 10_000])),
     },
   });
 }

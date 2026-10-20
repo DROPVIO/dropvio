@@ -922,7 +922,7 @@
     },
     "repartition": {
       "titre": "Breakdown",
-      "aide": "All your Dropvio activity and this month's AI budget at a glance. Hover a slice for details.",
+      "aide": "All your Dropvio activity at a glance. Hover a slice for details.",
       "periodes": {
         "7j": "7 d",
         "30j": "30 d",
@@ -930,11 +930,8 @@
         "tout": "All"
       },
       "activiteTitre": "Your activity",
-      "iaTitre": "This month's AI budget by feature",
       "actions": "actions",
-      "surBudget": "of {max}",
       "aucuneActivite": "No activity in this period.",
-      "aucuneDepense": "No AI spending this month.",
       "chargement": "Loading…",
       "activites": {
         "sites": "Generated sites",
@@ -942,13 +939,6 @@
         "simulations": "Margin simulations",
         "produits": "Products added to stores",
         "incidents": "Shopify incidents"
-      },
-      "fonctions": {
-        "site_builder": "Site creation",
-        "audit_ia": "AI audits",
-        "inspiration_ia": "Inspiration analysis",
-        "boutique_ia": "Store AI tools",
-        "textes_ia": "Product and store texts"
       }
     }
   },

@@ -2,14 +2,14 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
+import { Cell, Pie, PieChart, Tooltip } from "recharts";
 import { isAppLocale, toIntlTag } from "@/lib/locale";
 import type { DashboardChartData } from "@/components/DashboardActiviteChart";
 
-// Camemberts sous le graphique d'activité du dashboard : répartition de toute l'activité
+// Camembert sous le graphique d'activité du dashboard : répartition de toute l'activité
 // Dropvio sur une période (sites, audits, simulations de marge, produits ajoutés en
-// boutique, incidents Shopify), et budget IA du mois par fonction (/api/usage). Les données
-// d'activité sont celles déjà chargées par app/dashboard/page.tsx.
+// boutique, incidents Shopify). Les données sont celles déjà chargées par
+// app/dashboard/page.tsx, plus les incidents Shopify.
 
 const JOUR_MS = 24 * 3_600_000;
 const PERIODES = [
@@ -27,13 +27,7 @@ const ACTIVITES = [
   { cle: "incidents", couleur: "#fb7185" },
 ] as const;
 
-const FONCTIONS_IA: Record<string, string> = {
-  site_builder: "#34d399",
-  audit_ia: "#60a5fa",
-  inspiration_ia: "#22d3ee",
-  boutique_ia: "#fbbf24",
-  textes_ia: "#f472b6",
-};
+const TAILLE = 180;
 
 type Part = { cle: string; nom: string; valeur: number; couleur: string };
 
@@ -43,7 +37,6 @@ export default function RepartitionDashboard({ chartData }: { chartData: Dashboa
   const intlTag = toIntlTag(isAppLocale(locale) ? locale : "fr");
   const [periode, setPeriode] = useState<(typeof PERIODES)[number]>(PERIODES[1]);
   const [incidents, setIncidents] = useState<{ created_at: string }[]>([]);
-  const [budget, setBudget] = useState<{ parFonction: Record<string, number>; max: number } | null>(null);
   const [maintenant] = useState(() => Date.now());
 
   useEffect(() => {
@@ -51,12 +44,6 @@ export default function RepartitionDashboard({ chartData }: { chartData: Dashboa
       .then((r) => (r.ok ? r.json() : { incidents: [] }))
       .then((json) => setIncidents(json.incidents ?? []))
       .catch(() => setIncidents([]));
-    fetch("/api/usage")
-      .then((r) => (r.ok ? r.json() : null))
-      .then((json) => {
-        if (json?.budgetIa) setBudget({ parFonction: json.budgetIa.parFonction ?? {}, max: json.budgetIa.max });
-      })
-      .catch(() => setBudget(null));
   }, []);
 
   const activite: Part[] = useMemo(() => {
@@ -73,23 +60,7 @@ export default function RepartitionDashboard({ chartData }: { chartData: Dashboa
     return ACTIVITES.map((a) => ({ cle: a.cle, nom: t(`activites.${a.cle}`), valeur: valeurs[a.cle], couleur: a.couleur })).filter((p) => p.valeur > 0);
   }, [chartData, incidents, periode, maintenant, t]);
 
-  const depensesIa: Part[] = useMemo(
-    () =>
-      Object.entries(budget?.parFonction ?? {})
-        .filter(([, euros]) => euros > 0)
-        .map(([fonction, euros]) => ({
-          cle: fonction,
-          nom: t.has(`fonctions.${fonction}`) ? t(`fonctions.${fonction}`) : fonction,
-          valeur: euros,
-          couleur: FONCTIONS_IA[fonction] ?? "#94a3b8",
-        }))
-        .sort((a, b) => b.valeur - a.valeur),
-    [budget, t]
-  );
-
-  const euros = new Intl.NumberFormat(intlTag, { style: "currency", currency: "EUR", maximumFractionDigits: 2 });
   const entier = new Intl.NumberFormat(intlTag);
-  const totalIa = depensesIa.reduce((s, p) => s + p.valeur, 0);
 
   return (
     <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 sm:p-6 flex flex-col gap-5">
@@ -116,24 +87,15 @@ export default function RepartitionDashboard({ chartData }: { chartData: Dashboa
         </div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2">
-        <Camembert
-          titre={t("activiteTitre")}
-          parts={activite}
-          centre={entier.format(activite.reduce((s, p) => s + p.valeur, 0))}
-          sousCentre={t("actions")}
-          formater={(v) => entier.format(v)}
-          vide={chartData ? t("aucuneActivite") : t("chargement")}
-        />
-        <Camembert
-          titre={t("iaTitre")}
-          parts={depensesIa}
-          centre={euros.format(totalIa)}
-          sousCentre={budget ? t("surBudget", { max: euros.format(budget.max) }) : ""}
-          formater={(v) => euros.format(v)}
-          vide={budget ? t("aucuneDepense") : t("chargement")}
-        />
-      </div>
+      <Camembert
+        titre={t("activiteTitre")}
+        parts={activite}
+        centre={entier.format(activite.reduce((s, p) => s + p.valeur, 0))}
+        sousCentre={t("actions")}
+        formater={(v) => entier.format(v)}
+        pourcent={(r) => r.toLocaleString(intlTag, { style: "percent", maximumFractionDigits: 1 })}
+        vide={chartData ? t("aucuneActivite") : t("chargement")}
+      />
     </div>
   );
 }
@@ -144,6 +106,7 @@ function Camembert({
   centre,
   sousCentre,
   formater,
+  pourcent,
   vide,
 }: {
   titre: string;
@@ -151,6 +114,7 @@ function Camembert({
   centre: string;
   sousCentre: string;
   formater: (v: number) => string;
+  pourcent: (ratio: number) => string;
   vide: string;
 }) {
   const total = parts.reduce((s, p) => s + p.valeur, 0);
@@ -163,27 +127,27 @@ function Camembert({
         </div>
       ) : (
         <div className="flex flex-col items-center gap-4 sm:flex-row">
-          <div className="relative h-[180px] w-[180px] shrink-0">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie data={parts} dataKey="valeur" nameKey="nom" innerRadius={58} outerRadius={86} paddingAngle={parts.length > 1 ? 2 : 0} stroke="none" isAnimationActive={false}>
-                  {parts.map((p) => (
-                    <Cell key={p.cle} fill={p.couleur} />
-                  ))}
-                </Pie>
-                <Tooltip
-                  content={({ active, payload }) => {
-                    if (!active || !payload?.length) return null;
-                    const p = payload[0].payload as Part;
-                    return (
-                      <div className="rounded-lg border border-[var(--border)] bg-[var(--surface)] px-2.5 py-1.5 text-xs shadow-xl" style={{ color: p.couleur }}>
-                        {p.nom} : {formater(p.valeur)} ({((p.valeur / total) * 100).toFixed(1)} %)
-                      </div>
-                    );
-                  }}
-                />
-              </PieChart>
-            </ResponsiveContainer>
+          {/* Taille fixe, sans ResponsiveContainer : sa mesure pouvait donner une largeur nulle
+              (anneau invisible, total collé au bord). */}
+          <div className="relative shrink-0" style={{ width: TAILLE, height: TAILLE }}>
+            <PieChart width={TAILLE} height={TAILLE}>
+              <Pie data={parts} dataKey="valeur" nameKey="nom" innerRadius={58} outerRadius={86} paddingAngle={parts.length > 1 ? 2 : 0} stroke="none" isAnimationActive={false}>
+                {parts.map((p) => (
+                  <Cell key={p.cle} fill={p.couleur} />
+                ))}
+              </Pie>
+              <Tooltip
+                content={({ active, payload }) => {
+                  if (!active || !payload?.length) return null;
+                  const p = payload[0].payload as Part;
+                  return (
+                    <div className="rounded-lg border border-[var(--border)] bg-[var(--surface)] px-2.5 py-1.5 text-xs shadow-xl" style={{ color: p.couleur }}>
+                      {p.nom} : {formater(p.valeur)} ({pourcent(p.valeur / total)})
+                    </div>
+                  );
+                }}
+              />
+            </PieChart>
             <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center text-center">
               <span className="text-base font-bold tabular-nums text-[var(--text-primary)]">{centre}</span>
               <span className="text-[10px] text-[var(--text-faint)] max-w-[100px] leading-tight">{sousCentre}</span>
@@ -197,7 +161,7 @@ function Camembert({
                   <span className="truncate">{p.nom}</span>
                 </span>
                 <span className="shrink-0 tabular-nums text-[var(--text-primary)]">
-                  {formater(p.valeur)} <span className="text-[var(--text-faint)]">· {((p.valeur / total) * 100).toFixed(1)} %</span>
+                  {formater(p.valeur)} <span className="text-[var(--text-faint)]">· {pourcent(p.valeur / total)}</span>
                 </span>
               </li>
             ))}
