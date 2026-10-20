@@ -36,7 +36,7 @@ Chaque modification :
 - "raison" : la modification faite, en une phrase courte.
 Règles :
 - Applique toute la demande, sur toutes les pages concernées : textes, titres, sections, couleurs, mise en page, éléments à ajouter ou retirer.
-- Ne touche pas aux liens de navigation entre pages (href vers les fichiers .html), ni aux attributs data-dv-*.
+- Ne touche pas aux liens de navigation entre pages (href vers les fichiers .html), ni aux attributs data-dv et data-dv-* (le code s'en sert pour remplir les pages produit et d'achat), ni aux éléments vides qui les portent.
 - N'invente ni prix, ni avis client, ni chiffre, ni marque. Garde la langue du site.
 - Les modifications ne doivent pas se chevaucher.
 - Les parties marquées [dv-omis] (longs scripts, blocs de commande répétés dans les cartes produit) sont omises pour gagner de la place : n'en recopie jamais dans "avant". Pour changer tous les blocs de commande, prends un extrait du premier bloc entier, sans identifiant propre à un produit (id="…-p0"), avec "partout": true.

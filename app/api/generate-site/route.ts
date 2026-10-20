@@ -9,7 +9,15 @@ import { contexteSite, langueSite, prixSite, type SiteCtx } from "@/lib/site-tex
 import { avecRepliLangue, langueBoutique } from "@/lib/boutique-langue";
 import type { AppLocale } from "@/lib/locale";
 import { checkRateLimit } from "@/lib/rate-limit";
-import { escapeHtml, grilleProduitsHtml, grilleStyles, produitsCheckoutScripts, type ProduitBoutique } from "@/lib/site-templates";
+import { escapeHtml, grilleProduitsHtml, grilleStyles, prixBlock, produitsCheckoutScripts, type ProduitBoutique } from "@/lib/site-templates";
+import {
+  carteProduitLien,
+  contenusPagesProduit,
+  genererGabarits,
+  slugsProduits,
+  STYLES_CARTES_LIEN,
+  type GabaritsPages,
+} from "@/lib/pages-produit";
 import { blocConsignesStyle, validerFicheStyle } from "@/lib/style-fiche";
 import { assemblerPagesBoutique, assemblerPagesProduit, type ContenusLegaux, type PagesSite } from "@/lib/site-builder-pages";
 
@@ -264,16 +272,30 @@ function pagesBoutique(
   produits: ProduitBoutique[],
   accent: string,
   categories: CategorieBoutique[],
+  gabarits: GabaritsPages,
   legales: ContenusLegaux = {}
 ): PagesSite | null {
   const ctaLabel = ctx.t.boutique.commander;
+  // Chaque produit a sa clé d'URL ; les cartes mènent à la page produit (image, nom) et à la
+  // page d'achat (bouton) au lieu d'embarquer chacune un formulaire de commande.
+  const slugs = slugsProduits(produits);
+  const slugDe = new Map(produits.map((p, i) => [p, slugs[i]]));
+  const titreCategorie = new Map(categories.map((c) => [c.id, c.nom]));
+  const collectionDe = (p: ProduitBoutique) => (p.categorieId ? titreCategorie.get(p.categorieId) ?? null : null);
+  const pagesProduit = contenusPagesProduit(gabarits, ctx, produits, collectionDe);
+  const grille = (liste: ProduitBoutique[]) => `<div class="grille">
+      ${liste.map((p) => carteProduitLien(ctx, p, slugDe.get(p)!, ctaLabel, prixBlock(ctx, p.prixVente, p.prixOriginal, accent))).join("\n")}
+    </div>`;
+
   const css = `${grilleStyles(accent, "var(--site-surface)", "var(--site-border)", "var(--site-text)", "var(--site-text-muted)")}
+  ${STYLES_CARTES_LIEN}
   #catalogue, .collection { padding:80px 0; }
   #catalogue > .wrap, .collection > .wrap { max-width:1200px; margin:0 auto; padding:0 24px; }
   .dv-collections { display:flex; flex-wrap:wrap; gap:8px; margin:0 0 28px; }
   .dv-collection-lien { display:inline-flex; align-items:center; padding:8px 16px; border-radius:999px; border:1px solid var(--site-border); color:var(--site-text); background:var(--site-surface); text-decoration:none; font-size:14px; font-weight:600; transition:border-color .2s, color .2s; }
   .dv-collection-lien:hover { border-color:${accent}; color:${accent}; }
-  .dv-collection-lien[aria-current="page"] { background:${accent}; border-color:${accent}; color:#fff; }`;
+  .dv-collection-lien[aria-current="page"] { background:${accent}; border-color:${accent}; color:#fff; }
+  ${pagesProduit.css}`;
   const avecCss = coquille.includes("/* GRILLE_PRODUITS_CSS */")
     ? coquille.replace("/* GRILLE_PRODUITS_CSS */", css)
     : coquille.replace("</style>", `${css}\n</style>`);
@@ -282,22 +304,20 @@ function pagesBoutique(
   return assemblerPagesBoutique(avecCss, {
     catalogue: `<div class="wrap">
     <h2>${escapeHtml(ctx.t.boutique.nosProduits)}</h2>
-    ${grilleProduitsHtml(ctx, produits, accent, ctaLabel)}
+    ${grille(produits)}
   </div>`,
-    collections: collections.map((c, k) => ({
+    collections: collections.map((c) => ({
       slug: c.slug,
       titre: c.titre,
       html: `<div class="wrap">
     <h2>${escapeHtml(c.titre)}</h2>
-    ${grilleProduitsHtml(ctx, c.produits, accent, ctaLabel, `c${k}`)}
+    ${grille(c.produits)}
   </div>`,
     })),
-    scripts: [
-      produitsCheckoutScripts(ctx, produits),
-      ...collections.map((c, k) => produitsCheckoutScripts(ctx, c.produits, `c${k}`)),
-    ].join("\n"),
+    scripts: pagesProduit.selection,
     legales,
     liensCollections: { tous: ctx.t.boutique.tousLesProduits, aria: ctx.t.boutique.collections },
+    pagesProduit: { produit: pagesProduit.produit, commande: pagesProduit.commande },
   }, ctx);
 }
 
@@ -865,7 +885,10 @@ Réponds UNIQUEMENT avec le code HTML, sans explication ni balise markdown.`;
 
     // html = l'accueil (sauvegardé dans html_content), pages = toutes les pages du site.
     // Mentions légales absentes ou illisibles : page vierge.
-    const pages = pagesBoutique(ctx, accueilSeul, produits, "var(--site-accent)", categories, { mentionsLegales });
+    // Page produit et page d'achat au design du site (deuxième appel, repli intégré).
+    const gabarits = await genererGabarits(client, MODELE_GENERATION, ctx, accueilSeul, suivi);
+    await suivi.enregistrer();
+    const pages = pagesBoutique(ctx, accueilSeul, produits, "var(--site-accent)", categories, gabarits, { mentionsLegales });
     if (pages) return NextResponse.json({ html: pages.accueil, pages, ...avertissements });
 
     // Repli : coquille sans <body> ou sans <nav>, impossible à découper — site d'une seule

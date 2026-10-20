@@ -289,6 +289,9 @@ export type ContenusBoutique = {
   // Rangée de liens « Tous les produits · collection · … » en tête du catalogue et de chaque
   // collection : chaque collection reste accessible même quand le menu est replié (mobile).
   liensCollections?: { tous: string; aria: string };
+  // Page produit et page d'achat (sections complètes, voir lib/pages-produit.ts) : pages du
+  // site, hors du menu (on y arrive depuis les cartes produit).
+  pagesProduit?: { produit: string; commande: string };
 };
 
 // Pages légales de tout site généré (boutique et produit unique), produites par le code et
@@ -321,6 +324,8 @@ export type ContenusLegaux = { mentionsLegales?: string | null };
 export function titrePageConnue(cle: string, pages: TextesSite["pages"]): string | undefined {
   if (cle === CLE_ACCUEIL) return pages.accueil;
   if (cle === CLE_CATALOGUE) return pages.catalogue;
+  if (cle === "produit") return pages.produit;
+  if (cle === "commande") return pages.commande;
   const legale = PAGES_LEGALES.find((p) => p.cle === cle);
   return legale ? pages[legale.titre] : undefined;
 }
@@ -372,7 +377,7 @@ export function assemblerPagesBoutique(coquille: string, contenus: ContenusBouti
   if (!d) return null;
 
   const prises = new Set<string>([CLE_ACCUEIL, CLE_CATALOGUE, ...PAGES_LEGALES.map((p) => p.cle)]);
-  const corps: { cle: string; titre: string; contenu: string; legale?: boolean }[] = [
+  const corps: { cle: string; titre: string; contenu: string; legale?: boolean; horsNav?: boolean }[] = [
     { cle: CLE_ACCUEIL, titre: ctx.t.pages.accueil, contenu: `${d.accueil}${d.entre}` },
     { cle: CLE_CATALOGUE, titre: ctx.t.pages.catalogue, contenu: `<section id="${CLE_CATALOGUE}">${contenus.catalogue}</section>` },
   ];
@@ -380,14 +385,20 @@ export function assemblerPagesBoutique(coquille: string, contenus: ContenusBouti
     const cle = cleDePage(`collection-${c.slug}`, prises);
     corps.push({ cle, titre: c.titre, contenu: `<section id="${cle}" class="collection">${c.html}</section>` });
   }
+  if (contenus.pagesProduit) {
+    prises.add("produit");
+    prises.add("commande");
+    corps.push({ cle: "produit", titre: ctx.t.pages.produit, contenu: contenus.pagesProduit.produit, horsNav: true });
+    corps.push({ cle: "commande", titre: ctx.t.pages.commande, contenu: contenus.pagesProduit.commande, horsNav: true });
+  }
   for (const p of PAGES_LEGALES) {
     const texte = p.cle === "mentions-legales" ? contenus.legales?.mentionsLegales : null;
     const titre = ctx.t.pages[p.titre];
     corps.push({ cle: p.cle, titre, contenu: pageLegale(p.cle, titre, texte), legale: true });
   }
 
-  const nav: EntreeNav[] = corps.filter((p) => !p.legale).map(({ cle, titre }) => ({ cle, titre }));
-  const pagesCollections = corps.slice(2).filter((p) => !p.legale);
+  const nav: EntreeNav[] = corps.filter((p) => !p.legale && !p.horsNav).map(({ cle, titre }) => ({ cle, titre }));
+  const pagesCollections = corps.slice(2).filter((p) => !p.legale && !p.horsNav);
   if (contenus.liensCollections && pagesCollections.length > 0) {
     const { tous, aria } = contenus.liensCollections;
     const rangee = (cleActive: string) =>

@@ -61,14 +61,25 @@ const SCRIPT_INTERCEPTION = `<script>
       return;
     }
     e.preventDefault();
-    parent.postMessage({ source: "${SOURCE_MESSAGE}", cible: cible }, "*");
+    // Produit choisi (cartes, bouton d'achat) : transmis à la page suivante, l'iframe isolée
+    // n'ayant pas accès à sessionStorage.
+    var produit = a.getAttribute("data-dv-produit");
+    var selection = produit ? { p: produit, q: parseInt(a.getAttribute("data-dv-quantite") || "1", 10) || 1 } : null;
+    parent.postMessage({ source: "${SOURCE_MESSAGE}", cible: cible, selection: selection }, "*");
   }, true);
 })();
 </script>`;
 
-function avecInterception(html: string): string {
-  const fin = html.toLowerCase().lastIndexOf("</body>");
-  return fin === -1 ? `${html}${SCRIPT_INTERCEPTION}` : `${html.slice(0, fin)}${SCRIPT_INTERCEPTION}${html.slice(fin)}`;
+type Selection = { p: string; q: number } | null;
+
+function avecInterception(html: string, selection: Selection): string {
+  // Produit choisi lu par les pages produit et d'achat (lib/pages-produit.ts), placé avant
+  // leurs scripts.
+  const avecSelection = selection
+    ? html.replace(/<body\b[^>]*>/i, (b) => `${b}<script>window.DV_SELECTION=${JSON.stringify(selection).replace(/</g, "\\u003c")};</script>`)
+    : html;
+  const fin = avecSelection.toLowerCase().lastIndexOf("</body>");
+  return fin === -1 ? `${avecSelection}${SCRIPT_INTERCEPTION}` : `${avecSelection.slice(0, fin)}${SCRIPT_INTERCEPTION}${avecSelection.slice(fin)}`;
 }
 
 export default function ApercuPages({
@@ -82,13 +93,14 @@ export default function ApercuPages({
   const tPages = (cle: string) => (t.has(`pages.${cle}`) ? t(`pages.${cle}`) : undefined);
   const cles = useMemo(() => ordonner(Object.keys(pages)), [pages]);
   const [active, setActive] = useState<string>(CLE_ACCUEIL);
+  const [selection, setSelection] = useState<Selection>(null);
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const zoneRef = useRef<HTMLDivElement>(null);
 
   // Clé active inconnue (pages régénérées, collection retirée…) : retour à l'accueil, ou à la
   // première page s'il n'y a pas d'accueil.
   const cleAffichee = active in pages ? active : CLE_ACCUEIL in pages ? CLE_ACCUEIL : cles[0];
-  const srcDoc = useMemo(() => (cleAffichee ? avecInterception(pages[cleAffichee]) : ""), [pages, cleAffichee]);
+  const srcDoc = useMemo(() => (cleAffichee ? avecInterception(pages[cleAffichee], selection) : ""), [pages, cleAffichee, selection]);
 
   function allerA(cle: string) {
     if (!(cle in pages)) return;
@@ -102,8 +114,10 @@ export default function ApercuPages({
     function surMessage(e: MessageEvent) {
       // Seule l'iframe de cet aperçu est écoutée (origine opaque : on vérifie la source).
       if (e.source !== iframeRef.current?.contentWindow) return;
-      const data = e.data as { source?: unknown; cible?: unknown } | null;
+      const data = e.data as { source?: unknown; cible?: unknown; selection?: unknown } | null;
       if (!data || data.source !== SOURCE_MESSAGE || typeof data.cible !== "string") return;
+      const s = data.selection as { p?: unknown; q?: unknown } | null | undefined;
+      if (s && typeof s.p === "string") setSelection({ p: s.p, q: typeof s.q === "number" && s.q > 0 ? s.q : 1 });
       if (data.cible in pages) {
         setActive(data.cible);
         zoneRef.current?.scrollIntoView({ block: "nearest" });

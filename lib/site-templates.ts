@@ -87,7 +87,7 @@ function nl2list(bullets: string[]): string {
     .join("\n");
 }
 
-function prixBlock(ctx: SiteCtx, prixVente: string, prixBarre: string, accent: string): string {
+export function prixBlock(ctx: SiteCtx, prixVente: string, prixBarre: string, accent: string): string {
   if (!prixVente.trim()) return "";
   const barre = prixBarre.trim()
     ? `<span style="text-decoration:line-through;opacity:.5;font-size:var(--fs-small);margin-right:10px">${escapeHtml(prixSite(prixBarre, ctx.langue))}</span>`

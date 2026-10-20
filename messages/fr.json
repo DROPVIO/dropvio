@@ -1699,7 +1699,9 @@
         "catalogue": "Catalogue",
         "mentions-legales": "Mentions légales",
         "cgv": "CGV",
-        "confidentialite": "Confidentialité"
+        "confidentialite": "Confidentialité",
+        "produit": "Produit",
+        "commande": "Commande"
       }
     },
     "templates": {
@@ -2136,7 +2138,14 @@
       "catalogue": "Catalogue",
       "mentionsLegales": "Mentions légales",
       "cgv": "CGV",
-      "confidentialite": "Confidentialité"
+      "confidentialite": "Confidentialité",
+      "produit": "Produit",
+      "commande": "Commande"
+    },
+    "produitPage": {
+      "retourCatalogue": "← Retour au catalogue",
+      "quantite": "Quantité",
+      "votreCommande": "Votre commande"
     }
   },
   "legal": {

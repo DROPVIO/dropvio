@@ -1699,7 +1699,9 @@
         "catalogue": "Catálogo",
         "mentions-legales": "Aviso legal",
         "cgv": "Condiciones de venta",
-        "confidentialite": "Privacidad"
+        "confidentialite": "Privacidad",
+        "produit": "Producto",
+        "commande": "Pedido"
       }
     },
     "templates": {
@@ -2136,7 +2138,14 @@
       "catalogue": "Catálogo",
       "mentionsLegales": "Aviso legal",
       "cgv": "Condiciones de venta",
-      "confidentialite": "Privacidad"
+      "confidentialite": "Privacidad",
+      "produit": "Producto",
+      "commande": "Pedido"
+    },
+    "produitPage": {
+      "retourCatalogue": "← Volver al catálogo",
+      "quantite": "Cantidad",
+      "votreCommande": "Tu pedido"
     }
   },
   "legal": {
