@@ -1787,11 +1787,6 @@
         "bandeauSurTotal": "🏪 Store mode: <strong>{nom}</strong>, {count, plural, one {# product imported} other {# products imported}} out of {total}.",
         "importes": "{count, plural, one {# product imported} other {# products imported}}"
       },
-      "etapes": {
-        "infos": "Product info",
-        "generation": "Generation",
-        "resultat": "Result"
-      },
       "format": {
         "titre": "Export format",
         "aide": "You can change it anytime from “My sites”; the generated page stays the same.",
@@ -1872,17 +1867,6 @@
         "sauvegardeEnCours": "The site's initial save isn't finished yet: try again in a moment.",
         "couleurs": "Unable to save these colors.",
         "modifierPlan": "This site can't be opened for editing on the Free plan: upgrade to Pro to edit your saved sites."
-      },
-      "langueSite": {
-        "titre": "Site language",
-        "aide": "Language of the generated page's text (cart, footer, AI-written content).",
-        "imposee": "Store language: the site is generated in this language.",
-        "options": {
-          "fr": "Français",
-          "en": "English",
-          "es": "Español",
-          "it": "Italiano"
-        }
       },
       "siteCompletTelecharge": "Full site saved to your Downloads: {fichier}. Every page is in this file: open it and the navigation buttons work.",
       "composer": {

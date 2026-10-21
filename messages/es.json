@@ -1787,11 +1787,6 @@
         "bandeauSurTotal": "🏪 Modo tienda: <strong>{nom}</strong>, {count, plural, one {# producto importado} other {# productos importados}} de {total} en total.",
         "importes": "{count, plural, one {# producto importado} other {# productos importados}}"
       },
-      "etapes": {
-        "infos": "Información del producto",
-        "generation": "Generación",
-        "resultat": "Resultado"
-      },
       "format": {
         "titre": "Formato de exportación",
         "aide": "Se puede cambiar en cualquier momento desde «Mis sitios»; la página generada no cambia.",
@@ -1872,17 +1867,6 @@
         "sauvegardeEnCours": "El guardado inicial del sitio aún no ha terminado: vuelve a intentarlo en un momento.",
         "couleurs": "No se pueden guardar estos colores.",
         "modifierPlan": "Este sitio no se puede abrir para modificarlo con el plan Free: pásate a Pro para modificar tus sitios guardados."
-      },
-      "langueSite": {
-        "titre": "Idioma del sitio",
-        "aide": "Idioma de los textos de la página generada (carrito, pie de página, contenido escrito por la IA).",
-        "imposee": "Idioma de la tienda: el sitio se genera en este idioma.",
-        "options": {
-          "fr": "Français",
-          "en": "English",
-          "es": "Español",
-          "it": "Italiano"
-        }
       },
       "siteCompletTelecharge": "Sitio completo guardado en tus Descargas: {fichier}. Todas las páginas están en este archivo: ábrelo y los botones de navegación funcionan.",
       "composer": {

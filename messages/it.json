@@ -1787,11 +1787,6 @@
         "bandeauSurTotal": "🏪 Modalità negozio: <strong>{nom}</strong>, {count, plural, one {# prodotto importato} other {# prodotti importati}} su {total} in totale.",
         "importes": "{count, plural, one {# prodotto importato} other {# prodotti importati}}"
       },
-      "etapes": {
-        "infos": "Info prodotto",
-        "generation": "Generazione",
-        "resultat": "Risultato"
-      },
       "format": {
         "titre": "Formato di esportazione",
         "aide": "Modificabile in qualsiasi momento da «I miei siti»; la pagina generata resta la stessa.",
@@ -1872,17 +1867,6 @@
         "sauvegardeEnCours": "Il salvataggio iniziale del sito non è ancora terminato: riprova tra un attimo.",
         "couleurs": "Impossibile salvare questi colori.",
         "modifierPlan": "Questo sito non può essere aperto per la modifica con il piano Free: passa a Pro per modificare i siti salvati."
-      },
-      "langueSite": {
-        "titre": "Lingua del sito",
-        "aide": "Lingua dei testi della pagina generata (carrello, piè di pagina, contenuti scritti dall'IA).",
-        "imposee": "Lingua del negozio: il sito viene generato in questa lingua.",
-        "options": {
-          "fr": "Français",
-          "en": "English",
-          "es": "Español",
-          "it": "Italiano"
-        }
       },
       "siteCompletTelecharge": "Sito completo salvato nei tuoi Download: {fichier}. Tutte le pagine sono in questo file: aprilo e i pulsanti di navigazione funzionano.",
       "composer": {

@@ -20,8 +20,8 @@ import { slugFichier, telechargerTexte } from "@/lib/audit-download";
 import { telechargerPageSeule, telechargerSiteMultiPages } from "@/lib/telechargement-site";
 import { ToastHost, useToast } from "@/components/Toast";
 import { LIEN_CHANGER_DE_PLAN } from "@/lib/plan-links";
-import { useLocale, useTranslations } from "next-intl";
-import { SUPPORTED_LOCALES, isAppLocale, type AppLocale } from "@/lib/locale";
+import { useTranslations } from "next-intl";
+import { isAppLocale, type AppLocale } from "@/lib/locale";
 import { useApiErrorMessage } from "@/lib/use-api-error";
 
 type Step = 1 | 2 | 3;
@@ -111,13 +111,12 @@ function SiteBuilderContent() {
   const boutiqueDraft = brouillonLu && (!boutiqueId || brouillonLu.boutiqueId === boutiqueId) ? brouillonLu : null;
   const brouillonIntrouvable = modeBoutique && brouillonLu !== undefined && boutiqueDraft === null;
 
-  // Langue du contenu du site généré : celle de la boutique quand le site en vient (brouillon
-  // ou ?langue= posé par la page boutique), sinon au choix, celle de l'interface par défaut.
-  const localeInterface = useLocale() as AppLocale;
+  // Langue du contenu du site généré, envoyée à /api/generate-site et à l'éditeur de templates :
+  // celle de la boutique quand le site en vient (brouillon ou ?langue= posé par la page
+  // boutique), sinon le français. Plus de sélecteur dans l'interface.
   const langueParam = searchParams.get("langue");
   const langueImposee: AppLocale | null = boutiqueDraft?.langue ?? (isAppLocale(langueParam) ? langueParam : null);
-  const [langueChoisie, setLangueChoisie] = useState<AppLocale>(localeInterface);
-  const langueSite: AppLocale = langueImposee ?? langueChoisie;
+  const langueSite: AppLocale = langueImposee ?? "fr";
 
   // Style & palette
   const [selectedStyleId, setSelectedStyleId] = useState(STYLE_IDS[0]);
@@ -816,61 +815,10 @@ function SiteBuilderContent() {
           </div>
         )}
 
-        {/* Langue du site généré — partagée par les deux modes. Imposée par la boutique quand
-            le site en vient (le contenu doit être dans la langue de la boutique). */}
-        <div className="mb-6 rounded-2xl bg-[var(--surface)] border border-[var(--border)] px-6 py-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex flex-col gap-1">
-            <label htmlFor="langue-site" className="text-sm font-medium text-[var(--text-muted)]">
-              {t("langueSite.titre")}
-            </label>
-            <span className="text-xs text-[var(--text-faint)]">
-              {langueImposee ? t("langueSite.imposee") : t("langueSite.aide")}
-            </span>
-          </div>
-          <select
-            id="langue-site"
-            value={langueSite}
-            onChange={(e) => setLangueChoisie(e.target.value as AppLocale)}
-            disabled={langueImposee !== null}
-            className="rounded-xl border border-[var(--border-strong)] bg-[var(--bg)] px-3 py-2 text-sm text-[var(--text-primary)] disabled:opacity-60"
-          >
-            {SUPPORTED_LOCALES.map((l) => (
-              <option key={l} value={l}>
-                {t(`langueSite.options.${l}`)}
-              </option>
-            ))}
-          </select>
-        </div>
-
         {mode === "template" && <TemplateEditor boutiqueDraft={boutiqueDraft} canExport={canExport} langueSite={langueSite} />}
 
         {mode === "ia" && (
         <>
-        {/* Step indicators */}
-        <div className="flex items-center justify-center gap-4 mb-10">
-          {([1, 2, 3] as Step[]).map((s) => (
-            <div key={s} className="flex items-center gap-2">
-              <div
-                className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold border transition-all ${
-                  step === s
-                    ? "bg-violet-600 border-violet-500 text-white"
-                    : step > s
-                    ? "bg-violet-600/30 border-violet-500/40 text-[var(--accent)]"
-                    : "bg-transparent border-[var(--border-strong)] text-[var(--text-faint)]"
-                }`}
-              >
-                {step > s ? "✓" : s}
-              </div>
-              <span className={`text-xs font-medium ${step >= s ? "text-[var(--text-muted)]" : "text-[var(--text-faint)]"}`}>
-                {s === 1 ? t("etapes.infos") : s === 2 ? t("etapes.generation") : t("etapes.resultat")}
-              </span>
-              {s < 3 && (
-                <div className={`w-8 h-px ml-1 ${step > s ? "bg-violet-500/50" : "bg-[var(--border-strong)]"}`} />
-              )}
-            </div>
-          ))}
-        </div>
-
         {/* Format d'export — placé au-dessus du formulaire parce qu'il vaut pour les deux
             variantes de l'étape 1 (mode produit unique et mode boutique). Purement
             déclaratif à ce stade : la génération est identique dans les deux cas, seul le

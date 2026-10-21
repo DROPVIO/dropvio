@@ -1787,11 +1787,6 @@
         "bandeauSurTotal": "🏪 Mode boutique : <strong>{nom}</strong>, {count, plural, one {# produit importé} other {# produits importés}} sur {total} au total.",
         "importes": "{count, plural, one {# produit importé} other {# produits importés}}"
       },
-      "etapes": {
-        "infos": "Infos produit",
-        "generation": "Génération",
-        "resultat": "Résultat"
-      },
       "format": {
         "titre": "Format d'export",
         "aide": "Modifiable à tout moment depuis « Mes sites » ; la page générée, elle, reste la même.",
@@ -1872,17 +1867,6 @@
         "sauvegardeEnCours": "La sauvegarde initiale du site n'est pas encore terminée : réessaie dans un instant.",
         "couleurs": "Impossible d'enregistrer ces couleurs.",
         "modifierPlan": "Ce site ne peut pas être ouvert pour modification sur le plan Free : passe Pro pour modifier tes sites enregistrés."
-      },
-      "langueSite": {
-        "titre": "Langue du site",
-        "aide": "Langue des textes de la page générée (panier, pied de page, contenu écrit par l'IA).",
-        "imposee": "Langue de la boutique : le site est généré dans cette langue.",
-        "options": {
-          "fr": "Français",
-          "en": "English",
-          "es": "Español",
-          "it": "Italiano"
-        }
       },
       "siteCompletTelecharge": "Site complet enregistré dans tes Téléchargements : {fichier}. Toutes les pages sont dans ce fichier : ouvre-le, les boutons de navigation fonctionnent.",
       "composer": {
