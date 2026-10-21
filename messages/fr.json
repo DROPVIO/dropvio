@@ -1315,7 +1315,8 @@
     "budget_ia_depasse": "Budget IA du mois atteint. Il sera remis à zéro le 1er du mois prochain.",
     "limite_ia_jour": "Limite IA des dernières 24 heures atteinte. Elle se libère progressivement : réessaie le {reprise, date, short} à {reprise, time, short}.",
     "limite_ia_semaine": "Limite IA des 7 derniers jours atteinte. Elle se libère progressivement : réessaie le {reprise, date, short} à {reprise, time, short}.",
-    "modification_echec": "La modification n'a pas pu être appliquée. Reformule ta demande ou découpe-la en plusieurs."
+    "modification_echec": "La modification n'a pas pu être appliquée. Reformule ta demande ou découpe-la en plusieurs.",
+    "aliexpress_not_in_affiliate": "Ce produit n'est pas accessible via l'API AliExpress. Remplis les champs à la main."
   },
   "siteBuilder": {
     "boutique": {

@@ -387,6 +387,13 @@ function SiteBuilderContent() {
         if (json.nom) setProductName(json.nom);
         if (json.description) setDescription(json.description);
         if (json.image) setImageUrl(json.image);
+        if (typeof json.prix_vente === "number") setSalePrice(String(json.prix_vente));
+        if (typeof json.prix_original === "number") setOriginalPrice(String(json.prix_original));
+        // Lien court (s.click…) remplacé par l'URL produit canonique : c'est elle qui est
+        // sauvegardée avec le site (lien_aliexpress), un lien court affilié pouvant expirer.
+        if (typeof json.aliexpress_product_id === "string") {
+          setAliexpressUrl(`https://www.aliexpress.com/item/${json.aliexpress_product_id}.html`);
+        }
         // aliexpressUrl n'est plus effacé ici (contrairement à avant) : il est conservé et
         // envoyé à la sauvegarde du site (lien_aliexpress) pour être restitué lors d'une
         // future régénération — voir le useEffect de pré-remplissage plus haut.

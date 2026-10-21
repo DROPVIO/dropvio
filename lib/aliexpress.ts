@@ -61,6 +61,9 @@ export type AliExpressProduct = {
   target_sale_price?: string;
   target_sale_price_currency?: string;
   original_price?: string;
+  // Comme target_sale_price : prix barré converti dans target_currency.
+  target_original_price?: string;
+  target_original_price_currency?: string;
   commission_rate?: string;
   evaluate_rate?: string;
   lastest_volume?: number;

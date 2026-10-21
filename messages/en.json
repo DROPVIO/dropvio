@@ -1315,7 +1315,8 @@
     "budget_ia_depasse": "This month's AI budget has been reached. It will reset on the 1st of next month.",
     "limite_ia_jour": "AI limit for the last 24 hours reached. It frees up gradually: try again on {reprise, date, short} at {reprise, time, short}.",
     "limite_ia_semaine": "AI limit for the last 7 days reached. It frees up gradually: try again on {reprise, date, short} at {reprise, time, short}.",
-    "modification_echec": "The change couldn't be applied. Rephrase your request or split it into several."
+    "modification_echec": "The change couldn't be applied. Rephrase your request or split it into several.",
+    "aliexpress_not_in_affiliate": "This product isn't available through the AliExpress API. Fill in the fields manually."
   },
   "siteBuilder": {
     "boutique": {

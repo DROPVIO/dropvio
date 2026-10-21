@@ -69,6 +69,15 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
 
   const payload = await request.json();
   const { nom, slug, description, image_urls, prix_vente, prix_original, category_id, source_produit_id, meta } = payload;
+  // Présents seulement après un import AliExpress (colonnes de la migration 036) : jamais
+  // envoyés pour une fiche créée à la main.
+  const aliexpress =
+    typeof payload.aliexpress_product_id === "string" && /^\d{6,}$/.test(payload.aliexpress_product_id)
+      ? {
+          aliexpress_product_id: payload.aliexpress_product_id,
+          lien_aliexpress: `https://www.aliexpress.com/item/${payload.aliexpress_product_id}.html`,
+        }
+      : {};
 
   if (!nom || !slug || typeof prix_vente !== "number") {
     return NextResponse.json({ error: "nom, slug et prix_vente sont requis.", code: "product_fields_required" }, { status: 400 });
@@ -117,6 +126,7 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
       prix_original,
       position: 0,
       meta: meta ?? {},
+      ...aliexpress,
     })
     .select("id")
     .single();

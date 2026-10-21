@@ -147,6 +147,9 @@ export default function BoutiqueBuilderDetailPage() {
   // renvoie l'id catalogue) — permet de relier le produit boutique au catalogue via
   // source_produit_id, exploité par les suggestions de produits complémentaires.
   const [importedSourceId, setImportedSourceId] = useState<string | null>(null);
+  // Produit AliExpress d'origine d'un import réussi (catalogue ou API) : le lien fournisseur
+  // reste sur la fiche même hors catalogue, pour la préparation des commandes.
+  const [importedAliexpress, setImportedAliexpress] = useState<{ productId: string; lien: string } | null>(null);
   const [suggestionsRefreshKey, setSuggestionsRefreshKey] = useState(0);
 
   const [reorderLoading, setReorderLoading] = useState(false);
@@ -644,6 +647,7 @@ export default function BoutiqueBuilderDetailPage() {
     setProductFormError(null);
     setProductFormSuccess(null);
     setImportedSourceId(null);
+    setImportedAliexpress(null);
   }
 
   function populateProductForm(product: BoutiqueProduct) {
@@ -680,9 +684,14 @@ export default function BoutiqueBuilderDetailPage() {
       if (typeof json.prix_vente === "number") {
         setProductPrixVente(String(json.prix_vente));
       }
-      setProductPrixOriginal("");
+      setProductPrixOriginal(typeof json.prix_original === "number" ? String(json.prix_original) : "");
       setProductSlug(slugify(json.nom ?? ""));
       setImportedSourceId(json.id ?? null);
+      setImportedAliexpress(
+        typeof json.aliexpress_product_id === "string"
+          ? { productId: json.aliexpress_product_id, lien: json.lien_aliexpress }
+          : null
+      );
       setImportUrl("");
       setProductFormError(null);
     } catch {
@@ -770,6 +779,9 @@ export default function BoutiqueBuilderDetailPage() {
         // meta n'est envoyé qu'à la création : il porte aussi l'état de synchronisation Shopify
         // (variant, images, collection poussés), qu'une modification ne doit pas effacer.
         ...(editingProductId ? {} : { source_produit_id: importedSourceId, meta: {} }),
+        ...(!editingProductId && importedAliexpress
+          ? { aliexpress_product_id: importedAliexpress.productId, lien_aliexpress: importedAliexpress.lien }
+          : {}),
       };
 
       const url = editingProductId
