@@ -47,6 +47,7 @@ export default function ComposerSite({
   peutEnvoyer,
   onEnvoyer,
   aide,
+  outils,
 }: {
   prompt: string;
   onPromptChange: (value: string) => void;
@@ -63,6 +64,8 @@ export default function ComposerSite({
   onEnvoyer: () => void;
   // Ce qui manque encore pour pouvoir générer, affiché sous la barre.
   aide?: string | null;
+  // Réglages supplémentaires affichés après « Style auto » (ex. format d'export), en BoutonOutil.
+  outils?: ReactNode;
 }) {
   const t = useTranslations("siteBuilder.builder.composer");
   const tPrompt = useTranslations("siteBuilder.builder.prompt");
@@ -256,21 +259,12 @@ export default function ComposerSite({
           </div>
 
           {onAutoModeChange && (
-            <button
-              type="button"
-              onClick={() => onAutoModeChange(!autoMode)}
-              aria-pressed={Boolean(autoMode)}
-              title={t("styleAutoAide")}
-              className={`flex h-9 items-center gap-1.5 rounded-full border px-3 text-xs font-semibold transition ${
-                autoMode
-                  ? "border-violet-500 bg-violet-500/10 text-[var(--accent)]"
-                  : "border-[var(--border-strong)] text-[var(--text-muted)] hover:bg-[var(--surface-2)] hover:text-[var(--text-primary)]"
-              }`}
-            >
+            <BoutonOutil actif={Boolean(autoMode)} onClick={() => onAutoModeChange(!autoMode)} title={t("styleAutoAide")}>
               <span>🤖</span>
               {t("styleAuto")}
-            </button>
+            </BoutonOutil>
           )}
+          {outils}
 
           <span className={`ml-auto hidden text-[11px] sm:inline ${promptManquant > 0 ? "text-[var(--text-faint)]" : "text-[var(--accent)]"}`}>
             {promptManquant > 0
@@ -300,6 +294,35 @@ export default function ComposerSite({
         {aide ?? t("raccourci")}
       </p>
     </div>
+  );
+}
+
+// Pastille de réglage de la barre d'outils (« Style auto », format d'export…).
+export function BoutonOutil({
+  actif = false,
+  onClick,
+  title,
+  children,
+}: {
+  actif?: boolean;
+  onClick: () => void;
+  title?: string;
+  children: ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={actif}
+      title={title}
+      className={`flex h-9 shrink-0 items-center gap-1.5 rounded-full border px-3 text-xs font-semibold transition ${
+        actif
+          ? "border-violet-500 bg-violet-500/10 text-[var(--accent)]"
+          : "border-[var(--border-strong)] text-[var(--text-muted)] hover:bg-[var(--surface-2)] hover:text-[var(--text-primary)]"
+      }`}
+    >
+      {children}
+    </button>
   );
 }
 

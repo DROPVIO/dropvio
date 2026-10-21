@@ -1788,10 +1788,9 @@
         "importes": "{count, plural, one {# producto importado} other {# productos importados}}"
       },
       "format": {
-        "titre": "Formato de exportación",
-        "aide": "Se puede cambiar en cualquier momento desde «Mis sitios»; la página generada no cambia.",
         "html": "📄 HTML",
-        "liquid": "🛍 Liquid (Shopify)"
+        "liquid": "🛍 Liquid (Shopify)",
+        "basculer": "Formato de exportación (modificable después en «Mis sitios»): haz clic para pasar a {format}"
       },
       "formulaire": {
         "importer": "Importar desde AliExpress",

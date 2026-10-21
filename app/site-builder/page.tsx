@@ -6,7 +6,7 @@ import { useSearchParams } from "next/navigation";
 import TemplateEditor from "./TemplateEditor";
 import BoutiqueProduitsEditor from "@/components/site-builder/BoutiqueProduitsEditor";
 import ColorTokenPanel from "@/components/site-builder/ColorTokenPanel";
-import ComposerSite, { type ActionMenu, type PieceJointe } from "@/components/site-builder/ComposerSite";
+import ComposerSite, { BoutonOutil, type ActionMenu, type PieceJointe } from "@/components/site-builder/ComposerSite";
 import ApercuPages from "@/components/site-builder/ApercuPages";
 import ModifierSiteIA from "@/components/site-builder/ModifierSiteIA";
 import { pagesSiMultiples } from "@/lib/site-builder-pages";
@@ -699,6 +699,18 @@ function SiteBuilderContent() {
     actionCorrections,
   ];
 
+  // Format d'export, dans la barre d'outils de la barre de saisie (à côté de « Style auto ») :
+  // un clic bascule entre HTML et Liquid. Purement déclaratif à ce stade : la génération est
+  // identique dans les deux cas, seul le fichier produit à l'étape 3 change.
+  const boutonFormat = (
+    <BoutonOutil
+      onClick={() => setFormatExport((f) => (f === "html" ? "liquid" : "html"))}
+      title={t("format.basculer", { format: formatExport === "html" ? t("format.liquid") : t("format.html") })}
+    >
+      {formatExport === "html" ? t("format.html") : t("format.liquid")}
+    </BoutonOutil>
+  );
+
   // Mode boutique : « + » ajoute une fiche vide au brouillon (même limite de plan que
   // BoutiqueProduitsEditor) et déplie la liste des produits pour la remplir.
   const limiteBoutique = boutiqueDraft?.limiteProduits ?? null;
@@ -718,8 +730,10 @@ function SiteBuilderContent() {
   }
 
   return (
-    <div className="min-h-screen bg-[var(--bg)] text-[var(--text-primary)] font-sans px-4 py-16">
-      <div className="max-w-3xl mx-auto">
+    <div className={`min-h-screen bg-[var(--bg)] text-[var(--text-primary)] font-sans px-4 pt-16 ${step === 1 ? "pb-6" : "pb-16"} flex flex-col`}>
+      {/* Colonne flexible : à l'étape 1, la zone du formulaire prend la hauteur restante pour
+          que la barre de saisie (ComposerSite) se cale en bas, centrée, comme un assistant IA. */}
+      <div className="max-w-3xl mx-auto w-full flex-1 flex flex-col">
 
         {/* Header */}
         <div className="mb-12 text-center">
@@ -819,89 +833,59 @@ function SiteBuilderContent() {
 
         {mode === "ia" && (
         <>
-        {/* Format d'export — placé au-dessus du formulaire parce qu'il vaut pour les deux
-            variantes de l'étape 1 (mode produit unique et mode boutique). Purement
-            déclaratif à ce stade : la génération est identique dans les deux cas, seul le
-            fichier produit à l'étape 3 change. */}
-        {step === 1 && (
-          <div className="mb-6 rounded-2xl bg-[var(--surface)] border border-[var(--border)] px-6 py-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex flex-col gap-1">
-              <span className="text-sm font-medium text-[var(--text-muted)]">{t("format.titre")}</span>
-              <span className="text-xs text-[var(--text-faint)]">
-                {t("format.aide")}
-              </span>
-            </div>
-            <div className="inline-flex gap-1 p-1 rounded-xl bg-[var(--bg)] border border-[var(--border-strong)] self-start sm:self-auto">
-              {(
-                [
-                  { id: "html", label: t("format.html") },
-                  { id: "liquid", label: t("format.liquid") },
-                ] as const
-              ).map((f) => (
-                <button
-                  key={f.id}
-                  onClick={() => setFormatExport(f.id)}
-                  className={`px-4 py-2 rounded-lg text-xs font-semibold transition-all ${
-                    formatExport === f.id
-                      ? "bg-violet-600 text-white"
-                      : "text-[var(--text-faint)] hover:text-[var(--text-muted)]"
-                  }`}
-                >
-                  {f.label}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-
         {/* Step 1 (mode boutique) : les produits s'éditent au-dessus (BoutiqueProduitsEditor,
             partagé avec le mode Éditeur) — ici juste l'erreur éventuelle + génération directe.
             Pas de bouton "génération automatique" : style="auto" n'est pas supporté pour ce
             mode côté API (voir app/api/generate-site/route.ts). */}
         {step === 1 && boutiqueDraft && (
-          <div className="flex flex-col gap-4">
+          <div className="flex-1 flex flex-col gap-4">
             {error && (
               <div className="rounded-xl bg-[var(--danger)]/10 border border-[var(--danger)]/20 px-4 py-3 text-[var(--danger)] text-sm">
                 {error}
               </div>
             )}
-            <ComposerSite
-              prompt={promptSite}
-              onPromptChange={setPromptSite}
-              promptManquant={promptManquant}
-              piecesJointes={[
-                {
-                  id: "produits",
-                  icone: "🛍️",
-                  titre: t("composer.produitsBoutique", { count: boutiqueDraft.produits.length }),
-                  sousTitre: boutiqueDraft.nomBoutique,
-                  onClick: ouvrirProduitsBoutique,
-                },
-              ]}
-              actions={[
-                {
-                  id: "produit",
-                  icone: "📦",
-                  libelle: t("composer.ajouterProduit"),
-                  aide: limiteBoutiqueAtteinte
-                    ? t("composer.limiteAtteinte", { max: limiteBoutique ?? 0 })
-                    : t("composer.ajouterProduitBoutiqueAide"),
-                  disabled: limiteBoutiqueAtteinte,
-                  onClick: ajouterProduitBoutique,
-                },
-              ]}
-              fiche={ficheStyle}
-              onFicheChange={setFicheStyle}
-              peutEnvoyer={Boolean(canGenerate)}
-              onEnvoyer={() => handleGenerate(false)}
-              aide={aideComposer}
-            />
+            {/* Barre de saisie calée en bas de la zone (mt-auto) et collante quand la page
+                défile (sticky) ; le dégradé masque le contenu qui passe dessous. */}
+            <div className="sticky bottom-0 z-10 mt-auto -mx-2 px-2 pt-6 pb-2 bg-gradient-to-t from-[var(--bg)] from-70% to-transparent">
+              <ComposerSite
+                prompt={promptSite}
+                onPromptChange={setPromptSite}
+                promptManquant={promptManquant}
+                piecesJointes={[
+                  {
+                    id: "produits",
+                    icone: "🛍️",
+                    titre: t("composer.produitsBoutique", { count: boutiqueDraft.produits.length }),
+                    sousTitre: boutiqueDraft.nomBoutique,
+                    onClick: ouvrirProduitsBoutique,
+                  },
+                ]}
+                actions={[
+                  {
+                    id: "produit",
+                    icone: "📦",
+                    libelle: t("composer.ajouterProduit"),
+                    aide: limiteBoutiqueAtteinte
+                      ? t("composer.limiteAtteinte", { max: limiteBoutique ?? 0 })
+                      : t("composer.ajouterProduitBoutiqueAide"),
+                    disabled: limiteBoutiqueAtteinte,
+                    onClick: ajouterProduitBoutique,
+                  },
+                ]}
+                fiche={ficheStyle}
+                onFicheChange={setFicheStyle}
+                peutEnvoyer={Boolean(canGenerate)}
+                onEnvoyer={() => handleGenerate(false)}
+                aide={aideComposer}
+                outils={boutonFormat}
+              />
+            </div>
           </div>
         )}
 
         {/* Step 1: Product info form */}
         {step === 1 && !boutiqueDraft && (
-          <div className="flex flex-col gap-4">
+          <div className="flex-1 flex flex-col gap-4">
             {error && (
               <div className="rounded-xl bg-[var(--danger)]/10 border border-[var(--danger)]/20 px-4 py-3 text-[var(--danger)] text-sm">
                 {error}
@@ -919,211 +903,220 @@ function SiteBuilderContent() {
               </div>
             )}
 
-            {/* Fiche produit, ouverte depuis le « + » ou la pièce jointe produit de la barre. */}
-            {produitOuvert && (
-              <div className="rounded-3xl bg-[var(--surface)] border border-[var(--border)] p-6 flex flex-col gap-6">
-                <div className="flex items-center justify-between gap-3">
-                  <h2 className="text-sm font-semibold text-[var(--text-primary)]">{t("composer.produitTitre")}</h2>
-                  <button
-                    type="button"
-                    onClick={() => setProduitOuvert(false)}
-                    className="rounded-full border border-[var(--border-strong)] px-3 py-1 text-xs font-semibold text-[var(--text-primary)] transition hover:bg-[var(--surface-2)]"
-                  >
-                    {t("composer.terminer")}
-                  </button>
-                </div>
-                {/* AliExpress import */}
-                <div className="flex flex-col gap-2">
-                  <label className="text-sm font-medium text-[var(--text-muted)]">
-                    {t("formulaire.importer")}{" "}
-                    <span className="text-[var(--text-faint)] font-normal">{t("facultatif")}</span>
-                  </label>
-                  <div className="flex gap-2">
+            {/* Panneaux ouverts depuis la barre + barre de saisie, regroupés et calés en bas
+                de la zone (mt-auto), comme un assistant IA. */}
+            <div className="mt-auto flex flex-col gap-4">
+              {/* Fiche produit, ouverte depuis le « + » ou la pièce jointe produit de la barre. */}
+              {produitOuvert && (
+                <div className="rounded-3xl bg-[var(--surface)] border border-[var(--border)] p-6 flex flex-col gap-6">
+                  <div className="flex items-center justify-between gap-3">
+                    <h2 className="text-sm font-semibold text-[var(--text-primary)]">{t("composer.produitTitre")}</h2>
+                    <button
+                      type="button"
+                      onClick={() => setProduitOuvert(false)}
+                      className="rounded-full border border-[var(--border-strong)] px-3 py-1 text-xs font-semibold text-[var(--text-primary)] transition hover:bg-[var(--surface-2)]"
+                    >
+                      {t("composer.terminer")}
+                    </button>
+                  </div>
+                  {/* AliExpress import */}
+                  <div className="flex flex-col gap-2">
+                    <label className="text-sm font-medium text-[var(--text-muted)]">
+                      {t("formulaire.importer")}{" "}
+                      <span className="text-[var(--text-faint)] font-normal">{t("facultatif")}</span>
+                    </label>
+                    <div className="flex gap-2">
+                      <input
+                        type="url"
+                        value={aliexpressUrl}
+                        onChange={(e) => { setAliexpressUrl(e.target.value); setAliexpressError(null); }}
+                        placeholder="https://www.aliexpress.com/item/123456789.html"
+                        className="flex-1 bg-[var(--bg)] border border-[var(--border-strong)] rounded-xl px-4 py-3 text-sm text-[var(--text-primary)] placeholder-[var(--text-faint)] focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition"
+                      />
+                      <button
+                        type="button"
+                        onClick={handleImportAliexpress}
+                        disabled={!aliexpressUrl.trim() || aliexpressLoading}
+                        className="px-4 py-3 rounded-xl bg-violet-600/20 border border-violet-500/30 text-[var(--accent)] text-sm font-semibold hover:bg-violet-600/30 transition disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap"
+                      >
+                        {aliexpressLoading ? "…" : t("formulaire.importerBouton")}
+                      </button>
+                    </div>
+                    {aliexpressError && (
+                      <p className="text-xs text-[var(--danger)]">{aliexpressError}</p>
+                    )}
+                  </div>
+
+                  <div className="border-t border-[var(--border)]" />
+
+                  {/* Product name */}
+                  <div className="flex flex-col gap-2">
+                    <div className="flex items-center justify-between gap-2">
+                      <label className="text-sm font-medium text-[var(--text-muted)]">{t("formulaire.nom")}</label>
+                      <button
+                        type="button"
+                        onClick={handleReformulerNom}
+                        disabled={!productName.trim() || reformulatingNom}
+                        className="shrink-0 rounded-xl border border-[var(--border-strong)] bg-[var(--bg)] px-2.5 py-1 text-xs font-semibold text-[var(--text-primary)] transition hover:border-violet-500/40 hover:bg-violet-500/10 disabled:opacity-50"
+                      >
+                        {reformulatingNom ? "…" : t("formulaire.reformuler")}
+                      </button>
+                    </div>
+                    <input
+                      type="text"
+                      value={productName}
+                      onChange={(e) => setProductName(e.target.value)}
+                      placeholder={t("formulaire.nomPlaceholder")}
+                      className="bg-[var(--bg)] border border-[var(--border-strong)] rounded-xl px-4 py-3 text-sm text-[var(--text-primary)] placeholder-[var(--text-faint)] focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition"
+                    />
+                  </div>
+
+                  {/* Description */}
+                  <div className="flex flex-col gap-2">
+                    <div className="flex items-center justify-between gap-2">
+                      <label className="text-sm font-medium text-[var(--text-muted)]">{t("formulaire.description")}</label>
+                      <button
+                        type="button"
+                        onClick={handleGenererDescription}
+                        disabled={!productName.trim() || generatingDescription}
+                        className="shrink-0 rounded-xl border border-[var(--border-strong)] bg-[var(--bg)] px-2.5 py-1 text-xs font-semibold text-[var(--text-primary)] transition hover:border-violet-500/40 hover:bg-violet-500/10 disabled:opacity-50"
+                        title={!productName.trim() ? t("formulaire.nomDabord") : undefined}
+                      >
+                        {generatingDescription ? "…" : t("formulaire.genererDescription")}
+                      </button>
+                    </div>
+                    <textarea
+                      value={description}
+                      onChange={(e) => setDescription(e.target.value)}
+                      rows={3}
+                      placeholder={t("formulaire.descriptionPlaceholder")}
+                      className="bg-[var(--bg)] border border-[var(--border-strong)] rounded-xl px-4 py-3 text-sm text-[var(--text-primary)] placeholder-[var(--text-faint)] focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition resize-none"
+                    />
+                    {texteIaError ? <p className="text-xs text-[var(--danger)]">{texteIaError}</p> : null}
+                  </div>
+
+                  {/* Image URL */}
+                  <div className="flex flex-col gap-2">
+                    <div className="rounded-xl bg-amber-500/[0.08] border border-amber-500/20 px-4 py-3 flex gap-2.5 items-start">
+                      <span className="shrink-0">📷</span>
+                      <p className="text-xs text-[var(--warning)] leading-relaxed">
+                        {t.rich("formulaire.imageAvertissement", { strong: (chunks) => <strong>{chunks}</strong> })}
+                      </p>
+                    </div>
+                    <label className="text-sm font-medium text-[var(--text-muted)]">
+                      {t("formulaire.image")}{" "}
+                      <span className="text-[var(--text-faint)] font-normal">{t("facultatif")}</span>
+                    </label>
                     <input
                       type="url"
-                      value={aliexpressUrl}
-                      onChange={(e) => { setAliexpressUrl(e.target.value); setAliexpressError(null); }}
-                      placeholder="https://www.aliexpress.com/item/123456789.html"
-                      className="flex-1 bg-[var(--bg)] border border-[var(--border-strong)] rounded-xl px-4 py-3 text-sm text-[var(--text-primary)] placeholder-[var(--text-faint)] focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition"
+                      value={imageUrl}
+                      onChange={(e) => setImageUrl(e.target.value)}
+                      placeholder={t("formulaire.imagePlaceholder")}
+                      className="bg-[var(--bg)] border border-[var(--border-strong)] rounded-xl px-4 py-3 text-sm text-[var(--text-primary)] placeholder-[var(--text-faint)] focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition"
                     />
-                    <button
-                      type="button"
-                      onClick={handleImportAliexpress}
-                      disabled={!aliexpressUrl.trim() || aliexpressLoading}
-                      className="px-4 py-3 rounded-xl bg-violet-600/20 border border-violet-500/30 text-[var(--accent)] text-sm font-semibold hover:bg-violet-600/30 transition disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap"
-                    >
-                      {aliexpressLoading ? "…" : t("formulaire.importerBouton")}
-                    </button>
+                    {imageUrl.trim() && (
+                      <div className="mt-1 rounded-xl overflow-hidden border border-[var(--border-strong)] bg-[var(--bg)] h-32 flex items-center justify-center">
+                        {/* <img> volontairement conservé (pas next/image) : aperçu en direct d'une URL
+                            externe arbitraire tapée par l'utilisateur, jamais un domaine connu à l'avance
+                            — un remotePattern en wildcard ferait proxier n'importe quelle URL par le
+                            serveur (risque SSRF/bande passante non bornée) pour un gain d'optimisation nul
+                            sur un aperçu de validation ponctuel. */}
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={imageUrl}
+                          alt={t("formulaire.apercuImage")}
+                          className="max-h-full max-w-full object-contain"
+                          onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
+                        />
+                      </div>
+                    )}
                   </div>
-                  {aliexpressError && (
-                    <p className="text-xs text-[var(--danger)]">{aliexpressError}</p>
-                  )}
-                </div>
 
-                <div className="border-t border-[var(--border)]" />
-
-                {/* Product name */}
-                <div className="flex flex-col gap-2">
-                  <div className="flex items-center justify-between gap-2">
-                    <label className="text-sm font-medium text-[var(--text-muted)]">{t("formulaire.nom")}</label>
-                    <button
-                      type="button"
-                      onClick={handleReformulerNom}
-                      disabled={!productName.trim() || reformulatingNom}
-                      className="shrink-0 rounded-xl border border-[var(--border-strong)] bg-[var(--bg)] px-2.5 py-1 text-xs font-semibold text-[var(--text-primary)] transition hover:border-violet-500/40 hover:bg-violet-500/10 disabled:opacity-50"
-                    >
-                      {reformulatingNom ? "…" : t("formulaire.reformuler")}
-                    </button>
+                  {/* Prices */}
+                  <div className="flex gap-3">
+                    <div className="flex flex-col gap-2 flex-1">
+                      <label className="text-sm font-medium text-[var(--text-muted)]">
+                        {t("formulaire.prixVente")} <span className="text-[var(--danger)]">*</span>
+                      </label>
+                      <div className="relative">
+                        <input
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          value={salePrice}
+                          onChange={(e) => setSalePrice(e.target.value)}
+                          placeholder="29.99"
+                          className="w-full bg-[var(--bg)] border border-[var(--border-strong)] rounded-xl pl-4 pr-10 py-3 text-sm text-[var(--text-primary)] placeholder-[var(--text-faint)] focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition"
+                        />
+                        <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[var(--text-faint)] text-sm">€</span>
+                      </div>
+                    </div>
+                    <div className="flex flex-col gap-2 flex-1">
+                      <label className="text-sm font-medium text-[var(--text-muted)]">
+                        {t("formulaire.prixBarre")} <span className="text-[var(--text-faint)] font-normal">{t("facultatif")}</span>
+                      </label>
+                      <div className="relative">
+                        <input
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          value={originalPrice}
+                          onChange={(e) => setOriginalPrice(e.target.value)}
+                          placeholder="59.99"
+                          className="w-full bg-[var(--bg)] border border-[var(--border-strong)] rounded-xl pl-4 pr-10 py-3 text-sm text-[var(--text-primary)] placeholder-[var(--text-faint)] focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition"
+                        />
+                        <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[var(--text-faint)] text-sm">€</span>
+                      </div>
+                    </div>
                   </div>
-                  <input
-                    type="text"
-                    value={productName}
-                    onChange={(e) => setProductName(e.target.value)}
-                    placeholder={t("formulaire.nomPlaceholder")}
-                    className="bg-[var(--bg)] border border-[var(--border-strong)] rounded-xl px-4 py-3 text-sm text-[var(--text-primary)] placeholder-[var(--text-faint)] focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition"
-                  />
                 </div>
+              )}
 
-                {/* Description */}
-                <div className="flex flex-col gap-2">
-                  <div className="flex items-center justify-between gap-2">
-                    <label className="text-sm font-medium text-[var(--text-muted)]">{t("formulaire.description")}</label>
+              {/* Corrections d'un audit précédent — pré-remplies automatiquement lors d'une
+                  régénération si un audit est lié à ce site (voir useEffect plus haut), sinon
+                  vides et éditables librement. Prises en compte dans le prompt si non vides. */}
+              {correctionsOuvertes && (
+                <div className="rounded-3xl bg-[var(--surface)] border border-[var(--border)] p-6 flex flex-col gap-3">
+                  <div className="flex items-center justify-between gap-3">
+                    <h2 className="text-sm font-semibold text-[var(--text-primary)]">{t("corrections.titre")}</h2>
                     <button
                       type="button"
-                      onClick={handleGenererDescription}
-                      disabled={!productName.trim() || generatingDescription}
-                      className="shrink-0 rounded-xl border border-[var(--border-strong)] bg-[var(--bg)] px-2.5 py-1 text-xs font-semibold text-[var(--text-primary)] transition hover:border-violet-500/40 hover:bg-violet-500/10 disabled:opacity-50"
-                      title={!productName.trim() ? t("formulaire.nomDabord") : undefined}
+                      onClick={() => setCorrectionsOuvertes(false)}
+                      className="rounded-full border border-[var(--border-strong)] px-3 py-1 text-xs font-semibold text-[var(--text-primary)] transition hover:bg-[var(--surface-2)]"
                     >
-                      {generatingDescription ? "…" : t("formulaire.genererDescription")}
+                      {t("composer.terminer")}
                     </button>
                   </div>
                   <textarea
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                    rows={3}
-                    placeholder={t("formulaire.descriptionPlaceholder")}
-                    className="bg-[var(--bg)] border border-[var(--border-strong)] rounded-xl px-4 py-3 text-sm text-[var(--text-primary)] placeholder-[var(--text-faint)] focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition resize-none"
+                    value={corrections}
+                    onChange={(e) => setCorrections(e.target.value)}
+                    placeholder={t("corrections.placeholder")}
+                    rows={4}
+                    className="w-full bg-[var(--bg)] border border-[var(--border-strong)] rounded-xl px-4 py-3 text-sm text-[var(--text-primary)] placeholder-[var(--text-faint)] focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition resize-y"
                   />
-                  {texteIaError ? <p className="text-xs text-[var(--danger)]">{texteIaError}</p> : null}
                 </div>
+              )}
 
-                {/* Image URL */}
-                <div className="flex flex-col gap-2">
-                  <div className="rounded-xl bg-amber-500/[0.08] border border-amber-500/20 px-4 py-3 flex gap-2.5 items-start">
-                    <span className="shrink-0">📷</span>
-                    <p className="text-xs text-[var(--warning)] leading-relaxed">
-                      {t.rich("formulaire.imageAvertissement", { strong: (chunks) => <strong>{chunks}</strong> })}
-                    </p>
-                  </div>
-                  <label className="text-sm font-medium text-[var(--text-muted)]">
-                    {t("formulaire.image")}{" "}
-                    <span className="text-[var(--text-faint)] font-normal">{t("facultatif")}</span>
-                  </label>
-                  <input
-                    type="url"
-                    value={imageUrl}
-                    onChange={(e) => setImageUrl(e.target.value)}
-                    placeholder={t("formulaire.imagePlaceholder")}
-                    className="bg-[var(--bg)] border border-[var(--border-strong)] rounded-xl px-4 py-3 text-sm text-[var(--text-primary)] placeholder-[var(--text-faint)] focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition"
-                  />
-                  {imageUrl.trim() && (
-                    <div className="mt-1 rounded-xl overflow-hidden border border-[var(--border-strong)] bg-[var(--bg)] h-32 flex items-center justify-center">
-                      {/* <img> volontairement conservé (pas next/image) : aperçu en direct d'une URL
-                          externe arbitraire tapée par l'utilisateur, jamais un domaine connu à l'avance
-                          — un remotePattern en wildcard ferait proxier n'importe quelle URL par le
-                          serveur (risque SSRF/bande passante non bornée) pour un gain d'optimisation nul
-                          sur un aperçu de validation ponctuel. */}
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src={imageUrl}
-                        alt={t("formulaire.apercuImage")}
-                        className="max-h-full max-w-full object-contain"
-                        onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
-                      />
-                    </div>
-                  )}
-                </div>
-
-                {/* Prices */}
-                <div className="flex gap-3">
-                  <div className="flex flex-col gap-2 flex-1">
-                    <label className="text-sm font-medium text-[var(--text-muted)]">
-                      {t("formulaire.prixVente")} <span className="text-[var(--danger)]">*</span>
-                    </label>
-                    <div className="relative">
-                      <input
-                        type="number"
-                        min="0"
-                        step="0.01"
-                        value={salePrice}
-                        onChange={(e) => setSalePrice(e.target.value)}
-                        placeholder="29.99"
-                        className="w-full bg-[var(--bg)] border border-[var(--border-strong)] rounded-xl pl-4 pr-10 py-3 text-sm text-[var(--text-primary)] placeholder-[var(--text-faint)] focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition"
-                      />
-                      <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[var(--text-faint)] text-sm">€</span>
-                    </div>
-                  </div>
-                  <div className="flex flex-col gap-2 flex-1">
-                    <label className="text-sm font-medium text-[var(--text-muted)]">
-                      {t("formulaire.prixBarre")} <span className="text-[var(--text-faint)] font-normal">{t("facultatif")}</span>
-                    </label>
-                    <div className="relative">
-                      <input
-                        type="number"
-                        min="0"
-                        step="0.01"
-                        value={originalPrice}
-                        onChange={(e) => setOriginalPrice(e.target.value)}
-                        placeholder="59.99"
-                        className="w-full bg-[var(--bg)] border border-[var(--border-strong)] rounded-xl pl-4 pr-10 py-3 text-sm text-[var(--text-primary)] placeholder-[var(--text-faint)] focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition"
-                      />
-                      <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[var(--text-faint)] text-sm">€</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Corrections d'un audit précédent — pré-remplies automatiquement lors d'une
-                régénération si un audit est lié à ce site (voir useEffect plus haut), sinon
-                vides et éditables librement. Prises en compte dans le prompt si non vides. */}
-            {correctionsOuvertes && (
-              <div className="rounded-3xl bg-[var(--surface)] border border-[var(--border)] p-6 flex flex-col gap-3">
-                <div className="flex items-center justify-between gap-3">
-                  <h2 className="text-sm font-semibold text-[var(--text-primary)]">{t("corrections.titre")}</h2>
-                  <button
-                    type="button"
-                    onClick={() => setCorrectionsOuvertes(false)}
-                    className="rounded-full border border-[var(--border-strong)] px-3 py-1 text-xs font-semibold text-[var(--text-primary)] transition hover:bg-[var(--surface-2)]"
-                  >
-                    {t("composer.terminer")}
-                  </button>
-                </div>
-                <textarea
-                  value={corrections}
-                  onChange={(e) => setCorrections(e.target.value)}
-                  placeholder={t("corrections.placeholder")}
-                  rows={4}
-                  className="w-full bg-[var(--bg)] border border-[var(--border-strong)] rounded-xl px-4 py-3 text-sm text-[var(--text-primary)] placeholder-[var(--text-faint)] focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition resize-y"
+              {/* Barre de saisie collante quand la page défile (sticky) ; le dégradé masque le
+                  contenu qui passe dessous. */}
+              <div className="sticky bottom-0 z-10 -mx-2 px-2 pt-6 pb-2 bg-gradient-to-t from-[var(--bg)] from-70% to-transparent">
+                <ComposerSite
+                  prompt={promptSite}
+                  onPromptChange={setPromptSite}
+                  promptManquant={promptManquant}
+                  piecesJointes={piecesProduitUnique}
+                  actions={actionsProduitUnique}
+                  fiche={ficheStyle}
+                  onFicheChange={setFicheStyle}
+                  autoMode={autoMode}
+                  onAutoModeChange={setAutoMode}
+                  peutEnvoyer={Boolean(canGenerate)}
+                  onEnvoyer={() => handleGenerate(false)}
+                  aide={aideComposer}
+                  outils={boutonFormat}
                 />
               </div>
-            )}
-
-            <ComposerSite
-              prompt={promptSite}
-              onPromptChange={setPromptSite}
-              promptManquant={promptManquant}
-              piecesJointes={piecesProduitUnique}
-              actions={actionsProduitUnique}
-              fiche={ficheStyle}
-              onFicheChange={setFicheStyle}
-              autoMode={autoMode}
-              onAutoModeChange={setAutoMode}
-              peutEnvoyer={Boolean(canGenerate)}
-              onEnvoyer={() => handleGenerate(false)}
-              aide={aideComposer}
-            />
+            </div>
           </div>
         )}
 
