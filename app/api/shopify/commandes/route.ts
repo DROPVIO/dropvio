@@ -12,6 +12,9 @@ type LigneCommande = {
   quantite: number;
   variant_title: string | null;
   lien_aliexpress: string | null;
+  // Variante AliExpress à commander (import par variante, migration 036) — absente des
+  // lignes créées avant.
+  variante_attributs?: Record<string, string> | null;
 };
 
 // Liste les commandes à préparer côté AliExpress (v1 "assist manuel", voir
@@ -47,7 +50,8 @@ export async function GET() {
 // dropvio dans aucun des trois :
 // 1. { id, statut } : le marchand confirme avoir traité la commande côté AliExpress (ou l'écarte).
 // 2. { id, ligneIndex, lienAliExpress } : rattache manuellement un lien AliExpress à une ligne
-//    dont la résolution automatique (boutique_produits -> produits.lienAliExpress) a échoué.
+//    dont la résolution automatique (boutique_produits.lien_aliexpress, sinon
+//    produits.lienAliExpress via source_produit_id) a échoué.
 // 3. { id, numeroSuivi, transporteur? } : le marchand a commandé et saisit le numéro de suivi —
 //    tentative de push vers Shopify (fulfillment), best-effort : le numéro reste enregistré côté
 //    dropvio même si le push échoue (scope manquant, commande déjà expédiée, etc.).
@@ -122,11 +126,24 @@ async function attachLien(admin: AdminClient, userId: string, id: string, ligneI
     return NextResponse.json({ error: updateError.message, code: "server_error" }, { status: 500 });
   }
 
-  // Best-effort : propage vers le catalogue pour ne pas retomber sur le même trou aux
-  // prochaines commandes de ce produit. N'affecte jamais la réponse à cette requête.
-  const sourceProduitId = lignes[ligneIndex].source_produit_id;
+  // Best-effort : propage le lien pour ne pas retomber sur le même trou aux prochaines
+  // commandes de ce produit. N'affecte jamais la réponse à cette requête.
+  // - Produit du catalogue : vers produits.lienAliExpress (comportement d'origine).
+  // - Produit hors catalogue (source_produit_id null) : vers boutique_produits.lien_aliexpress,
+  //   limité aux boutiques de l'utilisateur (client service role, donc sans RLS).
+  const { source_produit_id: sourceProduitId, shopify_product_id: shopifyProductId } = lignes[ligneIndex];
   if (sourceProduitId) {
     await admin.from("produits").update({ lienAliExpress: lienAliExpress }).eq("id", sourceProduitId);
+  } else if (shopifyProductId) {
+    const { data: boutiques } = await admin.from("boutiques").select("id").eq("user_id", userId);
+    const boutiqueIds = (boutiques ?? []).map((b) => b.id);
+    if (boutiqueIds.length > 0) {
+      await admin
+        .from("boutique_produits")
+        .update({ lien_aliexpress: lienAliExpress })
+        .eq("shopify_product_id", shopifyProductId)
+        .in("boutique_id", boutiqueIds);
+    }
   }
 
   return NextResponse.json({ ok: true });

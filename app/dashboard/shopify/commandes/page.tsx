@@ -13,6 +13,7 @@ type LigneCommande = {
   quantite: number;
   variant_title: string | null;
   lien_aliexpress: string | null;
+  variante_attributs?: Record<string, string> | null;
 };
 
 type AdresseLivraison = {
@@ -278,9 +279,14 @@ export default function CommandesAPreparerPage() {
                           <p className="text-[var(--text-primary)] truncate">
                             {l.quantite}× {l.nom}
                           </p>
-                          {l.variant_title ? (
+                          {/* Import par variante : une fiche (donc un produit Shopify) par variante,
+                              sans variant_title Shopify — la variante AliExpress à commander
+                              vient alors de variante_attributs. */}
+                          {l.variant_title || l.variante_attributs ? (
                             <p className="text-[11px] text-[var(--text-faint)]">
-                              {t("commandes.variant", { variant: l.variant_title })}
+                              {t("commandes.variant", {
+                                variant: l.variant_title || Object.values(l.variante_attributs ?? {}).join(" / "),
+                              })}
                             </p>
                           ) : null}
                         </div>

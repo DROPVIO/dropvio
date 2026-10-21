@@ -633,11 +633,14 @@ export type ShopifyOrderForPreparation = {
   customer?: { first_name?: string | null; last_name?: string | null; phone?: string | null } | null;
 };
 
-// Résout chaque ligne de commande vers son produit AliExpress source (via
-// boutique_produits.shopify_product_id -> source_produit_id -> produits.lienAliExpress) et
-// construit la ligne à upsert dans commandes_a_preparer. Partagé entre le webhook
-// orders/create et le cron de réconciliation pour ne jamais avoir deux implémentations de
-// cette résolution qui divergent.
+// Résout chaque ligne de commande vers son produit AliExpress source et construit la ligne à
+// upsert dans commandes_a_preparer. Lien fournisseur, par priorité :
+// 1. boutique_produits.lien_aliexpress, posé par l'import AliExpress (migration 036) — seul
+//    lien disponible pour un produit importé hors catalogue (source_produit_id null) ;
+// 2. sinon le catalogue : boutique_produits.source_produit_id -> produits.lienAliExpress.
+// variante_attributs (ex. {Couleur: "Noir"}) dit quelle variante commander sur AliExpress.
+// Partagé entre le webhook orders/create et le cron de réconciliation pour ne jamais avoir
+// deux implémentations de cette résolution qui divergent.
 export async function buildCommandeAPreparerRow(
   admin: SupabaseClient,
   userId: string,
@@ -646,18 +649,37 @@ export async function buildCommandeAPreparerRow(
   const lineItems = order.line_items ?? [];
   const productIds = [...new Set(lineItems.map((li) => li.product_id).filter((id): id is number => Boolean(id)))];
 
-  const sourceProduitIdByShopifyId = new Map<number, string | null>();
+  type ProduitBoutique = {
+    source_produit_id: string | null;
+    lien_aliexpress: string | null;
+    variante_attributs: Record<string, string> | null;
+  };
+  const produitByShopifyId = new Map<number, ProduitBoutique>();
   if (productIds.length > 0) {
     const { data } = await admin
       .from("boutique_produits")
-      .select("shopify_product_id, source_produit_id")
+      .select("shopify_product_id, source_produit_id, lien_aliexpress, variante_attributs")
       .in("shopify_product_id", productIds);
     for (const row of data ?? []) {
-      if (row.shopify_product_id) sourceProduitIdByShopifyId.set(row.shopify_product_id, row.source_produit_id ?? null);
+      if (row.shopify_product_id) {
+        produitByShopifyId.set(row.shopify_product_id, {
+          source_produit_id: row.source_produit_id ?? null,
+          lien_aliexpress: row.lien_aliexpress ?? null,
+          variante_attributs: row.variante_attributs ?? null,
+        });
+      }
     }
   }
 
-  const sourceProduitIds = [...new Set([...sourceProduitIdByShopifyId.values()].filter((v): v is string => Boolean(v)))];
+  // Catalogue interrogé seulement pour les produits sans lien direct.
+  const sourceProduitIds = [
+    ...new Set(
+      [...produitByShopifyId.values()]
+        .filter((p) => !p.lien_aliexpress)
+        .map((p) => p.source_produit_id)
+        .filter((v): v is string => Boolean(v))
+    ),
+  ];
   const lienByProduitId = new Map<string, string | null>();
   if (sourceProduitIds.length > 0) {
     const { data } = await admin.from("produits").select("id, lienAliExpress").in("id", sourceProduitIds);
@@ -665,14 +687,18 @@ export async function buildCommandeAPreparerRow(
   }
 
   const lignes = lineItems.map((li) => {
-    const sourceProduitId = li.product_id ? sourceProduitIdByShopifyId.get(li.product_id) ?? null : null;
+    const produit = li.product_id ? produitByShopifyId.get(li.product_id) ?? null : null;
+    const sourceProduitId = produit?.source_produit_id ?? null;
+    const attributs = produit?.variante_attributs ?? {};
     return {
       shopify_product_id: li.product_id,
       source_produit_id: sourceProduitId,
       nom: li.title,
       quantite: li.quantity,
       variant_title: li.variant_title ?? null,
-      lien_aliexpress: sourceProduitId ? lienByProduitId.get(sourceProduitId) ?? null : null,
+      lien_aliexpress:
+        produit?.lien_aliexpress ?? (sourceProduitId ? lienByProduitId.get(sourceProduitId) ?? null : null),
+      variante_attributs: Object.keys(attributs).length > 0 ? attributs : null,
     };
   });
 
