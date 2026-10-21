@@ -1329,7 +1329,11 @@
     "aliexpress_oauth_expired": "La solicitud de conexión con AliExpress ha caducado o no es válida. Inténtalo de nuevo.",
     "aliexpress_oauth_session_expired": "Tu sesión de Dropvio caducó durante la conexión con AliExpress. Vuelve a iniciar sesión e inténtalo de nuevo.",
     "aliexpress_oauth_exchange_failed": "No se pudo completar la conexión con AliExpress. Inténtalo de nuevo.",
-    "aliexpress_oauth_save_failed": "No se pudo guardar la conexión con AliExpress. Inténtalo de nuevo."
+    "aliexpress_oauth_save_failed": "No se pudo guardar la conexión con AliExpress. Inténtalo de nuevo.",
+    "aliexpress_not_connected": "Conecta tu cuenta de AliExpress en los ajustes para importar las variantes.",
+    "aliexpress_ds_permission": "La importación de variantes de AliExpress aún no está activada para Dropvio. Puedes importar el producto como ficha única.",
+    "aliexpress_api_error": "AliExpress no ha respondido. Inténtalo de nuevo en un momento.",
+    "aliexpress_no_variant_selected": "Selecciona al menos una variante."
   },
   "siteBuilder": {
     "boutique": {
@@ -1598,6 +1602,20 @@
           "annuler": "Deshacer el ajuste",
           "annulationEnCours": "Deshaciendo…",
           "ancienPrix": "Precio anterior: {prix}"
+        },
+        "variantes": {
+          "chargement": "Cargando las variantes de AliExpress…",
+          "titre": "{n, plural, one {# variante encontrada} other {# variantes encontradas}}",
+          "aideIllimite": "Cada variante marcada se convierte en un producto distinto de tu tienda.",
+          "aideLimite": "Cada variante marcada se convierte en un producto distinto. Tu plan aún permite {restant, plural, =0 {ningún producto} one {# producto} other {# productos}}.",
+          "dejaPresente": "Ya añadida",
+          "importer": "Importar las variantes seleccionadas ({n})",
+          "importEnCours": "Importando…",
+          "resultatCreees": "{n, plural, =0 {Ninguna variante creada} one {# variante creada} other {# variantes creadas}}",
+          "resultatDejaPresentes": "{n, plural, one {# ya añadida} other {# ya añadidas}}",
+          "resultatLimite": "{n, plural, one {# ignorada} other {# ignoradas}} (límite del plan alcanzado)",
+          "erreurChargement": "No se pudieron obtener las variantes de este producto.",
+          "erreurImport": "La importación de variantes ha fallado."
         }
       },
       "liste": {

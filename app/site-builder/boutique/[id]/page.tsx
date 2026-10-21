@@ -80,6 +80,17 @@ function toProduitBoutique(prod: BoutiqueProduct): ProduitBoutiqueDraft {
   };
 }
 
+type VarianteApercu = {
+  sku_id: string;
+  nom: string;
+  prix: number | null;
+  attributs: Record<string, string>;
+  image: string | null;
+  stock: number | null;
+  deja_presente: boolean;
+};
+type ApercuVariantes = { productId: string; titre: string; variantes: VarianteApercu[]; restant: number | null };
+
 export default function BoutiqueBuilderDetailPage() {
   const params = useParams();
   const router = useRouter();
@@ -150,6 +161,15 @@ export default function BoutiqueBuilderDetailPage() {
   // Produit AliExpress d'origine d'un import réussi (catalogue ou API) : le lien fournisseur
   // reste sur la fiche même hors catalogue, pour la préparation des commandes.
   const [importedAliexpress, setImportedAliexpress] = useState<{ productId: string; lien: string } | null>(null);
+  // Import par variante (une fiche par SKU) : proposé seulement si le compte AliExpress de
+  // l'utilisateur est connecté (Paramètres > Intégrations), voir import-aliexpress/route.ts.
+  const [aliexpressConnecte, setAliexpressConnecte] = useState(false);
+  const [apercuVariantes, setApercuVariantes] = useState<ApercuVariantes | null>(null);
+  const [variantesChoisies, setVariantesChoisies] = useState<Set<string>>(new Set());
+  const [variantesChargement, setVariantesChargement] = useState(false);
+  const [variantesImport, setVariantesImport] = useState(false);
+  const [variantesErreur, setVariantesErreur] = useState<string | null>(null);
+  const [variantesResultat, setVariantesResultat] = useState<string | null>(null);
   const [suggestionsRefreshKey, setSuggestionsRefreshKey] = useState(0);
 
   const [reorderLoading, setReorderLoading] = useState(false);
@@ -663,8 +683,86 @@ export default function BoutiqueBuilderDetailPage() {
     setProductFormSuccess(null);
   }
 
+  useEffect(() => {
+    fetch("/api/aliexpress/status")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((json) => setAliexpressConnecte(Boolean(json?.connected)))
+      .catch(() => setAliexpressConnecte(false));
+  }, []);
+
+  async function chargerVariantes(productId: string) {
+    setVariantesChargement(true);
+    setVariantesErreur(null);
+    setVariantesResultat(null);
+    setApercuVariantes(null);
+    try {
+      const response = await fetch(
+        `/api/boutiques/${params?.id}/produits/import-aliexpress?productId=${encodeURIComponent(productId)}`
+      );
+      const json = await response.json();
+      if (!response.ok) {
+        setVariantesErreur(apiErrorMessage(json, t("variantes.erreurChargement")));
+        return;
+      }
+      const variantes: VarianteApercu[] = json.variantes ?? [];
+      const restant: number | null = typeof json.restant === "number" ? json.restant : null;
+      // Toutes cochées par défaut, dans la limite des places restantes du plan.
+      const cochables = variantes.filter((v) => !v.deja_presente).map((v) => v.sku_id);
+      setVariantesChoisies(new Set(restant === null ? cochables : cochables.slice(0, restant)));
+      setApercuVariantes({ productId, titre: json.titre ?? "", variantes, restant });
+    } catch {
+      setVariantesErreur(apiErrorMessage({ code: "network" }));
+    } finally {
+      setVariantesChargement(false);
+    }
+  }
+
+  function basculerVariante(skuId: string) {
+    setVariantesChoisies((prev) => {
+      const next = new Set(prev);
+      if (next.has(skuId)) next.delete(skuId);
+      else next.add(skuId);
+      return next;
+    });
+  }
+
+  async function handleImporterVariantes() {
+    if (!apercuVariantes || variantesChoisies.size === 0) return;
+    setVariantesImport(true);
+    setVariantesErreur(null);
+    setVariantesResultat(null);
+    try {
+      const response = await fetch(`/api/boutiques/${params?.id}/produits/import-aliexpress`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ productId: apercuVariantes.productId, skuIds: [...variantesChoisies] }),
+      });
+      const json = await response.json();
+      if (!response.ok) {
+        setVariantesErreur(apiErrorMessage(json, t("variantes.erreurImport")));
+        return;
+      }
+      const parties = [t("variantes.resultatCreees", { n: json.creees ?? 0 })];
+      if (json.deja_presentes > 0) parties.push(t("variantes.resultatDejaPresentes", { n: json.deja_presentes }));
+      if (json.ignorees_limite > 0) parties.push(t("variantes.resultatLimite", { n: json.ignorees_limite }));
+      setVariantesResultat(parties.join(" · "));
+      setApercuVariantes(null);
+      resetProductForm();
+      await fetchProducts(1);
+      void rafraichirCompteurs();
+      setSuggestionsRefreshKey((k) => k + 1);
+    } catch {
+      setVariantesErreur(apiErrorMessage({ code: "network" }));
+    } finally {
+      setVariantesImport(false);
+    }
+  }
+
   async function handleImportAliexpress() {
     if (!importUrl.trim()) return;
+    setApercuVariantes(null);
+    setVariantesErreur(null);
+    setVariantesResultat(null);
     setImportLoading(true);
     setImportError(null);
     try {
@@ -694,6 +792,9 @@ export default function BoutiqueBuilderDetailPage() {
       );
       setImportUrl("");
       setProductFormError(null);
+      if (aliexpressConnecte && typeof json.aliexpress_product_id === "string") {
+        void chargerVariantes(json.aliexpress_product_id);
+      }
     } catch {
       setImportError(apiErrorMessage({ code: "network" }));
     } finally {
@@ -1450,6 +1551,74 @@ export default function BoutiqueBuilderDetailPage() {
                   </button>
                 </div>
                 {importError ? <p className="text-xs text-[var(--danger)]">{importError}</p> : null}
+
+                {variantesChargement ? (
+                  <p className="text-xs text-[var(--text-faint)]">{t("variantes.chargement")}</p>
+                ) : null}
+                {apercuVariantes ? (
+                  <div className="space-y-3 border-t border-[var(--border)] pt-3">
+                    <div>
+                      <p className="text-sm font-medium text-[var(--text-primary)]">
+                        {t("variantes.titre", { n: apercuVariantes.variantes.length })}
+                      </p>
+                      <p className="text-xs text-[var(--text-faint)]">
+                        {apercuVariantes.restant === null
+                          ? t("variantes.aideIllimite")
+                          : t("variantes.aideLimite", { restant: apercuVariantes.restant })}
+                      </p>
+                    </div>
+                    <ul className="max-h-72 space-y-1 overflow-y-auto">
+                      {apercuVariantes.variantes.map((v) => {
+                        const cochee = variantesChoisies.has(v.sku_id);
+                        const limiteAtteinte =
+                          apercuVariantes.restant !== null && variantesChoisies.size >= apercuVariantes.restant;
+                        const desactivee = v.deja_presente || (!cochee && limiteAtteinte);
+                        const attributs = Object.values(v.attributs).join(" / ") || apercuVariantes.titre;
+                        return (
+                          <li key={v.sku_id}>
+                            <label
+                              className={`flex items-center gap-3 rounded-2xl px-2 py-1.5 text-sm ${
+                                desactivee ? "opacity-50" : "cursor-pointer hover:bg-[var(--surface)]"
+                              }`}
+                            >
+                              <input
+                                type="checkbox"
+                                checked={cochee}
+                                disabled={desactivee}
+                                onChange={() => basculerVariante(v.sku_id)}
+                                className="accent-violet-500"
+                              />
+                              {v.image ? (
+                                // eslint-disable-next-line @next/next/no-img-element
+                                <img src={v.image} alt="" className="h-8 w-8 rounded-lg object-cover" />
+                              ) : null}
+                              <span className="flex-1 truncate text-[var(--text-primary)]">{attributs}</span>
+                              <span className="text-xs text-[var(--text-muted)]">
+                                {v.deja_presente
+                                  ? t("variantes.dejaPresente")
+                                  : v.prix !== null
+                                    ? `${v.prix.toFixed(2)} €`
+                                    : "—"}
+                              </span>
+                            </label>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                    <button
+                      type="button"
+                      onClick={handleImporterVariantes}
+                      disabled={variantesImport || variantesChoisies.size === 0}
+                      className="rounded-2xl bg-violet-500 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-violet-400 disabled:opacity-50"
+                    >
+                      {variantesImport
+                        ? t("variantes.importEnCours")
+                        : t("variantes.importer", { n: variantesChoisies.size })}
+                    </button>
+                  </div>
+                ) : null}
+                {variantesErreur ? <p className="text-xs text-[var(--danger)]">{variantesErreur}</p> : null}
+                {variantesResultat ? <p className="text-xs text-[var(--success)]">{variantesResultat}</p> : null}
               </div>
 
               <div className="grid gap-4 sm:grid-cols-2">

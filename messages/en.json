@@ -1329,7 +1329,11 @@
     "aliexpress_oauth_expired": "The AliExpress connection request expired or is invalid. Try again.",
     "aliexpress_oauth_session_expired": "Your Dropvio session expired during the AliExpress connection. Log in again and retry.",
     "aliexpress_oauth_exchange_failed": "Couldn't complete the connection with AliExpress. Try again.",
-    "aliexpress_oauth_save_failed": "Couldn't save the AliExpress connection. Try again."
+    "aliexpress_oauth_save_failed": "Couldn't save the AliExpress connection. Try again.",
+    "aliexpress_not_connected": "Connect your AliExpress account in settings to import variants.",
+    "aliexpress_ds_permission": "AliExpress variant import isn't enabled for Dropvio yet. You can import the product as a single listing.",
+    "aliexpress_api_error": "AliExpress didn't respond. Try again in a moment.",
+    "aliexpress_no_variant_selected": "Select at least one variant."
   },
   "siteBuilder": {
     "boutique": {
@@ -1598,6 +1602,20 @@
           "annuler": "Undo adjustment",
           "annulationEnCours": "Undoing…",
           "ancienPrix": "Previous price: {prix}"
+        },
+        "variantes": {
+          "chargement": "Loading AliExpress variants…",
+          "titre": "{n, plural, one {# variant found} other {# variants found}}",
+          "aideIllimite": "Each ticked variant becomes a separate product in your store.",
+          "aideLimite": "Each ticked variant becomes a separate product. Your plan allows {restant, plural, =0 {no more products} one {# more product} other {# more products}}.",
+          "dejaPresente": "Already added",
+          "importer": "Import selected variants ({n})",
+          "importEnCours": "Importing…",
+          "resultatCreees": "{n, plural, =0 {No variant created} one {# variant created} other {# variants created}}",
+          "resultatDejaPresentes": "{n} already added",
+          "resultatLimite": "{n} skipped (plan limit reached)",
+          "erreurChargement": "Couldn't load this product's variants.",
+          "erreurImport": "Variant import failed."
         }
       },
       "liste": {

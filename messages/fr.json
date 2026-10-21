@@ -1329,7 +1329,11 @@
     "aliexpress_oauth_expired": "La demande de connexion AliExpress a expiré ou est invalide. Réessaie.",
     "aliexpress_oauth_session_expired": "Ta session Dropvio a expiré pendant la connexion AliExpress. Reconnecte-toi puis réessaie.",
     "aliexpress_oauth_exchange_failed": "Impossible de finaliser la connexion avec AliExpress. Réessaie.",
-    "aliexpress_oauth_save_failed": "Impossible d'enregistrer la connexion AliExpress. Réessaie."
+    "aliexpress_oauth_save_failed": "Impossible d'enregistrer la connexion AliExpress. Réessaie.",
+    "aliexpress_not_connected": "Connecte ton compte AliExpress dans les paramètres pour importer les variantes.",
+    "aliexpress_ds_permission": "L'import des variantes AliExpress n'est pas encore activé pour Dropvio. Tu peux importer le produit en fiche unique.",
+    "aliexpress_api_error": "AliExpress n'a pas répondu. Réessaie dans un instant.",
+    "aliexpress_no_variant_selected": "Sélectionne au moins une variante."
   },
   "siteBuilder": {
     "boutique": {
@@ -1598,6 +1602,20 @@
           "annuler": "Annuler l'ajustement",
           "annulationEnCours": "Annulation…",
           "ancienPrix": "Ancien prix : {prix}"
+        },
+        "variantes": {
+          "chargement": "Chargement des variantes AliExpress…",
+          "titre": "{n, plural, one {# variante trouvée} other {# variantes trouvées}}",
+          "aideIllimite": "Chaque variante cochée devient un produit distinct de ta boutique.",
+          "aideLimite": "Chaque variante cochée devient un produit distinct. Ton plan permet encore {restant, plural, =0 {aucun produit} one {# produit} other {# produits}}.",
+          "dejaPresente": "Déjà présente",
+          "importer": "Importer les variantes sélectionnées ({n})",
+          "importEnCours": "Import en cours…",
+          "resultatCreees": "{n, plural, =0 {Aucune variante créée} one {# variante créée} other {# variantes créées}}",
+          "resultatDejaPresentes": "{n, plural, one {# déjà présente} other {# déjà présentes}}",
+          "resultatLimite": "{n, plural, one {# ignorée} other {# ignorées}} (limite du plan atteinte)",
+          "erreurChargement": "Impossible de récupérer les variantes de ce produit.",
+          "erreurImport": "L'import des variantes a échoué."
         }
       },
       "liste": {
