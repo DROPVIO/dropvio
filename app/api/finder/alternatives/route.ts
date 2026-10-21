@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerUserAndPlan } from "@/lib/supabase-server";
 import { PLAN_LIMITS, planLabel, getMonthlyUsage, incrementMonthlyUsage } from "@/lib/plan-limits";
 import { checkRateLimit } from "@/lib/rate-limit";
-import { getProductDetail, queryProducts, type AliExpressProduct } from "@/lib/aliexpress";
+import { AliExpressApiError, getProductDetail, queryProducts, type AliExpressProduct } from "@/lib/aliexpress";
 
 const CANDIDATE_FIELDS =
   "product_id,product_title,product_main_image_url,target_sale_price,target_sale_price_currency,evaluate_rate,lastest_volume,shop_id,shop_url,shop_name,first_level_category_id,second_level_category_id,product_detail_url,promotion_link";
@@ -109,7 +109,17 @@ export async function POST(request: NextRequest) {
   // que de faire confiance à un prixFournisseur passé par le client : notre table "produits"
   // ne garantit pas une devise homogène (le seed n'a jamais fixé target_currency), donc c'est
   // la seule source fiable pour une comparaison de prix en EUR entre produits.
-  const origin = await getProductDetail(id, { shipToCountry: "FR", targetCurrency: "EUR" });
+  let origin: AliExpressProduct | null;
+  try {
+    origin = await getProductDetail(id, { shipToCountry: "FR", targetCurrency: "EUR" });
+  } catch (err) {
+    if (!(err instanceof AliExpressApiError)) throw err;
+    console.warn("[finder/alternatives]", err.message);
+    return NextResponse.json(
+      { error: "AliExpress n'a pas répondu. Réessaie dans un instant.", code: "aliexpress_api_error" },
+      { status: 502 }
+    );
+  }
 
   if (!origin) {
     return NextResponse.json(

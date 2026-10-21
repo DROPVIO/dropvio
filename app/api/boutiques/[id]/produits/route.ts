@@ -76,6 +76,10 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
       ? {
           aliexpress_product_id: payload.aliexpress_product_id,
           lien_aliexpress: `https://www.aliexpress.com/item/${payload.aliexpress_product_id}.html`,
+          prix_achat:
+            typeof payload.prix_achat === "number" && Number.isFinite(payload.prix_achat) && payload.prix_achat >= 0
+              ? payload.prix_achat
+              : null,
         }
       : {};
 

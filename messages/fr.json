@@ -1615,7 +1615,8 @@
           "resultatDejaPresentes": "{n, plural, one {# déjà présente} other {# déjà présentes}}",
           "resultatLimite": "{n, plural, one {# ignorée} other {# ignorées}} (limite du plan atteinte)",
           "erreurChargement": "Impossible de récupérer les variantes de ce produit.",
-          "erreurImport": "L'import des variantes a échoué."
+          "erreurImport": "L'import des variantes a échoué.",
+          "prix": "{vente} (coût {cout})"
         }
       },
       "liste": {

@@ -131,6 +131,19 @@ export async function queryProducts(
 const DEFAULT_DETAIL_FIELDS =
   "product_id,product_title,product_main_image_url,sale_price,sale_price_currency,target_sale_price,target_sale_price_currency,evaluate_rate,lastest_volume,shop_id,shop_url,shop_name,first_level_category_id,first_level_category_name,second_level_category_id,second_level_category_name,product_detail_url,promotion_link";
 
+// Échec d'appel à l'API (réseau, quota, resp_code ≠ 200…) : temporaire, à distinguer d'un
+// produit réellement introuvable. code fixe pour que les appelants puissent le tester.
+export class AliExpressApiError extends Error {
+  readonly code = "erreur_api" as const;
+  constructor(message: string) {
+    super(message);
+    this.name = "AliExpressApiError";
+  }
+}
+
+// null UNIQUEMENT si AliExpress répond normalement (resp_code 200) sans aucun produit :
+// produit retiré, identifiant invalide ou non disponible en affiliation (vérifié : c'est la
+// réponse obtenue pour un id inexistant). Tout autre échec lève AliExpressApiError.
 export async function getProductDetail(
   productId: string,
   opts: CommonOpts = {}
@@ -144,18 +157,23 @@ export async function getProductDetail(
   if (opts.targetCurrency) params.target_currency = opts.targetCurrency;
   if (opts.targetLanguage) params.target_language = opts.targetLanguage;
 
+  let data: Record<string, unknown>;
   try {
-    const data = await callApi("aliexpress.affiliate.productdetail.get", params);
-    const resp = (data?.aliexpress_affiliate_productdetail_get_response as Record<string, unknown>)
-      ?.resp_result as Record<string, unknown>;
-    if ((resp?.resp_code as number) !== 200) return null;
-    const list =
-      ((resp?.result as Record<string, unknown>)?.products as Record<string, unknown>)
-        ?.product as AliExpressProduct[] ?? [];
-    return list[0] ?? null;
-  } catch {
-    return null;
+    data = await callApi("aliexpress.affiliate.productdetail.get", params);
+  } catch (err) {
+    throw new AliExpressApiError(`productdetail.get : appel impossible (${String(err)})`);
   }
+
+  const resp = (data?.aliexpress_affiliate_productdetail_get_response as Record<string, unknown>)
+    ?.resp_result as Record<string, unknown> | undefined;
+  if (Number(resp?.resp_code) !== 200) {
+    const erreur = data?.error_response ?? resp ?? data;
+    throw new AliExpressApiError(`productdetail.get : réponse en échec ${JSON.stringify(erreur).slice(0, 300)}`);
+  }
+  const list =
+    ((resp?.result as Record<string, unknown>)?.products as Record<string, unknown>)
+      ?.product as AliExpressProduct[] ?? [];
+  return list[0] ?? null;
 }
 
 // ---- Variantes (API Dropshipping, token OAuth de l'utilisateur) ----
@@ -271,12 +289,17 @@ export async function getProductVariants(productId: string, userId: string): Pro
 
   if (variantes.length > 0) return { ok: true, titre, images, variantes };
 
-  const detail = await getProductDetail(productId, {
-    targetCurrency: "EUR",
-    shipToCountry: "FR",
-    targetLanguage: "FR",
-    fields: "product_id,product_title,product_main_image_url,target_sale_price,target_original_price,sku_id",
-  });
+  let detail: AliExpressProduct | null;
+  try {
+    detail = await getProductDetail(productId, {
+      targetCurrency: "EUR",
+      shipToCountry: "FR",
+      targetLanguage: "FR",
+      fields: "product_id,product_title,product_main_image_url,target_sale_price,target_original_price,sku_id",
+    });
+  } catch {
+    return { ok: false, error: "api_error" };
+  }
   const prix = toPrice(detail?.target_sale_price);
   const prixOriginal = toPrice(detail?.target_original_price);
   return {

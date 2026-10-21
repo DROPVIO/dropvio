@@ -1615,7 +1615,8 @@
           "resultatDejaPresentes": "{n, plural, one {# ya añadida} other {# ya añadidas}}",
           "resultatLimite": "{n, plural, one {# ignorada} other {# ignoradas}} (límite del plan alcanzado)",
           "erreurChargement": "No se pudieron obtener las variantes de este producto.",
-          "erreurImport": "La importación de variantes ha fallado."
+          "erreurImport": "La importación de variantes ha fallado.",
+          "prix": "{vente} (coste {cout})"
         }
       },
       "liste": {

@@ -5,6 +5,7 @@ import { PLAN_LIMITS } from "@/lib/plan-limits";
 import { apiError } from "@/lib/api-errors";
 import { getProductVariants, type AliExpressVariant, type AliExpressVariantsResult } from "@/lib/aliexpress";
 import { slugify } from "@/lib/slugify";
+import { prixVenteSuggere } from "@/lib/calcul-marge";
 
 // Import d'un produit AliExpress en une fiche boutique_produits PAR VARIANTE (SKU), chaque
 // variante étant un produit distinct. Les variantes sont toujours relues côté serveur via
@@ -114,6 +115,7 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
     image: ctx.variantes.images[0] ?? null,
     variantes: ctx.variantes.variantes.map((v) => ({
       ...v,
+      prix_vente: v.prix !== null ? prixVenteSuggere(v.prix) : null,
       nom: nomVariante(ctx.variantes.titre, v),
       deja_presente: ctx.existants.has(v.sku_id),
     })),
@@ -159,8 +161,11 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
         slug: slugVariante(nom, v.sku_id),
         description: ctx.variantes.titre,
         image_urls: images.slice(0, MAX_IMAGES),
-        prix_vente: v.prix ?? 0,
-        prix_original: v.prix_original,
+        // v.prix = coût AliExpress (privé) ; prix de vente proposé avec la marge par défaut,
+        // prix barré public laissé vide. Sans prix connu (devise non convertie) : 0, à saisir.
+        prix_vente: v.prix !== null ? prixVenteSuggere(v.prix) : 0,
+        prix_original: null,
+        prix_achat: v.prix,
         position: 0,
         meta: {},
         aliexpress_product_id: ctx.productId,

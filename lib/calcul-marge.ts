@@ -504,3 +504,17 @@ export function getMargeLabelKey(pct: number): string {
   if (pct >= 20) return "margeCorrecte";
   return "margeTropFaible";
 }
+
+// ─── Prix de vente suggéré à l'import AliExpress ─────────────────────────────
+
+// Prix de vente proposé = coût AliExpress × ce coefficient. Seul réglage à modifier pour
+// changer la marge par défaut de tous les imports (fiche unique et variantes) ; le prix reste
+// ensuite modifiable par l'utilisateur.
+export const COEFFICIENT_MARGE_DEFAUT = 3;
+
+// Arrondi « propre » au ,99 supérieur (13,14 € -> 13,99 € ; 13,00 € -> 13,99 €) : jamais
+// sous coût × coefficient, et un prix psychologique plutôt qu'un montant au centime près.
+export function prixVenteSuggere(cout: number, coefficient = COEFFICIENT_MARGE_DEFAUT): number {
+  const brut = cout * coefficient;
+  return Math.round((Math.ceil(brut + 0.01) - 0.01) * 100) / 100;
+}

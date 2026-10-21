@@ -83,7 +83,9 @@ function toProduitBoutique(prod: BoutiqueProduct): ProduitBoutiqueDraft {
 type VarianteApercu = {
   sku_id: string;
   nom: string;
+  // prix = coût AliExpress, prix_vente = prix proposé (coût × coefficient de marge par défaut).
   prix: number | null;
+  prix_vente: number | null;
   attributs: Record<string, string>;
   image: string | null;
   stock: number | null;
@@ -160,7 +162,9 @@ export default function BoutiqueBuilderDetailPage() {
   const [importedSourceId, setImportedSourceId] = useState<string | null>(null);
   // Produit AliExpress d'origine d'un import réussi (catalogue ou API) : le lien fournisseur
   // reste sur la fiche même hors catalogue, pour la préparation des commandes.
-  const [importedAliexpress, setImportedAliexpress] = useState<{ productId: string; lien: string } | null>(null);
+  const [importedAliexpress, setImportedAliexpress] = useState<
+    { productId: string; lien: string; prixAchat: number | null } | null
+  >(null);
   // Import par variante (une fiche par SKU) : proposé seulement si le compte AliExpress de
   // l'utilisateur est connecté (Paramètres > Intégrations), voir import-aliexpress/route.ts.
   const [aliexpressConnecte, setAliexpressConnecte] = useState(false);
@@ -787,7 +791,11 @@ export default function BoutiqueBuilderDetailPage() {
       setImportedSourceId(json.id ?? null);
       setImportedAliexpress(
         typeof json.aliexpress_product_id === "string"
-          ? { productId: json.aliexpress_product_id, lien: json.lien_aliexpress }
+          ? {
+              productId: json.aliexpress_product_id,
+              lien: json.lien_aliexpress,
+              prixAchat: typeof json.prix_achat === "number" ? json.prix_achat : null,
+            }
           : null
       );
       setImportUrl("");
@@ -881,7 +889,11 @@ export default function BoutiqueBuilderDetailPage() {
         // (variant, images, collection poussés), qu'une modification ne doit pas effacer.
         ...(editingProductId ? {} : { source_produit_id: importedSourceId, meta: {} }),
         ...(!editingProductId && importedAliexpress
-          ? { aliexpress_product_id: importedAliexpress.productId, lien_aliexpress: importedAliexpress.lien }
+          ? {
+              aliexpress_product_id: importedAliexpress.productId,
+              lien_aliexpress: importedAliexpress.lien,
+              prix_achat: importedAliexpress.prixAchat,
+            }
           : {}),
       };
 
@@ -1596,8 +1608,11 @@ export default function BoutiqueBuilderDetailPage() {
                               <span className="text-xs text-[var(--text-muted)]">
                                 {v.deja_presente
                                   ? t("variantes.dejaPresente")
-                                  : v.prix !== null
-                                    ? `${v.prix.toFixed(2)} €`
+                                  : v.prix_vente !== null && v.prix !== null
+                                    ? t("variantes.prix", {
+                                        vente: formatPrice(v.prix_vente, locale),
+                                        cout: formatPrice(v.prix, locale),
+                                      })
                                     : "—"}
                               </span>
                             </label>

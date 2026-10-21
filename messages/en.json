@@ -1615,7 +1615,8 @@
           "resultatDejaPresentes": "{n} already added",
           "resultatLimite": "{n} skipped (plan limit reached)",
           "erreurChargement": "Couldn't load this product's variants.",
-          "erreurImport": "Variant import failed."
+          "erreurImport": "Variant import failed.",
+          "prix": "{vente} (cost {cout})"
         }
       },
       "liste": {

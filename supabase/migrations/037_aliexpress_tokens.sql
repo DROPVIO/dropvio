@@ -14,10 +14,13 @@ create table if not exists aliexpress_tokens (
   updated_at            timestamptz not null default now()
 );
 
+-- RLS activée SANS aucune policy (même pattern que shopify_connections, voir
+-- 015_shopify_integration.sql) : ni anon ni authenticated ne peuvent lire ou écrire cette
+-- table, pas même leur propre ligne. Seul le service role (createSupabaseAdminClient, qui
+-- contourne RLS) y accède, exclusivement depuis le serveur : lib/aliexpress-oauth.ts,
+-- /api/aliexpress/status et /api/aliexpress/disconnect.
 alter table aliexpress_tokens enable row level security;
 
+-- Nettoyage si une version précédente de cette migration (avec policies) a déjà été exécutée.
 drop policy if exists "select_own" on aliexpress_tokens;
 drop policy if exists "update_own" on aliexpress_tokens;
-
-create policy "select_own" on aliexpress_tokens for select using (auth.uid() = user_id);
-create policy "update_own" on aliexpress_tokens for update using (auth.uid() = user_id) with check (auth.uid() = user_id);
