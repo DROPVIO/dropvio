@@ -233,7 +233,13 @@
       "aliexpressDesc": "Importa i tuoi prodotti da AliExpress",
       "aliexpressConnected": "Connesso",
       "aliexpressCaption": "L'importazione tramite URL è disponibile direttamente nel Site Builder.",
-      "comingSoon": "Zapier, Make, Stripe — presto disponibili"
+      "comingSoon": "Zapier, Make, Stripe — presto disponibili",
+      "aliexpressConnect": "Collega il mio account AliExpress",
+      "aliexpressConnectHint": "Collega il tuo account AliExpress per importare ogni variante (colore, taglia…) di un prodotto come scheda separata. Accedi direttamente su AliExpress: Dropvio non vede mai la tua password.",
+      "aliexpressVariantsOn": "Importazione delle varianti attivata nel Site Builder.",
+      "aliexpressNotConfigured": "La connessione AliExpress non è ancora configurata sul server. L'importazione tramite URL resta disponibile.",
+      "aliexpressDisconnectError": "Impossibile scollegare AliExpress.",
+      "aliexpressDisconnectSuccess": "Account AliExpress scollegato."
     },
     "facturation": {
       "title": "Fatturazione",
@@ -297,7 +303,8 @@
       "collapseTooltip": "Riduci la barra laterale",
       "userTooltip": "{name} · Impostazioni",
       "planLabel": "Piano {plan}",
-      "shopifyConnected": "Negozio Shopify collegato con successo."
+      "shopifyConnected": "Negozio Shopify collegato con successo.",
+      "aliexpressConnected": "Account AliExpress collegato correttamente."
     },
     "onboarding": {
       "ariaLabel": "Tutorial di benvenuto Dropvio",
@@ -1316,7 +1323,13 @@
     "limite_ia_jour": "Limite IA delle ultime 24 ore raggiunto. Si libera gradualmente: riprova il {reprise, date, short} alle {reprise, time, short}.",
     "limite_ia_semaine": "Limite IA degli ultimi 7 giorni raggiunto. Si libera gradualmente: riprova il {reprise, date, short} alle {reprise, time, short}.",
     "modification_echec": "Non è stato possibile applicare la modifica. Riformula la richiesta o dividila in più parti.",
-    "aliexpress_not_in_affiliate": "Questo prodotto non è accessibile tramite l'API di AliExpress. Compila i campi a mano."
+    "aliexpress_not_in_affiliate": "Questo prodotto non è accessibile tramite l'API di AliExpress. Compila i campi a mano.",
+    "aliexpress_not_configured": "La connessione AliExpress non è ancora configurata sul server.",
+    "aliexpress_oauth_refused": "Collegamento AliExpress annullato o rifiutato.",
+    "aliexpress_oauth_expired": "La richiesta di collegamento AliExpress è scaduta o non è valida. Riprova.",
+    "aliexpress_oauth_session_expired": "La tua sessione Dropvio è scaduta durante il collegamento AliExpress. Accedi di nuovo e riprova.",
+    "aliexpress_oauth_exchange_failed": "Impossibile completare il collegamento con AliExpress. Riprova.",
+    "aliexpress_oauth_save_failed": "Impossibile salvare il collegamento AliExpress. Riprova."
   },
   "siteBuilder": {
     "boutique": {

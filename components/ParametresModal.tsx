@@ -166,11 +166,13 @@ export default function ParametresModal({
   onClose,
   initialSection,
   initialShopifyMessage,
+  initialAliexpressMessage,
 }: {
   user: User;
   onClose: () => void;
   initialSection?: SectionId;
   initialShopifyMessage?: { ok: boolean; text: string } | null;
+  initialAliexpressMessage?: { ok: boolean; text: string } | null;
 }) {
   const t = useTranslations("parametres");
   const locale = useLocale();
@@ -303,6 +305,54 @@ export default function ParametresModal({
     }
     const returnTo = window.location.pathname + window.location.search;
     window.location.href = `/api/shopify/connect?shop=${encodeURIComponent(shop)}&returnTo=${encodeURIComponent(returnTo)}`;
+  }
+
+  // Integrations — AliExpress (OAuth par utilisateur, pour l'import des variantes via l'API
+  // Dropshipping). Même schéma que Shopify : redirection plein-page vers /api/aliexpress/connect.
+  const [aliStatus, setAliStatus] = useState<{ configured: boolean; connected: boolean } | null>(null);
+  const [aliStatusLoading, setAliStatusLoading] = useState(true);
+  const [aliConnecting, setAliConnecting] = useState(false);
+  const [aliDisconnecting, setAliDisconnecting] = useState(false);
+  const [aliMsg, setAliMsg] = useState<{ ok: boolean; text: string } | null>(initialAliexpressMessage ?? null);
+
+  useEffect(() => {
+    fetch("/api/aliexpress/status")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((json) => setAliStatus(json))
+      .catch(() => setAliStatus(null))
+      .finally(() => setAliStatusLoading(false));
+  }, []);
+
+  async function handleConnectAliexpress() {
+    setAliConnecting(true);
+    setAliMsg(null);
+    const { data } = await supabase.auth.getUser();
+    if (!data.user) {
+      setAliConnecting(false);
+      setAliMsg({ ok: false, text: t("integrations.shopifySessionExpired") });
+      return;
+    }
+    const returnTo = window.location.pathname + window.location.search;
+    window.location.href = `/api/aliexpress/connect?returnTo=${encodeURIComponent(returnTo)}`;
+  }
+
+  async function handleDisconnectAliexpress() {
+    setAliDisconnecting(true);
+    setAliMsg(null);
+    try {
+      const res = await fetch("/api/aliexpress/disconnect", { method: "POST" });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setAliMsg({ ok: false, text: apiErrorMessage(json, t("integrations.aliexpressDisconnectError")) });
+        return;
+      }
+      setAliStatus((s) => (s ? { ...s, connected: false } : s));
+      setAliMsg({ ok: true, text: t("integrations.aliexpressDisconnectSuccess") });
+    } catch {
+      setAliMsg({ ok: false, text: apiErrorMessage({ code: "network" }) });
+    } finally {
+      setAliDisconnecting(false);
+    }
   }
 
   async function handleDisconnectShopify() {
@@ -887,9 +937,31 @@ export default function ParametresModal({
             <p className="text-sm font-medium text-[var(--text-primary)]">{t("integrations.aliexpressLabel")}</p>
             <p className="text-[11px] text-[var(--text-faint)]">{t("integrations.aliexpressDesc")}</p>
           </div>
-          <span className="ml-auto text-[10px] font-bold bg-[var(--surface-2)] border border-[var(--border)] text-[var(--text-muted)] px-2 py-0.5 rounded-full">{t("integrations.aliexpressConnected")}</span>
+          {aliStatus?.connected && (
+            <span className="ml-auto text-[10px] font-bold bg-[var(--success)]/10 border border-[var(--success)]/20 text-[var(--success)] px-2 py-0.5 rounded-full">{t("integrations.aliexpressConnected")}</span>
+          )}
         </div>
         <p className="text-[11px] text-[var(--text-faint)]">{t("integrations.aliexpressCaption")}</p>
+        {aliStatusLoading ? (
+          <p className="text-[11px] text-[var(--text-faint)]">{t("integrations.shopifyChecking")}</p>
+        ) : !aliStatus?.configured ? (
+          <p className="text-[11px] text-[var(--text-faint)]">{t("integrations.aliexpressNotConfigured")}</p>
+        ) : aliStatus.connected ? (
+          <div className="flex items-center justify-between gap-3">
+            <p className="text-[11px] text-[var(--text-muted)]">{t("integrations.aliexpressVariantsOn")}</p>
+            <button className={BTN_G} disabled={aliDisconnecting} onClick={handleDisconnectAliexpress}>
+              {aliDisconnecting ? t("integrations.shopifyDisconnecting") : t("integrations.shopifyDisconnect")}
+            </button>
+          </div>
+        ) : (
+          <div className="flex flex-col gap-2">
+            <p className="text-[11px] text-[var(--text-muted)]">{t("integrations.aliexpressConnectHint")}</p>
+            <button className={`${BTN_G} self-start`} disabled={aliConnecting} onClick={handleConnectAliexpress}>
+              {aliConnecting ? t("integrations.shopifyConnecting") : t("integrations.aliexpressConnect")}
+            </button>
+          </div>
+        )}
+        {aliMsg && <p className={aliMsg.ok ? MSG_OK : MSG_ERR}>{aliMsg.text}</p>}
       </div>
 
       {/* Coming soon */}

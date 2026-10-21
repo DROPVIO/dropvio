@@ -138,6 +138,7 @@ export default function Sidebar({
   onCollapse: () => void;
 }) {
   const t        = useTranslations("dashboard.nav");
+  const tApiErrors = useTranslations("apiErrors");
   const pathname = usePathname();
   const router   = useRouter();
 
@@ -145,6 +146,7 @@ export default function Sidebar({
   const [profile,    setProfile]    = useState<Profile | null>(null);
   const [modalOpen,  setModalOpen]  = useState(false);
   const [modalShopifyMsg, setModalShopifyMsg] = useState<{ ok: boolean; text: string } | null>(null);
+  const [modalAliexpressMsg, setModalAliexpressMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const [modalOpenIntegrations, setModalOpenIntegrations] = useState(false);
 
   // Retour du round-trip OAuth Shopify (/api/shopify/callback) : rouvre la modale de
@@ -157,12 +159,18 @@ export default function Sidebar({
     const params = new URLSearchParams(window.location.search);
     const connected = params.get("shopifyConnected");
     const err = params.get("shopifyError");
+    // Même retour pour le round-trip OAuth AliExpress (/api/aliexpress/callback), sauf que
+    // l'erreur y est un code du namespace apiErrors (traduit ici) plutôt qu'un texte.
+    const aliConnected = params.get("aliexpressConnected");
+    const aliErr = params.get("aliexpressError");
     const openIntegrations = params.get("openIntegrations");
     const openPlan = params.get("openPlan");
-    if (!connected && !err && !openIntegrations && !openPlan) return;
+    if (!connected && !err && !aliConnected && !aliErr && !openIntegrations && !openPlan) return;
 
     params.delete("shopifyConnected");
     params.delete("shopifyError");
+    params.delete("aliexpressConnected");
+    params.delete("aliexpressError");
     params.delete("openIntegrations");
     params.delete("openPlan");
     const query = params.toString();
@@ -175,8 +183,14 @@ export default function Sidebar({
         setModalShopifyMsg(
           connected ? { ok: true, text: t("shopifyConnected") } : { ok: false, text: err! }
         );
+      } else if (aliConnected || aliErr) {
+        setModalAliexpressMsg(
+          aliConnected
+            ? { ok: true, text: t("aliexpressConnected") }
+            : { ok: false, text: tApiErrors.has(aliErr!) ? tApiErrors(aliErr!) : tApiErrors("generic") }
+        );
       }
-      if (connected || err || openIntegrations) setModalOpenIntegrations(true);
+      if (connected || err || aliConnected || aliErr || openIntegrations) setModalOpenIntegrations(true);
       setModalOpen(true);
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -379,9 +393,10 @@ export default function Sidebar({
       {modalOpen && user && (
         <ParametresModal
           user={user}
-          onClose={() => { setModalOpen(false); setModalShopifyMsg(null); setModalOpenIntegrations(false); }}
+          onClose={() => { setModalOpen(false); setModalShopifyMsg(null); setModalAliexpressMsg(null); setModalOpenIntegrations(false); }}
           initialSection={modalOpenIntegrations ? "integrations" : undefined}
           initialShopifyMessage={modalShopifyMsg}
+          initialAliexpressMessage={modalAliexpressMsg}
         />
       )}
     </>

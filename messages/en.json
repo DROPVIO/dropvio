@@ -233,7 +233,13 @@
       "aliexpressDesc": "Import your products from AliExpress",
       "aliexpressConnected": "Connected",
       "aliexpressCaption": "URL import is available directly in the Site Builder.",
-      "comingSoon": "Zapier, Make, Stripe — coming soon"
+      "comingSoon": "Zapier, Make, Stripe — coming soon",
+      "aliexpressConnect": "Connect my AliExpress account",
+      "aliexpressConnectHint": "Connect your AliExpress account to import each variant (colour, size…) of a product as a separate listing. You sign in directly on AliExpress: Dropvio never sees your password.",
+      "aliexpressVariantsOn": "Variant import enabled in the Site Builder.",
+      "aliexpressNotConfigured": "The AliExpress connection isn't configured on the server yet. Import by URL is still available.",
+      "aliexpressDisconnectError": "Couldn't disconnect AliExpress.",
+      "aliexpressDisconnectSuccess": "AliExpress account disconnected."
     },
     "facturation": {
       "title": "Billing",
@@ -297,7 +303,8 @@
       "collapseTooltip": "Collapse the sidebar",
       "userTooltip": "{name} · Settings",
       "planLabel": "{plan} plan",
-      "shopifyConnected": "Shopify store connected successfully."
+      "shopifyConnected": "Shopify store connected successfully.",
+      "aliexpressConnected": "AliExpress account connected successfully."
     },
     "onboarding": {
       "ariaLabel": "Dropvio welcome tour",
@@ -1316,7 +1323,13 @@
     "limite_ia_jour": "AI limit for the last 24 hours reached. It frees up gradually: try again on {reprise, date, short} at {reprise, time, short}.",
     "limite_ia_semaine": "AI limit for the last 7 days reached. It frees up gradually: try again on {reprise, date, short} at {reprise, time, short}.",
     "modification_echec": "The change couldn't be applied. Rephrase your request or split it into several.",
-    "aliexpress_not_in_affiliate": "This product isn't available through the AliExpress API. Fill in the fields manually."
+    "aliexpress_not_in_affiliate": "This product isn't available through the AliExpress API. Fill in the fields manually.",
+    "aliexpress_not_configured": "The AliExpress connection isn't configured on the server yet.",
+    "aliexpress_oauth_refused": "AliExpress connection cancelled or refused.",
+    "aliexpress_oauth_expired": "The AliExpress connection request expired or is invalid. Try again.",
+    "aliexpress_oauth_session_expired": "Your Dropvio session expired during the AliExpress connection. Log in again and retry.",
+    "aliexpress_oauth_exchange_failed": "Couldn't complete the connection with AliExpress. Try again.",
+    "aliexpress_oauth_save_failed": "Couldn't save the AliExpress connection. Try again."
   },
   "siteBuilder": {
     "boutique": {
