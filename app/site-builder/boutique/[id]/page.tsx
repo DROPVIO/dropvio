@@ -150,7 +150,6 @@ export default function BoutiqueBuilderDetailPage() {
   const [suggestionsRefreshKey, setSuggestionsRefreshKey] = useState(0);
 
   const [reorderLoading, setReorderLoading] = useState(false);
-  const [savingColorMode, setSavingColorMode] = useState(false);
   const [savingNiche, setSavingNiche] = useState(false);
 
   const [mentionsLegales, setMentionsLegales] = useState("");
@@ -329,30 +328,6 @@ export default function BoutiqueBuilderDetailPage() {
       setBandeauError(apiErrorMessage({ code: "network" }));
     } finally {
       setSavingBandeau(false);
-    }
-  }
-
-  async function handleSetColorMode(colorMode: "light" | "dark") {
-    if (!boutique) return;
-    const nextSettings = { ...(boutique.settings ?? {}), colorMode };
-    setSavingColorMode(true);
-    setGlobalError(null);
-    try {
-      const response = await fetch(`/api/boutiques/${params?.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ settings: nextSettings }),
-      });
-      const json = await response.json();
-      if (!response.ok) {
-        setGlobalError(apiErrorMessage(json, t("erreurs.theme")));
-        return;
-      }
-      setBoutique({ ...boutique, settings: nextSettings });
-    } catch {
-      setGlobalError(apiErrorMessage({ code: "network" }));
-    } finally {
-      setSavingColorMode(false);
     }
   }
 
@@ -1081,31 +1056,6 @@ export default function BoutiqueBuilderDetailPage() {
             <div className="mt-6 rounded-3xl border border-[var(--border)] bg-[var(--surface-2)] p-4">
               <h3 className="text-sm font-semibold text-[var(--text-primary)]">{t("parametres.titre")}</h3>
               <p className="mt-1 text-xs text-[var(--text-muted)]">
-                {t("parametres.modeAide")}
-              </p>
-              <div className="mt-3 inline-flex rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-1">
-                {(["light", "dark"] as const).map((mode) => {
-                  const currentMode = (boutique?.settings?.colorMode as string | undefined) ?? "dark";
-                  const active = currentMode === mode;
-                  return (
-                    <button
-                      key={mode}
-                      type="button"
-                      onClick={() => handleSetColorMode(mode)}
-                      disabled={!boutique || savingColorMode}
-                      className={`rounded-xl px-4 py-2 text-sm font-semibold transition disabled:opacity-50 ${
-                        active
-                          ? "bg-violet-500 text-white"
-                          : "text-[var(--text-muted)] hover:bg-[var(--surface-2)] hover:text-[var(--text-primary)]"
-                      }`}
-                    >
-                      {mode === "light" ? t("parametres.clair") : t("parametres.sombre")}
-                    </button>
-                  );
-                })}
-              </div>
-
-              <p className="mt-4 text-xs text-[var(--text-muted)]">
                 {t("parametres.nicheAide")}
               </p>
               <select

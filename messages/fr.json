@@ -1427,9 +1427,6 @@
         },
         "parametres": {
           "titre": "Affichage",
-          "modeAide": "Mode d'affichage par défaut de la boutique publique pour tes visiteurs.",
-          "clair": "☀️ Clair",
-          "sombre": "🌙 Sombre",
           "nicheAide": "Niche de la boutique : elle filtre les suggestions de produits et applique le thème visuel associé (quand il existe) à la boutique publique.",
           "aucuneNiche": "Aucune niche définie"
         },
@@ -1513,7 +1510,6 @@
           "chargementBoutique": "Impossible de charger la boutique.",
           "mentions": "Impossible d'enregistrer les mentions légales.",
           "bandeau": "Impossible d'enregistrer le bandeau.",
-          "theme": "Impossible de changer le mode d'affichage de la boutique.",
           "niche": "Impossible de changer la niche de la boutique.",
           "chargementCategories": "Impossible de charger les catégories.",
           "chargementProduits": "Impossible de charger les produits.",
@@ -1664,14 +1660,9 @@
       }
     },
     "inspiration": {
-      "titre": "Inspiration",
-      "aide": "(facultatif : 1 à {max} captures de sites que tu aimes)",
       "maximum": "{max} captures au maximum.",
       "tropLourdes": "Images trop lourdes pour être envoyées. Essaie une capture d'écran ou un export JPEG.",
       "erreurAnalyse": "Impossible d'analyser les captures.",
-      "analyse": "Analyse…",
-      "analyser": "Analyser le style",
-      "retirer": "Retirer la fiche",
       "fichierErreur": "« {fichier} » : {erreur}",
       "fiche": {
         "typo": "Typo :",
@@ -1680,9 +1671,7 @@
         "banniere": "Bannière :",
         "cartes": "Cartes :",
         "sections": "Sections :",
-        "aucuneSection": "aucune reconnue",
-        "palette": "Palette extraite (non appliquée) :",
-        "corrections": "{count, plural, one {# valeur de la fiche a été ajustée automatiquement.} other {# valeurs de la fiche ont été ajustées automatiquement.}}"
+        "aucuneSection": "aucune reconnue"
       },
       "fichiers": {
         "invalide": "fichier invalide.",
@@ -1782,8 +1771,6 @@
       "chargement": "Chargement…",
       "facultatif": "(facultatif)",
       "fichierTelecharge": "Fichier enregistré dans tes Téléchargements : {fichier}",
-      "generer": "Générer la landing page avec l'IA",
-      "genererAuto": "Génération automatique : l'IA choisit le style",
       "chargementRegeneration": "Chargement des données du site à régénérer…",
       "modes": {
         "ia": "🤖 Génération IA",
@@ -1791,11 +1778,8 @@
       },
       "prompt": {
         "label": "Prompt de ton site",
-        "aide": "Décris le site que tu veux, de A à Z : sections, textes, ton, animations, ambiance. L'IA s'appuie sur une structure de base, mais c'est ton prompt qui compte le plus.",
-        "placeholder": "Ex. : un hero plein écran avec une vidéo d'ambiance, puis une section « notre histoire » en deux colonnes, des témoignages en carrousel, un ton chaleureux et familial, des animations douces au défilement…",
         "compteur": "{count, plural, one {# caractère} other {# caractères}}",
-        "compteurManquant": "{count, plural, one {# caractère} other {# caractères}} : encore {manquant} au minimum",
-        "raison": "Le bouton est désactivé : ton prompt doit faire au moins {min} caractères (encore {manquant}). C'est lui qui guide toute la génération."
+        "compteurManquant": "{count, plural, one {# caractère} other {# caractères}} : encore {manquant} au minimum"
       },
       "brouillon": {
         "introuvable": "Le brouillon de la boutique est introuvable dans cet onglet. Retourne sur la page de ta boutique et relance « Créer mon site ».",
@@ -1830,20 +1814,6 @@
         "apercuImage": "Aperçu de l'image",
         "prixVente": "Prix de vente",
         "prixBarre": "Prix barré"
-      },
-      "style": {
-        "titre": "Style de la page",
-        "personnaliser": "Personnaliser →",
-        "retour": "← Retour",
-        "enregistrer": "Enregistrer les modifications"
-      },
-      "styles": {
-        "premium": "Élégant, exclusif, haut de gamme",
-        "nature": "Durable, naturel, éthique",
-        "mainstream": "Simple, efficace, grand public",
-        "retro": "Nostalgique, authentique, chaleureux",
-        "minimal": "Sobre, clair, moderne",
-        "tech": "Innovant, digital, high-tech"
       },
       "corrections": {
         "titre": "Corrections à prendre en compte",
@@ -1914,7 +1884,38 @@
           "it": "Italiano"
         }
       },
-      "siteCompletTelecharge": "Site complet enregistré dans tes Téléchargements : {fichier}. Toutes les pages sont dans ce fichier : ouvre-le, les boutons de navigation fonctionnent."
+      "siteCompletTelecharge": "Site complet enregistré dans tes Téléchargements : {fichier}. Toutes les pages sont dans ce fichier : ouvre-le, les boutons de navigation fonctionnent.",
+      "composer": {
+        "placeholder": "Décris le site que tu veux : sections, textes, ton, ambiance, animations…",
+        "ajouter": "Ajouter",
+        "envoyer": "Générer le site",
+        "raccourci": "Entrée pour générer · Maj + Entrée pour aller à la ligne",
+        "retirer": "Retirer",
+        "terminer": "Terminé",
+        "styleAuto": "Style auto",
+        "styleAutoAide": "L'IA choisit librement le style et les couleurs du site.",
+        "imagesInspiration": "Images d'inspiration",
+        "imagesInspirationAide": "1 à {max} captures de sites que tu aimes : l'IA s'inspire de leur style.",
+        "analyseEnCours": "Analyse du style…",
+        "styleExtrait": "Style d'inspiration",
+        "styleNonAnalyse": "Style non analysé",
+        "ajouterProduit": "Ajouter un produit",
+        "modifierProduit": "Modifier le produit",
+        "ajouterProduitAide": "Depuis un lien AliExpress ou à la main.",
+        "ajouterProduitBoutiqueAide": "Ajoute une fiche au site de ta boutique.",
+        "limiteAtteinte": "Limite de ton plan atteinte ({max} produits).",
+        "produitsBoutique": "{count, plural, =0 {Aucun produit} one {# produit} other {# produits}}",
+        "produitTitre": "Ton produit",
+        "produitAttendu": "Ajoute ton produit",
+        "produitAttenduAide": "Lien AliExpress ou saisie manuelle",
+        "prixManquant": "Prix de vente à renseigner",
+        "corrections": "Corrections d'audit",
+        "correctionsAide": "Points faibles d'un audit précédent à corriger.",
+        "correctionsCompte": "{count, plural, one {# correction} other {# corrections}}",
+        "aideProduit": "Ajoute ton produit avec le + (nom, description et prix de vente) pour pouvoir générer.",
+        "aideProduitsBoutique": "Ajoute au moins un produit avec le + pour pouvoir générer.",
+        "aidePrompt": "Ton prompt doit faire au moins {min} caractères (encore {manquant}) : c'est lui qui guide toute la génération."
+      }
     },
     "modifier": {
       "titre": "Modifier le site sans le recommencer",

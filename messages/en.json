@@ -1427,9 +1427,6 @@
         },
         "parametres": {
           "titre": "Display",
-          "modeAide": "Default display mode of the public store for your visitors.",
-          "clair": "☀️ Light",
-          "sombre": "🌙 Dark",
           "nicheAide": "Store niche: it filters product suggestions and applies the matching visual theme (when there is one) to the public store.",
           "aucuneNiche": "No niche set"
         },
@@ -1513,7 +1510,6 @@
           "chargementBoutique": "Unable to load the store.",
           "mentions": "Unable to save the legal notice.",
           "bandeau": "Unable to save the banner.",
-          "theme": "Unable to change the store's display mode.",
           "niche": "Unable to change the store's niche.",
           "chargementCategories": "Unable to load categories.",
           "chargementProduits": "Unable to load products.",
@@ -1664,14 +1660,9 @@
       }
     },
     "inspiration": {
-      "titre": "Inspiration",
-      "aide": "(optional: 1 to {max} screenshots of sites you like)",
       "maximum": "{max} screenshots at most.",
       "tropLourdes": "Images too large to upload. Try a screenshot or a JPEG export.",
       "erreurAnalyse": "Unable to analyze the screenshots.",
-      "analyse": "Analyzing…",
-      "analyser": "Analyze the style",
-      "retirer": "Remove the style sheet",
       "fichierErreur": "“{fichier}”: {erreur}",
       "fiche": {
         "typo": "Typeface:",
@@ -1680,9 +1671,7 @@
         "banniere": "Banner:",
         "cartes": "Cards:",
         "sections": "Sections:",
-        "aucuneSection": "none recognized",
-        "palette": "Extracted palette (not applied):",
-        "corrections": "{count, plural, one {# value in the style sheet was adjusted automatically.} other {# values in the style sheet were adjusted automatically.}}"
+        "aucuneSection": "none recognized"
       },
       "fichiers": {
         "invalide": "invalid file.",
@@ -1782,8 +1771,6 @@
       "chargement": "Loading…",
       "facultatif": "(optional)",
       "fichierTelecharge": "File saved to your Downloads: {fichier}",
-      "generer": "Generate the landing page with AI",
-      "genererAuto": "Automatic generation: AI picks the style",
       "chargementRegeneration": "Loading the site data to regenerate…",
       "modes": {
         "ia": "🤖 AI generation",
@@ -1791,11 +1778,8 @@
       },
       "prompt": {
         "label": "Your site prompt",
-        "aide": "Describe the site you want, from A to Z: sections, copy, tone, animations, mood. The AI starts from a base structure, but your prompt matters most.",
-        "placeholder": "E.g. a full-screen hero with a mood video, then an “our story” section in two columns, testimonials in a carousel, a warm, family tone, soft scroll animations…",
         "compteur": "{count, plural, one {# character} other {# characters}}",
-        "compteurManquant": "{count, plural, one {# character} other {# characters}}: {manquant} more needed",
-        "raison": "The button is disabled: your prompt must be at least {min} characters long ({manquant} more). It drives the whole generation."
+        "compteurManquant": "{count, plural, one {# character} other {# characters}}: {manquant} more needed"
       },
       "brouillon": {
         "introuvable": "The store draft can't be found in this tab. Go back to your store page and click “Create my site” again.",
@@ -1830,20 +1814,6 @@
         "apercuImage": "Image preview",
         "prixVente": "Selling price",
         "prixBarre": "Compare-at price"
-      },
-      "style": {
-        "titre": "Page style",
-        "personnaliser": "Customize →",
-        "retour": "← Back",
-        "enregistrer": "Save changes"
-      },
-      "styles": {
-        "premium": "Elegant, exclusive, high-end",
-        "nature": "Sustainable, natural, ethical",
-        "mainstream": "Simple, effective, mass-market",
-        "retro": "Nostalgic, authentic, warm",
-        "minimal": "Understated, clean, modern",
-        "tech": "Innovative, digital, high-tech"
       },
       "corrections": {
         "titre": "Fixes to take into account",
@@ -1914,7 +1884,38 @@
           "it": "Italiano"
         }
       },
-      "siteCompletTelecharge": "Full site saved to your Downloads: {fichier}. Every page is in this file: open it and the navigation buttons work."
+      "siteCompletTelecharge": "Full site saved to your Downloads: {fichier}. Every page is in this file: open it and the navigation buttons work.",
+      "composer": {
+        "placeholder": "Describe the site you want: sections, copy, tone, mood, animations…",
+        "ajouter": "Add",
+        "envoyer": "Generate the site",
+        "raccourci": "Enter to generate · Shift + Enter for a new line",
+        "retirer": "Remove",
+        "terminer": "Done",
+        "styleAuto": "Auto style",
+        "styleAutoAide": "The AI freely picks the site's style and colours.",
+        "imagesInspiration": "Inspiration images",
+        "imagesInspirationAide": "1 to {max} screenshots of sites you like: the AI draws on their style.",
+        "analyseEnCours": "Analysing style…",
+        "styleExtrait": "Inspiration style",
+        "styleNonAnalyse": "Style not analysed",
+        "ajouterProduit": "Add a product",
+        "modifierProduit": "Edit the product",
+        "ajouterProduitAide": "From an AliExpress link or by hand.",
+        "ajouterProduitBoutiqueAide": "Add a listing to your store's site.",
+        "limiteAtteinte": "Your plan's limit is reached ({max} products).",
+        "produitsBoutique": "{count, plural, =0 {No products} one {# product} other {# products}}",
+        "produitTitre": "Your product",
+        "produitAttendu": "Add your product",
+        "produitAttenduAide": "AliExpress link or manual entry",
+        "prixManquant": "Sale price missing",
+        "corrections": "Audit fixes",
+        "correctionsAide": "Weak points from a previous audit to fix.",
+        "correctionsCompte": "{count, plural, one {# fix} other {# fixes}}",
+        "aideProduit": "Add your product with + (name, description and sale price) to generate.",
+        "aideProduitsBoutique": "Add at least one product with + to generate.",
+        "aidePrompt": "Your prompt needs at least {min} characters ({manquant} to go): it drives the whole generation."
+      }
     },
     "modifier": {
       "titre": "Edit the site without starting over",

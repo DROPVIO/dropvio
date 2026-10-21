@@ -3,16 +3,17 @@
 import { useTranslations } from "next-intl";
 import { useApiErrorMessage } from "@/lib/use-api-error";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { FicheStyle } from "@/lib/style-fiche";
 
 // Dépôt de 1 à 3 captures de sites admirés → fiche de style à valeurs fermées
-// (app/api/inspiration/route.ts). Rendu dans les deux variantes de l'étape 1 du Site Builder
-// (produit unique et boutique). La fiche est gardée côté client et renvoyée avec la demande
-// de génération ; les captures, elles, sont supprimées du serveur juste après l'analyse.
-// La palette extraite est seulement affichée : la palette appliquée reste celle du builder.
-// Toute image est acceptée ici : le serveur l'identifie par ses octets et la convertit.
-const MAX_FICHIERS = 3;
+// (app/api/inspiration/route.ts). Utilisé par la barre de saisie de l'étape 1 du Site Builder
+// (components/site-builder/ComposerSite.tsx) : les captures sont jointes comme des pièces
+// jointes et analysées dès leur ajout. La fiche est gardée côté client et renvoyée avec la
+// demande de génération ; les captures, elles, sont supprimées du serveur juste après
+// l'analyse. La palette extraite est seulement affichée : la palette appliquée reste celle
+// du builder. Toute image est acceptée ici : le serveur l'identifie par ses octets et la convertit.
+export const MAX_FICHIERS_INSPIRATION = 3;
 const COTE_MAX = 1600;
 
 // Réduction avant envoi : Vercel refuse toute requête de plus de 4,5 Mo, alors qu'une photo
@@ -43,39 +44,33 @@ async function reduirePourEnvoi(fichier: File): Promise<Blob> {
   }
 }
 
-export default function InspirationStyle({
-  fiche,
-  onChange,
-}: {
-  fiche: FicheStyle | null;
-  onChange: (fiche: FicheStyle | null) => void;
-}) {
+export type Inspiration = {
+  // Miniatures des captures jointes (object URLs, libérées automatiquement).
+  apercus: string[];
+  analyse: boolean;
+  erreurs: string[];
+  ajouter: (liste: FileList | null) => void;
+  retirer: () => void;
+};
+
+export function useInspiration(onChange: (fiche: FicheStyle | null) => void): Inspiration {
   const t = useTranslations("siteBuilder.inspiration");
   const apiErrorMessage = useApiErrorMessage();
-  const [fichiers, setFichiers] = useState<File[]>([]);
+  const [apercus, setApercus] = useState<string[]>([]);
   const [analyse, setAnalyse] = useState(false);
   const [erreur, setErreur] = useState<string | null>(null);
-  const [corrections, setCorrections] = useState<string[]>([]);
   const [erreursFichiers, setErreursFichiers] = useState<{ fichier: string; erreur: string; code?: string }[]>([]);
 
-  function choisirFichiers(liste: FileList | null) {
-    setErreur(null);
-    const choisis = Array.from(liste ?? []);
-    if (choisis.length > MAX_FICHIERS) {
-      setErreur(t("maximum", { max: MAX_FICHIERS }));
-      return;
-    }
-    setFichiers(choisis);
-  }
+  // Libère les object URLs des miniatures quand elles sont remplacées ou au démontage.
+  useEffect(() => () => apercus.forEach((u) => URL.revokeObjectURL(u)), [apercus]);
 
-  async function analyser() {
-    if (fichiers.length === 0) return;
+  async function analyser(choisis: File[]) {
     setAnalyse(true);
     setErreur(null);
     setErreursFichiers([]);
     try {
       const form = new FormData();
-      for (const f of fichiers) form.append("files", await reduirePourEnvoi(f), f.name);
+      for (const f of choisis) form.append("files", await reduirePourEnvoi(f), f.name);
       const res = await fetch("/api/inspiration", { method: "POST", body: form });
       // Une requête refusée par l'hébergeur (413 au-delà de 4,5 Mo) ne renvoie pas de JSON.
       const json = await res.json().catch(() => null);
@@ -85,7 +80,6 @@ export default function InspirationStyle({
         return;
       }
       onChange(json.fiche as FicheStyle);
-      setCorrections(Array.isArray(json.corrections) ? json.corrections : []);
     } catch {
       setErreur(apiErrorMessage({ code: "network" }));
     } finally {
@@ -93,92 +87,49 @@ export default function InspirationStyle({
     }
   }
 
-  function retirer() {
-    onChange(null);
-    setCorrections([]);
-    setErreursFichiers([]);
-    setFichiers([]);
+  // Les captures jointes remplacent les précédentes (une seule fiche à la fois) et sont
+  // analysées tout de suite : plus d'étape « Analyser » séparée.
+  function ajouter(liste: FileList | null) {
+    const choisis = Array.from(liste ?? []);
+    if (choisis.length === 0) return;
+    if (choisis.length > MAX_FICHIERS_INSPIRATION) {
+      setErreur(t("maximum", { max: MAX_FICHIERS_INSPIRATION }));
+      return;
+    }
+    setApercus(choisis.map((f) => URL.createObjectURL(f)));
+    void analyser(choisis);
   }
 
-  return (
-    <div className="flex flex-col gap-2">
-      <label className="text-sm font-medium text-[var(--text-muted)]">
-        {t("titre")}{" "}
-        <span className="text-[var(--text-faint)] font-normal">{t("aide", { max: MAX_FICHIERS })}</span>
-      </label>
+  function retirer() {
+    onChange(null);
+    setErreur(null);
+    setErreursFichiers([]);
+    setApercus([]);
+  }
 
-      {!fiche ? (
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-          <input
-            type="file"
-            accept="image/*"
-            multiple
-            onChange={(e) => choisirFichiers(e.target.files)}
-            disabled={analyse}
-            className="text-sm text-[var(--text-muted)] file:mr-3 file:rounded-lg file:border file:border-[var(--border-strong)] file:bg-[var(--surface-2)] file:px-3 file:py-2 file:text-xs file:font-semibold file:text-[var(--text-primary)]"
-          />
-          <button
-            type="button"
-            onClick={() => void analyser()}
-            disabled={analyse || fichiers.length === 0}
-            className="rounded-xl border border-[var(--border-strong)] px-4 py-2 text-xs font-semibold text-[var(--text-primary)] transition hover:border-violet-500/40 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {analyse ? t("analyse") : t("analyser")}
-          </button>
-        </div>
-      ) : (
-        <div className="rounded-xl border border-[var(--border)] bg-[var(--bg)] px-4 py-3 text-xs text-[var(--text-muted)] flex flex-col gap-2">
-          <div className="flex flex-wrap gap-x-4 gap-y-1">
-            <span>{t("fiche.typo")} <strong className="text-[var(--text-primary)]">{fiche.typo}</strong></span>
-            <span>{t("fiche.rayon")} <strong className="text-[var(--text-primary)]">{fiche.rayon}</strong></span>
-            <span>{t("fiche.densite")} <strong className="text-[var(--text-primary)]">{fiche.densite}</strong></span>
-            <span>{t("fiche.banniere")} <strong className="text-[var(--text-primary)]">{fiche.banniere}</strong></span>
-            <span>{t("fiche.cartes")} <strong className="text-[var(--text-primary)]">{fiche.cartes}</strong></span>
-          </div>
-          <div>
-            {t("fiche.sections")}{" "}
-            <strong className="text-[var(--text-primary)]">
-              {fiche.sections.length > 0 ? fiche.sections.join(" → ") : t("fiche.aucuneSection")}
-            </strong>
-          </div>
-          <div className="flex items-center gap-2">
-            {t("fiche.palette")}
-            {(["fond", "encre", "accent"] as const).map((k) =>
-              fiche.palette[k] ? (
-                <span
-                  key={k}
-                  title={`${k} ${fiche.palette[k]}`}
-                  className="inline-block h-4 w-4 rounded border border-[var(--border-strong)]"
-                  style={{ background: fiche.palette[k] }}
-                />
-              ) : null
-            )}
-          </div>
-          {/* Le détail des ajustements (lib/style-fiche.ts) est une note technique en
-              français, gardée pour les logs ; l'interface n'en affiche que le nombre. */}
-          {corrections.length > 0 && (
-            <p className="text-[var(--text-faint)]">{t("fiche.corrections", { count: corrections.length })}</p>
-          )}
-          <button
-            type="button"
-            onClick={retirer}
-            className="self-start text-[11px] text-[var(--accent)] hover:opacity-80 transition"
-          >
-            {t("retirer")}
-          </button>
-        </div>
-      )}
+  const erreurs = [
+    ...erreursFichiers.map((e) =>
+      t("fichierErreur", {
+        fichier: e.fichier,
+        erreur: t.has(`fichiers.${e.code}`) ? t(`fichiers.${e.code}`) : t("fichiers.invalide"),
+      })
+    ),
+    ...(erreur ? [erreur] : []),
+  ];
 
-      {erreursFichiers.length > 0 && (
-        <ul className="list-disc pl-4 text-xs text-[var(--danger)]">
-          {erreursFichiers.map((e, i) => (
-            <li key={`${e.fichier}-${i}`}>
-              {t("fichierErreur", { fichier: e.fichier, erreur: t.has(`fichiers.${e.code}`) ? t(`fichiers.${e.code}`) : t("fichiers.invalide") })}
-            </li>
-          ))}
-        </ul>
-      )}
-      {erreur && <p className="text-xs text-[var(--danger)]">{erreur}</p>}
-    </div>
-  );
+  return { apercus, analyse, erreurs, ajouter, retirer };
+}
+
+// Résumé de la fiche extraite, en infobulle de la pièce jointe « style » de la barre.
+export function useResumeFiche(fiche: FicheStyle | null): string | null {
+  const t = useTranslations("siteBuilder.inspiration");
+  if (!fiche) return null;
+  return [
+    `${t("fiche.typo")} ${fiche.typo}`,
+    `${t("fiche.rayon")} ${fiche.rayon}`,
+    `${t("fiche.densite")} ${fiche.densite}`,
+    `${t("fiche.banniere")} ${fiche.banniere}`,
+    `${t("fiche.cartes")} ${fiche.cartes}`,
+    `${t("fiche.sections")} ${fiche.sections.length > 0 ? fiche.sections.join(" → ") : t("fiche.aucuneSection")}`,
+  ].join("\n");
 }

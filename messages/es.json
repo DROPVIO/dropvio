@@ -1427,9 +1427,6 @@
         },
         "parametres": {
           "titre": "Visualización",
-          "modeAide": "Modo de visualización predeterminado de la tienda pública para tus visitantes.",
-          "clair": "☀️ Claro",
-          "sombre": "🌙 Oscuro",
           "nicheAide": "Nicho de la tienda: filtra las sugerencias de productos y aplica el tema visual asociado (si existe) a la tienda pública.",
           "aucuneNiche": "Ningún nicho definido"
         },
@@ -1513,7 +1510,6 @@
           "chargementBoutique": "No se puede cargar la tienda.",
           "mentions": "No se puede guardar el aviso legal.",
           "bandeau": "No se puede guardar el banner.",
-          "theme": "No se puede cambiar el modo de visualización de la tienda.",
           "niche": "No se puede cambiar el nicho de la tienda.",
           "chargementCategories": "No se pueden cargar las categorías.",
           "chargementProduits": "No se pueden cargar los productos.",
@@ -1664,14 +1660,9 @@
       }
     },
     "inspiration": {
-      "titre": "Inspiración",
-      "aide": "(opcional: de 1 a {max} capturas de sitios que te gusten)",
       "maximum": "{max} capturas como máximo.",
       "tropLourdes": "Imágenes demasiado pesadas para enviarlas. Prueba con una captura de pantalla o una exportación JPEG.",
       "erreurAnalyse": "No se pueden analizar las capturas.",
-      "analyse": "Analizando…",
-      "analyser": "Analizar el estilo",
-      "retirer": "Quitar la ficha",
       "fichierErreur": "«{fichier}»: {erreur}",
       "fiche": {
         "typo": "Tipografía:",
@@ -1680,9 +1671,7 @@
         "banniere": "Banner:",
         "cartes": "Tarjetas:",
         "sections": "Secciones:",
-        "aucuneSection": "ninguna reconocida",
-        "palette": "Paleta extraída (no aplicada):",
-        "corrections": "{count, plural, one {Se ha ajustado automáticamente # valor de la ficha.} other {Se han ajustado automáticamente # valores de la ficha.}}"
+        "aucuneSection": "ninguna reconocida"
       },
       "fichiers": {
         "invalide": "archivo no válido.",
@@ -1782,8 +1771,6 @@
       "chargement": "Cargando…",
       "facultatif": "(opcional)",
       "fichierTelecharge": "Archivo guardado en tus Descargas: {fichier}",
-      "generer": "Generar la landing page con IA",
-      "genererAuto": "Generación automática: la IA elige el estilo",
       "chargementRegeneration": "Cargando los datos del sitio que se va a regenerar…",
       "modes": {
         "ia": "🤖 Generación con IA",
@@ -1791,11 +1778,8 @@
       },
       "prompt": {
         "label": "Prompt de tu sitio",
-        "aide": "Describe el sitio que quieres, de la A a la Z: secciones, textos, tono, animaciones, ambiente. La IA parte de una estructura base, pero lo que más cuenta es tu prompt.",
-        "placeholder": "Ej.: un hero a pantalla completa con un vídeo de ambiente, luego una sección «nuestra historia» en dos columnas, testimonios en carrusel, un tono cálido y familiar, animaciones suaves al desplazarse…",
         "compteur": "{count, plural, one {# carácter} other {# caracteres}}",
-        "compteurManquant": "{count, plural, one {# carácter} other {# caracteres}}: faltan al menos {manquant}",
-        "raison": "El botón está desactivado: tu prompt debe tener al menos {min} caracteres (faltan {manquant}). Es lo que guía toda la generación."
+        "compteurManquant": "{count, plural, one {# carácter} other {# caracteres}}: faltan al menos {manquant}"
       },
       "brouillon": {
         "introuvable": "No se encuentra el borrador de la tienda en esta pestaña. Vuelve a la página de tu tienda y pulsa de nuevo «Crear mi sitio».",
@@ -1830,20 +1814,6 @@
         "apercuImage": "Vista previa de la imagen",
         "prixVente": "Precio de venta",
         "prixBarre": "Precio tachado"
-      },
-      "style": {
-        "titre": "Estilo de la página",
-        "personnaliser": "Personalizar →",
-        "retour": "← Volver",
-        "enregistrer": "Guardar los cambios"
-      },
-      "styles": {
-        "premium": "Elegante, exclusivo, de alta gama",
-        "nature": "Sostenible, natural, ético",
-        "mainstream": "Sencillo, eficaz, para el gran público",
-        "retro": "Nostálgico, auténtico, cálido",
-        "minimal": "Sobrio, claro, moderno",
-        "tech": "Innovador, digital, high-tech"
       },
       "corrections": {
         "titre": "Correcciones a tener en cuenta",
@@ -1914,7 +1884,38 @@
           "it": "Italiano"
         }
       },
-      "siteCompletTelecharge": "Sitio completo guardado en tus Descargas: {fichier}. Todas las páginas están en este archivo: ábrelo y los botones de navegación funcionan."
+      "siteCompletTelecharge": "Sitio completo guardado en tus Descargas: {fichier}. Todas las páginas están en este archivo: ábrelo y los botones de navegación funcionan.",
+      "composer": {
+        "placeholder": "Describe el sitio que quieres: secciones, textos, tono, ambiente, animaciones…",
+        "ajouter": "Añadir",
+        "envoyer": "Generar el sitio",
+        "raccourci": "Intro para generar · Mayús + Intro para un salto de línea",
+        "retirer": "Quitar",
+        "terminer": "Listo",
+        "styleAuto": "Estilo auto",
+        "styleAutoAide": "La IA elige libremente el estilo y los colores del sitio.",
+        "imagesInspiration": "Imágenes de inspiración",
+        "imagesInspirationAide": "De 1 a {max} capturas de sitios que te gustan: la IA se inspira en su estilo.",
+        "analyseEnCours": "Analizando el estilo…",
+        "styleExtrait": "Estilo de inspiración",
+        "styleNonAnalyse": "Estilo no analizado",
+        "ajouterProduit": "Añadir un producto",
+        "modifierProduit": "Editar el producto",
+        "ajouterProduitAide": "Desde un enlace de AliExpress o a mano.",
+        "ajouterProduitBoutiqueAide": "Añade una ficha al sitio de tu tienda.",
+        "limiteAtteinte": "Has alcanzado el límite de tu plan ({max} productos).",
+        "produitsBoutique": "{count, plural, =0 {Ningún producto} one {# producto} other {# productos}}",
+        "produitTitre": "Tu producto",
+        "produitAttendu": "Añade tu producto",
+        "produitAttenduAide": "Enlace de AliExpress o entrada manual",
+        "prixManquant": "Falta el precio de venta",
+        "corrections": "Correcciones de auditoría",
+        "correctionsAide": "Puntos débiles de una auditoría anterior que corregir.",
+        "correctionsCompte": "{count, plural, one {# corrección} other {# correcciones}}",
+        "aideProduit": "Añade tu producto con el + (nombre, descripción y precio de venta) para poder generar.",
+        "aideProduitsBoutique": "Añade al menos un producto con el + para poder generar.",
+        "aidePrompt": "Tu prompt debe tener al menos {min} caracteres (faltan {manquant}): es lo que guía toda la generación."
+      }
     },
     "modifier": {
       "titre": "Modificar el sitio sin empezar de nuevo",

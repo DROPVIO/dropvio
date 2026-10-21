@@ -6,7 +6,7 @@ import { useSearchParams } from "next/navigation";
 import TemplateEditor from "./TemplateEditor";
 import BoutiqueProduitsEditor from "@/components/site-builder/BoutiqueProduitsEditor";
 import ColorTokenPanel from "@/components/site-builder/ColorTokenPanel";
-import InspirationStyle from "@/components/site-builder/InspirationStyle";
+import ComposerSite, { type ActionMenu, type PieceJointe } from "@/components/site-builder/ComposerSite";
 import ApercuPages from "@/components/site-builder/ApercuPages";
 import ModifierSiteIA from "@/components/site-builder/ModifierSiteIA";
 import { pagesSiMultiples } from "@/lib/site-builder-pages";
@@ -28,19 +28,11 @@ type Step = 1 | 2 | 3;
 
 type Palette = { primary: string; secondary: string; accent: string };
 
-const STYLES: Array<{
-  // label : nom du style, volontairement non traduit ; sa description est dans
-  // siteBuilder.builder.styles.<id>.
-  id: string; icon: string; label: string;
-  from: string; to: string; defaultPalette: Palette;
-}> = [
-  { id: "premium",    icon: "✨", label: "Luxueux / Premium",         from: "#7c3aed", to: "#ec4899", defaultPalette: { primary: "#7c3aed", secondary: "#1a0533", accent: "#f59e0b" } },
-  { id: "nature",     icon: "🌿", label: "Éco-responsable / Nature",  from: "#16a34a", to: "#0891b2", defaultPalette: { primary: "#16a34a", secondary: "#052e16", accent: "#0891b2" } },
-  { id: "mainstream", icon: "🛒", label: "Mainstream / Accessible",   from: "#2563eb", to: "#7c3aed", defaultPalette: { primary: "#2563eb", secondary: "#0f172a", accent: "#06b6d4" } },
-  { id: "retro",      icon: "🎞️", label: "Rétro / Vintage",           from: "#ea580c", to: "#ca8a04", defaultPalette: { primary: "#ea580c", secondary: "#1c0a00", accent: "#ca8a04" } },
-  { id: "minimal",    icon: "◻",  label: "Minimaliste / Épuré",       from: "#09090b", to: "#312e81", defaultPalette: { primary: "#a78bfa", secondary: "#09090b", accent: "#e4e4e7" } },
-  { id: "tech",       icon: "⚡", label: "Tech / Futuriste",          from: "#0ea5e9", to: "#7c3aed", defaultPalette: { primary: "#0ea5e9", secondary: "#0c1a2e", accent: "#7c3aed" } },
-];
+// Styles reconnus par /api/generate-site. Plus de choix dans l'interface : un nouveau site
+// part du style par défaut (le premier) avec la palette reçue de la page boutique, sinon
+// DEFAULT_PALETTE ; une régénération garde le style et la palette enregistrés avec le site.
+const STYLE_IDS = ["premium", "nature", "mainstream", "retro", "minimal", "tech"];
+const DEFAULT_PALETTE: Palette = { primary: "#7c3aed", secondary: "#1a0533", accent: "#f59e0b" };
 
 
 // Longueur minimale du prompt du site — même seuil que PROMPT_MIN_CARACTERES côté serveur
@@ -56,7 +48,7 @@ function addTargetBlank(html: string): string {
 
 // Palette initiale passée par « Créer mon site » (page boutique) via ?colorPrimary=…
 // &colorSecondary=…&colorAccent=… — appliquée seulement si les trois sont en #RRGGBB,
-// sinon on garde la palette par défaut du premier style.
+// sinon on garde la palette par défaut.
 const HEX_COLOR = /^#[0-9a-fA-F]{6}$/;
 function initialPaletteFromParams(searchParams: Pick<URLSearchParams, "get">): Palette {
   const primary = searchParams.get("colorPrimary");
@@ -65,7 +57,7 @@ function initialPaletteFromParams(searchParams: Pick<URLSearchParams, "get">): P
   if (primary && secondary && accent && HEX_COLOR.test(primary) && HEX_COLOR.test(secondary) && HEX_COLOR.test(accent)) {
     return { primary, secondary, accent };
   }
-  return STYLES[0].defaultPalette;
+  return DEFAULT_PALETTE;
 }
 
 const PRIX_FORMAT = /^\d+(\.\d{1,2})?$/;
@@ -76,7 +68,6 @@ function prixFromParam(value: string | null): string {
 function SiteBuilderContent() {
   const { toast, succes, fermer } = useToast();
   const t = useTranslations("siteBuilder.builder");
-  const tPalette = useTranslations("siteBuilder.palette");
   const apiErrorMessage = useApiErrorMessage();
   const searchParams = useSearchParams();
 
@@ -129,12 +120,15 @@ function SiteBuilderContent() {
   const langueSite: AppLocale = langueImposee ?? langueChoisie;
 
   // Style & palette
-  const [selectedStyleId, setSelectedStyleId] = useState("premium");
-  const [styleDrawerOpen, setStyleDrawerOpen] = useState(false);
-  const [editingStyleId, setEditingStyleId] = useState<string | null>(null);
+  const [selectedStyleId, setSelectedStyleId] = useState(STYLE_IDS[0]);
   const [palette, setPalette] = useState<Palette>(() => initialPaletteFromParams(searchParams));
-  const [draftPalette, setDraftPalette] = useState<Palette>(() => initialPaletteFromParams(searchParams));
   const [autoMode, setAutoMode] = useState(false);
+  // Panneaux ouverts depuis le « + » de la barre de saisie (ComposerSite) : fiche produit
+  // (mode produit unique), corrections d'audit, liste des produits (mode boutique).
+  const [produitOuvert, setProduitOuvert] = useState(false);
+  const [correctionsOuvertes, setCorrectionsOuvertes] = useState(false);
+  const [produitsBoutiqueOuverts, setProduitsBoutiqueOuverts] = useState(false);
+  const produitsBoutiqueRef = useRef<HTMLDetailsElement>(null);
 
   // Prices
   // Préremplis par ?prixVente=…&prixOriginal=… (page boutique) — repris seulement si c'est un
@@ -155,7 +149,8 @@ function SiteBuilderContent() {
   // consigne principale de la génération — sections, textes, animations — et il prime sur la
   // structure de base du prompt serveur (app/api/generate-site/route.ts, blocPromptUtilisateur).
   const [promptSite, setPromptSite] = useState("");
-  // Fiche de style extraite des captures d'inspiration (components/site-builder/InspirationStyle.tsx),
+  // Fiche de style extraite des captures d'inspiration jointes dans la barre de saisie
+  // (components/site-builder/ComposerSite.tsx, logique dans InspirationStyle.tsx),
   // envoyée avec la génération dans les deux modes — absente : prompt inchangé.
   const [ficheStyle, setFicheStyle] = useState<FicheStyle | null>(null);
 
@@ -190,7 +185,7 @@ function SiteBuilderContent() {
         if (typeof json.prix_original === "number") setOriginalPrice(String(json.prix_original));
         if (json.style_id === "auto") {
           setAutoMode(true);
-        } else if (typeof json.style_id === "string" && STYLES.some((s) => s.id === json.style_id)) {
+        } else if (typeof json.style_id === "string" && STYLE_IDS.includes(json.style_id)) {
           setSelectedStyleId(json.style_id);
         }
         if (json.couleur_primary && json.couleur_secondary && json.couleur_accent) {
@@ -200,7 +195,6 @@ function SiteBuilderContent() {
             accent: json.couleur_accent,
           };
           setPalette(restored);
-          setDraftPalette(restored);
         }
       })
       .catch(() => setRegenerateError(apiErrorMessage({ code: "network" })))
@@ -357,7 +351,6 @@ function SiteBuilderContent() {
     }
   }
 
-  const selectedStyle = STYLES.find((s) => s.id === selectedStyleId) ?? STYLES[0];
 
   // Une correction par ligne dans le textarea → tableau de strings pour le payload
   // generate-site (voir app/api/generate-site/route.ts). undefined (pas []) quand vide, pour
@@ -632,37 +625,98 @@ function SiteBuilderContent() {
       ? boutiqueDraft.produits.length > 0
       : productName.trim() && description.trim() && salePrice.trim());
 
-  // Champ du prompt, rendu en tête de l'étape 1 dans les deux modes.
-  const champPrompt = (
-    <div className="flex flex-col gap-2">
-      <label htmlFor="prompt-site" className="text-sm font-medium text-[var(--text-primary)]">
-        {t("prompt.label")} <span className="text-[var(--danger)]">*</span>
-      </label>
-      <p className="text-xs text-[var(--text-faint)]">
-        {t("prompt.aide")}
-      </p>
-      <textarea
-        id="prompt-site"
-        value={promptSite}
-        onChange={(e) => setPromptSite(e.target.value)}
-        rows={6}
-        placeholder={t("prompt.placeholder")}
-        className="w-full bg-[var(--bg)] border border-[var(--border-strong)] rounded-xl px-4 py-3 text-sm text-[var(--text-primary)] placeholder-[var(--text-faint)] focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition resize-y"
-      />
-      <p className={`text-right text-xs ${promptManquant > 0 ? "text-[var(--text-faint)]" : "text-[var(--accent)]"}`}>
-        {promptManquant > 0
-          ? t("prompt.compteurManquant", { count: promptSite.trim().length, manquant: promptManquant })
-          : t("prompt.compteur", { count: promptSite.trim().length })}
-      </p>
-    </div>
-  );
-  // Raison affichée sous le bouton quand le prompt est trop court (bouton désactivé).
-  const raisonPrompt =
-    promptManquant > 0 ? (
-      <p className="text-xs text-[var(--danger)]">
-        {t("prompt.raison", { min: PROMPT_MIN_CARACTERES, manquant: promptManquant })}
-      </p>
-    ) : null;
+  const produitIncomplet = !productName.trim() || !description.trim() || !salePrice.trim();
+  // Ce qui manque encore pour générer, affiché sous la barre de saisie.
+  const aideComposer = boutiqueDraft
+    ? boutiqueDraft.produits.length === 0
+      ? t("composer.aideProduitsBoutique")
+      : promptManquant > 0
+        ? t("composer.aidePrompt", { min: PROMPT_MIN_CARACTERES, manquant: promptManquant })
+        : null
+    : produitIncomplet
+      ? t("composer.aideProduit")
+      : promptManquant > 0
+        ? t("composer.aidePrompt", { min: PROMPT_MIN_CARACTERES, manquant: promptManquant })
+        : null;
+
+  const nbCorrections = correctionsList()?.length ?? 0;
+  const actionCorrections: ActionMenu = {
+    id: "corrections",
+    icone: "📝",
+    libelle: t("composer.corrections"),
+    aide: t("composer.correctionsAide"),
+    onClick: () => setCorrectionsOuvertes(true),
+  };
+  const pieceCorrections: PieceJointe[] =
+    nbCorrections > 0
+      ? [
+          {
+            id: "corrections",
+            icone: "📝",
+            titre: t("composer.corrections"),
+            sousTitre: t("composer.correctionsCompte", { count: nbCorrections }),
+            onClick: () => setCorrectionsOuvertes(true),
+            onRetirer: () => setCorrections(""),
+          },
+        ]
+      : [];
+
+  // Mode produit unique : le produit est la pièce jointe principale du message.
+  const piecesProduitUnique: PieceJointe[] = [
+    productName.trim()
+      ? {
+          id: "produit",
+          titre: productName.trim(),
+          sousTitre: salePrice.trim() ? `${salePrice.trim()} €` : t("composer.prixManquant"),
+          image: imageUrl.trim() || null,
+          onClick: () => setProduitOuvert(true),
+          onRetirer: () => {
+            setProductName("");
+            setDescription("");
+            setImageUrl("");
+            setSalePrice("");
+            setOriginalPrice("");
+            setAliexpressUrl("");
+          },
+        }
+      : {
+          id: "produit",
+          icone: "＋",
+          titre: t("composer.produitAttendu"),
+          sousTitre: t("composer.produitAttenduAide"),
+          attendue: true,
+          onClick: () => setProduitOuvert(true),
+        },
+    ...pieceCorrections,
+  ];
+  const actionsProduitUnique: ActionMenu[] = [
+    {
+      id: "produit",
+      icone: "📦",
+      libelle: productName.trim() ? t("composer.modifierProduit") : t("composer.ajouterProduit"),
+      aide: t("composer.ajouterProduitAide"),
+      onClick: () => setProduitOuvert(true),
+    },
+    actionCorrections,
+  ];
+
+  // Mode boutique : « + » ajoute une fiche vide au brouillon (même limite de plan que
+  // BoutiqueProduitsEditor) et déplie la liste des produits pour la remplir.
+  const limiteBoutique = boutiqueDraft?.limiteProduits ?? null;
+  const limiteBoutiqueAtteinte =
+    limiteBoutique !== null && (boutiqueDraft?.produits.length ?? 0) >= limiteBoutique;
+  function ouvrirProduitsBoutique() {
+    setProduitsBoutiqueOuverts(true);
+    requestAnimationFrame(() => produitsBoutiqueRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }));
+  }
+  function ajouterProduitBoutique() {
+    if (!boutiqueDraft || limiteBoutiqueAtteinte) return;
+    setBoutiqueDraft({
+      ...boutiqueDraft,
+      produits: [...boutiqueDraft.produits, { nom: "", description: "", image: null, prixVente: "", prixOriginal: "" }],
+    });
+    ouvrirProduitsBoutique();
+  }
 
   return (
     <div className="min-h-screen bg-[var(--bg)] text-[var(--text-primary)] font-sans px-4 py-16">
@@ -717,7 +771,12 @@ function SiteBuilderContent() {
             </div>
             {/* Liste repliée par défaut : avec tous les produits de la boutique, l'éditeur
                 pousserait le reste du formulaire très bas. */}
-            <details className="mb-4">
+            <details
+              ref={produitsBoutiqueRef}
+              open={produitsBoutiqueOuverts}
+              onToggle={(e) => setProduitsBoutiqueOuverts(e.currentTarget.open)}
+              className="mb-4 scroll-mt-6"
+            >
               <summary className="cursor-pointer select-none text-sm font-semibold text-[var(--text-primary)]">
                 {t("brouillon.importes", { count: boutiqueDraft.produits.length })}
               </summary>
@@ -852,28 +911,49 @@ function SiteBuilderContent() {
             Pas de bouton "génération automatique" : style="auto" n'est pas supporté pour ce
             mode côté API (voir app/api/generate-site/route.ts). */}
         {step === 1 && boutiqueDraft && (
-          <div className="rounded-2xl bg-[var(--surface)] border border-[var(--border)] p-8 flex flex-col gap-6">
+          <div className="flex flex-col gap-4">
             {error && (
               <div className="rounded-xl bg-[var(--danger)]/10 border border-[var(--danger)]/20 px-4 py-3 text-[var(--danger)] text-sm">
                 {error}
               </div>
             )}
-            {champPrompt}
-            <InspirationStyle fiche={ficheStyle} onChange={setFicheStyle} />
-            <button
-              onClick={() => handleGenerate(false)}
-              disabled={!canGenerate}
-              className="w-full py-3 rounded-xl bg-gradient-to-r from-violet-600 to-blue-600 text-white text-sm font-semibold hover:from-violet-500 hover:to-blue-500 transition-all duration-200 shadow-lg shadow-violet-900/40 disabled:opacity-40 disabled:cursor-not-allowed"
-            >
-              {t("generer")}
-            </button>
-            {raisonPrompt}
+            <ComposerSite
+              prompt={promptSite}
+              onPromptChange={setPromptSite}
+              promptManquant={promptManquant}
+              piecesJointes={[
+                {
+                  id: "produits",
+                  icone: "🛍️",
+                  titre: t("composer.produitsBoutique", { count: boutiqueDraft.produits.length }),
+                  sousTitre: boutiqueDraft.nomBoutique,
+                  onClick: ouvrirProduitsBoutique,
+                },
+              ]}
+              actions={[
+                {
+                  id: "produit",
+                  icone: "📦",
+                  libelle: t("composer.ajouterProduit"),
+                  aide: limiteBoutiqueAtteinte
+                    ? t("composer.limiteAtteinte", { max: limiteBoutique ?? 0 })
+                    : t("composer.ajouterProduitBoutiqueAide"),
+                  disabled: limiteBoutiqueAtteinte,
+                  onClick: ajouterProduitBoutique,
+                },
+              ]}
+              fiche={ficheStyle}
+              onFicheChange={setFicheStyle}
+              peutEnvoyer={Boolean(canGenerate)}
+              onEnvoyer={() => handleGenerate(false)}
+              aide={aideComposer}
+            />
           </div>
         )}
 
         {/* Step 1: Product info form */}
         {step === 1 && !boutiqueDraft && (
-          <div className="rounded-2xl bg-[var(--surface)] border border-[var(--border)] p-8 flex flex-col gap-6">
+          <div className="flex flex-col gap-4">
             {error && (
               <div className="rounded-xl bg-[var(--danger)]/10 border border-[var(--danger)]/20 px-4 py-3 text-[var(--danger)] text-sm">
                 {error}
@@ -891,343 +971,211 @@ function SiteBuilderContent() {
               </div>
             )}
 
-            {champPrompt}
-
-            {/* AliExpress import */}
-            <div className="flex flex-col gap-2">
-              <label className="text-sm font-medium text-[var(--text-muted)]">
-                {t("formulaire.importer")}{" "}
-                <span className="text-[var(--text-faint)] font-normal">{t("facultatif")}</span>
-              </label>
-              <div className="flex gap-2">
-                <input
-                  type="url"
-                  value={aliexpressUrl}
-                  onChange={(e) => { setAliexpressUrl(e.target.value); setAliexpressError(null); }}
-                  placeholder="https://www.aliexpress.com/item/123456789.html"
-                  className="flex-1 bg-[var(--bg)] border border-[var(--border-strong)] rounded-xl px-4 py-3 text-sm text-[var(--text-primary)] placeholder-[var(--text-faint)] focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition"
-                />
-                <button
-                  type="button"
-                  onClick={handleImportAliexpress}
-                  disabled={!aliexpressUrl.trim() || aliexpressLoading}
-                  className="px-4 py-3 rounded-xl bg-violet-600/20 border border-violet-500/30 text-[var(--accent)] text-sm font-semibold hover:bg-violet-600/30 transition disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap"
-                >
-                  {aliexpressLoading ? "…" : t("formulaire.importerBouton")}
-                </button>
-              </div>
-              {aliexpressError && (
-                <p className="text-xs text-[var(--danger)]">{aliexpressError}</p>
-              )}
-            </div>
-
-            <div className="border-t border-[var(--border)]" />
-
-            {/* Product name */}
-            <div className="flex flex-col gap-2">
-              <div className="flex items-center justify-between gap-2">
-                <label className="text-sm font-medium text-[var(--text-muted)]">{t("formulaire.nom")}</label>
-                <button
-                  type="button"
-                  onClick={handleReformulerNom}
-                  disabled={!productName.trim() || reformulatingNom}
-                  className="shrink-0 rounded-xl border border-[var(--border-strong)] bg-[var(--bg)] px-2.5 py-1 text-xs font-semibold text-[var(--text-primary)] transition hover:border-violet-500/40 hover:bg-violet-500/10 disabled:opacity-50"
-                >
-                  {reformulatingNom ? "…" : t("formulaire.reformuler")}
-                </button>
-              </div>
-              <input
-                type="text"
-                value={productName}
-                onChange={(e) => setProductName(e.target.value)}
-                placeholder={t("formulaire.nomPlaceholder")}
-                className="bg-[var(--bg)] border border-[var(--border-strong)] rounded-xl px-4 py-3 text-sm text-[var(--text-primary)] placeholder-[var(--text-faint)] focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition"
-              />
-            </div>
-
-            {/* Description */}
-            <div className="flex flex-col gap-2">
-              <div className="flex items-center justify-between gap-2">
-                <label className="text-sm font-medium text-[var(--text-muted)]">{t("formulaire.description")}</label>
-                <button
-                  type="button"
-                  onClick={handleGenererDescription}
-                  disabled={!productName.trim() || generatingDescription}
-                  className="shrink-0 rounded-xl border border-[var(--border-strong)] bg-[var(--bg)] px-2.5 py-1 text-xs font-semibold text-[var(--text-primary)] transition hover:border-violet-500/40 hover:bg-violet-500/10 disabled:opacity-50"
-                  title={!productName.trim() ? t("formulaire.nomDabord") : undefined}
-                >
-                  {generatingDescription ? "…" : t("formulaire.genererDescription")}
-                </button>
-              </div>
-              <textarea
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                rows={3}
-                placeholder={t("formulaire.descriptionPlaceholder")}
-                className="bg-[var(--bg)] border border-[var(--border-strong)] rounded-xl px-4 py-3 text-sm text-[var(--text-primary)] placeholder-[var(--text-faint)] focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition resize-none"
-              />
-              {texteIaError ? <p className="text-xs text-[var(--danger)]">{texteIaError}</p> : null}
-            </div>
-
-            {/* Image URL */}
-            <div className="flex flex-col gap-2">
-              <div className="rounded-xl bg-amber-500/[0.08] border border-amber-500/20 px-4 py-3 flex gap-2.5 items-start">
-                <span className="shrink-0">📷</span>
-                <p className="text-xs text-[var(--warning)] leading-relaxed">
-                  {t.rich("formulaire.imageAvertissement", { strong: (chunks) => <strong>{chunks}</strong> })}
-                </p>
-              </div>
-              <label className="text-sm font-medium text-[var(--text-muted)]">
-                {t("formulaire.image")}{" "}
-                <span className="text-[var(--text-faint)] font-normal">{t("facultatif")}</span>
-              </label>
-              <input
-                type="url"
-                value={imageUrl}
-                onChange={(e) => setImageUrl(e.target.value)}
-                placeholder={t("formulaire.imagePlaceholder")}
-                className="bg-[var(--bg)] border border-[var(--border-strong)] rounded-xl px-4 py-3 text-sm text-[var(--text-primary)] placeholder-[var(--text-faint)] focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition"
-              />
-              {imageUrl.trim() && (
-                <div className="mt-1 rounded-xl overflow-hidden border border-[var(--border-strong)] bg-[var(--bg)] h-32 flex items-center justify-center">
-                  {/* <img> volontairement conservé (pas next/image) : aperçu en direct d'une URL
-                      externe arbitraire tapée par l'utilisateur, jamais un domaine connu à l'avance
-                      — un remotePattern en wildcard ferait proxier n'importe quelle URL par le
-                      serveur (risque SSRF/bande passante non bornée) pour un gain d'optimisation nul
-                      sur un aperçu de validation ponctuel. */}
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={imageUrl}
-                    alt={t("formulaire.apercuImage")}
-                    className="max-h-full max-w-full object-contain"
-                    onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
-                  />
+            {/* Fiche produit, ouverte depuis le « + » ou la pièce jointe produit de la barre. */}
+            {produitOuvert && (
+              <div className="rounded-3xl bg-[var(--surface)] border border-[var(--border)] p-6 flex flex-col gap-6">
+                <div className="flex items-center justify-between gap-3">
+                  <h2 className="text-sm font-semibold text-[var(--text-primary)]">{t("composer.produitTitre")}</h2>
+                  <button
+                    type="button"
+                    onClick={() => setProduitOuvert(false)}
+                    className="rounded-full border border-[var(--border-strong)] px-3 py-1 text-xs font-semibold text-[var(--text-primary)] transition hover:bg-[var(--surface-2)]"
+                  >
+                    {t("composer.terminer")}
+                  </button>
                 </div>
-              )}
-            </div>
-
-            {/* Prices */}
-            <div className="flex gap-3">
-              <div className="flex flex-col gap-2 flex-1">
-                <label className="text-sm font-medium text-[var(--text-muted)]">
-                  {t("formulaire.prixVente")} <span className="text-[var(--danger)]">*</span>
-                </label>
-                <div className="relative">
-                  <input
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={salePrice}
-                    onChange={(e) => setSalePrice(e.target.value)}
-                    placeholder="29.99"
-                    className="w-full bg-[var(--bg)] border border-[var(--border-strong)] rounded-xl pl-4 pr-10 py-3 text-sm text-[var(--text-primary)] placeholder-[var(--text-faint)] focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition"
-                  />
-                  <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[var(--text-faint)] text-sm">€</span>
-                </div>
-              </div>
-              <div className="flex flex-col gap-2 flex-1">
-                <label className="text-sm font-medium text-[var(--text-muted)]">
-                  {t("formulaire.prixBarre")} <span className="text-[var(--text-faint)] font-normal">{t("facultatif")}</span>
-                </label>
-                <div className="relative">
-                  <input
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={originalPrice}
-                    onChange={(e) => setOriginalPrice(e.target.value)}
-                    placeholder="59.99"
-                    className="w-full bg-[var(--bg)] border border-[var(--border-strong)] rounded-xl pl-4 pr-10 py-3 text-sm text-[var(--text-primary)] placeholder-[var(--text-faint)] focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition"
-                  />
-                  <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[var(--text-faint)] text-sm">€</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Style chooser */}
-            {!autoMode && (
-              <div className="flex flex-col gap-2">
-                <label className="text-sm font-medium text-[var(--text-muted)]">{t("style.titre")}</label>
-
-                {/* Trigger button */}
-                <button
-                  type="button"
-                  onClick={() => { setStyleDrawerOpen((o) => !o); setEditingStyleId(null); }}
-                  className={`flex items-center gap-3 rounded-xl px-4 py-3 text-left transition-all border ${
-                    styleDrawerOpen
-                      ? "border-violet-500/50 bg-violet-500/5"
-                      : "border-[var(--border-strong)] bg-[var(--bg)] hover:border-[var(--border-strong)]"
-                  }`}
-                >
-                  {/* Aperçu de la palette choisie par l'utilisateur pour SA landing page —
-                      couleurs dynamiques réelles, sans rapport avec le thème de l'app : reste
-                      volontairement en inline style, jamais en tokens. */}
-                  <div className="flex rounded-lg overflow-hidden shrink-0 w-7 h-7">
-                    <div className="flex-1" style={{ background: palette.primary }} />
-                    <div className="flex-1" style={{ background: palette.secondary }} />
-                    <div className="flex-1" style={{ background: palette.accent }} />
+                {/* AliExpress import */}
+                <div className="flex flex-col gap-2">
+                  <label className="text-sm font-medium text-[var(--text-muted)]">
+                    {t("formulaire.importer")}{" "}
+                    <span className="text-[var(--text-faint)] font-normal">{t("facultatif")}</span>
+                  </label>
+                  <div className="flex gap-2">
+                    <input
+                      type="url"
+                      value={aliexpressUrl}
+                      onChange={(e) => { setAliexpressUrl(e.target.value); setAliexpressError(null); }}
+                      placeholder="https://www.aliexpress.com/item/123456789.html"
+                      className="flex-1 bg-[var(--bg)] border border-[var(--border-strong)] rounded-xl px-4 py-3 text-sm text-[var(--text-primary)] placeholder-[var(--text-faint)] focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleImportAliexpress}
+                      disabled={!aliexpressUrl.trim() || aliexpressLoading}
+                      className="px-4 py-3 rounded-xl bg-violet-600/20 border border-violet-500/30 text-[var(--accent)] text-sm font-semibold hover:bg-violet-600/30 transition disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap"
+                    >
+                      {aliexpressLoading ? "…" : t("formulaire.importerBouton")}
+                    </button>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-[var(--text-primary)] leading-tight">
-                      {selectedStyle.icon} {selectedStyle.label}
+                  {aliexpressError && (
+                    <p className="text-xs text-[var(--danger)]">{aliexpressError}</p>
+                  )}
+                </div>
+
+                <div className="border-t border-[var(--border)]" />
+
+                {/* Product name */}
+                <div className="flex flex-col gap-2">
+                  <div className="flex items-center justify-between gap-2">
+                    <label className="text-sm font-medium text-[var(--text-muted)]">{t("formulaire.nom")}</label>
+                    <button
+                      type="button"
+                      onClick={handleReformulerNom}
+                      disabled={!productName.trim() || reformulatingNom}
+                      className="shrink-0 rounded-xl border border-[var(--border-strong)] bg-[var(--bg)] px-2.5 py-1 text-xs font-semibold text-[var(--text-primary)] transition hover:border-violet-500/40 hover:bg-violet-500/10 disabled:opacity-50"
+                    >
+                      {reformulatingNom ? "…" : t("formulaire.reformuler")}
+                    </button>
+                  </div>
+                  <input
+                    type="text"
+                    value={productName}
+                    onChange={(e) => setProductName(e.target.value)}
+                    placeholder={t("formulaire.nomPlaceholder")}
+                    className="bg-[var(--bg)] border border-[var(--border-strong)] rounded-xl px-4 py-3 text-sm text-[var(--text-primary)] placeholder-[var(--text-faint)] focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition"
+                  />
+                </div>
+
+                {/* Description */}
+                <div className="flex flex-col gap-2">
+                  <div className="flex items-center justify-between gap-2">
+                    <label className="text-sm font-medium text-[var(--text-muted)]">{t("formulaire.description")}</label>
+                    <button
+                      type="button"
+                      onClick={handleGenererDescription}
+                      disabled={!productName.trim() || generatingDescription}
+                      className="shrink-0 rounded-xl border border-[var(--border-strong)] bg-[var(--bg)] px-2.5 py-1 text-xs font-semibold text-[var(--text-primary)] transition hover:border-violet-500/40 hover:bg-violet-500/10 disabled:opacity-50"
+                      title={!productName.trim() ? t("formulaire.nomDabord") : undefined}
+                    >
+                      {generatingDescription ? "…" : t("formulaire.genererDescription")}
+                    </button>
+                  </div>
+                  <textarea
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    rows={3}
+                    placeholder={t("formulaire.descriptionPlaceholder")}
+                    className="bg-[var(--bg)] border border-[var(--border-strong)] rounded-xl px-4 py-3 text-sm text-[var(--text-primary)] placeholder-[var(--text-faint)] focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition resize-none"
+                  />
+                  {texteIaError ? <p className="text-xs text-[var(--danger)]">{texteIaError}</p> : null}
+                </div>
+
+                {/* Image URL */}
+                <div className="flex flex-col gap-2">
+                  <div className="rounded-xl bg-amber-500/[0.08] border border-amber-500/20 px-4 py-3 flex gap-2.5 items-start">
+                    <span className="shrink-0">📷</span>
+                    <p className="text-xs text-[var(--warning)] leading-relaxed">
+                      {t.rich("formulaire.imageAvertissement", { strong: (chunks) => <strong>{chunks}</strong> })}
                     </p>
-                    <p className="text-[11px] text-[var(--text-faint)] mt-0.5">{t(`styles.${selectedStyle.id}`)}</p>
                   </div>
-                  <span className="text-[var(--text-faint)] text-xs">{styleDrawerOpen ? "▲" : "▼"}</span>
-                </button>
+                  <label className="text-sm font-medium text-[var(--text-muted)]">
+                    {t("formulaire.image")}{" "}
+                    <span className="text-[var(--text-faint)] font-normal">{t("facultatif")}</span>
+                  </label>
+                  <input
+                    type="url"
+                    value={imageUrl}
+                    onChange={(e) => setImageUrl(e.target.value)}
+                    placeholder={t("formulaire.imagePlaceholder")}
+                    className="bg-[var(--bg)] border border-[var(--border-strong)] rounded-xl px-4 py-3 text-sm text-[var(--text-primary)] placeholder-[var(--text-faint)] focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition"
+                  />
+                  {imageUrl.trim() && (
+                    <div className="mt-1 rounded-xl overflow-hidden border border-[var(--border-strong)] bg-[var(--bg)] h-32 flex items-center justify-center">
+                      {/* <img> volontairement conservé (pas next/image) : aperçu en direct d'une URL
+                          externe arbitraire tapée par l'utilisateur, jamais un domaine connu à l'avance
+                          — un remotePattern en wildcard ferait proxier n'importe quelle URL par le
+                          serveur (risque SSRF/bande passante non bornée) pour un gain d'optimisation nul
+                          sur un aperçu de validation ponctuel. */}
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={imageUrl}
+                        alt={t("formulaire.apercuImage")}
+                        className="max-h-full max-w-full object-contain"
+                        onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; }}
+                      />
+                    </div>
+                  )}
+                </div>
 
-                {/* Drawer */}
-                {styleDrawerOpen && (
-                  <div className="rounded-xl border border-[var(--border-strong)] bg-[var(--bg)] overflow-hidden">
-                    {editingStyleId === null ? (
-                      /* ── Phase 1 : liste des styles ── */
-                      <div className="p-3 flex flex-col gap-1">
-                        {STYLES.map((s) => {
-                          const sel = selectedStyleId === s.id;
-                          return (
-                            <button
-                              key={s.id}
-                              type="button"
-                              onClick={() => {
-                                setEditingStyleId(s.id);
-                                setDraftPalette(s.defaultPalette);
-                              }}
-                              className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-left transition-all w-full ${
-                                sel ? "bg-violet-500/10 ring-1 ring-violet-500/40" : "hover:bg-[var(--surface-2)]"
-                              }`}
-                            >
-                              {/* Dégradé de prévisualisation du style — couleurs figées propres
-                                  à chaque style prédéfini (pas le thème de l'app), reste en
-                                  inline style volontairement. */}
-                              <div className="w-8 h-8 rounded-lg shrink-0" style={{ background: `linear-gradient(135deg, ${s.from}, ${s.to})` }} />
-                              <div className="flex-1 min-w-0">
-                                <p className="text-sm font-semibold text-[var(--text-primary)]">{s.icon} {s.label}</p>
-                                <p className="text-[11px] text-[var(--text-faint)] mt-0.5">{t(`styles.${s.id}`)}</p>
-                              </div>
-                              <span className="text-[var(--text-faint)] text-xs shrink-0">{t("style.personnaliser")}</span>
-                            </button>
-                          );
-                        })}
-                      </div>
-                    ) : (
-                      /* ── Phase 2 : édition de la palette ── */
-                      (() => {
-                        const editingStyle = STYLES.find((s) => s.id === editingStyleId)!;
-                        const colorFields: Array<{ key: keyof Palette; label: string; hint: string }> = (
-                          ["primary", "secondary", "accent"] as const
-                        ).map((key) => ({ key, label: tPalette(`${key}.label`), hint: tPalette(`${key}.hint`) }));
-                        return (
-                          <div className="flex flex-col">
-                            {/* Header palette editor */}
-                            <div className="flex items-center gap-2 px-4 pt-4 pb-3 border-b border-[var(--border)]">
-                              <button
-                                type="button"
-                                onClick={() => setEditingStyleId(null)}
-                                className="text-[var(--text-faint)] hover:text-[var(--text-primary)] transition text-sm"
-                              >
-                                {t("style.retour")}
-                              </button>
-                              <div className="w-px h-4 bg-[var(--border-strong)]" />
-                              <span className="text-sm font-semibold text-[var(--text-primary)]">{editingStyle.icon} {editingStyle.label}</span>
-                            </div>
-
-                            {/* Color pickers */}
-                            <div className="p-4 flex flex-col gap-4">
-                              {colorFields.map(({ key, label, hint }) => (
-                                <div key={key} className="flex items-center gap-3">
-                                  <div className="relative shrink-0">
-                                    <input
-                                      type="color"
-                                      value={draftPalette[key]}
-                                      onChange={(e) => setDraftPalette((p) => ({ ...p, [key]: e.target.value }))}
-                                      className="w-10 h-10 rounded-xl cursor-pointer bg-transparent border-0 p-0"
-                                    />
-                                    {/* Couleur choisie par l'utilisateur pour sa landing page —
-                                        inline style volontaire, valeur dynamique arbitraire. */}
-                                    <div
-                                      className="absolute inset-0 rounded-xl ring-1 ring-white/10 pointer-events-none"
-                                      style={{ background: draftPalette[key] }}
-                                    />
-                                  </div>
-                                  <div className="flex-1 min-w-0">
-                                    <p className="text-sm font-medium text-[var(--text-primary)]">{label}</p>
-                                    <p className="text-[10px] text-[var(--text-faint)] mt-0.5">{hint} · <span className="font-mono">{draftPalette[key]}</span></p>
-                                  </div>
-                                </div>
-                              ))}
-
-                              {/* Preview strip — couleurs dynamiques utilisateur, inline style volontaire */}
-                              <div className="h-6 rounded-lg overflow-hidden flex">
-                                <div className="flex-1" style={{ background: draftPalette.primary }} />
-                                <div className="flex-1" style={{ background: draftPalette.secondary }} />
-                                <div className="flex-1" style={{ background: draftPalette.accent }} />
-                              </div>
-
-                              {/* Save button */}
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  setSelectedStyleId(editingStyleId);
-                                  setPalette(draftPalette);
-                                  setEditingStyleId(null);
-                                  setStyleDrawerOpen(false);
-                                }}
-                                className="w-full py-2.5 rounded-xl bg-violet-600 hover:bg-violet-500 text-white text-sm font-semibold transition"
-                              >
-                                {t("style.enregistrer")}
-                              </button>
-                            </div>
-                          </div>
-                        );
-                      })()
-                    )}
+                {/* Prices */}
+                <div className="flex gap-3">
+                  <div className="flex flex-col gap-2 flex-1">
+                    <label className="text-sm font-medium text-[var(--text-muted)]">
+                      {t("formulaire.prixVente")} <span className="text-[var(--danger)]">*</span>
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={salePrice}
+                        onChange={(e) => setSalePrice(e.target.value)}
+                        placeholder="29.99"
+                        className="w-full bg-[var(--bg)] border border-[var(--border-strong)] rounded-xl pl-4 pr-10 py-3 text-sm text-[var(--text-primary)] placeholder-[var(--text-faint)] focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition"
+                      />
+                      <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[var(--text-faint)] text-sm">€</span>
+                    </div>
                   </div>
-                )}
+                  <div className="flex flex-col gap-2 flex-1">
+                    <label className="text-sm font-medium text-[var(--text-muted)]">
+                      {t("formulaire.prixBarre")} <span className="text-[var(--text-faint)] font-normal">{t("facultatif")}</span>
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={originalPrice}
+                        onChange={(e) => setOriginalPrice(e.target.value)}
+                        placeholder="59.99"
+                        className="w-full bg-[var(--bg)] border border-[var(--border-strong)] rounded-xl pl-4 pr-10 py-3 text-sm text-[var(--text-primary)] placeholder-[var(--text-faint)] focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition"
+                      />
+                      <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[var(--text-faint)] text-sm">€</span>
+                    </div>
+                  </div>
+                </div>
               </div>
             )}
 
-            {/* Corrections d'un audit précédent — pré-rempli automatiquement lors d'une
+            {/* Corrections d'un audit précédent — pré-remplies automatiquement lors d'une
                 régénération si un audit est lié à ce site (voir useEffect plus haut), sinon
-                vide et éditable librement. Pris en compte dans le prompt si non vide. */}
-            <div className="flex flex-col gap-2">
-              <label className="text-sm font-medium text-[var(--text-muted)]">
-                {t("corrections.titre")}{" "}
-                <span className="text-[var(--text-faint)] font-normal">{t("facultatif")}</span>
-              </label>
-              <textarea
-                value={corrections}
-                onChange={(e) => setCorrections(e.target.value)}
-                placeholder={t("corrections.placeholder")}
-                rows={4}
-                className="w-full bg-[var(--bg)] border border-[var(--border-strong)] rounded-xl px-4 py-3 text-sm text-[var(--text-primary)] placeholder-[var(--text-faint)] focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition resize-y"
-              />
-            </div>
+                vides et éditables librement. Prises en compte dans le prompt si non vides. */}
+            {correctionsOuvertes && (
+              <div className="rounded-3xl bg-[var(--surface)] border border-[var(--border)] p-6 flex flex-col gap-3">
+                <div className="flex items-center justify-between gap-3">
+                  <h2 className="text-sm font-semibold text-[var(--text-primary)]">{t("corrections.titre")}</h2>
+                  <button
+                    type="button"
+                    onClick={() => setCorrectionsOuvertes(false)}
+                    className="rounded-full border border-[var(--border-strong)] px-3 py-1 text-xs font-semibold text-[var(--text-primary)] transition hover:bg-[var(--surface-2)]"
+                  >
+                    {t("composer.terminer")}
+                  </button>
+                </div>
+                <textarea
+                  value={corrections}
+                  onChange={(e) => setCorrections(e.target.value)}
+                  placeholder={t("corrections.placeholder")}
+                  rows={4}
+                  className="w-full bg-[var(--bg)] border border-[var(--border-strong)] rounded-xl px-4 py-3 text-sm text-[var(--text-primary)] placeholder-[var(--text-faint)] focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition resize-y"
+                />
+              </div>
+            )}
 
-            <InspirationStyle fiche={ficheStyle} onChange={setFicheStyle} />
-
-            {/* CTA buttons */}
-            <div className="mt-2 flex flex-col gap-3">
-              <button
-                onClick={() => handleGenerate(false)}
-                disabled={!canGenerate || autoMode}
-                className="w-full py-3 rounded-xl bg-gradient-to-r from-violet-600 to-blue-600 text-white text-sm font-semibold hover:from-violet-500 hover:to-blue-500 transition-all duration-200 shadow-lg shadow-violet-900/40 disabled:opacity-40 disabled:cursor-not-allowed"
-              >
-                {t("generer")}
-              </button>
-
-              <button
-                onClick={() => {
-                  setAutoMode(true);
-                  handleGenerate(true);
-                }}
-                disabled={!canGenerate}
-                className="w-full py-3 rounded-xl border border-[var(--border-strong)] text-[var(--text-muted)] text-sm font-semibold hover:border-[var(--border-strong)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-2)] transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-              >
-                <span>🤖</span>
-                {t("genererAuto")}
-              </button>
-              {raisonPrompt}
-            </div>
+            <ComposerSite
+              prompt={promptSite}
+              onPromptChange={setPromptSite}
+              promptManquant={promptManquant}
+              piecesJointes={piecesProduitUnique}
+              actions={actionsProduitUnique}
+              fiche={ficheStyle}
+              onFicheChange={setFicheStyle}
+              autoMode={autoMode}
+              onAutoModeChange={setAutoMode}
+              peutEnvoyer={Boolean(canGenerate)}
+              onEnvoyer={() => handleGenerate(false)}
+              aide={aideComposer}
+            />
           </div>
         )}
 
