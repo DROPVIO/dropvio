@@ -1320,7 +1320,8 @@
     "avis_nombre": "Envía entre 1 y {max} capturas de opiniones.",
     "avis_aucune_image": "No se pudo leer ninguna captura. Prueba con una captura en PNG o JPEG.",
     "avis_aucun": "No se encontró ninguna opinión de 4 o 5 estrellas en estas capturas.",
-    "avis_lecture_echec": "No se pudieron leer las opiniones. Inténtalo de nuevo."
+    "avis_lecture_echec": "No se pudieron leer las opiniones. Inténtalo de nuevo.",
+    "prompt_too_long": "Tu prompt supera los {max} caracteres: acórtalo. Para las opiniones, usa + → Opiniones de clientes (capturas)."
   },
   "siteBuilder": {
     "boutique": {
@@ -1784,7 +1785,8 @@
       "prompt": {
         "label": "Prompt de tu sitio",
         "compteur": "{count, plural, one {# carácter} other {# caracteres}}",
-        "compteurManquant": "{count, plural, one {# carácter} other {# caracteres}}: faltan al menos {manquant}"
+        "compteurManquant": "{count, plural, one {# carácter} other {# caracteres}}: faltan al menos {manquant}",
+        "compteurMax": "{count, number} / {max, number} caracteres"
       },
       "brouillon": {
         "introuvable": "No se encuentra el borrador de la tienda en esta pestaña. Vuelve a la página de tu tienda y pulsa de nuevo «Crear mi sitio».",
@@ -1913,7 +1915,8 @@
         "avisErreur": "No se pudieron leer las opiniones de estas capturas.",
         "avisMention": "Solo se conservan las opiniones de 4 y 5 estrellas de tus capturas ({max} como máximo). Como exige la ley, el sitio indicará que es una selección de opiniones de 4 y 5 estrellas, sin nota media. Quita las que no quieras mostrar.",
         "avisEtoiles": "{count} estrellas",
-        "avisAuteurInconnu": "Comprador"
+        "avisAuteurInconnu": "Comprador",
+        "aidePromptTropLong": "Tu prompt supera los {max, number} caracteres: describe el sitio (secciones, textos, ambiente) sin pegar contenidos largos. Para las opiniones, usa + → Opiniones de clientes (capturas)."
       }
     },
     "modifier": {

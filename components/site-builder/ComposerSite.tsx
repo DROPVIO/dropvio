@@ -35,12 +35,16 @@ export type ActionMenu = {
   | { onClick?: undefined; fichiers: { accept: string; multiple?: boolean; onChoix: (liste: FileList | null) => void } }
 );
 
+// Hauteur maximale du champ avant défilement : 320 px, et jamais plus de 30 % de l'écran
+// pour que la barre (collante en bas) ne masque pas la page.
 const LIGNES_MAX_PX = 320;
+const LIGNES_MAX_PART_ECRAN = 0.3;
 
 export default function ComposerSite({
   prompt,
   onPromptChange,
   promptManquant,
+  promptMax,
   piecesJointes,
   actions,
   onFicheChange,
@@ -56,6 +60,8 @@ export default function ComposerSite({
   onPromptChange: (value: string) => void;
   // Caractères manquants pour atteindre le minimum du prompt (0 : suffisant).
   promptManquant: number;
+  // Longueur maximale du prompt : au-delà, le compteur passe en erreur.
+  promptMax?: number;
   piecesJointes: PieceJointe[];
   actions: ActionMenu[];
   fiche: FicheStyle | null;
@@ -85,7 +91,8 @@ export default function ComposerSite({
     const el = textareaRef.current;
     if (!el) return;
     el.style.height = "auto";
-    el.style.height = `${Math.min(el.scrollHeight, LIGNES_MAX_PX)}px`;
+    const max = Math.min(LIGNES_MAX_PX, Math.round(window.innerHeight * LIGNES_MAX_PART_ECRAN));
+    el.style.height = `${Math.min(el.scrollHeight, max)}px`;
   }, [prompt]);
 
   useEffect(() => {
@@ -108,6 +115,7 @@ export default function ComposerSite({
   }
 
   const aStyle = inspiration.apercus.length > 0 || fiche !== null;
+  const tropLong = promptMax !== undefined && prompt.trim().length > promptMax;
 
   return (
     <div className="flex flex-col gap-2">
@@ -309,8 +317,14 @@ export default function ComposerSite({
           )}
           {outils}
 
-          <span className={`ml-auto hidden text-[11px] sm:inline ${promptManquant > 0 ? "text-[var(--text-faint)]" : "text-[var(--accent)]"}`}>
-            {promptManquant > 0
+          <span
+            className={`ml-auto hidden text-[11px] sm:inline ${
+              tropLong ? "font-semibold text-[var(--danger)]" : promptManquant > 0 ? "text-[var(--text-faint)]" : "text-[var(--accent)]"
+            }`}
+          >
+            {tropLong
+              ? tPrompt("compteurMax", { count: prompt.trim().length, max: promptMax ?? 0 })
+              : promptManquant > 0
               ? tPrompt("compteurManquant", { count: prompt.trim().length, manquant: promptManquant })
               : tPrompt("compteur", { count: prompt.trim().length })}
           </span>

@@ -52,15 +52,22 @@ function injectColorTokens(html: string, tokens: Record<string, string>): string
 }
 
 // Modèle de génération. claude-sonnet-5-5 remplace claude-sonnet-4-6 : plus récent ET moins
-// cher (2 $/10 $ par MTok contre 3 $/15 $). Attention au piège de migration : sur 4.6, ne pas
-// envoyer `thinking` signifiait « pas de réflexion » ; sur 5-5, l'omettre active la réflexion
-// adaptative avec un effort par défaut `high`. On ne passe donc PAS `thinking` (le désactiver
-// renvoie une 400 sur ce modèle) mais on fixe explicitement l'effort, sans quoi la facture de
-// tokens de sortie augmenterait silencieusement.
+// cher (2 $/10 $ par MTok contre 3 $/15 $). Piège de migration : sur 4.6, ne pas envoyer
+// `thinking` signifiait « pas de réflexion » ; sur 5-5, l'omettre active la réflexion
+// adaptative. Or la réflexion se décompte du même max_tokens que le HTML : mesuré en
+// développement, elle prenait 12 000 à 24 000 tokens sur 24 000 (un appel a rendu 0 caractère
+// de HTML), d'où des pages tronquées. On revient donc au comportement d'origine, sans
+// réflexion : THINKING_GENERATION ci-dessous.
 const MODELE_GENERATION = "claude-sonnet-5-5";
-// high : la génération suit désormais un prompt libre décrivant tout le site (sections,
-// textes, animations), qui demande plus de réflexion et une sortie plus longue — environ
-// 1,5 à 2 fois le coût et la durée du réglage medium précédent.
+// { type: "between_tools" } est le réglage le plus bas de claude-sonnet-5-5 (aucune réflexion
+// hors appels d'outils, et cette génération n'a pas d'outil) ; { type: "disabled" } y renvoie
+// une 400. Accepté seulement à l'effort high ou en dessous, sans aucun autre champ. Le SDK
+// installé (0.107) ne connaît pas encore ce type : conversion explicite, à retirer quand ses
+// types l'incluront.
+const THINKING_GENERATION = { type: "between_tools" } as unknown as Anthropic.ThinkingConfigParam;
+// high : la génération suit un prompt libre décrivant tout le site (sections, textes,
+// animations) et produit une sortie longue. C'est aussi le plus haut effort accepté avec
+// THINKING_GENERATION (between_tools).
 const EFFORT_GENERATION = "high" as const;
 
 const MAX_TOKENS_GENERATION = 24000;
@@ -113,6 +120,7 @@ async function generateHtmlViaClaude(prompt: string, suivi: SuiviBudgetIa): Prom
       model: MODELE_GENERATION,
       max_tokens: MAX_TOKENS_GENERATION,
       output_config: { effort: EFFORT_GENERATION },
+      thinking: THINKING_GENERATION,
       // Rôle et périmètre (sites uniquement) + capacités d'animation, communs aux deux modes.
       system: SYSTEM_GENERATION_SITE,
       messages: msgs,
@@ -137,6 +145,8 @@ async function generateHtmlViaClaude(prompt: string, suivi: SuiviBudgetIa): Prom
     );
 
     if (finalMessage.stop_reason !== "max_tokens") break;
+    // Rien d'écrit avant le plafond : pas de début de page à poursuivre, on relance la même demande.
+    if (!chunk) continue;
 
     msgs.push({ role: "assistant", content: chunk });
     msgs.push({
@@ -414,6 +424,9 @@ function consignesStyleDepuis(ficheStyle: unknown): string {
 // ne s'applique que là où il ne dit rien ; seules les règles NON NÉGOCIABLES (garde-fous,
 // données réelles, couleurs, contraintes techniques) l'emportent sur lui.
 const PROMPT_MIN_CARACTERES = 20;
+// Au-delà, le prompt n'est plus une description de site (ex. une page d'avis collée en entier)
+// et allonge la génération jusqu'à la tronquer. Même plafond côté client (app/site-builder/page.tsx).
+const PROMPT_MAX_CARACTERES = 6000;
 
 function promptUtilisateurDe(body: Record<string, unknown>): string {
   const brut =
@@ -450,6 +463,14 @@ export async function POST(request: NextRequest) {
   // Lu et vérifié avant le compteur de générations et le quota : une demande sans prompt
   // suffisant ne consomme rien.
   const body = await request.json();
+  if (promptUtilisateurDe(body).length > PROMPT_MAX_CARACTERES) {
+    return NextResponse.json(
+      {
+        error: `Ton prompt dépasse ${PROMPT_MAX_CARACTERES} caractères : raccourcis-le.`, code: "prompt_too_long", values: { max: PROMPT_MAX_CARACTERES },
+      },
+      { status: 400 }
+    );
+  }
   if (promptUtilisateurDe(body).length < PROMPT_MIN_CARACTERES) {
     return NextResponse.json(
       {

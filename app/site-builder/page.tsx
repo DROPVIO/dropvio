@@ -40,6 +40,8 @@ const DEFAULT_PALETTE: Palette = { primary: "#7c3aed", secondary: "#1a0533", acc
 // Longueur minimale du prompt du site — même seuil que PROMPT_MIN_CARACTERES côté serveur
 // (app/api/generate-site/route.ts), qui refuse aussi la génération en dessous.
 const PROMPT_MIN_CARACTERES = 20;
+// Même plafond que PROMPT_MAX_CARACTERES côté serveur.
+const PROMPT_MAX_CARACTERES = 6000;
 // Même plafond que app/api/avis-capture/route.ts.
 const MAX_CAPTURES_AVIS = 5;
 
@@ -629,15 +631,19 @@ function SiteBuilderContent() {
 
   // Caractères manquants au prompt pour pouvoir générer (0 : prompt suffisant).
   const promptManquant = Math.max(0, PROMPT_MIN_CARACTERES - promptSite.trim().length);
+  const promptTropLong = promptSite.trim().length > PROMPT_MAX_CARACTERES;
   const canGenerate =
     promptManquant === 0 &&
+    !promptTropLong &&
     (boutiqueDraft
       ? boutiqueDraft.produits.length > 0
       : productName.trim() && description.trim() && salePrice.trim());
 
   const produitIncomplet = !productName.trim() || !description.trim() || !salePrice.trim();
   // Ce qui manque encore pour générer, affiché sous la barre de saisie.
-  const aideComposer = boutiqueDraft
+  const aideComposer = promptTropLong
+    ? t("composer.aidePromptTropLong", { max: PROMPT_MAX_CARACTERES })
+    : boutiqueDraft
     ? boutiqueDraft.produits.length === 0
       ? t("composer.aideProduitsBoutique")
       : promptManquant > 0
@@ -913,6 +919,7 @@ function SiteBuilderContent() {
                 prompt={promptSite}
                 onPromptChange={setPromptSite}
                 promptManquant={promptManquant}
+                promptMax={PROMPT_MAX_CARACTERES}
                 piecesJointes={[
                   {
                     id: "produits",
@@ -1205,11 +1212,18 @@ function SiteBuilderContent() {
 
               {/* Barre de saisie collante quand la page défile (sticky) ; le dégradé masque le
                   contenu qui passe dessous. */}
-              <div className="sticky bottom-0 z-10 -mx-2 px-2 pt-6 pb-2 bg-gradient-to-t from-[var(--bg)] from-70% to-transparent">
+              {/* Collante seulement sans panneau ouvert : sinon une barre haute (long prompt)
+                  recouvrirait la fiche produit, les corrections ou les avis. */}
+              <div
+                className={`z-10 -mx-2 px-2 pt-6 pb-2 bg-gradient-to-t from-[var(--bg)] from-70% to-transparent ${
+                  produitOuvert || correctionsOuvertes || (avisOuverts && avis.length > 0) ? "" : "sticky bottom-0"
+                }`}
+              >
                 <ComposerSite
                   prompt={promptSite}
                   onPromptChange={setPromptSite}
                   promptManquant={promptManquant}
+                promptMax={PROMPT_MAX_CARACTERES}
                   piecesJointes={piecesProduitUnique}
                   actions={actionsProduitUnique}
                   fiche={ficheStyle}

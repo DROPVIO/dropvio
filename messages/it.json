@@ -1320,7 +1320,8 @@
     "avis_nombre": "Invia da 1 a {max} screenshot di recensioni.",
     "avis_aucune_image": "Nessuno screenshot è leggibile. Prova uno screenshot PNG o JPEG.",
     "avis_aucun": "Nessuna recensione da 4 o 5 stelle trovata in questi screenshot.",
-    "avis_lecture_echec": "Impossibile leggere le recensioni. Riprova."
+    "avis_lecture_echec": "Impossibile leggere le recensioni. Riprova.",
+    "prompt_too_long": "Il tuo prompt supera i {max} caratteri: accorcialo. Per le recensioni, usa + → Recensioni clienti (screenshot)."
   },
   "siteBuilder": {
     "boutique": {
@@ -1784,7 +1785,8 @@
       "prompt": {
         "label": "Prompt del tuo sito",
         "compteur": "{count, plural, one {# carattere} other {# caratteri}}",
-        "compteurManquant": "{count, plural, one {# carattere} other {# caratteri}}: ne servono almeno altri {manquant}"
+        "compteurManquant": "{count, plural, one {# carattere} other {# caratteri}}: ne servono almeno altri {manquant}",
+        "compteurMax": "{count, number} / {max, number} caratteri"
       },
       "brouillon": {
         "introuvable": "La bozza del negozio non si trova in questa scheda. Torna alla pagina del tuo negozio e rilancia «Crea il mio sito».",
@@ -1913,7 +1915,8 @@
         "avisErreur": "Impossibile leggere le recensioni da questi screenshot.",
         "avisMention": "Vengono tenute solo le recensioni da 4 e 5 stelle dei tuoi screenshot ({max} al massimo). Come richiede la legge, il sito indicherà che si tratta di una selezione di recensioni da 4 e 5 stelle, senza voto medio. Rimuovi quelle che non vuoi mostrare.",
         "avisEtoiles": "{count} stelle",
-        "avisAuteurInconnu": "Acquirente"
+        "avisAuteurInconnu": "Acquirente",
+        "aidePromptTropLong": "Il tuo prompt supera i {max, number} caratteri: descrivi il sito (sezioni, testi, atmosfera) senza incollare contenuti lunghi. Per le recensioni, usa + → Recensioni clienti (screenshot)."
       }
     },
     "modifier": {

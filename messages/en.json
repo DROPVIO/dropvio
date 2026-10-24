@@ -1320,7 +1320,8 @@
     "avis_nombre": "Send between 1 and {max} review screenshots.",
     "avis_aucune_image": "None of the screenshots could be read. Try a PNG or JPEG screenshot.",
     "avis_aucun": "No 4 or 5-star reviews were found in these screenshots.",
-    "avis_lecture_echec": "Couldn't read the reviews. Try again."
+    "avis_lecture_echec": "Couldn't read the reviews. Try again.",
+    "prompt_too_long": "Your prompt is over {max} characters: shorten it. For reviews, use + → Customer reviews (screenshots)."
   },
   "siteBuilder": {
     "boutique": {
@@ -1784,7 +1785,8 @@
       "prompt": {
         "label": "Your site prompt",
         "compteur": "{count, plural, one {# character} other {# characters}}",
-        "compteurManquant": "{count, plural, one {# character} other {# characters}}: {manquant} more needed"
+        "compteurManquant": "{count, plural, one {# character} other {# characters}}: {manquant} more needed",
+        "compteurMax": "{count, number} / {max, number} characters"
       },
       "brouillon": {
         "introuvable": "The store draft can't be found in this tab. Go back to your store page and click “Create my site” again.",
@@ -1913,7 +1915,8 @@
         "avisErreur": "Couldn't read reviews from these screenshots.",
         "avisMention": "Only 4 and 5-star reviews from your screenshots are kept ({max} at most). As the law requires, the site will state that this is a selection of 4 and 5-star reviews, with no average rating. Remove any you don't want to show.",
         "avisEtoiles": "{count} stars",
-        "avisAuteurInconnu": "Buyer"
+        "avisAuteurInconnu": "Buyer",
+        "aidePromptTropLong": "Your prompt is over {max, number} characters: describe the site (sections, copy, mood) without pasting long content. For reviews, use + → Customer reviews (screenshots)."
       }
     },
     "modifier": {
