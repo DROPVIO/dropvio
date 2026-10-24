@@ -1316,7 +1316,11 @@
     "limite_ia_jour": "Limite IA des dernières 24 heures atteinte. Elle se libère progressivement : réessaie le {reprise, date, short} à {reprise, time, short}.",
     "limite_ia_semaine": "Limite IA des 7 derniers jours atteinte. Elle se libère progressivement : réessaie le {reprise, date, short} à {reprise, time, short}.",
     "modification_echec": "La modification n'a pas pu être appliquée. Reformule ta demande ou découpe-la en plusieurs.",
-    "prompt_hors_sujet": "Le créateur de sites ne fait que des sites : décris le site que tu veux (sections, textes, ambiance, animations)."
+    "prompt_hors_sujet": "Le créateur de sites ne fait que des sites : décris le site que tu veux (sections, textes, ambiance, animations).",
+    "avis_nombre": "Envoie entre 1 et {max} captures d'avis.",
+    "avis_aucune_image": "Aucune capture n'a pu être lue. Essaie une capture d'écran en PNG ou JPEG.",
+    "avis_aucun": "Aucun avis 4 ou 5 étoiles n'a été trouvé sur ces captures.",
+    "avis_lecture_echec": "Impossible de lire les avis. Réessaie."
   },
   "siteBuilder": {
     "boutique": {
@@ -1898,7 +1902,18 @@
         "correctionsCompte": "{count, plural, one {# correction} other {# corrections}}",
         "aideProduit": "Ajoute ton produit avec le + (nom, description et prix de vente) pour pouvoir générer.",
         "aideProduitsBoutique": "Ajoute au moins un produit avec le + pour pouvoir générer.",
-        "aidePrompt": "Ton prompt doit faire au moins {min} caractères (encore {manquant}) : c'est lui qui guide toute la génération."
+        "aidePrompt": "Ton prompt doit faire au moins {min} caractères (encore {manquant}) : c'est lui qui guide toute la génération.",
+        "avisAjouter": "Avis clients (captures)",
+        "avisAjouterAide": "Captures des avis AliExpress du produit : seuls les avis 4 et 5 étoiles sont gardés.",
+        "avisLecture": "Lecture des avis…",
+        "avisLectureAide": "Seuls les 4 et 5 étoiles seront gardés",
+        "avisCompte": "{count, plural, one {# avis client} other {# avis clients}}",
+        "avisSelection": "4 et 5 étoiles",
+        "avisTropDeCaptures": "{max} captures au maximum.",
+        "avisErreur": "Impossible de lire les avis sur ces captures.",
+        "avisMention": "Seuls les avis 4 et 5 étoiles de tes captures sont gardés ({max} au maximum). Le site indiquera qu'il s'agit d'une sélection d'avis 4 et 5 étoiles, comme l'exige la loi, sans note moyenne. Retire ceux que tu ne veux pas afficher.",
+        "avisEtoiles": "{count} étoiles",
+        "avisAuteurInconnu": "Acheteur"
       }
     },
     "modifier": {

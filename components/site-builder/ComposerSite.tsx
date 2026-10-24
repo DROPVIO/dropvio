@@ -29,8 +29,11 @@ export type ActionMenu = {
   libelle: string;
   aide?: string;
   disabled?: boolean;
-  onClick: () => void;
-};
+} & (
+  | { onClick: () => void; fichiers?: undefined }
+  // Entrée qui ouvre directement le sélecteur de fichiers (ex. captures d'avis clients).
+  | { onClick?: undefined; fichiers: { accept: string; multiple?: boolean; onChoix: (liste: FileList | null) => void } }
+);
 
 const LIGNES_MAX_PX = 320;
 
@@ -202,25 +205,49 @@ export default function ComposerSite({
                 role="menu"
                 className="absolute bottom-full left-0 z-20 mb-2 w-72 rounded-2xl border border-[var(--border-strong)] bg-[var(--surface)] p-1.5 shadow-xl shadow-black/10"
               >
-                {actions.map((a) => (
-                  <button
-                    key={a.id}
-                    type="button"
-                    role="menuitem"
-                    disabled={a.disabled}
-                    onClick={() => {
-                      setMenuOuvert(false);
-                      a.onClick();
-                    }}
-                    className="flex w-full items-start gap-3 rounded-xl px-3 py-2.5 text-left transition hover:bg-[var(--surface-2)] disabled:cursor-not-allowed disabled:opacity-40"
-                  >
-                    <span className="text-base leading-5">{a.icone}</span>
-                    <span className="min-w-0">
-                      <span className="block text-sm font-medium text-[var(--text-primary)]">{a.libelle}</span>
-                      {a.aide && <span className="block text-[11px] text-[var(--text-faint)]">{a.aide}</span>}
-                    </span>
-                  </button>
-                ))}
+                {actions.map((a) => {
+                  const contenu = (
+                    <>
+                      <span className="text-base leading-5">{a.icone}</span>
+                      <span className="min-w-0">
+                        <span className="block text-sm font-medium text-[var(--text-primary)]">{a.libelle}</span>
+                        {a.aide && <span className="block text-[11px] text-[var(--text-faint)]">{a.aide}</span>}
+                      </span>
+                    </>
+                  );
+                  return a.fichiers ? (
+                    <label
+                      key={a.id}
+                      htmlFor={`${fichierId}-${a.id}`}
+                      role="menuitem"
+                      aria-disabled={a.disabled}
+                      onClick={(e) => {
+                        if (a.disabled) e.preventDefault();
+                        // Fermeture différée : voir le label des images d'inspiration ci-dessous.
+                        setTimeout(() => setMenuOuvert(false), 0);
+                      }}
+                      className={`flex w-full items-start gap-3 rounded-xl px-3 py-2.5 text-left transition hover:bg-[var(--surface-2)] ${
+                        a.disabled ? "cursor-not-allowed opacity-40" : "cursor-pointer"
+                      }`}
+                    >
+                      {contenu}
+                    </label>
+                  ) : (
+                    <button
+                      key={a.id}
+                      type="button"
+                      role="menuitem"
+                      disabled={a.disabled}
+                      onClick={() => {
+                        setMenuOuvert(false);
+                        a.onClick();
+                      }}
+                      className="flex w-full items-start gap-3 rounded-xl px-3 py-2.5 text-left transition hover:bg-[var(--surface-2)] disabled:cursor-not-allowed disabled:opacity-40"
+                    >
+                      {contenu}
+                    </button>
+                  );
+                })}
                 <label
                   htmlFor={fichierId}
                   role="menuitem"
@@ -244,6 +271,22 @@ export default function ComposerSite({
                   </span>
                 </label>
               </div>
+            )}
+            {actions.map((a) =>
+              a.fichiers ? (
+                <input
+                  key={a.id}
+                  id={`${fichierId}-${a.id}`}
+                  type="file"
+                  accept={a.fichiers.accept}
+                  multiple={a.fichiers.multiple}
+                  className="hidden"
+                  onChange={(e) => {
+                    a.fichiers.onChoix(e.target.files);
+                    e.target.value = "";
+                  }}
+                />
+              ) : null
             )}
             <input
               id={fichierId}

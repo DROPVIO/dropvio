@@ -7,6 +7,8 @@ import TemplateEditor from "./TemplateEditor";
 import BoutiqueProduitsEditor from "@/components/site-builder/BoutiqueProduitsEditor";
 import ColorTokenPanel from "@/components/site-builder/ColorTokenPanel";
 import ComposerSite, { BoutonOutil, type ActionMenu, type PieceJointe } from "@/components/site-builder/ComposerSite";
+import { reduirePourEnvoi } from "@/components/site-builder/InspirationStyle";
+import { MAX_AVIS, validerAvis, type AvisProduit } from "@/lib/avis-produit";
 import ApercuPages from "@/components/site-builder/ApercuPages";
 import ModifierSiteIA from "@/components/site-builder/ModifierSiteIA";
 import { pagesSiMultiples } from "@/lib/site-builder-pages";
@@ -38,6 +40,8 @@ const DEFAULT_PALETTE: Palette = { primary: "#7c3aed", secondary: "#1a0533", acc
 // Longueur minimale du prompt du site — même seuil que PROMPT_MIN_CARACTERES côté serveur
 // (app/api/generate-site/route.ts), qui refuse aussi la génération en dessous.
 const PROMPT_MIN_CARACTERES = 20;
+// Même plafond que app/api/avis-capture/route.ts.
+const MAX_CAPTURES_AVIS = 5;
 
 // Liens externes (http/https) ouverts dans un nouvel onglet. Les liens internes (#ancre,
 // pages du site) restent tels quels : avec target="_blank", chaque clic sur « Commander » ou
@@ -128,6 +132,12 @@ function SiteBuilderContent() {
   const [correctionsOuvertes, setCorrectionsOuvertes] = useState(false);
   const [produitsBoutiqueOuverts, setProduitsBoutiqueOuverts] = useState(false);
   const produitsBoutiqueRef = useRef<HTMLDetailsElement>(null);
+  // Avis clients réels lus sur des captures d'écran (app/api/avis-capture/route.ts) : seuls
+  // les 4 et 5 étoiles sont gardés, puis envoyés avec la génération (mode produit unique).
+  const [avis, setAvis] = useState<AvisProduit[]>([]);
+  const [avisChargement, setAvisChargement] = useState(false);
+  const [avisErreur, setAvisErreur] = useState<string | null>(null);
+  const [avisOuverts, setAvisOuverts] = useState(false);
 
   // Prices
   // Préremplis par ?prixVente=…&prixOriginal=… (page boutique) — repris seulement si c'est un
@@ -480,6 +490,7 @@ function SiteBuilderContent() {
             salePrice: salePrice.trim() || undefined,
             originalPrice: originalPrice.trim() || undefined,
             corrections: correctionsList(),
+            avis: avis.length > 0 ? avis : undefined,
             ficheStyle: ficheStyle ?? undefined,
             prompt: promptSite.trim(),
             langue: langueSite,
@@ -687,6 +698,20 @@ function SiteBuilderContent() {
           onClick: () => setProduitOuvert(true),
         },
     ...pieceCorrections,
+    ...(avisChargement
+      ? [{ id: "avis", icone: "⏳", titre: t("composer.avisLecture"), sousTitre: t("composer.avisLectureAide") }]
+      : avis.length > 0
+        ? [
+            {
+              id: "avis",
+              icone: "⭐",
+              titre: t("composer.avisCompte", { count: avis.length }),
+              sousTitre: t("composer.avisSelection"),
+              onClick: () => setAvisOuverts(true),
+              onRetirer: () => setAvis([]),
+            },
+          ]
+        : []),
   ];
   const actionsProduitUnique: ActionMenu[] = [
     {
@@ -697,7 +722,44 @@ function SiteBuilderContent() {
       onClick: () => setProduitOuvert(true),
     },
     actionCorrections,
+    {
+      id: "avis",
+      icone: "⭐",
+      libelle: t("composer.avisAjouter"),
+      aide: t("composer.avisAjouterAide"),
+      disabled: avisChargement,
+      fichiers: { accept: "image/*", multiple: true, onChoix: (liste) => void ajouterAvisDepuis(liste) },
+    },
   ];
+
+  // Captures d'avis → avis 4 et 5 étoiles, ajoutés à ceux déjà lus (sans doublon, MAX_AVIS au
+  // plus). Images réduites dans le navigateur avant l'envoi, comme les captures d'inspiration.
+  async function ajouterAvisDepuis(liste: FileList | null) {
+    const choisis = Array.from(liste ?? []);
+    if (choisis.length === 0) return;
+    if (choisis.length > MAX_CAPTURES_AVIS) {
+      setAvisErreur(t("composer.avisTropDeCaptures", { max: MAX_CAPTURES_AVIS }));
+      return;
+    }
+    setAvisChargement(true);
+    setAvisErreur(null);
+    try {
+      const form = new FormData();
+      for (const f of choisis) form.append("files", await reduirePourEnvoi(f), f.name);
+      const res = await fetch("/api/avis-capture", { method: "POST", body: form });
+      const json = await res.json().catch(() => null);
+      if (!res.ok || !json) {
+        setAvisErreur(apiErrorMessage(json, t("composer.avisErreur")));
+        return;
+      }
+      setAvis((actuels) => validerAvis([...actuels, ...(json.avis ?? [])]));
+      setAvisOuverts(true);
+    } catch {
+      setAvisErreur(apiErrorMessage({ code: "network" }));
+    } finally {
+      setAvisChargement(false);
+    }
+  }
 
   // Format d'export, dans la barre d'outils de la barre de saisie (à côté de « Style auto ») :
   // un clic bascule entre HTML et Liquid. Purement déclaratif à ce stade : la génération est
@@ -1071,6 +1133,50 @@ function SiteBuilderContent() {
                   </div>
                 </div>
               )}
+
+              {/* Avis clients lus sur les captures : relecture et retrait un par un avant la
+                  génération. Seuls les 4 et 5 étoiles ont été gardés, la page l'indiquera. */}
+              {avisOuverts && avis.length > 0 && (
+                <div className="rounded-3xl bg-[var(--surface)] border border-[var(--border)] p-6 flex flex-col gap-3">
+                  <div className="flex items-center justify-between gap-3">
+                    <h2 className="text-sm font-semibold text-[var(--text-primary)]">
+                      {t("composer.avisCompte", { count: avis.length })}
+                    </h2>
+                    <button
+                      type="button"
+                      onClick={() => setAvisOuverts(false)}
+                      className="rounded-full border border-[var(--border-strong)] px-3 py-1 text-xs font-semibold text-[var(--text-primary)] transition hover:bg-[var(--surface-2)]"
+                    >
+                      {t("composer.terminer")}
+                    </button>
+                  </div>
+                  <p className="text-xs text-[var(--text-faint)]">{t("composer.avisMention", { max: MAX_AVIS })}</p>
+                  <ul className="flex max-h-80 flex-col gap-2 overflow-y-auto">
+                    {avis.map((a, i) => (
+                      <li key={`${a.texte}-${i}`} className="flex gap-3 rounded-2xl border border-[var(--border)] bg-[var(--bg)] p-3">
+                        <div className="min-w-0 flex-1">
+                          <p className="text-xs">
+                            <span className="text-amber-500" aria-label={t("composer.avisEtoiles", { count: a.note })}>
+                              {"★".repeat(a.note)}
+                            </span>{" "}
+                            <span className="font-semibold text-[var(--text-primary)]">{a.auteur || t("composer.avisAuteurInconnu")}</span>
+                          </p>
+                          <p className="mt-1 line-clamp-3 text-sm text-[var(--text-muted)]">{a.texte}</p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setAvis((liste) => liste.filter((_, j) => j !== i))}
+                          aria-label={t("composer.retirer")}
+                          className="self-start rounded-full px-2 text-[var(--text-faint)] transition hover:text-[var(--text-primary)]"
+                        >
+                          ✕
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              {avisErreur && <p className="px-2 text-xs text-[var(--danger)]">{avisErreur}</p>}
 
               {/* Corrections d'un audit précédent — pré-remplies automatiquement lors d'une
                   régénération si un audit est lié à ce site (voir useEffect plus haut), sinon

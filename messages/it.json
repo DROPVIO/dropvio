@@ -1316,7 +1316,11 @@
     "limite_ia_jour": "Limite IA delle ultime 24 ore raggiunto. Si libera gradualmente: riprova il {reprise, date, short} alle {reprise, time, short}.",
     "limite_ia_semaine": "Limite IA degli ultimi 7 giorni raggiunto. Si libera gradualmente: riprova il {reprise, date, short} alle {reprise, time, short}.",
     "modification_echec": "Non è stato possibile applicare la modifica. Riformula la richiesta o dividila in più parti.",
-    "prompt_hors_sujet": "Il creatore di siti fa solo siti: descrivi il sito che vuoi (sezioni, testi, atmosfera, animazioni)."
+    "prompt_hors_sujet": "Il creatore di siti fa solo siti: descrivi il sito che vuoi (sezioni, testi, atmosfera, animazioni).",
+    "avis_nombre": "Invia da 1 a {max} screenshot di recensioni.",
+    "avis_aucune_image": "Nessuno screenshot è leggibile. Prova uno screenshot PNG o JPEG.",
+    "avis_aucun": "Nessuna recensione da 4 o 5 stelle trovata in questi screenshot.",
+    "avis_lecture_echec": "Impossibile leggere le recensioni. Riprova."
   },
   "siteBuilder": {
     "boutique": {
@@ -1898,7 +1902,18 @@
         "correctionsCompte": "{count, plural, one {# correzione} other {# correzioni}}",
         "aideProduit": "Aggiungi il tuo prodotto con il + (nome, descrizione e prezzo di vendita) per poter generare.",
         "aideProduitsBoutique": "Aggiungi almeno un prodotto con il + per poter generare.",
-        "aidePrompt": "Il tuo prompt deve avere almeno {min} caratteri (ne mancano {manquant}): è lui a guidare tutta la generazione."
+        "aidePrompt": "Il tuo prompt deve avere almeno {min} caratteri (ne mancano {manquant}): è lui a guidare tutta la generazione.",
+        "avisAjouter": "Recensioni clienti (screenshot)",
+        "avisAjouterAide": "Screenshot delle recensioni AliExpress del prodotto: vengono tenute solo quelle da 4 e 5 stelle.",
+        "avisLecture": "Lettura delle recensioni…",
+        "avisLectureAide": "Verranno tenute solo quelle da 4 e 5 stelle",
+        "avisCompte": "{count, plural, one {# recensione cliente} other {# recensioni clienti}}",
+        "avisSelection": "4 e 5 stelle",
+        "avisTropDeCaptures": "{max} screenshot al massimo.",
+        "avisErreur": "Impossibile leggere le recensioni da questi screenshot.",
+        "avisMention": "Vengono tenute solo le recensioni da 4 e 5 stelle dei tuoi screenshot ({max} al massimo). Come richiede la legge, il sito indicherà che si tratta di una selezione di recensioni da 4 e 5 stelle, senza voto medio. Rimuovi quelle che non vuoi mostrare.",
+        "avisEtoiles": "{count} stelle",
+        "avisAuteurInconnu": "Acquirente"
       }
     },
     "modifier": {

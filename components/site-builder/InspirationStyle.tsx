@@ -16,11 +16,11 @@ import type { FicheStyle } from "@/lib/style-fiche";
 export const MAX_FICHIERS_INSPIRATION = 3;
 const COTE_MAX = 1600;
 
-// Réduction avant envoi : Vercel refuse toute requête de plus de 4,5 Mo, alors qu'une photo
+// Réduction avant envoi (aussi utilisée pour les captures d'avis) : Vercel refuse toute requête de plus de 4,5 Mo, alors qu'une photo
 // de téléphone dépasse souvent 10 Mo. Ce que le navigateur sait décoder (dont le HEIC sur
 // Safari/iPhone) est redessiné en JPEG 1600 px max ; sinon le fichier d'origine part tel
 // quel et le serveur tranche (format illisible ou trop lourd, signalé par fichier).
-async function reduirePourEnvoi(fichier: File): Promise<Blob> {
+export async function reduirePourEnvoi(fichier: File): Promise<Blob> {
   const url = URL.createObjectURL(fichier);
   try {
     const img = new Image();

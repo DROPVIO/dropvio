@@ -1316,7 +1316,11 @@
     "limite_ia_jour": "AI limit for the last 24 hours reached. It frees up gradually: try again on {reprise, date, short} at {reprise, time, short}.",
     "limite_ia_semaine": "AI limit for the last 7 days reached. It frees up gradually: try again on {reprise, date, short} at {reprise, time, short}.",
     "modification_echec": "The change couldn't be applied. Rephrase your request or split it into several.",
-    "prompt_hors_sujet": "The site builder only builds sites: describe the site you want (sections, copy, mood, animations)."
+    "prompt_hors_sujet": "The site builder only builds sites: describe the site you want (sections, copy, mood, animations).",
+    "avis_nombre": "Send between 1 and {max} review screenshots.",
+    "avis_aucune_image": "None of the screenshots could be read. Try a PNG or JPEG screenshot.",
+    "avis_aucun": "No 4 or 5-star reviews were found in these screenshots.",
+    "avis_lecture_echec": "Couldn't read the reviews. Try again."
   },
   "siteBuilder": {
     "boutique": {
@@ -1898,7 +1902,18 @@
         "correctionsCompte": "{count, plural, one {# fix} other {# fixes}}",
         "aideProduit": "Add your product with + (name, description and sale price) to generate.",
         "aideProduitsBoutique": "Add at least one product with + to generate.",
-        "aidePrompt": "Your prompt needs at least {min} characters ({manquant} to go): it drives the whole generation."
+        "aidePrompt": "Your prompt needs at least {min} characters ({manquant} to go): it drives the whole generation.",
+        "avisAjouter": "Customer reviews (screenshots)",
+        "avisAjouterAide": "Screenshots of the product's AliExpress reviews: only 4 and 5-star reviews are kept.",
+        "avisLecture": "Reading reviews…",
+        "avisLectureAide": "Only 4 and 5-star reviews will be kept",
+        "avisCompte": "{count, plural, one {# customer review} other {# customer reviews}}",
+        "avisSelection": "4 and 5 stars",
+        "avisTropDeCaptures": "{max} screenshots at most.",
+        "avisErreur": "Couldn't read reviews from these screenshots.",
+        "avisMention": "Only 4 and 5-star reviews from your screenshots are kept ({max} at most). As the law requires, the site will state that this is a selection of 4 and 5-star reviews, with no average rating. Remove any you don't want to show.",
+        "avisEtoiles": "{count} stars",
+        "avisAuteurInconnu": "Buyer"
       }
     },
     "modifier": {

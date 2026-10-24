@@ -1316,7 +1316,11 @@
     "limite_ia_jour": "Se ha alcanzado el límite de IA de las últimas 24 horas. Se libera poco a poco: vuelve a intentarlo el {reprise, date, short} a las {reprise, time, short}.",
     "limite_ia_semaine": "Se ha alcanzado el límite de IA de los últimos 7 días. Se libera poco a poco: vuelve a intentarlo el {reprise, date, short} a las {reprise, time, short}.",
     "modification_echec": "No se pudo aplicar el cambio. Reformula tu petición o divídela en varias.",
-    "prompt_hors_sujet": "El creador de sitios solo hace sitios: describe el sitio que quieres (secciones, textos, ambiente, animaciones)."
+    "prompt_hors_sujet": "El creador de sitios solo hace sitios: describe el sitio que quieres (secciones, textos, ambiente, animaciones).",
+    "avis_nombre": "Envía entre 1 y {max} capturas de opiniones.",
+    "avis_aucune_image": "No se pudo leer ninguna captura. Prueba con una captura en PNG o JPEG.",
+    "avis_aucun": "No se encontró ninguna opinión de 4 o 5 estrellas en estas capturas.",
+    "avis_lecture_echec": "No se pudieron leer las opiniones. Inténtalo de nuevo."
   },
   "siteBuilder": {
     "boutique": {
@@ -1898,7 +1902,18 @@
         "correctionsCompte": "{count, plural, one {# corrección} other {# correcciones}}",
         "aideProduit": "Añade tu producto con el + (nombre, descripción y precio de venta) para poder generar.",
         "aideProduitsBoutique": "Añade al menos un producto con el + para poder generar.",
-        "aidePrompt": "Tu prompt debe tener al menos {min} caracteres (faltan {manquant}): es lo que guía toda la generación."
+        "aidePrompt": "Tu prompt debe tener al menos {min} caracteres (faltan {manquant}): es lo que guía toda la generación.",
+        "avisAjouter": "Opiniones de clientes (capturas)",
+        "avisAjouterAide": "Capturas de las opiniones del producto en AliExpress: solo se conservan las de 4 y 5 estrellas.",
+        "avisLecture": "Leyendo opiniones…",
+        "avisLectureAide": "Solo se conservarán las de 4 y 5 estrellas",
+        "avisCompte": "{count, plural, one {# opinión de cliente} other {# opiniones de clientes}}",
+        "avisSelection": "4 y 5 estrellas",
+        "avisTropDeCaptures": "{max} capturas como máximo.",
+        "avisErreur": "No se pudieron leer las opiniones de estas capturas.",
+        "avisMention": "Solo se conservan las opiniones de 4 y 5 estrellas de tus capturas ({max} como máximo). Como exige la ley, el sitio indicará que es una selección de opiniones de 4 y 5 estrellas, sin nota media. Quita las que no quieras mostrar.",
+        "avisEtoiles": "{count} estrellas",
+        "avisAuteurInconnu": "Comprador"
       }
     },
     "modifier": {

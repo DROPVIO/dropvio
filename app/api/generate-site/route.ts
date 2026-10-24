@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { estReponseHorsSujet, HorsSujetError, MESSAGE_HORS_SUJET, SYSTEM_GENERATION_SITE } from "@/lib/cadre-createur-site";
+import { blocAvisPrompt, validerAvis } from "@/lib/avis-produit";
 import Anthropic from "@anthropic-ai/sdk";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { getServerUserAndPlan } from "@/lib/supabase-server";
@@ -513,6 +514,9 @@ export async function POST(request: NextRequest) {
   const prixBarreTxt = originalPrice ? prixSite(originalPrice, langue) : "";
   const consignesStyle = consignesStyleDepuis(body.ficheStyle);
   const promptUtilisateur = promptUtilisateurDe(body);
+  // Avis réels lus sur des captures (app/api/avis-capture/route.ts), revalidés ici : seuls
+  // les 4 et 5 étoiles passent. Absents : prompt inchangé.
+  const avis = validerAvis(body.avis);
 
   // Régénération avec prise en compte d'un audit précédent (voir app/site-builder/page.tsx,
   // textarea "Corrections à prendre en compte") — optionnel et additif : absent, le prompt
@@ -667,9 +671,9 @@ RÈGLES PAR DÉFAUT — UX & CONVERSION (Nielsen Norman Group / Unbounce / McKin
 
 - IMAGE PRODUIT DOMINANTE : ${imageUrl ? `l'image <img src="${imageUrl}"> doit être visible IMMÉDIATEMENT à l'ouverture de la page (above the fold dans le hero), taille minimum 300px de large, clairement mise en valeur. Ne pas la réduire, la cacher derrière du texte, ou la pousser sous la ligne de flottaison.` : `pas d'image fournie : ${EMPLACEMENT_IMAGE_VIDE}.`}
 
-INTERDIT (NON NÉGOCIABLE) : noms de marques, journaux, magazines, médias, célébrités, plateformes e-commerce (AliExpress, Amazon, etc.). Aucun avis client inventé, aucun nom fictif, aucune citation fabriquée.
+INTERDIT (NON NÉGOCIABLE) : noms de marques, journaux, magazines, médias, célébrités, plateformes e-commerce (AliExpress, Amazon, etc.). Aucun avis client inventé, aucun nom fictif, aucune citation fabriquée${avis.length > 0 ? " : les seuls avis autorisés sont ceux de la section AVIS CLIENTS ci-dessous" : ""}.
 AUCUN CHIFFRE NON FOURNI (NON NÉGOCIABLE) : n'écris jamais un délai (livraison, réponse du support, durée, garantie), un pourcentage, une note, un avis compté ou une quantité qui ne figure pas explicitement dans les données ci-dessus. Si une information chiffrée te manque, reformule sans chiffre (« livraison rapide », « support réactif », « paiement sécurisé ») plutôt que d'inventer une valeur plausible.
-${consignesStyle}${correctionsList.length > 0 ? `
+${blocAvisPrompt(avis, NOMS_LANGUE[langue])}${consignesStyle}${correctionsList.length > 0 ? `
 POINTS À CORRIGER PAR RAPPORT À UN AUDIT PRÉCÉDENT (prioritaire — cette page a déjà été générée une première fois et auditée par un expert CRO/UX ; corrige spécifiquement chacun de ces points dans cette nouvelle version, en plus de respecter toutes les règles ci-dessus) :
 ${correctionsList.map((c) => `- ${c}`).join("\n")}
 ` : ""}
