@@ -25,7 +25,6 @@ export const maxDuration = 300;
 
 const MODELE = "claude-sonnet-5-5";
 const SORTIE_MAX = 32000;
-const DEMANDE_MAX = 2000;
 
 const SYSTEM = `Tu es un développeur front-end expert en sites e-commerce. Tu modifies un site HTML existant selon la demande de son propriétaire, sous forme de remplacements ciblés, sans jamais renvoyer une page entière.
 
@@ -60,7 +59,7 @@ export async function POST(request: NextRequest) {
   }
 
   const corps = await request.json().catch(() => null);
-  const demande = typeof corps?.demande === "string" ? corps.demande.trim().slice(0, DEMANDE_MAX) : "";
+  const demande = typeof corps?.demande === "string" ? corps.demande.trim() : "";
   const pages: Record<string, string> | null = pagesValides(corps?.pages)
     ? corps.pages
     : typeof corps?.html === "string" && corps.html.trim()

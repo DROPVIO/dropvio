@@ -44,7 +44,6 @@ export default function ComposerSite({
   prompt,
   onPromptChange,
   promptManquant,
-  promptMax,
   piecesJointes,
   actions,
   onFicheChange,
@@ -60,8 +59,6 @@ export default function ComposerSite({
   onPromptChange: (value: string) => void;
   // Caractères manquants pour atteindre le minimum du prompt (0 : suffisant).
   promptManquant: number;
-  // Longueur maximale du prompt : au-delà, le compteur passe en erreur.
-  promptMax?: number;
   piecesJointes: PieceJointe[];
   actions: ActionMenu[];
   fiche: FicheStyle | null;
@@ -115,7 +112,6 @@ export default function ComposerSite({
   }
 
   const aStyle = inspiration.apercus.length > 0 || fiche !== null;
-  const tropLong = promptMax !== undefined && prompt.trim().length > promptMax;
 
   return (
     <div className="flex flex-col gap-2">
@@ -317,14 +313,8 @@ export default function ComposerSite({
           )}
           {outils}
 
-          <span
-            className={`ml-auto hidden text-[11px] sm:inline ${
-              tropLong ? "font-semibold text-[var(--danger)]" : promptManquant > 0 ? "text-[var(--text-faint)]" : "text-[var(--accent)]"
-            }`}
-          >
-            {tropLong
-              ? tPrompt("compteurMax", { count: prompt.trim().length, max: promptMax ?? 0 })
-              : promptManquant > 0
+          <span className={`ml-auto hidden text-[11px] sm:inline ${promptManquant > 0 ? "text-[var(--text-faint)]" : "text-[var(--accent)]"}`}>
+            {promptManquant > 0
               ? tPrompt("compteurManquant", { count: prompt.trim().length, manquant: promptManquant })
               : tPrompt("compteur", { count: prompt.trim().length })}
           </span>

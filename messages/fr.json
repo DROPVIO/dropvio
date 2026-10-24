@@ -1320,8 +1320,7 @@
     "avis_nombre": "Envoie entre 1 et {max} captures d'avis.",
     "avis_aucune_image": "Aucune capture n'a pu être lue. Essaie une capture d'écran en PNG ou JPEG.",
     "avis_aucun": "Aucun avis 4 ou 5 étoiles n'a été trouvé sur ces captures.",
-    "avis_lecture_echec": "Impossible de lire les avis. Réessaie.",
-    "prompt_too_long": "Ton prompt dépasse {max} caractères : raccourcis-le. Pour les avis, utilise + → Avis clients (captures)."
+    "avis_lecture_echec": "Impossible de lire les avis. Réessaie."
   },
   "siteBuilder": {
     "boutique": {
@@ -1785,8 +1784,7 @@
       "prompt": {
         "label": "Prompt de ton site",
         "compteur": "{count, plural, one {# caractère} other {# caractères}}",
-        "compteurManquant": "{count, plural, one {# caractère} other {# caractères}} : encore {manquant} au minimum",
-        "compteurMax": "{count, number} / {max, number} caractères"
+        "compteurManquant": "{count, plural, one {# caractère} other {# caractères}} : encore {manquant} au minimum"
       },
       "brouillon": {
         "introuvable": "Le brouillon de la boutique est introuvable dans cet onglet. Retourne sur la page de ta boutique et relance « Créer mon site ».",
@@ -1915,8 +1913,7 @@
         "avisErreur": "Impossible de lire les avis sur ces captures.",
         "avisMention": "Seuls les avis 4 et 5 étoiles de tes captures sont gardés ({max} au maximum). Le site indiquera qu'il s'agit d'une sélection d'avis 4 et 5 étoiles, comme l'exige la loi, sans note moyenne. Retire ceux que tu ne veux pas afficher.",
         "avisEtoiles": "{count} étoiles",
-        "avisAuteurInconnu": "Acheteur",
-        "aidePromptTropLong": "Ton prompt dépasse {max, number} caractères : décris le site (sections, textes, ambiance) sans y coller de longs contenus. Pour les avis, utilise + → Avis clients (captures)."
+        "avisAuteurInconnu": "Acheteur"
       }
     },
     "modifier": {

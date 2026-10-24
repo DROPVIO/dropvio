@@ -40,8 +40,6 @@ const DEFAULT_PALETTE: Palette = { primary: "#7c3aed", secondary: "#1a0533", acc
 // Longueur minimale du prompt du site — même seuil que PROMPT_MIN_CARACTERES côté serveur
 // (app/api/generate-site/route.ts), qui refuse aussi la génération en dessous.
 const PROMPT_MIN_CARACTERES = 20;
-// Même plafond que PROMPT_MAX_CARACTERES côté serveur.
-const PROMPT_MAX_CARACTERES = 6000;
 // Même plafond que app/api/avis-capture/route.ts.
 const MAX_CAPTURES_AVIS = 5;
 
@@ -631,19 +629,15 @@ function SiteBuilderContent() {
 
   // Caractères manquants au prompt pour pouvoir générer (0 : prompt suffisant).
   const promptManquant = Math.max(0, PROMPT_MIN_CARACTERES - promptSite.trim().length);
-  const promptTropLong = promptSite.trim().length > PROMPT_MAX_CARACTERES;
   const canGenerate =
     promptManquant === 0 &&
-    !promptTropLong &&
     (boutiqueDraft
       ? boutiqueDraft.produits.length > 0
       : productName.trim() && description.trim() && salePrice.trim());
 
   const produitIncomplet = !productName.trim() || !description.trim() || !salePrice.trim();
   // Ce qui manque encore pour générer, affiché sous la barre de saisie.
-  const aideComposer = promptTropLong
-    ? t("composer.aidePromptTropLong", { max: PROMPT_MAX_CARACTERES })
-    : boutiqueDraft
+  const aideComposer = boutiqueDraft
     ? boutiqueDraft.produits.length === 0
       ? t("composer.aideProduitsBoutique")
       : promptManquant > 0
@@ -919,7 +913,6 @@ function SiteBuilderContent() {
                 prompt={promptSite}
                 onPromptChange={setPromptSite}
                 promptManquant={promptManquant}
-                promptMax={PROMPT_MAX_CARACTERES}
                 piecesJointes={[
                   {
                     id: "produits",
@@ -1223,7 +1216,6 @@ function SiteBuilderContent() {
                   prompt={promptSite}
                   onPromptChange={setPromptSite}
                   promptManquant={promptManquant}
-                promptMax={PROMPT_MAX_CARACTERES}
                   piecesJointes={piecesProduitUnique}
                   actions={actionsProduitUnique}
                   fiche={ficheStyle}

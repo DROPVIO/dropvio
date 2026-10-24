@@ -129,7 +129,6 @@ export default function ModifierSiteIA({ html, pages, siteId, onChange }: Props)
             void appliquer();
           }
         }}
-        maxLength={2000}
         rows={3}
         placeholder={t("placeholder")}
         className="w-full bg-[var(--bg)] border border-[var(--border-strong)] rounded-xl px-4 py-3 text-sm text-[var(--text-primary)] placeholder-[var(--text-faint)] focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 resize-y"

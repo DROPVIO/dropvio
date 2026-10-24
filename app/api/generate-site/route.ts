@@ -424,9 +424,6 @@ function consignesStyleDepuis(ficheStyle: unknown): string {
 // ne s'applique que là où il ne dit rien ; seules les règles NON NÉGOCIABLES (garde-fous,
 // données réelles, couleurs, contraintes techniques) l'emportent sur lui.
 const PROMPT_MIN_CARACTERES = 20;
-// Au-delà, le prompt n'est plus une description de site (ex. une page d'avis collée en entier)
-// et allonge la génération jusqu'à la tronquer. Même plafond côté client (app/site-builder/page.tsx).
-const PROMPT_MAX_CARACTERES = 6000;
 
 function promptUtilisateurDe(body: Record<string, unknown>): string {
   const brut =
@@ -463,14 +460,6 @@ export async function POST(request: NextRequest) {
   // Lu et vérifié avant le compteur de générations et le quota : une demande sans prompt
   // suffisant ne consomme rien.
   const body = await request.json();
-  if (promptUtilisateurDe(body).length > PROMPT_MAX_CARACTERES) {
-    return NextResponse.json(
-      {
-        error: `Ton prompt dépasse ${PROMPT_MAX_CARACTERES} caractères : raccourcis-le.`, code: "prompt_too_long", values: { max: PROMPT_MAX_CARACTERES },
-      },
-      { status: 400 }
-    );
-  }
   if (promptUtilisateurDe(body).length < PROMPT_MIN_CARACTERES) {
     return NextResponse.json(
       {
