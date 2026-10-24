@@ -5,6 +5,7 @@ import { checkRateLimit } from "@/lib/rate-limit";
 import { apiError } from "@/lib/api-errors";
 import { reponseLimiteIa, SuiviBudgetIa, tokensEstimes } from "@/lib/ai-budget";
 import { pagesValides } from "@/lib/site-builder-pages";
+import { CADRE_MODIFICATION_SITE, MESSAGE_HORS_SUJET } from "@/lib/cadre-createur-site";
 import {
   appliquerModificationsSite,
   pagesPourDemande,
@@ -40,7 +41,10 @@ Règles :
 - N'invente ni prix, ni avis client, ni chiffre, ni marque. Garde la langue du site.
 - Les modifications ne doivent pas se chevaucher.
 - Les parties marquées [dv-omis] (longs scripts, blocs de commande répétés dans les cartes produit) sont omises pour gagner de la place : n'en recopie jamais dans "avant". Pour changer tous les blocs de commande, prends un extrait du premier bloc entier, sans identifiant propre à un produit (id="…-p0"), avec "partout": true.
-- "resume" : ce que tu as changé, en une ou deux phrases, dans la langue de la demande.`;
+- "resume" : ce que tu as changé, en une ou deux phrases, dans la langue de la demande.
+- "hors_sujet" : false pour toute demande qui concerne le site.
+
+${CADRE_MODIFICATION_SITE}`;
 
 export async function POST(request: NextRequest) {
   const { supabase, user, plan } = await getServerUserAndPlan();
@@ -88,11 +92,15 @@ export async function POST(request: NextRequest) {
       return apiError("modification_echec", 502, "La modification n'a pas pu être appliquée. Reformule ou découpe ta demande.");
     }
     const texte = message.content.find((b) => b.type === "text");
-    let sortie: { modifications: ModificationSite[]; resume: string };
+    let sortie: { modifications: ModificationSite[]; resume: string; hors_sujet?: boolean };
     try {
       sortie = JSON.parse(texte && texte.type === "text" ? texte.text : "");
     } catch {
       return NextResponse.json({ error: "Réponse invalide. Réessaie.", code: "ai_invalid_response" }, { status: 500 });
+    }
+
+    if (sortie.hors_sujet === true) {
+      return apiError("prompt_hors_sujet", 422, MESSAGE_HORS_SUJET);
     }
 
     const resultat = appliquerModificationsSite(pages, sortie.modifications ?? [], cible);

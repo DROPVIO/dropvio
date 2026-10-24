@@ -35,8 +35,11 @@ export const SCHEMA_MODIFICATIONS_SITE = {
       },
     },
     resume: { type: "string" },
+    // true quand la demande ne concerne pas le site (question, autre tâche) : rien n'est
+    // modifié et la route renvoie prompt_hors_sujet (voir lib/cadre-createur-site.ts).
+    hors_sujet: { type: "boolean" },
   },
-  required: ["modifications", "resume"],
+  required: ["modifications", "resume", "hors_sujet"],
   additionalProperties: false,
 };
 

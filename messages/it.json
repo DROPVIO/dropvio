@@ -1315,7 +1315,8 @@
     "budget_ia_depasse": "Budget IA del mese raggiunto. Verrà azzerato il 1° del mese prossimo.",
     "limite_ia_jour": "Limite IA delle ultime 24 ore raggiunto. Si libera gradualmente: riprova il {reprise, date, short} alle {reprise, time, short}.",
     "limite_ia_semaine": "Limite IA degli ultimi 7 giorni raggiunto. Si libera gradualmente: riprova il {reprise, date, short} alle {reprise, time, short}.",
-    "modification_echec": "Non è stato possibile applicare la modifica. Riformula la richiesta o dividila in più parti."
+    "modification_echec": "Non è stato possibile applicare la modifica. Riformula la richiesta o dividila in più parti.",
+    "prompt_hors_sujet": "Il creatore di siti fa solo siti: descrivi il sito che vuoi (sezioni, testi, atmosfera, animazioni)."
   },
   "siteBuilder": {
     "boutique": {

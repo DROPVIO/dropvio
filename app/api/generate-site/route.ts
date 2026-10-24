@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { estReponseHorsSujet, HorsSujetError, MESSAGE_HORS_SUJET, SYSTEM_GENERATION_SITE } from "@/lib/cadre-createur-site";
 import Anthropic from "@anthropic-ai/sdk";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { getServerUserAndPlan } from "@/lib/supabase-server";
@@ -105,12 +106,14 @@ async function generateHtmlViaClaude(prompt: string, suivi: SuiviBudgetIa): Prom
   let appels = 0;
 
   for (let attempt = 0; attempt < MAX_APPELS_GENERATION; attempt++) {
-    const entreeEstimee = tokensEstimes(msgs.map((m) => m.content).join(""));
+    const entreeEstimee = tokensEstimes(SYSTEM_GENERATION_SITE + msgs.map((m) => m.content).join(""));
     await suivi.verifier(suivi.estimer(entreeEstimee, MAX_TOKENS_GENERATION));
     const stream = client.messages.stream({
       model: MODELE_GENERATION,
       max_tokens: MAX_TOKENS_GENERATION,
       output_config: { effort: EFFORT_GENERATION },
+      // Rôle et périmètre (sites uniquement) + capacités d'animation, communs aux deux modes.
+      system: SYSTEM_GENERATION_SITE,
       messages: msgs,
     });
 
@@ -150,6 +153,11 @@ async function generateHtmlViaClaude(prompt: string, suivi: SuiviBudgetIa): Prom
   const nettoye = html.startsWith("```")
     ? html.replace(/^```(?:html)?\n?/, "").replace(/\n?```$/, "").trim()
     : html;
+
+  // Demande qui ne décrit pas un site : l'IA répond par le seul marqueur, rien n'est généré.
+  if (estReponseHorsSujet(nettoye)) {
+    throw new HorsSujetError();
+  }
 
   // Vérification d'intégrité, APRÈS le nettoyage markdown (une balise ``` fermante traînante
   // ferait échouer le test alors que le document est complet) et APRÈS la boucle de relance
@@ -626,8 +634,8 @@ COULEURS :
 
 TOKENS CSS (NON NÉGOCIABLE) : --site-bg, --site-text, --site-text-muted, --site-accent, --site-accent-2, --site-bg-alt, --site-surface et --site-border sont DÉJÀ déclarées automatiquement dans un bloc :root — ne les redéclare surtout pas toi-même, et n'en déclare pas d'autres à la place. Utilise-les SYSTÉMATIQUEMENT via var(--nom) partout où le CSS ci-dessus mentionne une de ces couleurs : jamais de valeur hex ou rgba() en dur pour un fond, un texte ou un accent. Les valeurs entre parenthèses ci-dessus ne sont indiquées que pour que tu juges le rendu (contraste, harmonie) — ne les recopie jamais littéralement dans ton CSS.
 
-ANIMATIONS PAR DÉFAUT (le prompt peut en demander d'autres, plus riches ; dans tous les cas le contenu reste visible sans JavaScript, sans IntersectionObserver, et prefers-reduced-motion est respecté) :
-- Fade-in au chargement : les éléments .reveal ont TOUJOURS opacity:1 et transform:none dans le CSS — ils sont visibles par défaut. Au chargement de la page, JS applique d'abord opacity:0 + translateY(20px) sur tous les .reveal, puis avec setTimeout décalé (100ms, 200ms, 300ms… par index) remet opacity:1 + translateY(0) + transition:0.5s. NE PAS utiliser IntersectionObserver (non fiable en iframe).
+ANIMATIONS PAR DÉFAUT (base minimale : le prompt peut en demander de bien plus riches, voir ANIMATIONS ET EFFETS ; ROBUSTESSE DES ANIMATIONS s'applique toujours) :
+- Apparition au défilement : sections et cartes .reveal révélées en fondu avec translateY(20px) → 0 (transition 0.6s) quand elles entrent à l'écran (IntersectionObserver), avec un léger décalage entre les cartes d'une même grille.
 - Hover bouton : scale(1.03), transition 0.2s
 - Fond hero : @keyframes gradientShift sur background-position (10s infinite)
 - Navbar : opacity/background au scroll
@@ -682,6 +690,9 @@ Réponds UNIQUEMENT avec le code HTML, sans explication ni balise markdown.`;
   } catch (err) {
     const refus = reponseLimiteIa(err);
     if (refus) return refus;
+    if (err instanceof HorsSujetError) {
+      return NextResponse.json({ error: MESSAGE_HORS_SUJET, code: "prompt_hors_sujet" }, { status: 422 });
+    }
     // HTML incomplet : on ne renvoie PAS la page, donc le client n'a rien à sauvegarder
     // dans « Mes sites ». 502 et non 500 : l'échec vient de la réponse du modèle, pas d'un
     // bug local.
@@ -852,8 +863,8 @@ TYPOGRAPHIE PAR DÉFAUT :
 COULEURS DE BASE (NON NÉGOCIABLE, fixes, ne pas dévier — les pages catalogue s'y calent) :
 - Fond global : var(--site-bg) (${IA_BG}) · Texte : var(--site-text) (${IA_TEXT}) · Texte secondaire : var(--site-text-muted) (${IA_TEXT_MUTED})
 
-ANIMATIONS PAR DÉFAUT (le prompt peut en demander d'autres, plus riches ; dans tous les cas le contenu reste visible sans JavaScript, sans IntersectionObserver, et prefers-reduced-motion est respecté) :
-- Fade-in au chargement : éléments .reveal opacity:1/transform:none par défaut dans le CSS ; JS applique opacity:0+translateY(20px) au chargement puis setTimeout décalé (100/200/300ms) remet l'état normal avec transition 0.5s. Pas d'IntersectionObserver (non fiable en iframe).
+ANIMATIONS PAR DÉFAUT (base minimale : le prompt peut en demander de bien plus riches, voir ANIMATIONS ET EFFETS ; ROBUSTESSE DES ANIMATIONS s'applique toujours) :
+- Apparition au défilement : sections .reveal révélées en fondu avec translateY(20px) → 0 (transition 0.6s) quand elles entrent à l'écran (IntersectionObserver).
 - Hover bouton : scale(1.03). Fond hero : @keyframes gradientShift sur background-position (10s infinite). Navbar : opacity/background au scroll.
 
 TECHNIQUE (NON NÉGOCIABLE) :
@@ -899,6 +910,9 @@ Réponds UNIQUEMENT avec le code HTML, sans explication ni balise markdown.`;
   } catch (err) {
     const refus = reponseLimiteIa(err);
     if (refus) return refus;
+    if (err instanceof HorsSujetError) {
+      return NextResponse.json({ error: MESSAGE_HORS_SUJET, code: "prompt_hors_sujet" }, { status: 422 });
+    }
     if (err instanceof HtmlTronqueError) {
       console.error("[generate-site] (mode boutique)", err.message);
       return NextResponse.json({ error: ERREUR_HTML_TRONQUE, code: "generation_truncated" }, { status: 502 });
