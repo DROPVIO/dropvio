@@ -1,0 +1,25 @@
+# Dropshipping Course — Short version (continued 2)
+
+## Part 11 — Retaining customers rather than winning them over every time
+
+An already acquired customer structurally costs less to bring back than a new customer to convince from scratch, because they already know the store and required no ad budget for that second sale. A follow-up message a few days after delivery, simply asking whether the product meets expectations, lets you both detect a problem before it escalates into a dispute, and naturally suggest a complementary product once satisfaction is confirmed — as long as you never over-solicit, which would push the customer to unsubscribe.
+
+Every contact who agrees to receive communications is an asset that belongs to you, unlike the audience of an ad platform whose rules can change without notice. Careful packaging and a small touch on delivery, even simple ones, leave a lastingly different impression from an anonymous parcel, for an often marginal extra cost. A store that generates a significant share of its revenue from already acquired customers reduces its dependence on an ever-growing ad budget — one of the most profitable long-term levers, precisely because it's invisible in short-term advertising indicators and therefore easy to neglect.
+
+## Part 12 — Getting organized when you run things alone
+
+Some tasks are best handled as they come — an urgent complaint, a sign of supplier decline. Others, like product research or analyzing indicators, are better grouped into dedicated time slots rather than fragmented throughout the day. A regular weekly review of key indicators — margin, return rate, cash flow, warning signals — lets you correct a drift at a stage still easy to fix, rather than discovering it weeks later once it has settled in, especially in periods when "everything seems to be going well", precisely when weak signals start to appear unnoticed.
+
+Delegating certain one-off tasks, notably taxation where an accountant often remains more cost-effective than the personal learning time, avoids spending disproportionate time for an equivalent result. Finally, being wary of constant comparison with spectacular results shown by others, often presented without the context or failures that preceded them, helps you stay focused on your own real data. A business run at a regular, sustainable pace produces, over several years, more solid results than one run in intense bursts followed by abandonment.
+
+## Part 13 — Niche or general: a structuring choice
+
+A store focused on a coherent niche makes cross-selling easier, gives a more readable brand identity and allows more precise ad targeting, but depends more on the fate of that specific niche over time. A general store spreads this risk by diversifying its categories, at the price of a positioning coherence that's harder to build in the visitor's eyes. An often relevant middle path is to specialize around a use or a customer profile rather than a single strict product category. The most useful decision criterion remains to observe, once the first products are tested, which direction the real data encourages — which products convert, which profiles come back — rather than freezing this choice arbitrarily on day one.
+
+## Part 14 — International shipping: what to anticipate
+
+A parcel stuck in customs, with surprise fees for the customer to pay, is one of the worst possible post-purchase experiences — the IOSS scheme addresses this problem for low-value shipments by collecting VAT at the time of sale rather than at customs; since July 1, 2026, these parcels also bear a European flat tax of 3 euros per item category, to be planned into the price. Delivery times vary by destination, which makes a realistic range per geographic zone more honest than a single figure applied everywhere. Some product categories (electronics with batteries, cosmetics, medical devices) are subject to restrictions depending on the country, to be checked before launch rather than discovered at the first block. Clearly stating on the product page that shipping is from abroad defuses a good part of the impatience that would otherwise turn into a premature complaint.
+
+## Part 15 — Condensed 90-day action plan
+
+Weeks 1-2: narrow a product idea, check volume and trend, compare several suppliers on reliability, place a test order. Weeks 3-4: calculate the complete margin with the Dropvio calculator, build the product page and have it audited, put the mandatory legal documents in place, open an account dedicated to the business. Weeks 5-8: launch a first limited ad tier, reply quickly to every customer request, set aside contributions as soon as money comes in, reassess on sufficient data volume before increasing the budget. Weeks 9-12: add one or two coherent complementary products, test a bundle offer, set up regular weekly tracking, and weekly tracking of refunds and disputes if the store is connected through Shopify. Beyond this first quarter, these same principles repeat product after product, without ever slackening under the effect of accumulated experience.

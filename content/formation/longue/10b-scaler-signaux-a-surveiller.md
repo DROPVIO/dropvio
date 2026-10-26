@@ -4,7 +4,7 @@ La partie 10 a insisté sur l'importance de voir venir plutôt que de subir. Voi
 
 ## Sur le produit et le fournisseur
 
-Une légère hausse progressive du taux de retour sur un produit précis, même si elle reste chaque mois individuellement peu significative, mérite d'être suivie dans la durée plutôt qu'ignorée tant qu'elle ne franchit pas un seuil arbitraire — une hausse de deux points par mois sur trois mois consécutifs raconte une histoire différente d'une hausse ponctuelle isolée. Un allongement progressif du délai de livraison annoncé par un fournisseur, même de quelques jours, peut annoncer une dégradation plus large à venir plutôt qu'un incident isolé — c'est le type de signal que la comparaison avec des fournisseurs alternatifs, via la fonctionnalité dédiée de Dropvio évoquée dans la partie 5, permet de vérifier avant qu'il ne s'aggrave.
+Une légère hausse progressive du taux de retour sur un produit précis, même si elle reste chaque mois individuellement peu significative, mérite d'être suivie dans la durée plutôt qu'ignorée tant qu'elle ne franchit pas un seuil arbitraire — une hausse de deux points par mois sur trois mois consécutifs raconte une histoire différente d'une hausse ponctuelle isolée. Un allongement progressif du délai de livraison annoncé par un fournisseur, même de quelques jours, peut annoncer une dégradation plus large à venir plutôt qu'un incident isolé — c'est le type de signal qui justifie de relancer sans attendre la comparaison avec des fournisseurs alternatifs décrite dans la partie 5, avant qu'il ne s'aggrave.
 
 ## Sur la marge et les finances
 

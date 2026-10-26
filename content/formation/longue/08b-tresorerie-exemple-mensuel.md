@@ -8,7 +8,7 @@ Une boutique encaisse 8 200 euros de chiffre d'affaires sur un mois. Vu isoléme
 
 ## Ce que ce chiffre d'affaires devient une fois les postes réels déduits
 
-Sur ces 8 200 euros, le coût produit et les frais de transaction représentent, selon les marges calculées dans la partie 3 pour les produits vendus ce mois-là, environ 3 400 euros. Le budget publicitaire engagé sur le mois s'élève à 2 300 euros. Les remboursements traités ce mois, y compris ceux liés à des commandes du mois précédent qui reviennent avec un décalage naturel, représentent 410 euros. Les abonnements et outils utilisés pour faire tourner la boutique — plateforme e-commerce, outils de gestion, éventuel abonnement à des outils d'automatisation ou d'analyse — représentent 140 euros. Il reste, avant cotisations, environ 1 950 euros.
+Sur ces 8 200 euros, le coût produit, les taxes à l'importation sur les colis et les frais de transaction représentent, selon les marges calculées dans la partie 3 pour les produits vendus ce mois-là, environ 3 400 euros. Le budget publicitaire engagé sur le mois s'élève à 2 300 euros. Les remboursements traités ce mois, y compris ceux liés à des commandes du mois précédent qui reviennent avec un décalage naturel, représentent 410 euros. Les abonnements et outils utilisés pour faire tourner la boutique — plateforme e-commerce, outils de gestion, éventuel abonnement à des outils d'automatisation ou d'analyse — représentent 140 euros. Il reste, avant cotisations, environ 1 950 euros.
 
 ## La part que la réserve de précaution doit absorber avant tout réinvestissement
 

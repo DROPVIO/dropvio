@@ -12,7 +12,7 @@ Rédiger ou faire rédiger des conditions générales de vente conformes à ton 
 
 ## Sur la TVA et la fiscalité applicable aux ventes
 
-Vérifier, avec un professionnel si le doute persiste, si la franchise de TVA s'applique encore à ton niveau de chiffre d'affaires prévisionnel ou déjà atteint. Si des ventes sont réalisées vers des clients dans d'autres pays européens, se renseigner sur le dispositif IOSS évoqué dans la partie 9 pour les envois de valeur modeste, qui simplifie la collecture de la TVA et évite les mauvaises surprises douanières côté client. Ne jamais supposer qu'une règle apprise à un moment donné reste valable indéfiniment — ce cadre évolue, comme souligné dans la partie 9.
+Vérifier, avec un professionnel si le doute persiste, si la franchise de TVA s'applique encore à ton niveau de chiffre d'affaires prévisionnel ou déjà atteint. Si des ventes sont réalisées vers des clients dans d'autres pays européens, se renseigner sur le dispositif IOSS évoqué dans la partie 9 pour les envois de valeur modeste, qui simplifie la collecte de la TVA et évite les mauvaises surprises douanières côté client, et intégrer dans tes prix la taxe européenne de 3 euros par catégorie d'article sur les colis de moins de 150 euros venant de hors UE. Ne jamais supposer qu'une règle apprise à un moment donné reste valable indéfiniment — ce cadre évolue, comme souligné dans la partie 9.
 
 ## En continu, une fois l'activité lancée
 

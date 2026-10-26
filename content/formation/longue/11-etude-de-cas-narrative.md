@@ -8,7 +8,7 @@ La boutique démarre avec un seul produit, choisi selon la méthode de la partie
 
 ## Mois 2 — Le premier signal d'alerte, traité tôt
 
-Un fournisseur announce un allongement de son délai d'expédition habituel. Plutôt que d'attendre que les clients commencent à se plaindre, la boutique communique de façon proactive à ceux dont la commande est concernée, en suivant la logique de la partie 7 : reconnaître le retard avant que le client ne le découvre par lui-même. En parallèle, un second fournisseur est identifié en réserve pour ce produit, comme recommandé dans la grille de la partie 5 — une précaution qui ne sera pas utilisée immédiatement, mais qui réduit le risque si le premier fournisseur continue à se dégrader.
+Un fournisseur annonce un allongement de son délai d'expédition habituel. Plutôt que d'attendre que les clients commencent à se plaindre, la boutique communique de façon proactive à ceux dont la commande est concernée, en suivant la logique de la partie 7 : reconnaître le retard avant que le client ne le découvre par lui-même. En parallèle, un second fournisseur est identifié en réserve pour ce produit, comme recommandé dans la grille de la partie 5 — une précaution qui ne sera pas utilisée immédiatement, mais qui réduit le risque si le premier fournisseur continue à se dégrader.
 
 ## Mois 3 à 4 — L'élargissement de la gamme
 

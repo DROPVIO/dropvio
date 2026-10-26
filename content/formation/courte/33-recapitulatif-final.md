@@ -12,7 +12,7 @@ Passer une commande test avant tout engagement à volume, pour vérifier la qual
 
 ## Avant de lancer une campagne publicitaire
 
-Calculer la marge nette complète — coût produit, frais de transaction, coût d'acquisition estimé, taux de retour hypothétique cohérent avec la catégorie, cotisations sur le chiffre d'affaires — et vérifier qu'elle reste positive avec une marge de sécurité raisonnable. Faire auditer la fiche produit sur les critères de conversion avant d'y envoyer du trafic payant. Découper le budget de test en paliers plutôt que de l'engager d'un coup. Choisir un premier canal cohérent avec la nature du produit plutôt que de disperser le budget sur plusieurs canaux à la fois.
+Calculer la marge nette complète — coût produit, frais de transaction, droits et taxes à l'importation, coût d'acquisition estimé, taux de retour hypothétique cohérent avec la catégorie, cotisations sur le chiffre d'affaires — et vérifier qu'elle reste positive avec une marge de sécurité raisonnable. Faire auditer la fiche produit sur les critères de conversion avant d'y envoyer du trafic payant. Découper le budget de test en paliers plutôt que de l'engager d'un coup. Choisir un premier canal cohérent avec la nature du produit plutôt que de disperser le budget sur plusieurs canaux à la fois.
 
 ## Une fois les premières ventes réalisées
 

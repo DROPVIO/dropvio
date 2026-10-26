@@ -1,6 +1,6 @@
 # Partie 19 — Plan d'action sur 90 jours
 
-Cette dernière partie synthétise l'ensemble de la formation sous la forme d'un plan concret, semaine après semaine, pour un lancement structuré sur les trois premiers mois. Ce calendrier reste indicatif — chaque situation avance à son propre rythme — mais il donne un ordre logique à respecter plutôt qu'une durée à suivre au jour près.
+Cette partie synthétise l'ensemble de la formation sous la forme d'un plan concret, semaine après semaine, pour un lancement structuré sur les trois premiers mois. Ce calendrier reste indicatif — chaque situation avance à son propre rythme — mais il donne un ordre logique à respecter plutôt qu'une durée à suivre au jour près.
 
 ## Semaines 1 à 2 — Recherche et validation du produit
 
@@ -8,7 +8,7 @@ Resserrer une idée large en plusieurs variantes concrètes, comme détaillé da
 
 ## Semaines 3 à 4 — Construction de la boutique et calcul financier
 
-Calculer la marge nette complète du produit retenu avec le calculateur intégré, en intégrant tous les postes détaillés dans la partie 3. Construire la fiche produit en suivant la grille d'audit de la partie 4, puis la faire vérifier par l'auditeur de page de destination avant toute mise en ligne définitive. Mettre en place les documents légaux obligatoires évoqués dans la partie 9 — conditions générales de vente, politique de confidentialité, mentions légales. Ouvrir un compte bancaire dédié à l'activité, conformément à la partie 8.
+Calculer la marge nette complète du produit retenu avec le calculateur intégré, en intégrant tous les postes détaillés dans la partie 3. Construire la fiche produit en suivant la grille d'audit de la partie 4, vérifier son rendu sur mobile, puis la faire vérifier par l'auditeur de page de destination avant toute mise en ligne définitive. Mettre en place les documents légaux obligatoires évoqués dans la partie 9 — conditions générales de vente, politique de confidentialité, mentions légales. Ouvrir un compte bancaire dédié à l'activité, conformément à la partie 8.
 
 ## Semaines 5 à 8 — Premier test d'acquisition et ajustements
 

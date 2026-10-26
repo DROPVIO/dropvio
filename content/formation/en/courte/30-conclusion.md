@@ -1,0 +1,9 @@
+# Conclusion — What to remember from this course
+
+This short version has covered, in condensed form but without sacrificing anything essential, all the topics that determine whether a dropshipping business lasts or stops within the year: methodically choosing a product, a complete margin calculation before each launch, a product page built to answer the visitor's questions before they ask them, a serious check of each supplier, acquisition tested in tiers rather than committed all at once, after-sales service treated as a priority and not a chore, financial management that distinguishes profitability from cash flow, a legal and tax framework anticipated rather than regularized in a rush, and growth that consolidates before accelerating.
+
+None of these disciplines is complex taken alone. What separates the stores that last from those that close is almost never the discovery of a secret trick out of others' reach, but the constant application of these simple disciplines, including at times when launch enthusiasm or daily pressure would push you to neglect them. The failure rate widely quoted in the industry for the first year of business, however imprecise its exact origin, tells a simple reality: most sellers who fail do so by skipping one or more of these steps, not by following a rigorous method that would have failed anyway.
+
+If a specific topic in this short version deserves more depth once the basics are in place — an additional worked example, a more detailed evaluation grid, a full case study over an entire year — the long version of this course develops each of these points with the corresponding level of detail. Both versions share the same method and the same demands; only the depth of treatment of each topic differs between them.
+
+You now have the essential benchmarks to start with method rather than improvisation alone. What comes next happens in practice, week after week, with the same rigor as described in these pages.

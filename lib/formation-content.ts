@@ -3,6 +3,7 @@ import path from "path";
 import matter from "gray-matter";
 import { remark } from "remark";
 import html from "remark-html";
+import type { AppLocale } from "@/lib/locale";
 
 export type FormationCollection = "courte" | "longue";
 
@@ -57,16 +58,33 @@ function renderHtml(markdown: string): string {
   return String(remark().use(html).processSync(markdown));
 }
 
-function loadCollection(collection: FormationCollection): FormationModule[] {
+// Traductions rangées sous content/formation/<langue>/<collection>/, avec les mêmes noms de
+// fichiers que la version française : l'id d'un module ne dépend donc pas de la langue (les
+// liens /formation/lire/[moduleId] et la possession d'une collection restent valables quand
+// l'utilisateur change de langue). Seul l'anglais existe pour l'instant ; es et it retombent
+// sur le français, comme le reste de l'app quand une traduction manque.
+const TRANSLATED_LOCALES = ["en"] as const;
+type FormationLocale = "fr" | (typeof TRANSLATED_LOCALES)[number];
+
+function toFormationLocale(locale: AppLocale): FormationLocale {
+  return (TRANSLATED_LOCALES as readonly string[]).includes(locale) ? (locale as FormationLocale) : "fr";
+}
+
+// La liste et l'ordre des modules viennent toujours du dossier français ; un fichier pas encore
+// traduit est servi en français plutôt que de disparaître de la formation.
+function loadCollection(collection: FormationCollection, locale: FormationLocale): FormationModule[] {
   const dir = path.join(CONTENT_DIR, collection);
   if (!fs.existsSync(dir)) return [];
+  const translatedDir = locale === "fr" ? null : path.join(CONTENT_DIR, locale, collection);
 
   return fs
     .readdirSync(dir)
     .filter((file) => file.endsWith(".md") || file.endsWith(".mdx"))
     .sort((a, b) => orderKey(a) - orderKey(b) || a.localeCompare(b))
     .map((file) => {
-      const raw = fs.readFileSync(path.join(dir, file), "utf8");
+      const translatedPath = translatedDir ? path.join(translatedDir, file) : null;
+      const source = translatedPath && fs.existsSync(translatedPath) ? translatedPath : path.join(dir, file);
+      const raw = fs.readFileSync(source, "utf8");
       const { content: markdown, data: frontmatter } = matter(raw);
       const slug = slugFromFilename(file);
 
@@ -80,7 +98,15 @@ function loadCollection(collection: FormationCollection): FormationModule[] {
     });
 }
 
-export const FORMATION_MODULES: FormationModule[] = [
-  ...loadCollection("courte"),
-  ...loadCollection("longue"),
-];
+function loadModules(locale: FormationLocale): FormationModule[] {
+  return [...loadCollection("courte", locale), ...loadCollection("longue", locale)];
+}
+
+const MODULES_PAR_LANGUE: Record<FormationLocale, FormationModule[]> = {
+  fr: loadModules("fr"),
+  en: loadModules("en"),
+};
+
+export function getFormationModules(locale: AppLocale): FormationModule[] {
+  return MODULES_PAR_LANGUE[toFormationLocale(locale)];
+}

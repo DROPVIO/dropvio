@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
 import Sidebar from "@/components/Sidebar";
 import OnboardingProvider from "@/components/onboarding/OnboardingProvider";
@@ -54,6 +54,7 @@ function useIsLightTheme(): boolean {
 
 export default function FormationPage() {
   const t = useTranslations("dashboard.formation");
+  const locale = useLocale();
   const apiErrorMessage = useApiErrorMessage();
   const tCommon = useTranslations("dashboard.common");
   const [state, setState] = useState<FormationState>({ status: "loading" });
@@ -92,7 +93,7 @@ export default function FormationPage() {
   }, []);
 
   const load = () => {
-    fetch("/api/formation")
+    fetch(`/api/formation?locale=${encodeURIComponent(locale)}`)
       .then(async (res) => {
         const json = await res.json();
         if (!res.ok) {
@@ -104,11 +105,11 @@ export default function FormationPage() {
       .catch(() => setState({ status: "error", message: t("errorServer") }));
   };
 
-  // `load` n'est volontairement pas dans les deps (ni mémoïsé) : un seul chargement au
-  // montage. Il capture `t`, stable pour une locale donnée — un changement de langue
-  // recharge de toute façon l'arbre (router.refresh dans les Paramètres).
+  // `load` n'est volontairement pas dans les deps (ni mémoïsé) : un chargement au montage,
+  // puis un seul par changement de langue, puisque le texte des leçons en dépend
+  // (lib/formation-content.ts). Il capture `t`, stable pour une locale donnée.
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(load, []);
+  useEffect(load, [locale]);
 
   // Retour de Stripe Checkout. Le webhook (asynchrone) peut prendre une poignée de
   // secondes à débloquer l'accès : on affiche le message tout de suite puis on relance un

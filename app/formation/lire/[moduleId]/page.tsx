@@ -1,6 +1,8 @@
 import { notFound, redirect } from "next/navigation";
+import { getLocale } from "next-intl/server";
 import { getServerUserAndPlan } from "@/lib/supabase-server";
-import { FORMATION_MODULES } from "@/lib/formation-content";
+import { getFormationModules } from "@/lib/formation-content";
+import { isAppLocale, DEFAULT_LOCALE } from "@/lib/locale";
 import PagedReader from "./PagedReader";
 
 // Vue de lecture dédiée, séparée de /formation (qui reste la page de vente/liste). Le contrôle
@@ -14,7 +16,9 @@ export default async function LireModulePage({
   params: Promise<{ moduleId: string }>;
 }) {
   const { moduleId } = await params;
-  const module = FORMATION_MODULES.find((m) => m.id === moduleId);
+  const rawLocale = await getLocale();
+  const locale = isAppLocale(rawLocale) ? rawLocale : DEFAULT_LOCALE;
+  const module = getFormationModules(locale).find((m) => m.id === moduleId);
   if (!module) notFound();
 
   const { user, formationOwned } = await getServerUserAndPlan();
