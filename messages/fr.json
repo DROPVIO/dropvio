@@ -1528,7 +1528,6 @@
     "media_produit_sans_nom": "Ce produit n'a pas de nom : impossible de générer son image.",
     "media_produit_sans_photo": "Ce produit n'a pas de photo : impossible de générer son image.",
     "plan_payant_requis": "La génération d'images est réservée aux plans payants.",
-    "catalogue_plan": "Le catalogue des produits gagnants est réservé aux plans payants.",
     "images_quota_epuise": "Ton budget d'images du mois est épuisé. Il sera remis à zéro le 1er du mois prochain.",
     "images_migration_requise": "La génération d'images n'est pas encore activée sur ton plan.",
     "catalogue_photos_migration_requise": "L'enregistrement des photos du catalogue n'est pas encore disponible.",

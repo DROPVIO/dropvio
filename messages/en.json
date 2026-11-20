@@ -1528,7 +1528,6 @@
     "media_produit_sans_nom": "This product has no name: its image can't be generated.",
     "media_produit_sans_photo": "This product has no photo: its image can't be generated.",
     "plan_payant_requis": "Image generation is available on paid plans.",
-    "catalogue_plan": "The winning products catalog is reserved for paid plans.",
     "images_quota_epuise": "Your monthly image budget is used up. It resets on the 1st of next month.",
     "images_migration_requise": "Image generation isn't enabled on your plan yet.",
     "catalogue_photos_migration_requise": "Saving catalog photos isn't available yet.",

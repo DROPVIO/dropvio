@@ -1,9 +1,33 @@
 import { NextRequest, NextResponse } from "next/server";
-import { supabase } from "@/lib/supabase";
+import { apiError } from "@/lib/api-errors";
 import { getServerUserPlanOnly } from "@/lib/supabase-server";
 import { PLAN_LIMITS } from "@/lib/plan-limits";
+import { commandesMinEffectif } from "@/lib/catalogue-commandes";
 
 const DEFAULT_LIMIT = 20;
+
+/** Date du jour à Europe/Paris (YYYY-MM-DD) : clé de la rotation quotidienne du catalogue.
+ *  Calculée ici, jamais fournie par le client ; l'ordre change à minuit heure de Paris. */
+function dateParis(): string {
+  // en-CA formate en YYYY-MM-DD.
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Europe/Paris",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(new Date());
+}
+
+/** ?seed= sert uniquement aux tests : ignoré en production, sinon un compte Free pourrait
+ *  changer de seed pour faire défiler tout le catalogue malgré le plafond produitsMax. */
+function seedRotation(seedParam: string | null): string {
+  if (seedParam && process.env.NODE_ENV !== "production") return seedParam.slice(0, 64);
+  return dateParis();
+}
+
+function nombreOuNull(n: number): number | null {
+  return Number.isFinite(n) ? n : null;
+}
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -21,7 +45,12 @@ export async function GET(request: NextRequest) {
   const to    = from + limit - 1;
 
   try {
-    const { plan } = await getServerUserPlanOnly();
+    // Session de l'utilisateur, jamais le client anonyme : le RLS du catalogue (migration 057)
+    // limite un compte Free à sa sélection, et aucun visiteur sans compte n'y a accès.
+    const { supabase, user, plan } = await getServerUserPlanOnly();
+    if (!user) {
+      return apiError("auth_required", 401, "Connecte-toi pour voir le catalogue.");
+    }
     const produitsMax = PLAN_LIMITS[plan].produitsMax; // null = illimité (Pro/Agency)
 
     // Plan Free : le catalogue accessible est plafonné à produitsMax, quels que soient
@@ -45,28 +74,38 @@ export async function GET(request: NextRequest) {
     // commandée par (nom, niche). Table produits inchangée, seule cette lecture catalogue en
     // bénéficie ; les lookups par id exact ailleurs (snapshots, produit collé par URL...)
     // restent sur produits, une ligne "perdante" exclue de la vue devant toujours être trouvable.
-    let query = supabase
-      .from("produits_dedup")
-      .select("*", { count: "exact" })
-      .order("commandes", { ascending: false })
-      .range(from, cappedTo);
+    // Lue ici via deux RPC (migration 047) : PostgREST ne sait
+    // pas trier par md5(id || '|' || seed), ordre de rotation quotidienne du catalogue.
+    // Mêmes filtres qu'avant, appliqués avant le tri : l'ensemble est inchangé, seul l'ordre
+    // tourne. Le plafond Free ci-dessus s'applique après le tri, donc sur l'ordre du jour.
+    const filtres = {
+      p_niche:         niche || null,
+      p_prix_min:      priceMin     ? nombreOuNull(parseFloat(priceMin)) : null,
+      p_prix_max:      priceMax     ? nombreOuNull(parseFloat(priceMax)) : null,
+      // Jamais sous 100 commandes, même sans filtre (lib/catalogue-commandes.ts).
+      p_commandes_min: commandesMinEffectif(commandesMin),
+      p_commandes_max: commandesMax ? nombreOuNull(parseInt(commandesMax)) : null,
+      p_note_min:      noteMin      ? nombreOuNull(parseFloat(noteMin)) : null,
+      p_marge_min:     margeMin     ? nombreOuNull(parseInt(margeMin)) : null,
+    };
 
-    if (niche)          query = query.eq("niche", niche);
-    if (priceMin)      query = query.gte("prixVente", parseFloat(priceMin));
-    if (priceMax)      query = query.lte("prixVente", parseFloat(priceMax));
-    if (commandesMin)  query = query.gte("commandes", parseInt(commandesMin));
-    if (commandesMax)  query = query.lte("commandes", parseInt(commandesMax));
-    if (noteMin)        query = query.gte("note", parseFloat(noteMin));
-    if (margeMin)        query = query.gte("marge", parseInt(margeMin));
+    const [pageRes, totalRes] = await Promise.all([
+      supabase.rpc("produits_rotation", {
+        ...filtres,
+        p_seed: seedRotation(searchParams.get("seed")),
+        p_offset: from,
+        p_limit: cappedTo - from + 1,
+      }),
+      supabase.rpc("produits_rotation_total", filtres),
+    ]);
 
-    const { data, error, count } = await query;
-
+    const error = pageRes.error ?? totalRes.error;
     if (error) {
       return NextResponse.json({ error: error.message, code: "server_error" }, { status: 500 });
     }
 
-    const products = data ?? [];
-    const realTotal = count ?? 0;
+    const products = pageRes.data ?? [];
+    const realTotal = Number(totalRes.data ?? 0);
     const total = produitsMax !== null ? Math.min(realTotal, produitsMax) : realTotal;
 
     return NextResponse.json({

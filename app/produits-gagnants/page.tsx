@@ -3,8 +3,8 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { COMMANDES_MIN_DEFAUT, commandesMinEffectif } from "@/lib/catalogue-commandes";
 import { useTranslations } from "next-intl";
-import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
 import { slugify } from "@/lib/slugify";
 import ProduitsSuggeres from "@/components/ProduitsSuggeres";
 import { NICHES as NICHES_CATALOGUE, nicheI18nKey, nicheLabel } from "@/lib/niches";
@@ -43,9 +43,6 @@ type Produit = {
   niche: string;
 };
 
-// Plage par défaut du "sweet spot" : ni invendable (trop peu de commandes), ni déjà saturé
-const SWEET_SPOT_DEFAUT = { min: 500, max: 5000 };
-
 // Envoyé explicitement (plutôt que de changer DEFAULT_LIMIT dans la route, partagée avec
 // tout futur appelant) pour que ce réglage reste local à cette page — vérifié : /api/
 // aliexpress/products n'est aujourd'hui appelée que d'ici, et le total/totalPages renvoyés
@@ -67,11 +64,9 @@ export default function ProduitsGagnants() {
   const [erreur, setErreur] = useState<string | null>(null);
 
   // Bloc 1 — filtres avancés
-  const [commandesMin, setCommandesMin] = useState<string>("");
+  // Jamais sous COMMANDES_MIN_DEFAUT : la route ramène toute valeur plus basse à 100.
+  const [commandesMin, setCommandesMin] = useState<string>(String(COMMANDES_MIN_DEFAUT));
   const [noteMin, setNoteMin] = useState<number>(0);
-  const [sweetSpotActif, setSweetSpotActif] = useState(false);
-  const [sweetMin, setSweetMin] = useState<number>(SWEET_SPOT_DEFAUT.min);
-  const [sweetMax, setSweetMax] = useState<number>(SWEET_SPOT_DEFAUT.max);
 
   // Pagination
   const [page, setPage] = useState(1);
@@ -99,10 +94,7 @@ export default function ProduitsGagnants() {
       else if (filtresPrix === "20-50") { params.set("priceMin", "20"); params.set("priceMax", "50"); }
       else if (filtresPrix === "50+") params.set("priceMin", "50");
 
-      const baseMin = parseInt(commandesMin) || 0;
-      const effectiveMin = sweetSpotActif ? Math.max(baseMin, sweetMin) : baseMin;
-      if (effectiveMin > 0) params.set("commandesMin", String(effectiveMin));
-      if (sweetSpotActif) params.set("commandesMax", String(sweetMax));
+      params.set("commandesMin", String(commandesMinEffectif(commandesMin)));
       if (noteMin > 0) params.set("noteMin", String(noteMin));
       if (filtreMarge > 0) params.set("margeMin", String(filtreMarge));
       params.set("page", String(page));
@@ -129,7 +121,7 @@ export default function ProduitsGagnants() {
       if (chargementEnCoursRef.current === controller) setLoading(false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [nicheActive, filtresPrix, filtreMarge, commandesMin, noteMin, sweetSpotActif, sweetMin, sweetMax, page]);
+  }, [nicheActive, filtresPrix, filtreMarge, commandesMin, noteMin, page]);
 
   useEffect(() => {
     // Défère l'appel (donc ses setState internes) hors du corps synchrone de
@@ -150,36 +142,42 @@ export default function ProduitsGagnants() {
     if (produits.length === 0) return;
 
     let annule = false;
-    const supabase = createSupabaseBrowserClient();
-
-    supabase
-      .from("snapshots_produits")
-      .select("product_id, volume_commandes, date")
-      .in("product_id", produits.map((p) => p.id))
-      .order("date", { ascending: true })
-      .then(({ data, error }) => {
-        if (annule || error || !data) return;
-
-        const parProduit: Record<string, { volume_commandes: number; date: string }[]> = {};
-        for (const row of data) {
-          (parProduit[row.product_id] ??= []).push(row);
-        }
-
-        const resultat: Record<string, number> = {};
-        for (const [id, points] of Object.entries(parProduit)) {
-          if (points.length < 2) continue;
-          const premier = points[0].volume_commandes;
-          const dernier = points[points.length - 1].volume_commandes;
-          if (!premier) continue;
-          resultat[id] = ((dernier - premier) / premier) * 100;
-        }
-        setCroissance(resultat);
-      });
+    // Calculée par le serveur (/api/catalogue/croissance) avec la limite du plan : l'historique
+    // n'est jamais lu directement depuis le navigateur.
+    const ids = produits.map((p) => encodeURIComponent(p.id)).join(",");
+    fetch(`/api/catalogue/croissance?ids=${ids}`)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((json: { croissance?: Record<string, number> } | null) => {
+        if (!annule && json?.croissance) setCroissance(json.croissance);
+      })
+      .catch(() => {});
 
     return () => { annule = true; };
   }, [produits]);
 
   const nicheSelectionnee = NICHES.find(n => n.id === nicheActive);
+
+  // Styles partagés de la carte de filtres. Accent orange conservé pour la niche Halloween.
+  const libelleChamp = "text-xs font-medium text-[var(--text-muted)]";
+  const champ = "h-[38px] rounded-lg border border-[var(--border-strong)] bg-[var(--bg-sunken)] px-3 text-[13.5px] text-[var(--text-primary)]";
+  const sansFleches = "[appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none";
+  const segments = "flex h-[38px] items-center rounded-lg bg-[var(--surface-2)] p-0.5";
+  const segment = (actif: boolean) =>
+    `h-full whitespace-nowrap rounded-md px-3 text-[13px] font-medium transition-colors ${
+      actif
+        ? `bg-[var(--surface)] shadow-sm ${isHalloweenNiche ? "text-[#e07b2e]" : "text-[var(--text-primary)]"}`
+        : "text-[var(--text-muted)] hover:text-[var(--text-primary)]"
+    }`;
+
+  const nbFiltresActifs = [nicheActive !== "all", filtresPrix !== "tous", filtreMarge > 0, commandesMinEffectif(commandesMin) > COMMANDES_MIN_DEFAUT, noteMin > 0].filter(Boolean).length;
+  const effacerFiltres = () => {
+    setNicheActive("all");
+    setFiltresPrix("tous");
+    setFiltreMarge(0);
+    setCommandesMin(String(COMMANDES_MIN_DEFAUT));
+    setNoteMin(0);
+    setPage(1);
+  };
 
   // Bloc 4 — Ajouter à une boutique
   const [ajouterBoutiqueProduit, setAjouterBoutiqueProduit] = useState<Produit | null>(null);
@@ -222,177 +220,151 @@ export default function ProduitsGagnants() {
           <div>
             <h1 className="text-[28px] font-bold m-0 text-[var(--text-primary)]">{t("title")}</h1>
             <p className="text-[var(--text-faint)] mt-1.5 mb-0 text-sm">{t("subtitle")}</p>
-            <div className="bg-amber-500/10 border border-amber-500/25 text-[var(--warning)] rounded-lg px-3 py-2.5 text-[12.5px] mt-3">
-              {t("warning")}
-            </div>
           </div>
         </div>
       </div>
 
       <div className="max-w-[1200px] mx-auto px-6 py-8">
 
-        {/* Bouton choisir niche */}
-        <div className="mb-6">
-          <button
-            onClick={() => setTiroirOpen(!tiroirOpen)}
-            className={`px-6 py-3.5 rounded-xl text-[15px] font-semibold cursor-pointer flex items-center gap-2.5 transition-all border ${
-              tiroirOpen ? "bg-violet-600 border-violet-600 text-white" : "bg-[var(--surface)] border-[var(--border-strong)] text-[var(--text-primary)]"
-            }`}
-          >
-            <span>🎯</span>
-            {nicheSelectionnee
-              ? t("nicheButton", { emoji: nicheSelectionnee.emoji, label: nicheSelectionnee.label })
-              : t("nicheChoose")}
-            <span className="ml-auto text-xs opacity-70">{tiroirOpen ? "▲" : "▼"}</span>
-          </button>
+        {/* ── Filtres : niche, prix, marge, puis filtres avancés, dans une seule carte ── */}
+        <div className="mb-7 rounded-2xl border border-[var(--border)] bg-[var(--surface)]">
+          <div className="grid gap-5 p-5 md:grid-cols-[minmax(200px,1fr)_auto_auto] md:items-end">
+            {/* Niche */}
+            <div className="flex flex-col gap-1.5">
+              <span className={libelleChamp}>{t("labelNiche")}</span>
+              <button
+                type="button"
+                onClick={() => setTiroirOpen(!tiroirOpen)}
+                aria-expanded={tiroirOpen}
+                className={`${champ} flex items-center justify-between gap-3 text-left ${tiroirOpen ? "border-[var(--accent)]" : ""}`}
+              >
+                <span className="truncate font-medium">{nicheSelectionnee?.label ?? t("nicheChoose")}</span>
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true" className={`shrink-0 text-[var(--text-faint)] transition-transform ${tiroirOpen ? "rotate-180" : ""}`}>
+                  <path d="M3 4.5L6 7.5L9 4.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </button>
+            </div>
+
+            {/* Prix */}
+            <div className="flex flex-col gap-1.5">
+              <span className={libelleChamp}>{t("labelPrice")}</span>
+              <div className={segments}>
+                {[
+                  { label: t("priceAll"), val: "tous" },
+                  { label: t("price020"), val: "0-20" },
+                  { label: t("price2050"), val: "20-50" },
+                  { label: t("price50"), val: "50+" },
+                ].map(f => (
+                  <button key={f.val} type="button" aria-pressed={filtresPrix === f.val} onClick={() => { setFiltresPrix(f.val); setPage(1); }} className={segment(filtresPrix === f.val)}>
+                    {f.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Marge */}
+            <div className="flex flex-col gap-1.5">
+              <span className={libelleChamp}>{t("labelMarge")}</span>
+              <div className={segments}>
+                {[
+                  { label: t("margeAll"), val: 0 },
+                  { label: t("marge50"), val: 50 },
+                  { label: t("marge70"), val: 70 },
+                ].map(f => (
+                  <button key={f.val} type="button" aria-pressed={filtreMarge === f.val} onClick={() => { setFiltreMarge(f.val); setPage(1); }} className={segment(filtreMarge === f.val)}>
+                    {f.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
 
           {/* Tiroir niches */}
           {tiroirOpen && (
-            <div className="mt-2 bg-[var(--surface)] border border-[var(--border-strong)] rounded-2xl p-6 grid gap-2.5" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))" }}>
-              {NICHES.map(niche => (
-                <button
-                  key={niche.id}
-                  onClick={() => { setNicheActive(niche.id); setTiroirOpen(false); setPage(1); }}
-                  className={`px-4 py-3 rounded-[10px] text-[13px] font-medium cursor-pointer text-left transition-all border ${
-                    nicheActive === niche.id
-                      ? niche.id === "halloween"
-                        ? "bg-[#e07b2e] border-[#e07b2e] text-white shadow-[0_0_16px_rgba(224,123,46,0.45)]"
-                        : "bg-violet-600 border-violet-600 text-white"
-                      : "bg-[var(--bg-sunken)] border-[var(--border-strong)] text-[var(--text-primary)]"
-                  }`}
-                >
-                  <div className="text-lg mb-1">{niche.emoji}</div>
-                  <div className="font-semibold">{niche.label}</div>
-                  <div className="text-[11px] text-[var(--text-faint)] mt-0.5">{niche.desc}</div>
-                </button>
-              ))}
+            <div className="mx-5 mb-5 grid gap-2 rounded-xl border border-[var(--border)] bg-[var(--bg-sunken)] p-3" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(170px, 1fr))" }}>
+              {NICHES.map(niche => {
+                const actif = nicheActive === niche.id;
+                return (
+                  <button
+                    key={niche.id}
+                    type="button"
+                    onClick={() => { setNicheActive(niche.id); setTiroirOpen(false); setPage(1); }}
+                    className={`flex items-start gap-2.5 rounded-lg border px-3 py-2.5 text-left transition-colors ${
+                      actif
+                        ? niche.id === "halloween"
+                          ? "border-[#e07b2e] bg-[#e07b2e]/10"
+                          : "border-[var(--accent)] bg-[var(--accent)]/10"
+                        : "border-transparent hover:bg-[var(--surface-2)]"
+                    }`}
+                  >
+                    <span className="text-base leading-5" aria-hidden="true">{niche.emoji}</span>
+                    <span className="min-w-0">
+                      <span className="block text-[13px] font-medium text-[var(--text-primary)]">{niche.label}</span>
+                      <span className="block text-[11px] text-[var(--text-faint)] mt-0.5">{niche.desc}</span>
+                    </span>
+                  </button>
+                );
+              })}
             </div>
           )}
-        </div>
 
-        {/* Filtres */}
-        <div className="flex gap-3 mb-7 flex-wrap items-center">
-          <span className="text-[13px] text-[var(--text-faint)]">{t("filters")}</span>
+          {/* Filtres avancés */}
+          <div className="border-t border-[var(--border)] p-5 flex flex-col gap-4">
+            <p className="text-[13px] font-semibold text-[var(--text-primary)]">{t("advanced")}</p>
 
-          {[
-            { label: t("priceAll"), val: "tous" },
-            { label: t("price020"), val: "0-20" },
-            { label: t("price2050"), val: "20-50" },
-            { label: t("price50"), val: "50+" },
-          ].map(f => (
-            <button
-              key={f.val}
-              onClick={() => { setFiltresPrix(f.val); setPage(1); }}
-              className={`px-3.5 py-[7px] rounded-lg text-xs font-medium cursor-pointer border ${
-                filtresPrix === f.val
-                  ? isHalloweenNiche
-                    ? "bg-[#e07b2e] border-[#e07b2e] text-white"
-                    : "bg-violet-600 border-violet-600 text-white"
-                  : "bg-[var(--surface)] border-[var(--border-strong)] text-[var(--text-primary)]"
-              }`}
-            >
-              {f.label}
-            </button>
-          ))}
-
-          {[
-            { label: t("margeAll"), val: 0 },
-            { label: t("marge50"), val: 50 },
-            { label: t("marge70"), val: 70 },
-          ].map(f => (
-            <button
-              key={f.val}
-              onClick={() => { setFiltreMarge(f.val); setPage(1); }}
-              className={`px-3.5 py-[7px] rounded-lg text-xs font-medium cursor-pointer border ${
-                filtreMarge === f.val ? "bg-emerald-600 border-emerald-600 text-white" : "bg-[var(--surface)] border-[var(--border-strong)] text-[var(--text-primary)]"
-              }`}
-            >
-              {f.label}
-            </button>
-          ))}
-        </div>
-
-        {/* Filtres avancés */}
-        <div className="bg-[var(--surface)] border border-[var(--border-strong)] rounded-[14px] p-5 mb-7 grid gap-4.5">
-          <div className="text-xs font-semibold text-[var(--text-faint)] uppercase tracking-[0.06em]">
-            {t("advanced")}
-          </div>
-
-          <div className="grid grid-cols-2 gap-5">
-            {/* Commandes minimum */}
-            <div>
-              <label className="block text-[12.5px] text-[var(--text-muted)] mb-2">
-                {t("ordersMinLabel")}
+            <div className="grid gap-5 md:grid-cols-2">
+              {/* Commandes minimum */}
+              <label className="flex flex-col gap-1.5">
+                <span className={libelleChamp}>{t("ordersMinLabel")}</span>
+                <span className={`${champ} flex items-center gap-2 focus-within:border-[var(--accent)]`}>
+                  <input
+                    type="number"
+                    min={COMMANDES_MIN_DEFAUT}
+                    placeholder={t("ordersMinPlaceholder")}
+                    value={commandesMin}
+                    aria-describedby="commandes-min-aide"
+                    onChange={(e) => { setCommandesMin(e.target.value); setPage(1); }}
+                    onBlur={() => setCommandesMin(String(commandesMinEffectif(commandesMin)))}
+                    className={`${sansFleches} min-w-0 flex-1 bg-transparent text-[var(--text-primary)] outline-none placeholder:text-[var(--text-faint)]`}
+                  />
+                  <span className="shrink-0 text-xs text-[var(--text-faint)]">{t("ordersUnit")}</span>
+                </span>
+                <span id="commandes-min-aide" className="text-xs text-[var(--text-faint)]">{t("ordersMinHint", { min: COMMANDES_MIN_DEFAUT })}</span>
               </label>
-              <input
-                type="number"
-                min={0}
-                placeholder={t("ordersMinPlaceholder")}
-                value={commandesMin}
-                onChange={(e) => { setCommandesMin(e.target.value); setPage(1); }}
-                className="w-full box-border bg-[var(--bg-sunken)] border border-[var(--border-strong)] rounded-lg px-3 py-2.5 text-[13.5px] text-[var(--text-primary)] outline-none"
-              />
-            </div>
 
-            {/* Note minimum */}
-            <div>
-              <label className="flex justify-between text-[12.5px] text-[var(--text-muted)] mb-2">
-                <span>{t("noteMinLabel")}</span>
-                <span className="text-[var(--warning)] font-semibold">
-                  {noteMin > 0 ? `⭐ ${noteMin.toFixed(1)}+` : t("noteAll")}
+              {/* Note minimum */}
+              <label className="flex flex-col gap-1.5">
+                <span className="flex items-center justify-between">
+                  <span className={libelleChamp}>{t("noteMinLabel")}</span>
+                  <span className="rounded-md bg-[var(--surface-2)] px-2 py-0.5 text-xs font-semibold tabular-nums text-[var(--text-primary)]">
+                    {noteMin > 0 ? `★ ${noteMin.toFixed(1)}+` : t("noteAll")}
+                  </span>
+                </span>
+                <span className="flex h-[38px] items-center">
+                  <input
+                    type="range"
+                    min={0}
+                    max={5}
+                    step={0.5}
+                    value={noteMin}
+                    onChange={(e) => { setNoteMin(parseFloat(e.target.value)); setPage(1); }}
+                    className="w-full accent-[var(--accent)]"
+                  />
                 </span>
               </label>
-              <input
-                type="range"
-                min={0}
-                max={5}
-                step={0.5}
-                value={noteMin}
-                onChange={(e) => { setNoteMin(parseFloat(e.target.value)); setPage(1); }}
-                className="w-full accent-[var(--warning)]"
-              />
             </div>
           </div>
 
-          <div className="flex flex-wrap gap-6 items-center">
-            {/* Sweet spot */}
-            <label className="flex items-center gap-2.5 text-[13px] text-[var(--text-muted)] cursor-pointer">
-              <input
-                type="checkbox"
-                checked={sweetSpotActif}
-                onChange={(e) => { setSweetSpotActif(e.target.checked); setPage(1); }}
-                className="w-4 h-4 accent-[var(--success)]"
-              />
-              {t("sweetSpot")}
-            </label>
-          </div>
-
-          {sweetSpotActif && (
-            <div className="bg-[var(--bg-sunken)] rounded-[10px] p-4 border border-emerald-500/20 flex items-center gap-4 flex-wrap">
-              <span className="text-xs text-[var(--text-faint)]">{t("sweetSpotHint")}</span>
-              <div className="flex items-center gap-2">
-                <input
-                  type="number"
-                  min={0}
-                  value={sweetMin}
-                  onChange={(e) => { setSweetMin(parseInt(e.target.value) || 0); setPage(1); }}
-                  className="w-[90px] bg-[var(--bg)] border border-[var(--border-strong)] rounded-[7px] px-2.5 py-1.5 text-[13px] text-[var(--text-primary)] outline-none"
-                />
-                <span className="text-[var(--text-faint)] text-xs">{t("and")}</span>
-                <input
-                  type="number"
-                  min={0}
-                  value={sweetMax}
-                  onChange={(e) => { setSweetMax(parseInt(e.target.value) || 0); setPage(1); }}
-                  className="w-[90px] bg-[var(--bg)] border border-[var(--border-strong)] rounded-[7px] px-2.5 py-1.5 text-[13px] text-[var(--text-primary)] outline-none"
-                />
-                <span className="text-[var(--text-faint)] text-xs">{t("ordersUnit")}</span>
-              </div>
+          {/* Pied : nombre de filtres actifs + tout effacer */}
+          {nbFiltresActifs > 0 && (
+            <div className="flex items-center justify-between gap-3 border-t border-[var(--border)] px-5 py-3">
+              <span className="text-xs text-[var(--text-muted)]">{t("activeFilters", { count: nbFiltresActifs })}</span>
               <button
-                onClick={() => { setSweetMin(SWEET_SPOT_DEFAUT.min); setSweetMax(SWEET_SPOT_DEFAUT.max); setPage(1); }}
-                className="ml-auto bg-transparent border border-[var(--border-strong)] text-[var(--text-faint)] px-3 py-1.5 rounded-[7px] text-[11.5px] cursor-pointer"
+                type="button"
+                onClick={effacerFiltres}
+                className="rounded-lg px-3 py-1.5 text-xs font-medium text-[var(--text-muted)] hover:bg-[var(--surface-2)] hover:text-[var(--text-primary)]"
               >
-                {t("reset")}
+                {t("clearAll")}
               </button>
             </div>
           )}

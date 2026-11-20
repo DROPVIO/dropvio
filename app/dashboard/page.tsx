@@ -54,6 +54,7 @@ const PLAN_META: Record<string, { label: string; badge: string; border: string }
   free:   { label: "Free",   badge: "bg-zinc-700 text-zinc-200",  border: "border-white/10" },
   pro:    { label: "Pro",    badge: "bg-violet-600 text-white",   border: "border-violet-500/30" },
   agency: { label: "Agency", badge: "bg-amber-400 text-black",    border: "border-amber-500/30" },
+  expert: { label: "Expert", badge: "bg-emerald-400 text-black",  border: "border-emerald-500/30" },
 };
 
 function fmt(n: number): string {
@@ -61,17 +62,8 @@ function fmt(n: number): string {
   return String(n);
 }
 
-function greetingKey(): string {
-  const h = new Date().getHours();
-  if (h < 6)  return "greetingNight";
-  if (h < 12) return "greetingMorning";
-  if (h < 18) return "greetingAfternoon";
-  return "greetingEvening";
-}
-
 export default function DashboardPage() {
   const t = useTranslations("dashboard.home");
-  const [user,          setUser]          = useState<import("@supabase/supabase-js").User | null>(null);
   const [profile,       setProfile]       = useState<Profile | null>(null);
   const [loading,       setLoading]       = useState(true);
   const [shopifyStatus, setShopifyStatus] = useState<ShopifyStatus | null>(null);
@@ -105,7 +97,6 @@ export default function DashboardPage() {
 
     async function load() {
       const { data: { user } } = await supabase.auth.getUser();
-      setUser(user);
 
       if (user) {
         const now = new Date();
@@ -134,10 +125,12 @@ export default function DashboardPage() {
           // flux « Préparer ma boutique » (voir 028_sites_generes_is_trace.sql) ne sont pas
           // des générations et ne décomptent rien.
           supabase.from("sites_generes").select("id, created_at, is_trace").eq("user_id", user.id).limit(1000),
-          // produits_dedup (supabase/migrations/027_produits_dedup_view.sql) : compte le
-          // catalogue tel que l'utilisateur le voit réellement dans produits-gagnants
-          // (dédupliqué par (nom, niche)), pas le nombre brut de lignes sourcées.
-          supabase.from("produits_dedup").select("*", { count: "exact", head: true }),
+          // Catalogue tel que l'utilisateur le voit dans produits-gagnants (dédupliqué, limité à
+          // la sélection Free pour un compte Free) : compté par le serveur (/api/catalogue/compte),
+          // jamais lu directement depuis le navigateur.
+          fetch("/api/catalogue/compte")
+            .then((res) => (res.ok ? res.json() : { count: null }))
+            .catch(() => ({ count: null })) as Promise<{ count: number | null }>,
           supabase.from("simulations_marge").select("resultats, created_at").eq("user_id", user.id).limit(500),
           supabase.from("audits_realises").select("score_total, created_at").eq("user_id", user.id).limit(500),
           // "boutiques" a aussi une policy select_public (boutiques d'autres utilisateurs
@@ -205,9 +198,6 @@ export default function DashboardPage() {
   const planKey  = (profile?.plan ?? "free") as Plan;
   const planMeta = PLAN_META[planKey] ?? PLAN_META.free;
   const planLimits = PLAN_LIMITS[planKey];
-  const prenom   = profile?.nom_complet?.split(" ")[0]
-    || user?.email?.split("@")[0]
-    || t("fallbackName");
 
   const METRICS = [
     {
@@ -304,7 +294,8 @@ export default function DashboardPage() {
       title: t("cardUsage"),
       stats: [
         { label: t("cardUsageAudits"), value: `${auditsMoisUsage}${planLimits.auditsParMoisMax !== null ? `/${planLimits.auditsParMoisMax}` : ""}` },
-        { label: t("cardUsageSites"), value: `${sitesMoisUsage}${planLimits.sitesParMoisMax !== null ? `/${planLimits.sitesParMoisMax}` : ""}` },
+        // Nombre de sites informatif : la création est limitée par le budget IA, pas par ce chiffre.
+        { label: t("cardUsageSites"), value: String(sitesMoisUsage) },
       ],
     },
   ];
@@ -313,20 +304,18 @@ export default function DashboardPage() {
     <div className="min-h-screen bg-[var(--bg)] px-4 py-10 sm:px-8">
       <div className="max-w-6xl mx-auto flex flex-col gap-8">
 
+        {/* ── Activité, en tête de page ─────────────────────────────────────
+            Position JSX fixe, jamais dans une branche conditionnelle liée à
+            "loading" : sinon React démonte/remonte le composant quand loading
+            change, ce qui relance son fetch (incidents Shopify) pour rien. */}
+        <DashboardActiviteChart chartData={chartData} />
+
         {loading ? (
           <div className="flex items-center justify-center py-20">
             <div className="w-5 h-5 rounded-full border-2 border-[var(--accent)] border-t-transparent animate-spin" />
           </div>
         ) : (
           <>
-            {/* ── Welcome ─────────────────────────────────────────────────── */}
-            <div>
-              <h1 className="text-2xl font-bold text-[var(--text-primary)]">
-                {t("title", { greeting: t(greetingKey()), name: prenom })}
-              </h1>
-              <p className="text-[var(--text-faint)] text-sm mt-1.5">{t("subtitle")}</p>
-            </div>
-
             {/* ── Bannière reconnexion Shopify ─────────────────────────────── */}
             {shopifyStatus?.reconnectRequired && (
               <a
@@ -369,14 +358,8 @@ export default function DashboardPage() {
           </>
         )}
 
-        {/* ── Graphique d'activité combiné ─────────────────────────────────
-            Position JSX fixe, jamais dans une branche conditionnelle liée à
-            "loading" : sinon React démonte/remonte le composant quand loading
-            change, ce qui relance son fetch (incidents Shopify) pour rien. */}
         {/* Ventes Shopify : chiffres clés, par produit, courbes zoomables. */}
         <VentesDashboard />
-
-        <DashboardActiviteChart chartData={chartData} />
 
         {/* Répartition de toute l'activité Dropvio et du budget IA, en camemberts. */}
         <RepartitionDashboard chartData={chartData} />

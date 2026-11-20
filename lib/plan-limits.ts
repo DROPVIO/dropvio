@@ -53,6 +53,12 @@ export const AGENCY_PRICE_EUR = 59;
 // de sa configuration du mois (lib/expert-quota.ts). "free" n'est plus une offre : c'est un compte sans abonnement actif ni
 // essai en cours (045_abonnements.sql). Tout est à 0 — le middleware redirige déjà ces comptes
 // vers /abonnement, ces zéros bloquent aussi les appels directs aux routes API.
+// Catalogue des produits gagnants d'un compte Free : 40 produits par niche sur 10 niches. La
+// sélection est faite par la base (table catalogue_free, migration 057) et appliquée par le RLS
+// de produits / snapshots_produits / produits_dedup à toute lecture avec la session de
+// l'utilisateur. produitsMax (Free) n'en est que le total, pour la pagination.
+export const CATALOGUE_FREE = { niches: 10, produitsParNiche: 40 } as const;
+
 export const PLAN_LIMITS: Record<Plan, {
   produitsMax: number | null;
   produitsBoutiqueMax: number | null;
@@ -61,7 +67,7 @@ export const PLAN_LIMITS: Record<Plan, {
   auditsParMoisMax: number | null;
   alternativesParMoisMax: number | null;
 }> = {
-  free:   { produitsMax: 0, produitsBoutiqueMax: 0, simulationsMax: 0, sitesParMoisMax: 0, auditsParMoisMax: 0, alternativesParMoisMax: 0 },
+  free:   { produitsMax: CATALOGUE_FREE.niches * CATALOGUE_FREE.produitsParNiche, produitsBoutiqueMax: 0, simulationsMax: 0, sitesParMoisMax: 0, auditsParMoisMax: 0, alternativesParMoisMax: 0 },
   pro:    { produitsMax: null, produitsBoutiqueMax: 200, simulationsMax: null, sitesParMoisMax: 20, auditsParMoisMax: 30, alternativesParMoisMax: null },
   agency: { produitsMax: null, produitsBoutiqueMax: 200, simulationsMax: null, sitesParMoisMax: 50, auditsParMoisMax: 100, alternativesParMoisMax: null },
   // Expert : aucun plafond de produits par boutique, seul le quota d'images limite la génération.

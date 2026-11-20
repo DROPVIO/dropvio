@@ -1528,7 +1528,6 @@
     "media_produit_sans_nom": "Este producto no tiene nombre: no se puede generar su imagen.",
     "media_produit_sans_photo": "Este producto no tiene foto: no se puede generar su imagen.",
     "plan_payant_requis": "La generación de imágenes está reservada a los planes de pago.",
-    "catalogue_plan": "El catálogo de productos ganadores está reservado a los planes de pago.",
     "images_quota_epuise": "Tu presupuesto de imágenes del mes está agotado. Se reinicia el día 1 del mes que viene.",
     "images_migration_requise": "La generación de imágenes aún no está activada en tu plan.",
     "catalogue_photos_migration_requise": "Guardar las fotos del catálogo aún no está disponible.",

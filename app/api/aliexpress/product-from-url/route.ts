@@ -8,15 +8,12 @@ function extractProductId(url: string): string | null {
 }
 
 // Pré-remplissage du Site Builder depuis le catalogue des produits gagnants : réservé aux
-// comptes connectés avec un plan payant (le catalogue est un contenu payant). Lecture avec la
-// session de l'utilisateur, donc soumise au RLS de produits.
+// comptes connectés. Lecture avec la session de l'utilisateur, donc soumise au RLS de produits
+// (migration 057) : un compte Free ne trouve que les produits de sa sélection (CATALOGUE_FREE).
 export async function POST(request: NextRequest) {
-  const { supabase, user, plan } = await getServerUserPlanOnly();
+  const { supabase, user } = await getServerUserPlanOnly();
   if (!user) {
     return apiError("auth_required", 401, "Connecte-toi pour utiliser le catalogue.");
-  }
-  if (plan === "free") {
-    return apiError("catalogue_plan", 403, "Le catalogue est réservé aux plans payants.");
   }
 
   const body = await request.json().catch(() => null);
