@@ -1,4 +1,7 @@
-# Part 31 — Anticipating seasonality rather than suffering it
+---
+ordre: 30
+---
+# Part 30 — Anticipating seasonality rather than suffering it
 
 Some products behave predictably from one year to the next, at similar periods — true seasonality, distinct both from a lasting underlying trend and from a one-off fad spike mentioned in the part on choosing a product. A strongly seasonal product can be an excellent commercial choice, provided you correctly anticipate the high and low periods rather than discovering them each cycle as a surprise.
 
@@ -6,7 +9,7 @@ A supplier faced with a sudden rise in demand as a recognized seasonal peak appr
 
 Periods of strong seasonality also generate more customer service requests, especially about delivery times — preparing replies suited to that specific period in advance avoids improvising in a rush when the volume of messages is highest. Conversely, quiet periods shouldn't be experienced as downtime, but as a window to prepare the next period: researching new products, enriching existing pages, consolidating cash before the next busy period.
 
-# Part 32 — A third worked example: the effect of a returning customer
+# Part 31 — A third worked example: the effect of a returning customer
 
 The previous parts quantified the effect of cross-selling on a single order. Here's how a second purchase, a few weeks later, changes the overall calculation for the same customer acquired once.
 

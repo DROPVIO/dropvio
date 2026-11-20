@@ -1,3 +1,6 @@
+---
+ordre: 26
+---
 # Partie 26 — Lire un mois de trésorerie sur un exemple chiffré
 
 Une boutique encaisse 8 200 euros de chiffre d'affaires sur un mois — un chiffre isolé qui paraît excellent, mais qui ne dit rien de ce qui reste réellement disponible. Une fois déduits le coût produit, les taxes à l'importation et les frais de transaction (environ 3 400 euros), le budget publicitaire engagé (2 300 euros), les remboursements traités (410 euros) et les abonnements/outils (140 euros), il reste environ 1 950 euros avant cotisations. Les cotisations URSSAF à provisionner sur ce chiffre d'affaires encaissé représentent environ 1 009 euros — à mettre de côté immédiatement plutôt qu'à découvrir au moment de la déclaration. Il reste environ 941 euros réellement disponibles sur ce mois précis, et c'est cette somme, pas les 8 200 euros initiaux, qui doit guider une éventuelle décision de réinvestissement ou de mise en réserve.

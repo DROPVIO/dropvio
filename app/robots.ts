@@ -11,6 +11,8 @@ export default async function robots(): Promise<MetadataRoute.Robots> {
     rules: [
       {
         userAgent: "*",
+        // /formation (page de vente publique) reste indexable ; les leçons payantes
+        // (/formation/lire/...) ne le sont pas (noindex aussi sur la page elle-même).
         allow: ["/", "/boutiques/", "/faq"],
         disallow: [
           "/api/",
@@ -20,7 +22,7 @@ export default async function robots(): Promise<MetadataRoute.Robots> {
           "/mes-sites",
           "/audit",
           "/tools/",
-          "/formation",
+          "/formation/lire/",
           "/spy",
           "/login",
           "/register",

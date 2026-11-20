@@ -1,3 +1,6 @@
+---
+ordre: 29
+---
 # Partie 29 — Les tout premiers clients : ce qui compte différemment
 
 Les toute premières ventes d'une nouvelle boutique méritent une attention différente de celle accordée une fois l'activité rodée, parce que chacune de ces premières expériences client pèse proportionnellement beaucoup plus lourd sur la réputation naissante de la boutique qu'une vente parmi des centaines une fois l'activité installée.

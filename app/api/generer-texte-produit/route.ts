@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Connecte-toi pour utiliser la génération de texte.", code: "auth_required" }, { status: 401 });
   }
 
-  if (!checkRateLimit(`generer-texte-produit:${user.id}`, { max: 20, windowMs: 3_600_000 })) {
+  if (!(await checkRateLimit(`generer-texte-produit:${user.id}`, { max: 20, windowMs: 3_600_000 }))) {
     return NextResponse.json(
       { error: "Trop de générations en peu de temps. Réessaie dans quelques minutes.", code: "rate_limit" },
       { status: 429 }

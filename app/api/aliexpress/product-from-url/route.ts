@@ -1,15 +1,27 @@
 import { NextRequest, NextResponse } from "next/server";
-import { supabase } from "@/lib/supabase";
+import { getServerUserPlanOnly } from "@/lib/supabase-server";
+import { apiError } from "@/lib/api-errors";
 
 function extractProductId(url: string): string | null {
   const match = url.match(/\/item\/(\d+)/);
   return match ? match[1] : null;
 }
 
+// Pré-remplissage du Site Builder depuis le catalogue des produits gagnants : réservé aux
+// comptes connectés avec un plan payant (le catalogue est un contenu payant). Lecture avec la
+// session de l'utilisateur, donc soumise au RLS de produits.
 export async function POST(request: NextRequest) {
-  const { url } = await request.json();
+  const { supabase, user, plan } = await getServerUserPlanOnly();
+  if (!user) {
+    return apiError("auth_required", 401, "Connecte-toi pour utiliser le catalogue.");
+  }
+  if (plan === "free") {
+    return apiError("catalogue_plan", 403, "Le catalogue est réservé aux plans payants.");
+  }
 
-  if (!url || typeof url !== "string") {
+  const body = await request.json().catch(() => null);
+  const url = body?.url;
+  if (!url || typeof url !== "string" || url.length > 2048) {
     return NextResponse.json({ error: "URL manquante", code: "url_missing" }, { status: 400 });
   }
 
@@ -26,7 +38,7 @@ export async function POST(request: NextRequest) {
     .select("id, nom, image, note, commandes, niche")
     .ilike("lienAliExpress", `%${productId}%`)
     .limit(1)
-    .single();
+    .maybeSingle();
 
   if (error || !data) {
     return NextResponse.json(

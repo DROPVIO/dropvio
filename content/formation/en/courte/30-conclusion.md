@@ -1,3 +1,6 @@
+---
+ordre: 36
+---
 # Conclusion — What to remember from this course
 
 This short version has covered, in condensed form but without sacrificing anything essential, all the topics that determine whether a dropshipping business lasts or stops within the year: methodically choosing a product, a complete margin calculation before each launch, a product page built to answer the visitor's questions before they ask them, a serious check of each supplier, acquisition tested in tiers rather than committed all at once, after-sales service treated as a priority and not a chore, financial management that distinguishes profitability from cash flow, a legal and tax framework anticipated rather than regularized in a rush, and growth that consolidates before accelerating.

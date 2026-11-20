@@ -57,6 +57,8 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
   const cssContents = await Promise.all(
     stylesheetHrefs.map(async (href) => {
       const cssUrl = href.startsWith("http") ? href : `${baseUrl}${href}`;
+      // Seules les feuilles de style servies par l'app elle-même sont récupérées.
+      if (!cssUrl.startsWith(`${baseUrl}/`)) return "";
       const res = await fetch(cssUrl, { cache: "no-store" });
       if (!res.ok) return "";
       const css = await res.text();

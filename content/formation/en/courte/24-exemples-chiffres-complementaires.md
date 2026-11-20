@@ -1,6 +1,9 @@
+---
+ordre: 24
+---
 # Part 24 — Two more margin examples, to anchor the method
 
-Appendix C has already worked through a complete calculation on a niche product. Here are two additional, shorter examples, to cover different product profiles and help you reproduce this reasoning whatever your own price positioning.
+Appendix C, at the end of the course, works through a complete calculation on a niche product. Here are two additional, shorter examples, to cover different product profiles and help you reproduce this reasoning whatever your own price positioning.
 
 ## The low-priced loss leader
 

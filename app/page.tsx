@@ -69,7 +69,7 @@ export default function LandingPage() {
             >
               {t("hero.title")}
             </h1>
-            <p data-rv="hero" style={{ "--dl": "60ms" } as React.CSSProperties} className="dv-hero-sub text-[#555]">
+            <p data-rv="hero" style={{ "--dl": "60ms" } as React.CSSProperties} className="dv-hero-sub text-[#444]">
               {t("hero.subtitle")}
             </p>
             <div
@@ -87,10 +87,10 @@ export default function LandingPage() {
                 {t("hero.ctaSecondary")}
               </Link>
             </div>
-            <p className="dv-hero-terms leading-[1.45] text-[#444]">{t("hero.note")}</p>
+            <p data-mention-ia className="dv-hero-ia leading-[1.45] text-[#555]">{t("hero.mentionIa")}</p>
           </div>
 
-          <div className="dv-hero-devices min-h-[260px] min-w-0">
+          <div className="dv-hero-devices min-h-[260px] min-w-0" role="img" aria-label={t("hero.mockupAlt")}>
             <HeroDevices />
           </div>
         </div>
@@ -118,9 +118,6 @@ export default function LandingPage() {
         >
           {t("final.cta")}
         </Link>
-        <p data-rv="up" style={{ "--dl": "160ms" } as React.CSSProperties} className="mt-3.5 text-sm leading-[1.45] text-[#444]">
-          {t("final.note")}
-        </p>
       </section>
 
       {/* ── Footer ───────────────────────────────────────────────────── */}

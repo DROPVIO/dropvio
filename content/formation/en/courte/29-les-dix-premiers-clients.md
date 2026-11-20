@@ -1,3 +1,6 @@
+---
+ordre: 29
+---
 # Part 29 — The very first customers: what counts differently
 
 The very first sales of a new store deserve different attention from that given once the business is up and running, because each of these first customer experiences weighs proportionally much more on the store's budding reputation than one sale among hundreds once the business is established.

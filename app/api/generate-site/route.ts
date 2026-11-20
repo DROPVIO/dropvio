@@ -4,8 +4,11 @@ import { blocAvisPrompt, validerAvis } from "@/lib/avis-produit";
 import Anthropic from "@anthropic-ai/sdk";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { getServerUserAndPlan } from "@/lib/supabase-server";
-import { PLAN_LIMITS, planLabel, currentMonthKey, type Plan } from "@/lib/plan-limits";
+import { PLAN_LIMITS, planLabel, type Plan } from "@/lib/plan-limits";
 import { reponseLimiteIa, SuiviBudgetIa, tokensEstimes } from "@/lib/ai-budget";
+import { EXPERT_MODELS } from "@/lib/expert-pricing";
+import { finaliserSiteExpert, reserverSiteExpert, type ReservationSite } from "@/lib/expert-generation";
+import { createSupabaseAdminClient } from "@/lib/supabase-admin";
 import { apiError } from "@/lib/api-errors";
 import { contexteSite, langueSite, prixSite, type SiteCtx } from "@/lib/site-textes";
 import { avecRepliLangue, langueBoutique } from "@/lib/boutique-langue";
@@ -24,6 +27,10 @@ import { blocConsignesStyle, validerFicheStyle } from "@/lib/style-fiche";
 import { assemblerPagesBoutique, assemblerPagesProduit, type ContenusLegaux, type PagesSite } from "@/lib/site-builder-pages";
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+
+// Inférieur aux 15 minutes de expert_rembourser_expirees : une génération encore en cours ne
+// peut pas être remboursée par le cron.
+export const maxDuration = 600;
 
 // Couleurs de fond/texte du mode IA — fixes, indépendantes du style choisi (voir le prompt
 // produit existant plus bas : "Fond global : #0a0a0f" n'a jamais varié). La grille de
@@ -71,6 +78,27 @@ const THINKING_GENERATION = { type: "between_tools" } as unknown as Anthropic.Th
 const EFFORT_GENERATION = "high" as const;
 
 const MAX_TOKENS_GENERATION = 24000;
+// Modèles Expert : réflexion toujours active, comptée dans max_tokens. Il faut donc une marge
+// bien plus large pour que le HTML ne soit pas tronqué.
+const MAX_TOKENS_GENERATION_EXPERT = 64000;
+
+type ConfigGeneration = { model: string; maxTokens: number; thinking?: Anthropic.ThinkingConfigParam };
+
+const CONFIG_GENERATION: ConfigGeneration = {
+  model: MODELE_GENERATION,
+  maxTokens: MAX_TOKENS_GENERATION,
+  thinking: THINKING_GENERATION,
+};
+
+function configGeneration(reservation: ReservationSite | null): ConfigGeneration {
+  if (!reservation) return CONFIG_GENERATION;
+  return { model: EXPERT_MODELS[reservation.modele].apiId, maxTokens: MAX_TOKENS_GENERATION_EXPERT };
+}
+
+// Plan Expert : une unité par génération, sauvegardée ou non. null ici = quota et crédits épuisés.
+function reponseQuotaExpert() {
+  return NextResponse.json({ error: "Quota de sites épuisé : rachète des crédits sur /quota.", code: "expert_quota" }, { status: 403 });
+}
 
 // Plafond d'appels à Claude pour une génération : 1 appel initial + 1 relance au maximum.
 // Borne le coût du pire cas (une page qui ne converge pas) au lieu de le laisser filer sur
@@ -105,24 +133,27 @@ type ResultatGeneration = {
 // Renvoie aussi la consommation cumulée de tokens. Le budget IA est vérifié avant CHAQUE appel
 // (la relance coûte autant que le premier appel) et chaque réponse est ajoutée au suivi, que
 // l'appelant enregistre même si la génération échoue ensuite (HTML tronqué).
-async function generateHtmlViaClaude(prompt: string, suivi: SuiviBudgetIa): Promise<ResultatGeneration> {
-  type Msg = { role: "user" | "assistant"; content: string };
-  const msgs: Msg[] = [{ role: "user", content: prompt }];
+async function generateHtmlViaClaude(prompt: string, suivi: SuiviBudgetIa, config: ConfigGeneration): Promise<ResultatGeneration> {
+  const msgs: Anthropic.MessageParam[] = [{ role: "user", content: prompt }];
+  let texteEnvoye = prompt;
   let html = "";
   let tokensEntree = 0;
   let tokensSortie = 0;
   let appels = 0;
 
   for (let attempt = 0; attempt < MAX_APPELS_GENERATION; attempt++) {
-    const entreeEstimee = tokensEstimes(SYSTEM_GENERATION_SITE + msgs.map((m) => m.content).join(""));
-    await suivi.verifier(suivi.estimer(entreeEstimee, MAX_TOKENS_GENERATION));
+    const entreeEstimee = tokensEstimes(SYSTEM_GENERATION_SITE + texteEnvoye);
+    await suivi.verifier(suivi.estimer(entreeEstimee, config.maxTokens));
+    // Durée de chaque appel, pour les logs : une génération longue se diagnostique appel par appel.
+    const debutAppel = Date.now();
     const stream = client.messages.stream({
-      model: MODELE_GENERATION,
-      max_tokens: MAX_TOKENS_GENERATION,
+      model: config.model,
+      max_tokens: config.maxTokens,
       output_config: { effort: EFFORT_GENERATION },
-      thinking: THINKING_GENERATION,
+      ...(config.thinking ? { thinking: config.thinking } : {}),
       // Rôle et périmètre (sites uniquement) + capacités d'animation, communs aux deux modes.
-      system: SYSTEM_GENERATION_SITE,
+      // Identique pour tous les comptes : mis en cache, il coûte 10 % de son prix à la relecture.
+      system: [{ type: "text", text: SYSTEM_GENERATION_SITE, cache_control: { type: "ephemeral" } }],
       messages: msgs,
     });
 
@@ -141,19 +172,20 @@ async function generateHtmlViaClaude(prompt: string, suivi: SuiviBudgetIa): Prom
     tokensSortie += finalMessage.usage?.output_tokens ?? 0;
 
     console.log(
-      `[generate-site] Appel ${appels}/${MAX_APPELS_GENERATION}: stop_reason=${finalMessage.stop_reason}, chunk=${chunk.length} chars, total=${html.length} chars, tokens=${finalMessage.usage?.input_tokens ?? 0}/${finalMessage.usage?.output_tokens ?? 0}`
+      `[generate-site] Appel ${appels}/${MAX_APPELS_GENERATION}: stop_reason=${finalMessage.stop_reason}, chunk=${chunk.length} chars, total=${html.length} chars, tokens=${finalMessage.usage?.input_tokens ?? 0}/${finalMessage.usage?.output_tokens ?? 0}, modèle=${finalMessage.model}, durée=${((Date.now() - debutAppel) / 1000).toFixed(1)} s`
     );
 
     if (finalMessage.stop_reason !== "max_tokens") break;
     // Rien d'écrit avant le plafond : pas de début de page à poursuivre, on relance la même demande.
     if (!chunk) continue;
 
-    msgs.push({ role: "assistant", content: chunk });
-    msgs.push({
-      role: "user",
-      content:
-        "Continue exactement là où tu t'es arrêté dans le code HTML. Reprends immédiatement au caractère suivant sans répéter ce qui précède, sans aucune explication ni balise markdown.",
-    });
+    // Réponse renvoyée telle quelle : les modèles Expert refusent un historique dont les blocs
+    // de réflexion auraient été modifiés.
+    const relance =
+      "Continue exactement là où tu t'es arrêté dans le code HTML. Reprends immédiatement au caractère suivant sans répéter ce qui précède, sans aucune explication ni balise markdown.";
+    msgs.push({ role: "assistant", content: finalMessage.content });
+    msgs.push({ role: "user", content: relance });
+    texteEnvoye += chunk + relance;
   }
 
   // Malgré la consigne, Claude enveloppe parfois sa réponse dans une balise markdown —
@@ -469,45 +501,20 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  // Garde-fou technique indépendant du quota métier (sitesParMoisMax) : chaque appel
+  // Garde-fou technique indépendant du budget IA : chaque appel
   // déclenche un appel Claude facturé, donc même un plan avec du quota restant ne doit
   // pas pouvoir enchaîner des centaines de générations en une heure (script, compte
   // compromis...).
-  if (!checkRateLimit(`generate-site:${user.id}`, { max: 10, windowMs: 3_600_000 })) {
+  if (!(await checkRateLimit(`generate-site:${user.id}`, { max: 10, windowMs: 3_600_000 }))) {
     return NextResponse.json(
       { error: "Trop de générations en peu de temps. Réessaie dans quelques minutes.", code: "rate_limit" },
       { status: 429 }
     );
   }
 
-  // Même plafond que la sauvegarde (/api/sites-generes), vérifié ici aussi pour éviter
-  // d'appeler Claude (coûteux) pour un site qui ne pourra de toute façon pas être sauvegardé.
-  // Comptage basé sur les sites réellement sauvegardés ce mois-ci — pas de compteur séparé
-  // à incrémenter, donc pas de double comptage avec la vérification de /api/sites-generes.
-  const maxSites = PLAN_LIMITS[plan].sitesParMoisMax;
-  if (maxSites !== null) {
-    const debutMois = `${currentMonthKey()}T00:00:00.000Z`;
-    const { count, error: countError } = await supabase
-      .from("sites_generes")
-      .select("id", { count: "exact", head: true })
-      .eq("user_id", user.id)
-      .eq("is_trace", false)
-      .gte("created_at", debutMois);
-
-    if (countError) {
-      return NextResponse.json({ error: countError.message, code: "server_error" }, { status: 500 });
-    }
-    if ((count ?? 0) >= maxSites) {
-      return NextResponse.json(
-        {
-          error: `Tu as atteint la limite de ${maxSites} sites générés ce mois-ci sur le plan ${planLabel(plan)}. ${
-            plan === "free" ? "Passe Pro pour 20 sites par mois." : plan === "pro" ? "Passe Agency pour 50 sites par mois." : "La limite se réinitialise le mois prochain."
-          }`, code: "sites_limit", values: { max: maxSites, plan: planLabel(plan) },
-        },
-        { status: 403 }
-      );
-    }
-  }
+  // Aucune limite sur le nombre de sites (informatif seulement, voir /api/usage) : la limite
+  // des plans Pro et Agency est le budget IA du mois, en tokens réellement consommés (suivi
+  // ci-dessous). Expert : une unité de site est réservée par génération (quota payé).
 
   // Mode boutique (plusieurs produits, voir app/site-builder/{page.tsx,TemplateEditor.tsx})
   // — payload distingué par la présence d'un tableau produits, branché ici avant la
@@ -691,15 +698,21 @@ ${RAPPEL_PRIORITES}
 
 Réponds UNIQUEMENT avec le code HTML, sans explication ni balise markdown.`;
 
-  const suivi = new SuiviBudgetIa(supabase, user.id, plan, "site_builder", { fenetres: true });
+  const admin = createSupabaseAdminClient();
+  const reservation = plan === "expert" ? await reserverSiteExpert(admin, user.id) : null;
+  if (plan === "expert" && !reservation) return reponseQuotaExpert();
+  let reussie = false;
+
+  const suivi = new SuiviBudgetIa(supabase, user.id, plan, "site_builder", { fenetres: true, horsBudget: reservation !== null });
   try {
-    const resultat = await generateHtmlViaClaude(prompt, suivi);
-    // Enregistré avant de répondre ; en cas d'échec, par le finally (jamais d'exception).
-    await suivi.enregistrer();
+    const resultat = await generateHtmlViaClaude(prompt, suivi, configGeneration(reservation));
     const html = injectColorTokens(resultat.html, colorTokens);
     // Pages légales vierges (mentions légales, CGV, confidentialité) à côté de la page : le
     // site devient multi-pages ; html reste la page d'accueil. Page non découpable : seule.
     const pages = assemblerPagesProduit(html, ctx);
+    // Génération réussie : les tokens réellement consommés sont décomptés du budget du mois.
+    await suivi.enregistrer();
+    reussie = true;
     return NextResponse.json(pages ? { html: pages.accueil, pages } : { html });
   } catch (err) {
     const refus = reponseLimiteIa(err);
@@ -727,7 +740,9 @@ Réponds UNIQUEMENT avec le code HTML, sans explication ni balise markdown.`;
       { status: 500 }
     );
   } finally {
-    await suivi.enregistrer();
+    // Génération en échec : le coût est rendu (rien n'est décompté du budget du mois).
+    if (!reussie) suivi.abandonner();
+    if (reservation) await finaliserSiteExpert(admin, reservation, reussie, suivi.tokensReels);
   }
 }
 
@@ -896,10 +911,15 @@ ${consignesStyle}${RAPPEL_PRIORITES}
 
 Réponds UNIQUEMENT avec le code HTML, sans explication ni balise markdown.`;
 
-  const suivi = new SuiviBudgetIa(supabase, userId, plan, "site_builder", { fenetres: true });
+  const admin = createSupabaseAdminClient();
+  const reservation = plan === "expert" ? await reserverSiteExpert(admin, userId) : null;
+  if (plan === "expert" && !reservation) return reponseQuotaExpert();
+  let reussie = false;
+  const config = configGeneration(reservation);
+
+  const suivi = new SuiviBudgetIa(supabase, userId, plan, "site_builder", { fenetres: true, horsBudget: reservation !== null });
   try {
-    const resultat = await generateHtmlViaClaude(prompt, suivi);
-    await suivi.enregistrer();
+    const resultat = await generateHtmlViaClaude(prompt, suivi, config);
     const htmlWithTokens = injectColorTokens(resultat.html, colorTokens);
     const categories = categoriesValides(body.categories);
     const { html: accueilSeul, retraits } = nettoyerCoquilleAccueil(htmlWithTokens);
@@ -911,9 +931,11 @@ Réponds UNIQUEMENT avec le code HTML, sans explication ni balise markdown.`;
     // html = l'accueil (sauvegardé dans html_content), pages = toutes les pages du site.
     // Mentions légales absentes ou illisibles : page vierge.
     // Page produit et page d'achat au design du site (deuxième appel, repli intégré).
-    const gabarits = await genererGabarits(client, MODELE_GENERATION, ctx, accueilSeul, suivi);
-    await suivi.enregistrer();
+    const gabarits = await genererGabarits(client, config.model, ctx, accueilSeul, suivi);
     const pages = pagesBoutique(ctx, accueilSeul, produits, "var(--site-accent)", categories, gabarits, { mentionsLegales });
+    // Génération réussie (les deux appels) : tokens réellement consommés décomptés en une fois.
+    await suivi.enregistrer();
+    reussie = true;
     if (pages) return NextResponse.json({ html: pages.accueil, pages, ...avertissements });
 
     // Repli : coquille sans <body> ou sans <nav>, impossible à découper — site d'une seule
@@ -941,6 +963,8 @@ Réponds UNIQUEMENT avec le code HTML, sans explication ni balise markdown.`;
       { status: 500 }
     );
   } finally {
-    await suivi.enregistrer();
+    // Génération en échec : le coût est rendu (rien n'est décompté du budget du mois).
+    if (!reussie) suivi.abandonner();
+    if (reservation) await finaliserSiteExpert(admin, reservation, reussie, suivi.tokensReels);
   }
 }

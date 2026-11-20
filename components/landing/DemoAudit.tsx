@@ -1,8 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useId, useRef, useState } from "react";
-import { useTranslations } from "next-intl";
-import { SUPPORT_EMAIL } from "@/lib/contact";
+import { useLocale, useTranslations } from "next-intl";
+import { PRIX_PLAN_EUR, formatEuros } from "@/lib/prix";
+import Link from "next/link";
 
 /* Démonstration de l'audit IA, jouable directement depuis la landing.
  *
@@ -24,13 +25,7 @@ type Champ = "url" | "html";
 export default function DemoAudit() {
   const t = useTranslations("landing.demo");
   const tPrix = useTranslations("landing.pricing");
-  // Clés déjà traduites, réutilisées pour le bouton d'abonnement désactivé :
-  //   dashboard.nav.soon            → bientôt / soon / pronto / presto
-  //   parametres.plan.chooseTooltip → explication + adresse du support
-  // La modale d'abonnement (Stripe) vit sur la branche backup/wip-complet-2026-10-12 et sera
-  // rebranchée ici avec le chantier abonnement.
-  const tSoon = useTranslations("dashboard.nav");
-  const tPlan = useTranslations("parametres.plan");
+  const locale = useLocale();
   const titreId = useId();
 
   const [phase, setPhase] = useState<Phase>("repos");
@@ -407,7 +402,7 @@ export default function DemoAudit() {
                 <span className="rounded-full bg-[#7c3aed] px-2.5 py-1 text-xs font-semibold text-white">{tPrix("recommended")}</span>
               </div>
               <div className="mt-1.5 flex items-baseline gap-[3px] tabular-nums">
-                <span className="text-[40px] font-bold leading-[1.05] tracking-[-0.04em] text-[#7c3aed]">{t("price")}</span>
+                <span className="text-[40px] font-bold leading-[1.05] tracking-[-0.04em] text-[#7c3aed]">{formatEuros(PRIX_PLAN_EUR.pro, locale)}</span>
                 <span className="text-base text-[#52525B]">{t("perMonth")}</span>
               </div>
               <ul className="m-0 mt-3 flex list-none flex-col gap-1.5 p-0 tabular-nums sm:gap-2">
@@ -420,15 +415,13 @@ export default function DemoAudit() {
               </ul>
             </div>
 
-            {/* Désactivé tant que l'abonnement n'est pas ouvert. */}
-            <button
-              type="button"
-              disabled
-              title={tPlan("chooseTooltip", { email: SUPPORT_EMAIL })}
-              className="mt-4 block w-full cursor-not-allowed rounded-[10px] border-0 bg-[#E4E4E7] px-4 py-[15px] text-center text-base font-semibold capitalize text-[#71717a]"
+            {/* Le plan se choisit après l'inscription, sur /abonnement. */}
+            <Link
+              href="/register"
+              className="mt-4 block w-full rounded-[10px] bg-[#7c3aed] px-4 py-[15px] text-center text-base font-semibold text-white no-underline transition-colors hover:bg-[#6d28d9] hover:text-white"
             >
-              {tSoon("soon")}
-            </button>
+              {t("cta")}
+            </Link>
             <p className="m-0 mt-2.5 text-sm leading-[1.45] text-[#3F3F46]">{t("modalNote")}</p>
 
             <div className="mt-2.5 flex justify-center">

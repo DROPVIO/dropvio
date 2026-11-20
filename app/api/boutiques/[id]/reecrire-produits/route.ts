@@ -148,7 +148,7 @@ export async function POST(_request: NextRequest, context: { params: Promise<{ i
     return NextResponse.json({ error: "Connecte-toi pour réécrire tes produits.", code: "auth_required" }, { status: 401 });
   }
 
-  if (!checkRateLimit(`reecrire-produits:${user.id}`, { max: 5, windowMs: 3_600_000 })) {
+  if (!(await checkRateLimit(`reecrire-produits:${user.id}`, { max: 5, windowMs: 3_600_000 }))) {
     return NextResponse.json(
       { error: "Trop de générations en peu de temps. Réessaie dans quelques minutes.", code: "rate_limit" },
       { status: 429 }

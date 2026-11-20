@@ -1,4 +1,137 @@
 {
+  "studio": {
+    "titre": "Studio IA",
+    "sousTitre": "Crea le tue immagini e ritrovale nella tua mediateca.",
+    "prompt": "Descrivi l'immagine da creare",
+    "promptExemple": "Foto di un prodotto su sfondo chiaro, luce da studio morbida…",
+    "format": "Formato",
+    "format_carre": "Quadrato",
+    "format_portrait": "Verticale",
+    "format_paysage": "Orizzontale",
+    "generer": "Genera l'immagine",
+    "generationEnCours": "Generazione…",
+    "mediatheque": "Mediateca",
+    "stockage": "{utilise} MB usati su {max} MB",
+    "importer": "Importa un'immagine",
+    "importEnCours": "Invio…",
+    "importType": "Formati accettati: jpg, png e webp.",
+    "importTaille": "L'immagine supera i 10 MB.",
+    "importErreur": "Impossibile importare questa immagine.",
+    "chargement": "Caricamento…",
+    "chargementErreur": "Impossibile caricare la mediateca.",
+    "vide": "La tua mediateca è vuota.",
+    "imageImportee": "Immagine importata",
+    "supprimer": "Elimina",
+    "suppressionErreur": "Impossibile eliminare questo file.",
+    "copieConservee": "File eliminato dalla mediateca. L'immagine resta visibile sul negozio finché un prodotto la usa.",
+    "voirPlus": "Mostra altro",
+    "choisir": "Scegli questa immagine",
+    "titreModal": "Scegli un'immagine",
+    "fermer": "Chiudi",
+    "publication": "Preparazione dell'immagine…",
+    "publicationErreur": "Impossibile usare questa immagine.",
+    "mention": "Generato con {fournisseur}",
+    "mentionInclus": "Generato con {fournisseur} — incluso nel tuo piano",
+    "mentionFacture": "Generato con {fournisseur} — uso fatturato a parte",
+    "genererTitre": "Genera un visual",
+    "choisirTitre": "Oppure scegli dalla tua mediateca",
+    "accroche": "Crea le immagini del tuo negozio",
+    "modeImage": "Modalità di generazione",
+    "modeLibre": "Prompt libero",
+    "modeProduits": "Immagini prodotti",
+    "reglages": "Impostazioni",
+    "produits": {
+      "legende": "Immagini prodotti",
+      "aide": "Seleziona i tuoi prodotti: per ognuno vengono generate una o più immagini, a partire da nome, descrizione, foto e dalle tue istruzioni. Solo la tua quota mensile di immagini limita la generazione.",
+      "produitsTitre": "I tuoi prodotti",
+      "recherche": "Cerca un prodotto o un negozio",
+      "selectionCompte": "{n, plural, =0 {Nessuno selezionato} one {# selezionato} other {# selezionati}}",
+      "chargementErreur": "Impossibile caricare i tuoi prodotti.",
+      "aucunProduit": "Nessun prodotto per ora.",
+      "rechercheVide": "Nessun prodotto corrisponde alla ricerca.",
+      "sansNomLibelle": "Prodotto senza nome",
+      "sansNom": "Selezione impossibile: questo prodotto non ha un nome.",
+      "sansPhoto": "Selezione impossibile: questo prodotto non ha una foto.",
+      "etat_attente": "In attesa",
+      "etat_en_cours": "Generazione…",
+      "etat_ok": "Aggiunta alla mediateca",
+      "resume": "{n, plural, =0 {Nessun prodotto selezionato.} one {# prodotto selezionato.} other {# prodotti selezionati.}}",
+      "cout": "Costo stimato: {images, plural, =0 {nessuna immagine} one {# immagine} other {# immagini}} (≈ {eur}).",
+      "restantes": "Ti {restantes, plural, =0 {restano 0 immagini} one {resta # immagine} other {restano # immagini}} questo mese.",
+      "recharger": "Ricarica",
+      "lancer": "{n, plural, =0 {Genera} one {Genera l'immagine} other {Genera le # immagini}}",
+      "vider": "Svuota la selezione",
+      "ajouterDepuisCatalogue": "Aggiungi prodotti dal Catalogo",
+      "selectionnerLibelle": "Seleziona i primi",
+      "selectionner": "prodotti",
+      "versCatalogue": "Apri il Catalogo",
+      "sectionCatalogue": "Inviati dal Catalogo",
+      "sectionRecents": "Ultimi {n} prodotti modificati",
+      "sectionAutres": "Tutti gli altri miei prodotti",
+      "sectionResultats": "Risultati",
+      "depuisCatalogue": "Catalogo",
+      "retirerListe": "Rimuovi",
+      "consigne": "Prompt (facoltativo)",
+      "consignePlaceholder": "Es.: sfondo bianco, luce morbida, prodotto centrato…",
+      "imagesParProduit": "Immagini per prodotto",
+      "depasse": "La tua quota del mese copre {possibles, plural, one {# immagine} other {# immagini}}, cioè {produits, plural, one {# prodotto} other {# prodotti}}.",
+      "quotaEpuise": "La tua quota di immagini del mese è esaurita.",
+      "genererSeulement": "Genera solo {produits, plural, one {# prodotto} other {# prodotti}}",
+      "progressionProduits": "{faits} / {total} prodotti",
+      "arreter": "Interrompi",
+      "arretQuota": "Quota del mese esaurita: generazione interrotta dopo {traites} / {total} prodotti.",
+      "arretUtilisateur": "Generazione interrotta: {traites} / {total} prodotti elaborati.",
+      "arretBloquant": "Generazione interrotta dopo {traites} / {total} prodotti: {message}",
+      "garderImage": "Tieni questa immagine",
+      "enregistrer": "Salva",
+      "enregistrement": "Salvataggio…",
+      "enregistre": "Immagini aggiunte al prodotto.",
+      "enregistrerErreur": "Impossibile aggiungere queste immagini al prodotto."
+    },
+    "reservePayant": "Le funzioni dello Studio IA sono riservate ai piani a pagamento (Pro, Agency ed Expert).",
+    "passerPayant": "Vedi i piani",
+    "reference": "Immagine di riferimento (facoltativa)",
+    "referenceAjouter": "Aggiungi un'immagine dalla mediateca",
+    "referenceRetirer": "Rimuovi il riferimento",
+    "referenceAide": "Per generare da un'immagine della tua mediateca, aggiungila qui come riferimento: sceglierla nella mediateca non basta.",
+    "vues": "Viste della mediateca",
+    "vueGenerees": "Create con Dropvio",
+    "vueImportees": "Immagini importate",
+    "stockageVue": "{vue} MB in questa vista · {utilise} MB usati su {max} MB",
+    "aideImportees": "Le tue immagini caricate: usale come riferimento per generare altre immagini.",
+    "videGenerees": "Nessuna immagine creata con Dropvio per ora.",
+    "videImportees": "Nessuna immagine importata per ora."
+  },
+  "expertPaiement": {
+    "message": "Il rinnovo Expert richiede una tua azione. L'accesso riprende appena il pagamento è confermato.",
+    "cta": "Conferma il pagamento"
+  },
+  "quota": {
+    "title": "Quota",
+    "subtitle": "La tua configurazione e i tuoi consumi del periodo.",
+    "loading": "Caricamento…",
+    "configTitle": "Configurazione del periodo",
+    "configNote": "Resta bloccata fino al prossimo rinnovo.",
+    "model": "Modello IA",
+    "sites": "Siti",
+    "images": "Immagini",
+    "endDate": "Fine periodo",
+    "usageTitle": "Consumi",
+    "creditsTitle": "Crediti acquistati rimanenti",
+    "noCredits": "Nessun credito acquistato.",
+    "rechargeTitle": "Acquista crediti",
+    "rechargeNote": "Pagamento unico. I crediti non usati vengono riportati finché l'abbonamento è attivo.",
+    "total": "Totale",
+    "consent": "Chiedo l'esecuzione immediata del servizio e riconosco di perdere il diritto di recesso.",
+    "buy": "Paga",
+    "redirecting": "Reindirizzamento…",
+    "manage": "Gestisci abbonamento / disdici",
+    "offered": "Abbonamento offerto",
+    "rechargeSuccess": "Pagamento ricevuto. I crediti appariranno qui tra pochi istanti.",
+    "loadError": "Impossibile caricare la tua quota.",
+    "rechargeError": "Impossibile avviare il pagamento. Riprova.",
+    "portalError": "Impossibile aprire la gestione dell'abbonamento."
+  },
   "auth": {
     "login": {
       "loadingFallback": "Caricamento…",
@@ -21,7 +154,7 @@
     },
     "register": {
       "title": "Crea un account",
-      "subtitle": "Unisciti a Dropvio gratuitamente",
+      "subtitle": "Crea il tuo account, poi scegli il tuo piano: 3 giorni di prova gratuita.",
       "errorPasswordLength": "La password deve contenere almeno 6 caratteri.",
       "errorPasswordMismatch": "Le password non corrispondono.",
       "errorAlreadyRegistered": "Questa email è già in uso. Accedi.",
@@ -73,14 +206,12 @@
       "subtitle": "Gestisci il tuo abbonamento Dropvio.",
       "currentPlanLabel": "Piano attuale",
       "changePlan": "Cambia piano",
-      "changePlanTooltip": "Presto disponibile — contatta {email} per cambiare piano nel frattempo.",
       "current": "ATTUALE",
       "choose": "Scegli",
-      "chooseTooltip": "Presto disponibile — contatta {email} per cambiare piano nel frattempo.",
       "meta": {
         "free": {
-          "label": "Free",
-          "desc": "Accesso limitato alle funzionalità di base."
+          "label": "Nessun abbonamento",
+          "desc": "Scegli un piano per accedere agli strumenti di Dropvio."
         },
         "pro": {
           "label": "Pro",
@@ -89,20 +220,14 @@
         "agency": {
           "label": "Agency",
           "desc": "Multi-account, API e supporto prioritario."
+        },
+        "expert": {
+          "label": "Expert",
+          "desc": "Tutto Agency, con un'offerta su misura."
         }
       },
-      "price": {
-        "free": "0 €/mese",
-        "pro": "29 €/mese",
-        "agency": "59 €/mese"
-      },
+      "prixParMois": "{prix}/mese",
       "features": {
-        "free": [
-          "Accesso ai primi 1000 prodotti del catalogo",
-          "2 simulazioni di margine salvate",
-          "5 siti generati al mese",
-          "Audit IA non incluso"
-        ],
         "pro": [
           "Prodotti vincenti illimitati",
           "Calcolatore di margine illimitato",
@@ -122,7 +247,7 @@
       "budgetIaAtteint": "Budget IA del mese raggiunto. Verrà azzerato il 1° del mese prossimo.",
       "limiteJour": "Ultime 24 ore: {utilise} / {max}",
       "limiteSemaine": "Ultimi 7 giorni: {utilise} / {max}",
-      "limitesAide": "Come in Claude, il tuo budget è distribuito nel tempo: al massimo il 15% in 24 ore e il 30% in 7 giorni, per poter creare siti e fare audit per tutto il mese. Questi limiti si liberano con il passare delle ore.",
+      "limitesAide": "Il tuo budget è distribuito nel tempo: al massimo il 15% in 24 ore e il 30% in 7 giorni, per poter creare siti e fare audit per tutto il mese. Questi limiti si liberano con il passare delle ore.",
       "limiteReprise": "Si libera il {reprise, date, short} alle {reprise, time, short}"
     },
     "profil": {
@@ -178,6 +303,8 @@
       "notifEmailCaption": "Nuovi prodotti vincenti, aggiornamenti Dropvio",
       "notifPushLabel": "Notifiche push",
       "notifPushCaption": "Avvisi sulle tendenze in tempo reale",
+      "notifVentesLabel": "Email a ogni nuova vendita",
+      "notifVentesCaption": "Disattivata per impostazione predefinita. Un'email per ogni ordine Shopify ricevuto.",
       "tutorialLabel": "Tutorial di benvenuto",
       "tutorialCaption": "Rivedi i suggerimenti che presentano gli strumenti Dropvio",
       "tutorialRestart": "Riavvia il tutorial",
@@ -241,12 +368,11 @@
       "currentPlanLabel": "Piano attuale",
       "nextPayment": "Prossimo pagamento",
       "paymentMethod": "Metodo di pagamento",
-      "notConfigured": "Non configurato",
       "invoicesTitle": "Cronologia fatture",
-      "noInvoices": "Nessuna fattura al momento.",
-      "noInvoicesCaption": "Le fatture Stripe appariranno qui dopo il primo pagamento.",
+      "noInvoices": "Le tue fatture sono consultabili nel portale di fatturazione.",
+      "noInvoicesCaption": "Accessibile con il pulsante qui sotto non appena ti abboni.",
       "manage": "Gestisci fatturazione →",
-      "manageTooltip": "Presto disponibile — contatta {email} per qualsiasi domanda di fatturazione nel frattempo."
+      "dansPortail": "Nel portale di fatturazione"
     },
     "legal": {
       "title": "Legale",
@@ -285,14 +411,21 @@
       "newGeneration": "Nuova generazione",
       "itemDashboard": "Dashboard",
       "itemProduitsGagnants": "Prodotti vincenti",
+      "itemTousProduits": "Tutti i prodotti",
+      "itemCatalogue": "Catalogo",
       "itemSiteBuilder": "Site Builder",
+      "itemCreerSite": "Crea un sito",
+      "itemStudio": "Studio IA",
+      "itemVentes": "Le mie vendite",
       "itemMesSites": "I miei siti",
       "itemAudit": "Audit del sito",
       "itemCalculateurMarge": "Calcolatore di margine",
+      "itemQuota": "Quota",
       "itemFormation": "Formazione",
       "soon": "presto",
       "settings": "Impostazioni",
       "collapse": "Riduci",
+      "openMenu": "Apri il menu",
       "expandTooltip": "Espandi la barra laterale",
       "collapseTooltip": "Riduci la barra laterale",
       "userTooltip": "{name} · Impostazioni",
@@ -361,9 +494,9 @@
       "footerHint": "Accedi alle impostazioni del tuo account dalla barra laterale a sinistra."
     },
     "chart": {
-      "title": "Attività — ultimi 30 giorni",
-      "caption": "Ogni curva è normalizzata in % del proprio massimo nel periodo — passa il cursore su un punto per vedere il valore reale. Trascina i bordi sotto il grafico per ingrandire.",
-      "empty": "Ancora nessuna attività negli ultimi 30 giorni.",
+      "title": "Attività",
+      "caption": "Scegli un indicatore per vederne l'andamento. Tratteggiato: il periodo precedente della stessa durata.",
+      "empty": "Ancora nessuna attività in questo periodo.",
       "serieMarges": "Margini",
       "serieAudits": "Audit",
       "serieShopify": "Shopify",
@@ -375,7 +508,17 @@
       "incidents": "{count, plural, one {# incidente} other {# incidenti}}",
       "sites": "{count, plural, one {# sito} other {# siti}}",
       "produits": "{count, plural, one {# prodotto} other {# prodotti}}",
-      "actions": "{count, plural, one {# azione} other {# azioni}}"
+      "actions": "{count, plural, one {# azione} other {# azioni}}",
+      "modeCumul": "Cumulativo",
+      "modeJour": "Al giorno",
+      "tooltipCumul": "Totale dall'inizio del periodo",
+      "tooltipJour": "Valore del giorno",
+      "metricSites": "Siti generati",
+      "metricProduits": "Prodotti aggiunti al negozio",
+      "metricAudits": "Punteggio medio degli audit",
+      "metricMarges": "Margine netto medio",
+      "metricShopify": "Incidenti Shopify",
+      "metricUtilisation": "Utilizzo (audit + siti)"
     },
     "audits": {
       "title": "Audit IA",
@@ -482,7 +625,14 @@
       "metricSitesGeneres": "Siti generati",
       "metricSimulationsMarge": "Simulazioni di margine salvate",
       "errorLoad": "Impossibile caricare il tuo utilizzo.",
-      "errorServer": "Impossibile contattare il server."
+      "errorServer": "Impossibile contattare il server.",
+      "sitesCrees": "{count, plural, =0 {Nessun sito creato questo mese} one {# sito creato questo mese} other {# siti creati questo mese}}",
+      "budgetsTitre": "Budget del mese",
+      "budgetIa": "Budget IA",
+      "budgetIaAide": "Testi, siti e audit. Le immagini non sono conteggiate qui.",
+      "budgetImages": "Budget immagini",
+      "budgetImagesAide": "Solo immagini generate. Ti {images, plural, =0 {restano 0 immagini} one {resta # immagine} other {restano # immagini}}.",
+      "budgetRestant": "{restant} rimanenti su {max}"
     },
     "mesSites": {
       "badge": "I miei siti",
@@ -609,9 +759,10 @@
       "advanced": "Filtri avanzati",
       "ordersMinLabel": "Volume minimo di ordini",
       "ordersMinPlaceholder": "es.: 200",
+      "ordersMinHint": "Minimo: {min} ordini. I prodotti con meno ordini non vengono mostrati.",
       "noteMinLabel": "Valutazione minima",
       "noteAll": "Tutte",
-      "sweetSpot": "🎯 Sweet spot di saturazione",
+      "sweetSpot": "Sweet spot di saturazione",
       "sweetSpotHint": "Né invendibile né già saturo — ordini tra:",
       "and": "e",
       "ordersUnit": "ordini",
@@ -656,7 +807,12 @@
       "addErrorAdd": "Impossibile aggiungere questo prodotto.",
       "addSubmit": "Aggiungi a questo negozio",
       "addSubmitting": "Aggiunta…",
-      "addSuccess": "✓ Prodotto aggiunto al negozio."
+      "addSuccess": "✓ Prodotto aggiunto al negozio.",
+      "labelNiche": "Nicchia",
+      "labelPrice": "Prezzo",
+      "labelMarge": "Margine",
+      "clearAll": "Cancella filtri",
+      "activeFilters": "{count, plural, one {# filtro attivo} other {# filtri attivi}}"
     },
     "calculateur": {
       "title": "Calcolatore di margine",
@@ -1032,15 +1188,16 @@
     "nav": {
       "pricing": "Prezzi",
       "login": "Accedi",
-      "cta": "Crea un account gratuito"
+      "cta": "Crea un account"
     },
     "hero": {
       "eyebrow": "Per i dropshipper Shopify",
       "title": "Trova un prodotto, conosci il tuo margine reale, lancia il tuo negozio. Nello stesso posto.",
       "subtitle": "Dropvio cerca i tuoi prodotti su AliExpress, calcola il margine netto dopo commissioni, spedizione e imposte, e genera un negozio pronto a vendere in pochi clic. Poi la nostra IA analizza la tua pagina di vendita e ti dice esattamente cosa correggere per primo.",
-      "ctaPrimary": "Crea un account gratuito",
+      "ctaPrimary": "Trova il mio primo prodotto",
       "ctaSecondary": "Vedi i prezzi",
-      "note": "Nessuna carta richiesta · Piano gratuito senza limiti di tempo"
+      "mentionIa": "Basato sui modelli Claude (Anthropic) e OpenAI",
+      "mockupAlt": "Anteprima di Dropvio su computer e telefono: dashboard dei margini e negozio generato"
     },
     "mockup": {
       "url": "dropvio.vercel.app/dashboard",
@@ -1093,14 +1250,14 @@
       "pageLabel": "Pagina da analizzare",
       "planName": "Pro",
       "recommended": "Consigliato",
-      "price": "29€",
       "perMonth": "/mese",
       "f1": "30 audit della pagina di vendita al mese",
       "f2": "Punteggio su 100 + correzioni per impatto",
       "f3": "Download dell'HTML corretto",
       "f4": "Catalogo prodotti completo, senza tetto",
       "f5": "Calcolatore di margine, 10 paesi",
-      "modalNote": "L'audit IA fa parte dei piani Pro e Agency, che non sono ancora aperti.",
+      "cta": "Inizia",
+      "modalNote": "L'audit IA è incluso nei piani Pro e Agency.",
       "notNow": "Più tardi"
     },
     "chain": {
@@ -1151,30 +1308,16 @@
     },
     "pricing": {
       "eyebrow": "Prezzi",
-      "title": "Inizia gratis. Cambia piano quando il tuo negozio lo giustifica.",
-      "free": "Free",
+      "title": "Il piano adatto al tuo negozio.",
       "pro": "Pro",
       "agency": "Agency",
       "recommended": "Consigliato",
       "perMonth": "/mese",
-      "prix": {
-        "free": "0 €",
-        "pro": "29 €",
-        "agency": "59 €"
-      },
-      "note": {
-        "free": "Gratis, senza limiti di tempo e senza carta di credito",
-        "pro": "Non ancora disponibile",
-        "agency": "Non ancora disponibile"
+      "cta": {
+        "pro": "Passa a Pro",
+        "agency": "Scegli Agency"
       },
       "features": {
-        "free": [
-          "Primi 1.000 prodotti del catalogo",
-          "5 siti generati al mese, salvati in «I miei siti»",
-          "Negozi fino a 10 prodotti",
-          "Ordinamento delle collezioni, riscrittura delle schede e prezzi di mercato con l'IA",
-          "Calcolatore di margine per 10 paesi e 2 simulazioni salvate"
-        ],
         "pro": [
           "Catalogo prodotti completo",
           "20 siti generati al mese, download HTML completo e pubblicazione su Shopify",
@@ -1191,30 +1334,68 @@
           "Supporto prioritario entro 24 h"
         ]
       },
-      "ctaFree": "Crea un account gratuito",
-      "bientot": "Presto disponibile",
       "budgetTitre": "Un budget IA per tutte le funzioni",
-      "budgetTexte": "Ogni piano include un budget IA mensile che copre la creazione di siti, gli audit e gli strumenti IA del negozio. Un'azione tipica costa pochi centesimi: circa 0,10 € per generare un sito, 0,15 € per l'audit di una pagina normale, meno di 0,20 € per riscrivere tutte le schede di un negozio da 70 prodotti. Il budget si azzera il 1° di ogni mese.",
+      "budgetTexte": "Ogni piano include un budget IA mensile che copre la creazione di siti, gli audit e gli strumenti IA del negozio. Un'azione tipica costa pochi centesimi: circa 0,15 € per l'audit di una pagina normale, meno di 0,20 € per riscrivere tutte le schede di un negozio da 70 prodotti. Il budget si azzera il 1° di ogni mese.",
       "limitesTitre": "Distribuito su tutto il mese",
-      "limitesTexte": "Per i siti e gli audit, l'uso è distribuito nel tempo: al massimo il {jour}% del budget in 24 ore e il {semaine}% in 7 giorni. Così puoi creare e fare audit ogni settimana senza consumare tutto in un giorno. Questi limiti si liberano con il passare delle ore e il tuo utilizzo è sempre visibile nelle impostazioni."
+      "limitesTexte": "Per i siti e gli audit, l'uso è distribuito nel tempo: al massimo il {jour}% del budget in 24 ore e il {semaine}% in 7 giorni. Così puoi creare e fare audit ogni settimana senza consumare tutto in un giorno. Questi limiti si liberano con il passare delle ore e il tuo utilizzo è sempre visibile nelle impostazioni.",
+      "expert": {
+        "nom": "Expert",
+        "badge": "Su misura",
+        "aPartirDe": "Da",
+        "note": "Prezzo Agency + opzioni del mese, in base alla tua configurazione",
+        "features": [
+          "Tutto il piano Agency",
+          "Audit IA quasi illimitati",
+          "Generazione di testi IA quasi illimitata"
+        ],
+        "cta": "Scegli Expert",
+        "config": {
+          "titre": "Componi il tuo mese Expert",
+          "modele": "Modello di creazione dei siti",
+          "plafond": "{max} siti multipagina al mese inclusi",
+          "verrou": "Scelta bloccata fino al rinnovo",
+          "verrouTexte": "Il modello scelto resta lo stesso per tutto il mese. Potrai cambiarlo al rinnovo.",
+          "sites": "Siti multipagina",
+          "images": "Immagini",
+          "parUnite": "{prix} / unità",
+          "recap": "Il tuo mese",
+          "ligneAgency": "Base Agency",
+          "ligneSupplement": "Supplemento Expert",
+          "ligneQuantite": "{label} × {quantite}",
+          "total": "Totale",
+          "parMois": "/mese",
+          "apercu": "Anteprima indicativa: il prezzo definitivo ti viene confermato prima di qualsiasi pagamento.",
+          "cta": "Inizia con Expert",
+          "sitesLibelle": "Siti multipagina con {modele}",
+          "sitesValeur": "{n} su {max}",
+          "sitesAria": "{n} siti su {max} possibili con {modele}",
+          "sitesAide": "Limite del mese: {max} siti · {prix} / sito"
+        },
+        "quota": {
+          "eyebrow": "Quota",
+          "titre": "Ti serve di più durante il mese?",
+          "texte": "Acquista crediti con lo stesso configuratore. Pagamento unico, senza base mensile: i crediti si aggiungono alla tua quota.",
+          "recap": "La tua ricarica",
+          "total": "Totale della ricarica",
+          "cta": "Ricarica i miei crediti"
+        },
+        "decouvrir": "Scopri"
+      }
     },
     "faq": {
       "title": "Domande",
-      "q1": "Il piano Free costa qualcosa?",
-      "a1": "No. L'account Free è gratuito, senza limiti di tempo, e la creazione dell'account non chiede alcuna carta.",
-      "q2": "Che differenza c'è tra Free, Pro e Agency?",
-      "a2": "Free (0 €): 1.000 prodotti del catalogo, 5 siti al mese, negozi fino a 10 prodotti e 0,50 € di budget IA al mese; l'audit IA non è incluso. Pro (29 €/mese): catalogo completo, 20 siti e 30 audit IA al mese, negozi fino a 200 prodotti e 6 € di budget IA. Agency (59 €/mese): tutto Pro, con 50 siti, 100 audit e 28 € di budget IA al mese. I piani Pro e Agency non sono ancora aperti.",
-      "q3": "Cosa succede se raggiungo il limite del mio piano?",
-      "a3": "Un messaggio chiaro indica il limite raggiunto: quota del mese (siti, audit), budget IA del mese, oppure limite delle 24 ore o dei 7 giorni, con il momento in cui potrai riprendere. Il tuo utilizzo è sempre visibile nelle impostazioni. Niente si blocca senza spiegazione.",
-      "q4": "Il calcolatore di margine include davvero le imposte?",
-      "a4": "Sì: sono supportati 10 paesi, ciascuno con le sue regole — contributi URSSAF e IVA in Francia, sales tax per stato negli USA, VAT nel Regno Unito — più le commissioni Stripe e una modalità manuale per gli altri casi.",
-      "q5": "I miei dati sono condivisi con altri utenti?",
-      "a5": "No, mai. Ogni account è isolato: nessun altro può vedere le tue simulazioni, i tuoi siti o i tuoi audit."
+      "q1": "Che differenza c'è tra Pro e Agency?",
+      "a1": "Pro ({prixPro}/mese): catalogo completo, 20 siti e 30 audit IA al mese, negozi fino a 200 prodotti e {budgetPro} di budget IA. Agency ({prixAgency}/mese): tutto Pro, con 50 siti, 100 audit e {budgetAgency} di budget IA al mese. Senza un abbonamento attivo, gli strumenti non sono più accessibili, ma il tuo account e i tuoi siti vengono conservati.",
+      "q2": "Cosa succede se raggiungo il limite del mio piano?",
+      "a2": "Un messaggio chiaro indica il limite raggiunto: quota del mese (siti, audit), budget IA del mese, oppure limite delle 24 ore o dei 7 giorni, con il momento in cui potrai riprendere. Il tuo utilizzo è sempre visibile nelle impostazioni. Niente si blocca senza spiegazione.",
+      "q3": "Il calcolatore di margine include davvero le imposte?",
+      "a3": "Sì: sono supportati 10 paesi, ciascuno con le sue regole — contributi URSSAF e IVA in Francia, sales tax per stato negli USA, VAT nel Regno Unito — più le commissioni Stripe e una modalità manuale per gli altri casi.",
+      "q4": "I miei dati sono condivisi con altri utenti?",
+      "a4": "No, mai. Ogni account è isolato: nessun altro può vedere le tue simulazioni, i tuoi siti o i tuoi audit."
     },
     "final": {
       "title": "Fai i conti prima di costruire il negozio.",
-      "cta": "Crea un account gratuito",
-      "note": "Nessuna carta richiesta · Piano gratuito senza limiti di tempo"
+      "cta": "Calcola il mio margine reale"
     },
     "footer": {
       "tagline": "La nuova voce del dropshipping.",
@@ -1223,9 +1404,25 @@
       "legal": "Note legali",
       "faq": "FAQ",
       "contact": "Contatti"
+    },
+    "expertPage": {
+      "metaTitre": "Piano Expert: configura il tuo mese | Dropvio",
+      "metaDescription": "Scegli il modello IA che progetta i tuoi siti, regola il volume del mese e vedi il prezzo in tempo reale. Ricarica di crediti possibile durante il mese.",
+      "eyebrow": "Piano Expert",
+      "titre": "Il piano Expert, regolato sul tuo mese",
+      "texte": "Tutto il piano Agency, la progettazione dei siti generata dall'IA e un volume di siti adatto al modello che scegli. Il prezzo si aggiorna a ogni regolazione.",
+      "retour": "← Torna ai prezzi"
     }
   },
   "apiErrors": {
+    "expert_requis": "La generazione di immagini è riservata ai piani a pagamento.",
+    "expert_quota_images": "La tua quota di immagini è esaurita. Acquista crediti nella pagina",
+    "media_introuvable": "File non trovato.",
+    "media_type_invalide": "Formati accettati: jpg, png e webp.",
+    "media_trop_lourd": "L'immagine supera i 10 MB.",
+    "media_stockage_plein": "Il tuo spazio di archiviazione è pieno. Elimina dei file per continuare.",
+    "media_trop_de_requetes": "Troppe generazioni in poco tempo. Riprova più tardi.",
+    "expert_quota": "La tua quota di siti è esaurita. Acquista crediti nella pagina",
     "generic": "Si è verificato un errore. Riprova.",
     "network": "Impossibile contattare il server.",
     "invalid_request": "Richiesta non valida.",
@@ -1273,7 +1470,6 @@
     "generation_failed": "La generazione non è riuscita. Riprova.",
     "generation_truncated": "La pagina generata era incompleta: non è stata salvata. Riprova.",
     "prompt_too_short": "Descrivi il tuo sito in almeno {min} caratteri: questo prompt guida tutta la generazione (sezioni, testi, animazioni).",
-    "sites_limit": "Hai raggiunto il limite di {max} siti generati questo mese con il piano {plan}.",
     "simulations_limit": "Hai raggiunto il limite di {max} simulazioni con il piano {plan}.",
     "audit_limit": "Hai raggiunto il limite di {max} audit questo mese con il piano {plan}.",
     "alternatives_limit": "Hai raggiunto il limite di {max} ricerche di alternative questo mese con il piano {plan}.",
@@ -1312,7 +1508,7 @@
     "tri_echec": "Ordinamento non riuscito. Riprova tra un attimo.",
     "reecriture_aucun_produit": "Aggiungi prodotti al negozio prima di riscriverli.",
     "prix_aucun_produit": "Aggiungi prodotti al negozio prima di adeguarne i prezzi.",
-    "budget_ia_depasse": "Budget IA del mese raggiunto. Verrà azzerato il 1° del mese prossimo.",
+    "budget_ia_depasse": "Il tuo budget IA del mese è esaurito. Si azzera il 1° del mese prossimo.",
     "limite_ia_jour": "Limite IA delle ultime 24 ore raggiunto. Si libera gradualmente: riprova il {reprise, date, short} alle {reprise, time, short}.",
     "limite_ia_semaine": "Limite IA degli ultimi 7 giorni raggiunto. Si libera gradualmente: riprova il {reprise, date, short} alle {reprise, time, short}.",
     "modification_echec": "Non è stato possibile applicare la modifica. Riformula la richiesta o dividila in più parti.",
@@ -1320,7 +1516,26 @@
     "avis_nombre": "Invia da 1 a {max} screenshot di recensioni.",
     "avis_aucune_image": "Nessuno screenshot è leggibile. Prova uno screenshot PNG o JPEG.",
     "avis_aucun": "Nessuna recensione da 4 o 5 stelle trovata in questi screenshot.",
-    "avis_lecture_echec": "Impossibile leggere le recensioni. Riprova."
+    "avis_lecture_echec": "Impossibile leggere le recensioni. Riprova.",
+    "plan_invalid": "Piano non valido.",
+    "subscription_exists": "Hai già un abbonamento in corso: gestiscilo dal portale di fatturazione.",
+    "no_subscription": "Nessun abbonamento da gestire per questo account.",
+    "expert_actif": "Hai già un abbonamento Expert in corso: deve terminare prima di poter sottoscrivere Pro o Agency.",
+    "portail_expert_ferme": "L'abbonamento Expert non si può gestire dal portale di fatturazione. Scrivici per qualsiasi modifica.",
+    "media_limite_atteinte": "Limite di generazione raggiunto. Riprova più tardi.",
+    "media_prompt_refuse": "Il prompt è stato rifiutato, riformulalo.",
+    "media_service_indisponible": "Servizio di generazione non disponibile, riprova più tardi.",
+    "media_produit_sans_nom": "Questo prodotto non ha un nome: impossibile generarne l'immagine.",
+    "media_produit_sans_photo": "Questo prodotto non ha una foto: impossibile generarne l'immagine.",
+    "plan_payant_requis": "La generazione di immagini è riservata ai piani a pagamento.",
+    "catalogue_plan": "Il catalogo dei prodotti vincenti è riservato ai piani a pagamento.",
+    "images_quota_epuise": "Il tuo budget di immagini del mese è esaurito. Si azzera il 1° del mese prossimo.",
+    "images_migration_requise": "La generazione di immagini non è ancora attiva sul tuo piano.",
+    "catalogue_photos_migration_requise": "Il salvataggio delle foto del catalogo non è ancora disponibile.",
+    "outil_en_pause": "Limite raggiunto per questo strumento. Riprova alle {reprise, time, short}.",
+    "outil_reglages_a_definir": "Impostazioni da definire per questo strumento: la generazione è disattivata nel frattempo.",
+    "outil_migration_requise": "Questo strumento non è ancora attivo sul tuo piano.",
+    "budget_ia_insuffisant": "Budget IA insufficiente per questa generazione: ti restano {restant, number, ::currency/EUR} questo mese."
   },
   "siteBuilder": {
     "boutique": {
@@ -1469,7 +1684,12 @@
           "colPrix": "Prezzo",
           "colActions": "Azioni",
           "sansCategorie": "Nessuna",
-          "editer": "Modifica"
+          "changerImage": "Cambia immagine",
+          "editer": "Modifica",
+          "ajouterMenu": "Aggiungi",
+          "ajouterProduit": "Aggiungi un prodotto",
+          "ajouterBoutique": "Aggiungi un negozio",
+          "ficheCatalogue": "Foto (Catalogo)"
         },
         "pagination": {
           "page": "Pagina {page} di {total}",
@@ -1477,6 +1697,10 @@
           "suivant": "Successivo"
         },
         "formulaire": {
+          "changerImage": "Cambia immagine",
+          "ajouterGalerie": "Aggiungi alla galleria",
+          "galerie": "Galleria del prodotto",
+          "retirerGalerie": "Rimuovi dalla galleria",
           "titre": "Aggiungi o modifica un prodotto",
           "aide": "Importa il prodotto da AliExpress o compila il modulo.",
           "importer": "Importa da AliExpress",
@@ -1512,6 +1736,7 @@
           "renommer": "Rinomina"
         },
         "erreurs": {
+          "imageProduit": "Impossibile cambiare l'immagine.",
           "chargementBoutique": "Impossibile caricare il negozio.",
           "mentions": "Impossibile salvare le note legali.",
           "bandeau": "Impossibile salvare il banner.",
@@ -1585,6 +1810,41 @@
           "annuler": "Annulla l'adeguamento",
           "annulationEnCours": "Annullamento…",
           "ancienPrix": "Prezzo precedente: {prix}"
+        },
+        "imagesIa": {
+          "titre": "Immagini dei prodotti (IA)",
+          "aide": "Genera un'immagine per ogni prodotto del negozio dal tuo prompt, nei limiti della tua quota mensile di immagini.",
+          "reservePayant": "La generazione di immagini è riservata ai piani a pagamento.",
+          "voirPlans": "Vedi i piani",
+          "consigne": "Prompt",
+          "consignePlaceholder": "Prompt per tutte le immagini (facoltativo): sfondo, luce, atmosfera…",
+          "format": "Formato",
+          "format_carre": "Quadrato",
+          "format_portrait": "Verticale",
+          "format_paysage": "Orizzontale",
+          "preparer": "Genera le immagini di tutti i prodotti",
+          "calcul": "Calcolo del costo…",
+          "estimation": "{produits, plural, one {# prodotto} other {# prodotti}}: {images, plural, one {# immagine} other {# immagini}}, costo stimato ≈ {eur}.",
+          "restantes": "Ti {restantes, plural, =0 {restano 0 immagini} one {resta # immagine} other {restano # immagini}} questo mese.",
+          "ignores": "{count, plural, one {# prodotto ignorato} other {# prodotti ignorati}} (senza nome o foto).",
+          "aucunEligible": "Nessun prodotto può essere elaborato: servono un nome e una foto.",
+          "lancer": "Avvia per {produits, plural, one {# prodotto} other {# prodotti}}",
+          "depasse": "Il costo supera la tua quota: {possibles, plural, one {# immagine possibile} other {# immagini possibili}} su {total}.",
+          "genererSeulement": "Genera solo {produits, plural, one {# prodotto} other {# prodotti}}",
+          "quotaEpuise": "La tua quota di immagini del mese è esaurita.",
+          "progression": "{faits} / {total} prodotti",
+          "arreter": "Interrompi",
+          "arretQuota": "Quota del mese esaurita: interrotto dopo {traites} / {total} prodotti.",
+          "arretUtilisateur": "Generazione interrotta: {traites} / {total} prodotti elaborati.",
+          "arretBloquant": "Interrotto dopo {traites} / {total} prodotti: {message}",
+          "termine": "Fatto: {traites} / {total} prodotti elaborati.",
+          "generees": "{images, plural, one {# immagine generata} other {# immagini generate}} per {produits, plural, one {# prodotto} other {# prodotti}}, salvate nella tua mediateca.",
+          "ajouterAuxFiches": "Aggiungi alle schede prodotto",
+          "ajoutEnCours": "Aggiunta…",
+          "ajoutProgression": "{faits} / {total} schede aggiornate.",
+          "ajoutErreurs": "{count, plural, one {# errore} other {# errori}}.",
+          "erreurChargement": "Impossibile caricare i prodotti del negozio.",
+          "erreurAjout": "Impossibile aggiungere alcune immagini alle schede."
         }
       },
       "liste": {
@@ -1630,7 +1890,9 @@
       "prixBarre": "Prezzo barrato",
       "image": "URL dell'immagine (facoltativo)",
       "apercuImage": "Anteprima dell'immagine",
-      "vide": "Nessun prodotto: aggiungine almeno uno per generare un sito."
+      "vide": "Nessun prodotto: aggiungine almeno uno per generare un sito.",
+      "imageAucune": "Nessuna foto per questo prodotto.",
+      "mentionCatalogue": "Le immagini dei prodotti non si modificano da questa schermata: per cambiarle, vai su «Catalogo»."
     },
     "palette": {
       "primary": {
@@ -1812,7 +2074,9 @@
         "imagePlaceholder": "https://esempio.com/immagine-prodotto.jpg",
         "apercuImage": "Anteprima dell'immagine",
         "prixVente": "Prezzo di vendita",
-        "prixBarre": "Prezzo barrato"
+        "prixBarre": "Prezzo barrato",
+        "imageProduit": "Foto del prodotto",
+        "imageAucune": "Nessuna foto per questo prodotto (importazione AliExpress o Catalogo)."
       },
       "corrections": {
         "titre": "Correzioni da considerare",
@@ -1830,7 +2094,10 @@
         "telechargerLiquid": "⬇ Scarica il .liquid",
         "telechargerHtml": "⬇ Scarica l'HTML",
         "passerPro": "🔒 Passa al piano Pro per scaricare il tuo sito",
-        "titreApercu": "Anteprima della landing page"
+        "titreApercu": "Anteprima della landing page",
+        "apercuAppareil": "Dispositivo dell'anteprima",
+        "apercuOrdinateur": "🖥️ Computer",
+        "apercuTelephone": "📱 Telefono"
       },
       "shopify": {
         "titre": "Pubblica su Shopify",
@@ -1914,6 +2181,52 @@
         "avisMention": "Vengono tenute solo le recensioni da 4 e 5 stelle dei tuoi screenshot ({max} al massimo). Come richiede la legge, il sito indicherà che si tratta di una selezione di recensioni da 4 e 5 stelle, senza voto medio. Rimuovi quelle che non vuoi mostrare.",
         "avisEtoiles": "{count} stelle",
         "avisAuteurInconnu": "Acquirente"
+      },
+      "imagesOpenAI": {
+        "libelle": "Genera immagini con OpenAI",
+        "planExpert": "Disponibile sui piani a pagamento.",
+        "quotaInsuffisant": "Servono {images} immagini della tua quota, te ne restano {restantes}.",
+        "recharger": "Ricarica",
+        "aide": "{images} immagini generate insieme al sito, salvate nella tua mediateca.",
+        "cout": "Costo stimato: {images} immagini della tua quota (cioè {eur} al prezzo dei crediti).",
+        "restantes": "Te ne restano {restantes}.",
+        "conservees": "{count, plural, one {L'immagine già generata resta} other {Le # immagini già generate restano}} nella tua mediateca: saranno riutilizzate al prossimo tentativo, senza nuovo conteggio.",
+        "role_hero": "immagine principale",
+        "role_detail": "immagine di dettaglio",
+        "role_situation": "immagine in situazione",
+        "echec": "Impossibile generare l'{role} ({raison}): il suo spazio è rimasto vuoto.",
+        "horsSite": "{count, plural, one {# immagine non aveva uno spazio libero nel sito: è} other {# immagini non avevano uno spazio libero nel sito: sono}} solo nella tua mediateca.",
+        "publicationErreur": "immagine generata ma impossibile da pubblicare"
+      },
+      "photos": {
+        "titre": "Foto del sito",
+        "source": "Origine delle foto",
+        "nombre": "Numero",
+        "max": "(max {max})",
+        "sources": {
+          "produit": "Foto del prodotto",
+          "mediatheque": "La mia mediateca (o caricamento file)",
+          "liens": "Link di immagini",
+          "ia": "Genera con l'IA",
+          "iaPlan": "Genera con l'IA (piani a pagamento)",
+          "aucune": "Nessuna foto"
+        },
+        "aideProduit": "Il sito usa la foto del prodotto.",
+        "aideProduitBoutique": "Ogni scheda usa la foto del suo prodotto.",
+        "aideProduitAbsente": "Il tuo prodotto non ha ancora una foto: gli spazi immagine del sito resteranno vuoti.",
+        "aideMediatheque": "Scegli fino a {max, plural, one {# foto} other {# foto}} dalla tua mediateca. Puoi anche caricarvi i tuoi file.",
+        "aideLiens": "Incolla l'indirizzo di ogni foto (https://…).",
+        "aideAucune": "Il sito sarà generato senza foto: degli spazi vuoti indicheranno dove aggiungerle.",
+        "choisir": "+ Scegli ({count}/{max})",
+        "retirer": "Rimuovi la foto",
+        "lienPlaceholder": "https://… (foto {index})",
+        "mentionCatalogue": "Le immagini dei prodotti non si modificano da questa schermata: per cambiarle, vai su «Catalogo».",
+        "horsSite": "{count, plural, one {# foto non ha trovato} other {# foto non hanno trovato}} uno spazio libero nel sito."
+      },
+      "budgetIa": {
+        "restant": "Budget IA rimanente questo mese: {euros} (≈ {tokens} token di generazione)",
+        "epuise": "Il tuo budget IA del mese è esaurito. Si azzera il 1° del mese prossimo.",
+        "sitesCrees": "{count, plural, =0 {Nessun sito creato questo mese} one {# sito creato questo mese} other {# siti creati questo mese}}"
       }
     },
     "modifier": {
@@ -2178,21 +2491,21 @@
       "objetTitre": "1. Oggetto",
       "objetTexte": "Le presenti condizioni generali di vendita disciplinano l'uso a pagamento della piattaforma Dropvio, pubblicata dall'auto-entrepreneur indicato nelle <mentions>note legali</mentions>, che offre strumenti di supporto al dropshipping (ricerca di prodotti, calcolatore di margine, generatore di siti, audit delle pagine).",
       "offresTitre": "2. Piani e prezzi",
-      "offresIntro": "Dropvio offre tre piani di abbonamento mensile senza vincoli:",
-      "offreFree": "<strong>Free</strong>: 0 €/mese, accesso limitato alle funzionalità di base.",
-      "offrePro": "<strong>Pro</strong>: 29 €/mese, accesso completo agli strumenti di Dropvio.",
-      "offreAgency": "<strong>Agency</strong>: 59 €/mese, come Pro, con un volume di utilizzo più elevato.",
+      "offresIntro": "Dropvio offre due piani di abbonamento mensile senza vincoli:",
+      "offrePro": "<strong>Pro</strong>: 34,80 €/mese, accesso completo agli strumenti di Dropvio.",
+      "offreAgency": "<strong>Agency</strong>: 75,60 €/mese, come Pro, con un volume di utilizzo più elevato.",
       "offresTarifs": "I prezzi sono indicati in euro, tasse incluse (IVA inclusa). Dropvio si riserva il diritto di modificare i prezzi; ogni modifica viene annunciata prima della sua entrata in vigore e non si applica retroattivamente a un periodo già pagato.",
       "paiementTitre": "3. Sottoscrizione e pagamento",
-      "paiementTexte": "La sottoscrizione di un piano a pagamento richiede la creazione di un account e un metodo di pagamento valido, elaborato dal nostro fornitore Stripe. Dropvio non memorizza mai il numero della tua carta. L'addebito è mensile, alla data di anniversario della sottoscrizione.",
+      "paiementTexte": "L'abbonamento a un piano richiede la creazione di un account e un metodo di pagamento valido, gestito dal nostro fornitore Stripe. Dropvio non memorizza mai il numero della tua carta. Il primo addebito avviene alla fine del periodo di prova (o alla sottoscrizione se la prova è già stata utilizzata), poi ogni mese alla stessa data.",
       "dureeTitre": "4. Durata e disdetta",
-      "dureeTexte": "Gli abbonamenti non hanno una durata minima. Puoi disdire in qualsiasi momento da Impostazioni → Fatturazione. La disdetta ha effetto alla fine del periodo già pagato; non è previsto alcun rimborso proporzionale per il periodo in corso, salvo diversa disposizione di legge.",
+      "dureeTexte": "Gli abbonamenti sono senza vincolo di durata. Puoi annullare in qualsiasi momento da Impostazioni → Fatturazione. L'annullamento durante la prova evita qualsiasi addebito. Dopo la prova, l'annullamento ha effetto alla fine del periodo già pagato; non è previsto alcun rimborso proporzionale per il periodo in corso, salvo diversa disposizione di legge.",
       "retractationTitre": "5. Diritto di recesso",
       "retractationTexte": "Ai sensi dell'articolo L221-28 13° del Codice del consumo francese, il diritto di recesso non si applica ai contenuti digitali forniti su un supporto immateriale la cui esecuzione è iniziata con il tuo previo consenso espresso e la tua rinuncia espressa al diritto di recesso, che accetti sottoscrivendo un piano a pagamento e accedendo subito al servizio. Al di fuori di questo caso, hai 14 giorni per recedere, come previsto dalla legge.",
       "responsabiliteTitre": "6. Responsabilità",
       "responsabiliteTexte": "Dropvio mette a disposizione strumenti di supporto alle decisioni (stima del margine, suggerimenti di prodotti, audit automatizzati) forniti a titolo indicativo. Dropvio non garantisce né la redditività di un'attività, né la disponibilità dei prodotti di terzi (AliExpress), né l'esattezza assoluta dei dati mostrati, che possono cambiare indipendentemente dalla piattaforma. Resti l'unico responsabile delle tue decisioni commerciali e del rispetto dei tuoi obblighi legali e fiscali.",
       "droitTitre": "7. Legge applicabile e controversie",
-      "droitTexte": "Le presenti condizioni sono regolate dalla legge francese. In caso di controversia, si cercherà prima una soluzione amichevole contattando <email>legal@dropvio.com</email> prima di qualsiasi azione legale. In mancanza di un accordo amichevole, saranno competenti i tribunali francesi, fatte salve le disposizioni inderogabili applicabili ai consumatori."
+      "droitTexte": "Le presenti condizioni sono regolate dalla legge francese. In caso di controversia, si cercherà prima una soluzione amichevole contattando <email>legal@dropvio.com</email> prima di qualsiasi azione legale. In mancanza di un accordo amichevole, saranno competenti i tribunali francesi, fatte salve le disposizioni inderogabili applicabili ai consumatori.",
+      "offresEssai": "Ogni piano inizia con un periodo di prova gratuito di 3 giorni, offerto una sola volta per account. È richiesto un metodo di pagamento valido fin dall'inizio della prova. Salvo annullamento prima della fine della prova, l'abbonamento prosegue automaticamente e il primo mese viene addebitato al suo termine. Senza un abbonamento attivo o una prova in corso, l'accesso agli strumenti è sospeso; l'account e i suoi dati vengono conservati."
     },
     "confidentialite": {
       "metaTitre": "Informativa sulla privacy | Dropvio",
@@ -2218,6 +2531,7 @@
       "sousTraitantVercel": "<strong>Vercel Inc.</strong>: hosting dell'applicazione.",
       "sousTraitantStripe": "<strong>Stripe Payments Europe, Ltd.</strong>: elaborazione dei pagamenti.",
       "sousTraitantAnthropic": "<strong>Anthropic</strong>: elaborazione delle richieste inviate agli strumenti di intelligenza artificiale (audit delle pagine, generazione di siti e testi, analisi degli screenshot di ispirazione).",
+      "sousTraitantOpenAI": "<strong>OpenAI</strong>: generazione di immagini a partire dai prompt inviati allo Studio IA e al Site Builder (piano Expert).",
       "sousTraitantResend": "<strong>Resend</strong>: invio delle e-mail relative all'account (conferma, reimpostazione della password).",
       "sousTraitantShopify": "<strong>Shopify Inc.</strong>: solo se colleghi volontariamente il tuo negozio Shopify.",
       "destinatairesTransferts": "Alcuni di questi fornitori si trovano al di fuori dell'Unione europea (Stati Uniti); i trasferimenti di dati sono disciplinati dalle rispettive clausole contrattuali tipo.",
@@ -2235,7 +2549,7 @@
     "nav": {
       "fonctionnalites": "Funzionalità",
       "faq": "FAQ",
-      "cta": "Inizia gratis"
+      "cta": "Prova 3 giorni"
     },
     "hero": {
       "surtitre": "Centro assistenza",
@@ -2244,10 +2558,9 @@
     },
     "footer": {
       "titre": "Un'altra domanda?",
-      "texte": "Crea il tuo account gratuito e scopri Dropvio da solo. Nessuna carta di credito richiesta.",
+      "texte": "Crea il tuo account e prova Dropvio con 3 giorni di prova gratuita (carta richiesta).",
       "cta": "Crea il mio account"
     },
-    "plansBientot": "I piani Pro e Agency arriveranno presto. Nel frattempo, contatta <email>{adresse}</email>.",
     "categories": {
       "general": "Generale",
       "comptes": "Account e fatturazione",
@@ -2264,18 +2577,18 @@
         "a": "Sì, completamente, oltre che in francese, inglese e spagnolo. Dropvio è stato pensato prima di tutto per il mercato francofono, con le vere regole fiscali e legali francesi (IVA, URSSAF, dazi doganali)."
       },
       "freeGratuit": {
-        "q": "Il piano Free costa qualcosa?",
-        "a": "No. L'account Free è gratuito, senza limiti di tempo, e la registrazione non richiede alcuna carta di credito."
+        "q": "Come funziona la prova gratuita?",
+        "a": "Ogni piano inizia con 3 giorni di prova gratuita. La tua carta viene richiesta all'inizio: se non annulli prima della fine della prova, il primo mese viene addebitato automaticamente. Puoi annullare in qualsiasi momento da Impostazioni → Fatturazione. La prova è offerta una sola volta per account."
       },
       "differences": {
-        "q": "Che differenza c'è tra Free, Pro e Agency?",
-        "free": "Free (0 €): accesso limitato a ogni strumento, 5 siti al mese, negozi fino a 10 prodotti, 0,50 € di budget IA al mese, audit IA non incluso",
-        "pro": "Pro (29 €/mese): catalogo completo, 20 siti e 30 audit IA al mese, negozi fino a 200 prodotti, 6 € di budget IA al mese",
-        "agency": "Agency (59 €/mese): come Pro, con 50 siti, 100 audit IA e 28 € di budget IA al mese",
-        "fin": "Per ora è aperto solo il piano Free: i piani Pro e Agency arriveranno presto. Nel frattempo, contatta <email>{adresse}</email>."
+        "q": "Che differenza c'è tra Pro e Agency?",
+        "pro": "Pro ({prixPro}/mese): catalogo completo, 20 siti e 30 audit IA al mese, negozi fino a 200 prodotti, {budgetPro} di budget IA al mese",
+        "agency": "Agency ({prixAgency}/mese): come Pro, con 50 siti, 100 audit IA e {budgetAgency} di budget IA al mese",
+        "fin": "Entrambi i piani iniziano con 3 giorni di prova gratuita, carta richiesta. Domande? Scrivici a <email>{adresse}</email>."
       },
       "changerPlan": {
-        "q": "Come passo a Pro o Agency, o cambio piano?"
+        "q": "Come passo a Pro o Agency, o cambio piano?",
+        "a": "Da Impostazioni → Il tuo piano o Fatturazione: il pulsante apre il portale di fatturazione, dove puoi cambiare piano, aggiornare la carta, scaricare le fatture o annullare."
       },
       "limite": {
         "q": "Cosa succede se raggiungo il limite del mio piano?",
@@ -2377,5 +2690,171 @@
       "htmlCorrigeVide": "L'HTML corretto ricevuto è vuoto. Riprova tra un attimo.",
       "reseauHtmlCorrige": "Errore di rete durante la generazione dell'HTML corretto."
     }
+  },
+  "abonnement": {
+    "titre": "Scegli il tuo piano",
+    "sousTitreEssai": "Entrambi i piani iniziano con 3 giorni di prova gratuita. La tua carta viene richiesta all'inizio; puoi annullare prima della fine della prova senza alcun addebito.",
+    "sousTitreSansEssai": "Hai già utilizzato la tua prova gratuita: l'abbonamento inizia non appena il pagamento è confermato.",
+    "ctaEssai": "Inizia la prova gratuita",
+    "ctaSansEssai": "Abbonati",
+    "mentionEssai": "Se non annulli prima della fine dei 3 giorni, il primo mese viene addebitato automaticamente. Abbonamento mensile senza vincoli, annullabile in qualsiasi momento da Impostazioni → Fatturazione.",
+    "mentionSansEssai": "Abbonamento mensile senza vincoli, annullabile in qualsiasi momento da Impostazioni → Fatturazione.",
+    "annule": "Pagamento annullato: nessun abbonamento è stato creato.",
+    "impaye": "L'ultimo pagamento del tuo abbonamento non è andato a buon fine: l'accesso agli strumenti è sospeso. Aggiorna il metodo di pagamento per riaverlo.",
+    "regulariser": "Aggiorna il pagamento",
+    "termine": "Il tuo abbonamento è terminato. Il tuo account e i tuoi siti vengono conservati: scegli un piano per riavere l'accesso.",
+    "redirection": "Reindirizzamento…",
+    "erreurChargement": "Impossibile caricare il tuo abbonamento.",
+    "erreurPaiement": "Impossibile aprire il pagamento. Riprova.",
+    "activationTitre": "Attivazione del tuo abbonamento…",
+    "activationTexte": "Pagamento confermato. Il tuo accesso è in fase di attivazione, ci vuole qualche secondo.",
+    "activationLongueTitre": "L'attivazione richiede più tempo del previsto",
+    "activationLongueTexte": "Il tuo pagamento è stato registrato. Riprova tra un momento; se l'accesso non è ancora attivo, scrivici.",
+    "activationRecharger": "Vai alla dashboard",
+    "lienFormation": "Vedi la formazione",
+    "deconnexion": "Esci"
+  },
+  "ventes": {
+    "titre": "Le mie vendite",
+    "intro": "Gli ordini ricevuti sul tuo negozio Shopify. Ordina tu stesso dal fornitore, poi segna la vendita come ordinata.",
+    "filtre": "Filtra per stato",
+    "tous": "Tutte",
+    "statut_a_traiter": "Da ordinare",
+    "statut_commandee": "Ordinata",
+    "statut_ignoree": "Ignorata",
+    "colDate": "Data",
+    "colNumero": "Ordine",
+    "colProduit": "Prodotto",
+    "colQuantite": "Q.tà",
+    "colClient": "Cliente",
+    "colStatut": "Stato",
+    "colActions": "Azioni",
+    "chargement": "Caricamento…",
+    "vide": "Ancora nessuna vendita. Gli ordini Shopify appariranno qui.",
+    "videFiltre": "Nessuna vendita con questo stato.",
+    "autresProduits": "{count, plural, one {+ # altro prodotto} other {+ # altri prodotti}}",
+    "ouvrirFournisseur": "Apri dal fornitore",
+    "sansLien": "Nessun link fornitore per questo prodotto.",
+    "marquerCommandee": "Segna come ordinata",
+    "ignorer": "Ignora",
+    "erreurChargement": "Impossibile caricare le tue vendite.",
+    "erreurStatut": "Impossibile cambiare lo stato.",
+    "pagination": "Pagine delle vendite",
+    "precedente": "Precedente",
+    "suivante": "Successiva",
+    "pageSur": "Pagina {page} di {total} · {ventes} vendite",
+    "cloche": {
+      "libelle": "Notifiche",
+      "libelleNonVues": "{count, plural, one {# nuova vendita} other {# nuove vendite}}",
+      "titre": "Nuove vendite",
+      "vide": "Nessuna notifica.",
+      "nouvelleVente": "Nuova vendita {numero}",
+      "voirVentes": "Vedi le mie vendite"
+    }
+  },
+  "catalogue": {
+    "title": "Catalogo",
+    "count": "{count, plural, =0 {Nessun prodotto} one {# prodotto} other {# prodotti}}",
+    "loadingShort": "Caricamento…",
+    "loading": "Caricamento del catalogo…",
+    "searchPlaceholder": "Cerca per nome",
+    "filterCategory": "Filtra per categoria",
+    "allCategories": "Tutte le categorie",
+    "colProduit": "Prodotto",
+    "colPrix": "Prezzo",
+    "colCategorie": "Categoria",
+    "colBoutique": "Negozio",
+    "colStock": "Stock",
+    "empty": "Nessun prodotto nel catalogo.",
+    "emptyFiltered": "Nessun prodotto corrisponde alla tua ricerca.",
+    "noCategory": "Senza categoria",
+    "noBoutique": "Nessun negozio",
+    "stockMissing": "Non indicato",
+    "stockMissingHint": "Il catalogo non contiene informazioni sullo stock.",
+    "planLimited": "Il tuo piano dà accesso a una parte del catalogo.",
+    "prev": "← Precedente",
+    "next": "Successivo →",
+    "pageOf": "Pagina {page} di {totalPages}",
+    "errorLoad": "Impossibile caricare il catalogo.",
+    "backToList": "Torna al catalogo",
+    "envoyerStudio": "Invia allo Studio IA",
+    "sectionFiche": "Scheda prodotto",
+    "fieldNom": "Nome",
+    "fieldTitre": "Titolo",
+    "titreMissingHint": "Il catalogo memorizza solo un nome, senza titolo separato.",
+    "fieldDescription": "Descrizione",
+    "descriptionMissingHint": "Il catalogo non contiene una descrizione.",
+    "fieldPrix": "Prezzo",
+    "fieldAncienPrix": "Prezzo precedente",
+    "fieldCategorie": "Categoria",
+    "fieldBoutiques": "Negozi",
+    "fieldStock": "Stock disponibile",
+    "fieldLienAliExpress": "Link AliExpress",
+    "notSet": "Non indicato",
+    "noBoutiqueCategory": "Senza categoria",
+    "stockBoutique": "stock negozio: {stock}",
+    "sectionBoutique": "Negozio",
+    "sectionBoutiqueHint": "Il prezzo barrato e la categoria si applicano al prodotto nel negozio scelto. Il link AliExpress non viene mai inviato al negozio.",
+    "noBoutiqueYet": "Non hai ancora un negozio.",
+    "createBoutique": "Crea un negozio →",
+    "fieldBoutique": "Negozio",
+    "alreadyIn": "già aggiunto",
+    "statusIn": "Questo prodotto è già in questo negozio.",
+    "statusNotIn": "Questo prodotto non è ancora in questo negozio.",
+    "fieldPrixBarre": "Prezzo barrato",
+    "prixBarrePlaceholder": "es. 39,90",
+    "prixBarreOnHint": "Il prezzo precedente sarà mostrato barrato nel negozio.",
+    "prixBarreOffHint": "Il prezzo precedente non è mostrato nel negozio.",
+    "fieldCategorieBoutique": "Categoria nel negozio",
+    "createCategory": "+ Crea una categoria",
+    "newCategoryPlaceholder": "Nome della nuova categoria",
+    "create": "Crea",
+    "creating": "Creazione…",
+    "save": "Salva",
+    "saving": "Salvataggio…",
+    "send": "Invia a «{boutique}»",
+    "saved": "Modifiche salvate.",
+    "sent": "Prodotto inviato a «{boutique}».",
+    "categorieCreated": "Categoria «{nom}» creata.",
+    "categorieAssigned": "Categoria «{nom}» creata e assegnata al prodotto.",
+    "errorPrixBarre": "Inserisci un prezzo barrato valido (un numero maggiore di 0).",
+    "errorPrixManquant": "Questo prodotto non ha un prezzo nel catalogo: impossibile inviarlo.",
+    "errorSave": "Impossibile salvare le modifiche.",
+    "errorSend": "Impossibile inviare il prodotto.",
+    "errorCategorie": "Impossibile creare la categoria.",
+    "photos": {
+      "titre": "Foto",
+      "aide": "Scegli le foto del prodotto, senza generazione IA: dalla tua mediateca o dal tuo computer. La prima è la foto principale, le successive formano la galleria.",
+      "porteeTitre": "Dove applicare queste foto?",
+      "porteeBoutique": "Solo a questo prodotto nel negozio «{boutique}»",
+      "porteeUtilisateur": "A questo prodotto del catalogo, per tutto il mio account (non ai negozi esistenti)",
+      "porteeUtilisateurSeule": "Queste foto sono salvate per il tuo account: il catalogo comune non viene modificato. Servono per i prossimi invii in negozio, non ai negozi esistenti.",
+      "parDefaut": "Nessuna foto scelta: viene usata la foto del catalogo.",
+      "migration": "Il salvataggio delle foto per il tuo account non è ancora disponibile (migrazione 053 da applicare).",
+      "indisponible": "Foto non disponibili.",
+      "vide": "Nessuna foto per ora.",
+      "principale": "Principale",
+      "monter": "Sposta su",
+      "descendre": "Sposta giù",
+      "definirPrincipale": "Principale",
+      "retirer": "Rimuovi",
+      "depuisMediatheque": "Scegli dalla mediateca",
+      "depuisOrdinateur": "Importa dal computer",
+      "enregistrer": "Salva le foto",
+      "enregistrement": "Salvataggio…",
+      "enregistre": "Foto salvate.",
+      "nonEnregistre": "Modifiche non salvate.",
+      "erreur": "Impossibile salvare le foto."
+    }
+  },
+  "outilsIa": {
+    "pause": "Limite raggiunto per questo strumento. Riprova alle {heure}.",
+    "aDefinir": "Impostazioni da definire per questo strumento: la generazione è disattivata nel frattempo.",
+    "migration": "Questo strumento non è ancora attivo sul tuo piano.",
+    "restants": "Crediti rimanenti per questo periodo: {restants} / {max} ({images, plural, =0 {nessuna immagine} one {# immagine} other {# immagini}})."
+  },
+  "expertModeles": {
+    "fable-5": "Qualità avanzata",
+    "opus-5-5": "Qualità standard"
   }
 }

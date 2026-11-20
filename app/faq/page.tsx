@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import Link from "next/link";
-import { getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
+import { valeursPrix } from "@/lib/prix";
 import Logo from "@/components/Logo";
 import { SUPPORT_EMAIL } from "@/lib/contact";
 import FaqAccordeon, { type FaqCategorieRendue } from "./FaqAccordeon";
@@ -19,11 +20,10 @@ export async function generateMetadata(): Promise<Metadata> {
   return { title: t("metaTitre"), description: t("metaDescription") };
 }
 
-// Aucun plan Pro/Agency n'est aujourd'hui souscriptible (voir components/ParametresModal.tsx) :
-// les questions d'abonnement renvoient vers le support (faq.plansBientot).
 export default async function FaqPage() {
   const t = await getTranslations("faq");
   const valeurs = { adresse: SUPPORT_EMAIL };
+  const prix = valeursPrix(await getLocale());
   const lienEmail = (chunks: ReactNode) => <a href={`mailto:${SUPPORT_EMAIL}`}>{chunks}</a>;
   const texteEmail = (chunks: string) => chunks;
 
@@ -31,7 +31,7 @@ export default async function FaqPage() {
   function reponse(id: string): { q: string; a: ReactNode; aText: string } {
     const q = t(`questions.${id}.q`);
     if (id === "differences") {
-      const lignes = [t("questions.differences.free"), t("questions.differences.pro"), t("questions.differences.agency")];
+      const lignes = [t("questions.differences.pro", prix), t("questions.differences.agency", prix)];
       return {
         q,
         a: (
@@ -45,13 +45,6 @@ export default async function FaqPage() {
           </>
         ),
         aText: `${lignes.join(". ")}. ${t.markup("questions.differences.fin", { ...valeurs, email: texteEmail })}`,
-      };
-    }
-    if (id === "changerPlan") {
-      return {
-        q,
-        a: t.rich("plansBientot", { ...valeurs, email: lienEmail }),
-        aText: t.markup("plansBientot", { ...valeurs, email: texteEmail }),
       };
     }
     const a = t(`questions.${id}.a`);

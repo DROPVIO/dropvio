@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 import { createServerClient } from "@supabase/ssr";
 import sharp from "sharp";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
+import { checkRateLimit } from "@/lib/rate-limit";
 
 const MAX_UPLOAD_BYTES = 8 * 1024 * 1024; // 8 Mo en entrée
 
@@ -33,6 +34,11 @@ export async function POST(request: NextRequest) {
   const user = await getUser();
   if (!user) {
     return NextResponse.json({ error: "Non autorisé", code: "auth_required" }, { status: 401 });
+  }
+  // Envoi vers un bucket public, avec traitement d'image côté serveur : plafonné pour éviter
+  // qu'un compte ne s'en serve comme hébergement ou ne monopolise le CPU.
+  if (!(await checkRateLimit(`upload-image:${user.id}`, { max: 60, windowMs: 3_600_000 }))) {
+    return NextResponse.json({ error: "Trop d'envois en peu de temps. Réessaie dans quelques minutes.", code: "rate_limit" }, { status: 429 });
   }
 
   const form = await request.formData();

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { convertirEnJpeg, detecterFormat } from "@/lib/image-capture";
 import { getServerUserPlanOnly } from "@/lib/supabase-server";
+import { checkRateLimit } from "@/lib/rate-limit";
 import { BudgetIaDepasse, reponseBudgetDepasse, SuiviBudgetIa, tokensEstimes } from "@/lib/ai-budget";
 import { validerFicheStyle } from "@/lib/style-fiche";
 
@@ -55,6 +56,10 @@ export async function POST(request: NextRequest) {
   const { supabase, user, plan } = await getServerUserPlanOnly();
   if (!user) {
     return NextResponse.json({ error: "Connecte-toi pour analyser des captures.", code: "auth_required" }, { status: 401 });
+  }
+  // Analyse d'images par Claude : garde-fou anti-rafale, en plus du budget IA du mois.
+  if (!(await checkRateLimit(`inspiration:${user.id}`, { max: 20, windowMs: 3_600_000 }))) {
+    return NextResponse.json({ error: "Trop d'analyses en peu de temps. Réessaie dans quelques minutes.", code: "rate_limit" }, { status: 429 });
   }
 
   const form = await request.formData();

@@ -1,6 +1,9 @@
-# Part 36 — The most common mistakes, phrased as direct warnings
+---
+ordre: 34
+---
+# Part 34 — The most common mistakes, phrased as direct warnings
 
-This last part revisits the whole course from a different angle: rather than what to do, here's what to avoid, phrased directly, for those who remember a clear warning better than a positive recommendation.
+This part revisits the whole course from a different angle: rather than what to do, here's what to avoid, phrased directly, for those who remember a clear warning better than a positive recommendation.
 
 Never launch an ad campaign without first calculating the product's complete net margin — a selling price that looks attractive on paper can become non-viable once all real costs are included. Never commit to a supplier on the basis of an attractive price alone without having compared their reliability with other candidates and without placing a test order.
 

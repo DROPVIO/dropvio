@@ -1,6 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
-export type Plan = "free" | "pro" | "agency";
+export type Plan = "free" | "pro" | "agency" | "expert";
 // inspiration_ia, boutique_ia et textes_ia : migration 043 (contrainte usage_mensuel_feature_check).
 export type UsageFeature =
   | "audit_ia"
@@ -8,15 +8,20 @@ export type UsageFeature =
   | "finder_alternatives"
   | "inspiration_ia"
   | "boutique_ia"
-  | "textes_ia";
+  | "textes_ia"
+  // Images générées par les plans Pro et Agency (compteur = nombre d'images du mois, décompté
+  // du budget images IMAGE_BUDGET_EUR_PAR_PLAN au prix IMAGE_PRICE_EUR, jamais du budget IA).
+  // Migration 052 requise.
+  | "images_ia";
 
 // Budget IA mensuel en euros par plan : plafonne le coût de toutes les fonctions IA réunies
 // (calculé depuis usage_mensuel.tokens_entree / tokens_sortie, voir lib/ai-budget.ts). Les
 // quotas par fonction ci-dessous (sites, audits) restent en place ; le budget s'ajoute à eux.
 export const AI_BUDGET_EUR_PAR_PLAN: Record<Plan, number> = {
-  free: 0.5,
+  free: 0,
   pro: 6,
   agency: 28,
+  expert: 28,
 };
 
 // Limites glissantes, à la manière de Claude : part du budget mensuel utilisable sur les
@@ -25,10 +30,29 @@ export const AI_BUDGET_EUR_PAR_PLAN: Record<Plan, number> = {
 // demie (0,30 par semaine) et jamais moins de 7 jours d'utilisation (0,15 par jour).
 // Contrairement au budget mensuel, ce sont des limites souples : une génération ou un audit
 // démarre tant que la limite n'est pas encore atteinte, même s'il la dépasse un peu.
+// Budget mensuel propre aux images générées (plans Pro et Agency), séparé du budget IA total
+// ci-dessus : une image ne décompte que ce budget, un texte, un site ou un audit que le budget IA.
+// Expert : quota d'images du plan (expert_periodes), hors de ce budget. Sans plan payant : 0.
+export const IMAGE_BUDGET_EUR_PAR_PLAN: Record<Plan, number> = {
+  free: 0,
+  pro: 1.5,
+  agency: 3.5,
+  expert: 0,
+};
+
 export const AI_BUDGET_PART_JOUR = 0.15;
 export const AI_BUDGET_PART_SEMAINE = 0.3;
 
-// null = illimité
+// Prix mensuels des abonnements : source unique de tous les prix affichés (landing, tarifs,
+// FAQ, paramètres, abonnement), formatés par lib/prix.ts. Le montant débité reste celui du
+// Price Stripe : à garder synchronisé à la main si un prix change.
+export const PRO_PRICE_EUR = 29;
+export const AGENCY_PRICE_EUR = 59;
+
+// null = illimité. expert reprend la base Agency, sauf pour les sites : sa limite réelle vient
+// de sa configuration du mois (lib/expert-quota.ts). "free" n'est plus une offre : c'est un compte sans abonnement actif ni
+// essai en cours (045_abonnements.sql). Tout est à 0 — le middleware redirige déjà ces comptes
+// vers /abonnement, ces zéros bloquent aussi les appels directs aux routes API.
 export const PLAN_LIMITS: Record<Plan, {
   produitsMax: number | null;
   produitsBoutiqueMax: number | null;
@@ -37,18 +61,29 @@ export const PLAN_LIMITS: Record<Plan, {
   auditsParMoisMax: number | null;
   alternativesParMoisMax: number | null;
 }> = {
-  free:   { produitsMax: 1000, produitsBoutiqueMax: 10, simulationsMax: 2, sitesParMoisMax: 5, auditsParMoisMax: 0, alternativesParMoisMax: 5 },
+  free:   { produitsMax: 0, produitsBoutiqueMax: 0, simulationsMax: 0, sitesParMoisMax: 0, auditsParMoisMax: 0, alternativesParMoisMax: 0 },
   pro:    { produitsMax: null, produitsBoutiqueMax: 200, simulationsMax: null, sitesParMoisMax: 20, auditsParMoisMax: 30, alternativesParMoisMax: null },
   agency: { produitsMax: null, produitsBoutiqueMax: 200, simulationsMax: null, sitesParMoisMax: 50, auditsParMoisMax: 100, alternativesParMoisMax: null },
+  // Expert : aucun plafond de produits par boutique, seul le quota d'images limite la génération.
+  expert: { produitsMax: null, produitsBoutiqueMax: null, simulationsMax: null, sitesParMoisMax: 0, auditsParMoisMax: 100, alternativesParMoisMax: null },
 };
 
-const PLAN_LABEL: Record<Plan, string> = { free: "Free", pro: "Pro", agency: "Agency" };
+// Espace de la médiathèque du Studio IA, copies publiques non comprises. Free n'a pas accès aux outils.
+const MO = 1024 * 1024;
+export const MEDIA_STOCKAGE_MAX_OCTETS: Record<Plan, number> = {
+  free: 0,
+  pro: 500 * MO,
+  agency: 2048 * MO,
+  expert: 10240 * MO,
+};
+
+const PLAN_LABEL: Record<Plan, string> = { free: "Free", pro: "Pro", agency: "Agency", expert: "Expert" };
 
 export function planLabel(plan: Plan): string {
   return PLAN_LABEL[plan];
 }
 
-const PLANS_ORDONNES: Plan[] = ["free", "pro", "agency"];
+const PLANS_ORDONNES: Plan[] = ["free", "pro", "agency", "expert"];
 
 // Premier plan au-dessus de `plan` qui autorise plus de produits par boutique, ou null si
 // aucun plan ne va plus loin (le message de limite ne propose alors pas de changer de plan).

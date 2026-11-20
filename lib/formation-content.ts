@@ -25,11 +25,11 @@ function slugFromFilename(filename: string): string {
     .toLowerCase();
 }
 
-// Les fichiers numérotés (00-, 02b-, ...) se trient bien alphabétiquement, mais la
-// version courte mélange des fichiers "partie-X-Y" (plusieurs leçons regroupées) et des
-// fichiers thématiques numérotés (20-, 22-, ...) : on retrie donc sur le premier numéro
-// rencontré (préfixe ou "partie-N") pour reconstituer l'ordre de lecture réel.
-function orderKey(filename: string): number {
+// Ordre de lecture : le champ `ordre` du front matter français s'il existe (version courte :
+// les noms de fichiers, donc les URL des leçons, restent stables même quand l'ordre change),
+// sinon le premier numéro du nom de fichier (préfixe ou "partie-N").
+function orderKey(filename: string, ordre?: unknown): number {
+  if (typeof ordre === "number" && Number.isFinite(ordre)) return ordre;
   const leading = filename.match(/^(\d+)/);
   if (leading) return parseInt(leading[1], 10);
   const partie = filename.match(/partie-(\d+)/);
@@ -61,9 +61,9 @@ function renderHtml(markdown: string): string {
 // Traductions rangées sous content/formation/<langue>/<collection>/, avec les mêmes noms de
 // fichiers que la version française : l'id d'un module ne dépend donc pas de la langue (les
 // liens /formation/lire/[moduleId] et la possession d'une collection restent valables quand
-// l'utilisateur change de langue). Seul l'anglais existe pour l'instant ; es et it retombent
-// sur le français, comme le reste de l'app quand une traduction manque.
-const TRANSLATED_LOCALES = ["en"] as const;
+// l'utilisateur change de langue). Anglais, espagnol et italien : un module dont la traduction
+// manque est servi en français (voir loadCollection), comme le reste de l'app.
+const TRANSLATED_LOCALES = ["en", "es", "it"] as const;
 type FormationLocale = "fr" | (typeof TRANSLATED_LOCALES)[number];
 
 function toFormationLocale(locale: AppLocale): FormationLocale {
@@ -77,10 +77,13 @@ function loadCollection(collection: FormationCollection, locale: FormationLocale
   if (!fs.existsSync(dir)) return [];
   const translatedDir = locale === "fr" ? null : path.join(CONTENT_DIR, locale, collection);
 
-  return fs
-    .readdirSync(dir)
-    .filter((file) => file.endsWith(".md") || file.endsWith(".mdx"))
-    .sort((a, b) => orderKey(a) - orderKey(b) || a.localeCompare(b))
+  const fichiers = fs.readdirSync(dir).filter((file) => file.endsWith(".md") || file.endsWith(".mdx"));
+  const cle = new Map(
+    fichiers.map((file) => [file, orderKey(file, matter(fs.readFileSync(path.join(dir, file), "utf8")).data.ordre)])
+  );
+
+  return fichiers
+    .sort((a, b) => cle.get(a)! - cle.get(b)! || a.localeCompare(b))
     .map((file) => {
       const translatedPath = translatedDir ? path.join(translatedDir, file) : null;
       const source = translatedPath && fs.existsSync(translatedPath) ? translatedPath : path.join(dir, file);
@@ -105,6 +108,8 @@ function loadModules(locale: FormationLocale): FormationModule[] {
 const MODULES_PAR_LANGUE: Record<FormationLocale, FormationModule[]> = {
   fr: loadModules("fr"),
   en: loadModules("en"),
+  es: loadModules("es"),
+  it: loadModules("it"),
 };
 
 export function getFormationModules(locale: AppLocale): FormationModule[] {

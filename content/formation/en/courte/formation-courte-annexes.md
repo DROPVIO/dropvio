@@ -1,3 +1,6 @@
+---
+ordre: 37
+---
 # Dropshipping Course — Short version: practical appendices
 
 ## Appendix A — Launch checklist for a new product

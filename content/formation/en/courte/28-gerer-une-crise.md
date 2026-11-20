@@ -1,3 +1,6 @@
+---
+ordre: 28
+---
 # Part 28 — Handling a supplier or financial crisis without panicking
 
 Despite all the precautions detailed in this course, a crisis almost always ends up happening in one form or another — a sudden stock-out, a supplier abruptly deteriorating, a particularly tight cash month. This part gives a method for reacting in those moments, rather than improvising under pressure.

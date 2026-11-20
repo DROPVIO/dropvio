@@ -1,3 +1,6 @@
+---
+ordre: 37
+---
 # Formation Dropshipping — Version courte : annexes pratiques
 
 ## Annexe A — Check-list de lancement d'un nouveau produit

@@ -1,3 +1,6 @@
+---
+ordre: 26
+---
 # Part 26 — Reading a month of cash flow through a worked example
 
 A store collects 8,200 euros in revenue over a month — an isolated figure that looks excellent, but says nothing about what's really available. Once product cost, import taxes and transaction fees (about 3,400 euros), the ad budget spent (2,300 euros), refunds processed (410 euros) and subscriptions/tools (140 euros) are deducted, about 1,950 euros remain before contributions. The URSSAF contributions to set aside on this collected revenue represent about 1,009 euros — to put aside immediately rather than discover at declaration time. About 941 euros remain really available for this particular month, and it's this amount, not the initial 8,200 euros, that should guide any decision to reinvest or put money in reserve.

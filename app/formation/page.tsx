@@ -9,8 +9,9 @@ import OnboardingProvider from "@/components/onboarding/OnboardingProvider";
 import OnboardingTour from "@/components/onboarding/OnboardingTour";
 import { useApiErrorMessage } from "@/lib/use-api-error";
 
+import { FORMATION_PRIX, type FormationOffre } from "@/lib/formation";
+
 type FormationCollection = "courte" | "longue";
-type FormationOffre = FormationCollection | "bundle";
 
 type FormationModule = {
   id: string;
@@ -26,12 +27,6 @@ type FormationState =
   | { status: "loading" }
   | { status: "error"; message: string }
   | { status: "ok"; modules: FormationModule[]; owned: Owned };
-
-const FORMATION_PRIX: Record<FormationOffre, number> = {
-  courte: 24.99,
-  longue: 59.99,
-  bundle: 69.99,
-};
 
 function formatPrix(prix: number): string {
   return `${prix.toFixed(2).replace(".", ",")}€`;
@@ -125,6 +120,7 @@ export default function FormationPage() {
     const query = params.toString();
     window.history.replaceState(null, "", query ? `/formation?${query}` : "/formation");
 
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- l'URL n'est lisible qu'après l'hydratation.
     setBanner(success ? "success" : "canceled");
     if (success) setTimeout(load, 3000);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -139,7 +135,7 @@ export default function FormationPage() {
         body: JSON.stringify({ offre }),
       });
       if (res.status === 401) {
-        window.location.href = `/login?redirect=${encodeURIComponent("/formation")}`;
+        window.location.assign(`/login?redirect=${encodeURIComponent("/formation")}`);
         return;
       }
       const json = await res.json();
@@ -148,7 +144,7 @@ export default function FormationPage() {
         setBuying(null);
         return;
       }
-      window.location.href = json.url;
+      window.location.assign(json.url);
     } catch {
       alert(t("errorServer"));
       setBuying(null);

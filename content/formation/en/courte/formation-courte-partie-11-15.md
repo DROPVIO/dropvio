@@ -1,3 +1,6 @@
+---
+ordre: 11
+---
 # Dropshipping Course — Short version (continued 2)
 
 ## Part 11 — Retaining customers rather than winning them over every time

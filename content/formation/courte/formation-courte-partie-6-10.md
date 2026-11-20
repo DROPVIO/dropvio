@@ -1,3 +1,6 @@
+---
+ordre: 6
+---
 # Formation Dropshipping — Version courte (suite)
 ## Partie 6 — Acquisition et marketing
 

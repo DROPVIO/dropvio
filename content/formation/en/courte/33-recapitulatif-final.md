@@ -1,4 +1,7 @@
-# Part 33 — Final recap: the complete method in one place
+---
+ordre: 35
+---
+# Part 35 — Final recap: the complete method in one place
 
 This last part brings together, step by step, all the checks detailed separately in the previous parts, so you can refer to them quickly without rereading the whole course for every new decision.
 

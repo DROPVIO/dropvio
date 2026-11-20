@@ -10,6 +10,7 @@ import { UsageMeter } from "./UsageMeter";
 import { applyTheme, getStoredTheme, type Theme } from "@/lib/theme";
 import { setLocaleCookie, isAppLocale, toIntlTag, type AppLocale } from "@/lib/locale";
 import { useApiErrorMessage } from "@/lib/use-api-error";
+import { PRIX_PLAN_EUR, formatEuros } from "@/lib/prix";
 
 const SUPPORT_EMAIL = "support@dropvio.com";
 const LEGAL_EMAIL = "legal@dropvio.com";
@@ -42,6 +43,7 @@ const PLAN_STYLE: Record<string, { badge: string; border: string; bg: string; gl
   free:   { badge: "bg-zinc-700 text-zinc-200",  border: "border-[var(--border-strong)]", bg: "bg-[var(--surface)]",  glow: "" },
   pro:    { badge: "bg-violet-600 text-white",   border: "border-violet-500/40",   bg: "bg-violet-500/[0.06]",  glow: "shadow-[0_0_28px_rgba(124,58,237,0.14)]" },
   agency: { badge: "bg-amber-400 text-black",   border: "border-amber-400/40",    bg: "bg-amber-400/[0.05]",   glow: "shadow-[0_0_28px_rgba(251,191,36,0.11)]" },
+  expert: { badge: "bg-emerald-400 text-black", border: "border-emerald-400/40",  bg: "bg-emerald-400/[0.05]", glow: "shadow-[0_0_28px_rgba(52,211,153,0.11)]" },
 };
 
 // ─── Shared styles ───────────────────────────────────────────────────────────
@@ -211,6 +213,9 @@ export default function ParametresModal({
     applyTheme(next);
   }
   const [notifEmail, setNotifEmail] = useState(true);
+  // E-mail à chaque nouvelle vente (profils.notif_email_ventes, migration 051), désactivé par
+  // défaut. null : colonne absente (migration pas appliquée), le réglage n'est pas proposé.
+  const [notifEmailVentes, setNotifEmailVentes] = useState<boolean | null>(null);
   const [notifPush, setNotifPush] = useState(false);
   const [prefMsg, setPrefMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const [savingPrefs, setSavingPrefs] = useState(false);
@@ -266,6 +271,32 @@ export default function ParametresModal({
   const [shopifyConnecting, setShopifyConnecting] = useState(false);
   const [shopifyDisconnecting, setShopifyDisconnecting] = useState(false);
   const [intMsg, setIntMsg] = useState<{ ok: boolean; text: string } | null>(initialShopifyMessage ?? null);
+
+  // Abonnement : un compte sans plan payant choisit son plan sur /abonnement ; un compte abonné
+  // change de plan, de carte ou résilie dans le portail Stripe (app/api/abonnement/portail).
+  const [portailEnCours, setPortailEnCours] = useState(false);
+  const [abonnementMsg, setAbonnementMsg] = useState<string | null>(null);
+  const ouvrirAbonnement = async () => {
+    setAbonnementMsg(null);
+    if ((profile?.plan ?? "free") === "free") {
+      router.push("/abonnement");
+      return;
+    }
+    setPortailEnCours(true);
+    try {
+      const res = await fetch("/api/abonnement/portail", { method: "POST" });
+      const json = await res.json().catch(() => null);
+      if (!res.ok || !json?.url) {
+        setAbonnementMsg(apiErrorMessage(json));
+        setPortailEnCours(false);
+        return;
+      }
+      window.location.assign(json.url);
+    } catch {
+      setAbonnementMsg(apiErrorMessage({ code: "network" }));
+      setPortailEnCours(false);
+    }
+  };
 
   useEffect(() => {
     fetch("/api/shopify/status")
@@ -324,6 +355,18 @@ export default function ParametresModal({
     }
   }
 
+  // Lu à part : avant la migration 051 la colonne n'existe pas, et sa lecture ne doit pas
+  // empêcher le chargement des autres préférences.
+  useEffect(() => {
+    supabase
+      .from("profils")
+      .select("notif_email_ventes")
+      .eq("id", user.id)
+      .maybeSingle()
+      .then(({ data, error }) => setNotifEmailVentes(error ? null : Boolean(data?.notif_email_ventes)));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user.id]);
+
   // Danger zone
   useEffect(() => {
     supabase
@@ -341,7 +384,7 @@ export default function ParametresModal({
         } else {
           supabase
             .from("profils")
-            .upsert({ id: user.id, nom_complet: null, plan: "free" })
+            .upsert({ id: user.id, nom_complet: null })
             .then(() => setProfile({ nom_complet: null, plan: "free" }));
         }
       });
@@ -370,7 +413,7 @@ export default function ParametresModal({
     const langueChanged = langue !== (profile?.langue ?? "fr");
     const { error } = await supabase
       .from("profils")
-      .upsert({ id: user.id, langue, notif_email: notifEmail, notif_push: notifPush });
+      .upsert({ id: user.id, langue, notif_email: notifEmail, notif_push: notifPush, ...(notifEmailVentes !== null ? { notif_email_ventes: notifEmailVentes } : {}) });
     setSavingPrefs(false);
     if (error) {
       setPrefMsg({ ok: false, text: t("preferences.saveError") });
@@ -455,14 +498,11 @@ export default function ParametresModal({
             </div>
             <p className="text-[11px] text-[var(--text-faint)] mt-1">{planDesc}</p>
           </div>
-          <button
-            className={`${BTN_G} opacity-40 cursor-not-allowed`}
-            disabled
-            title={t("plan.changePlanTooltip", { email: SUPPORT_EMAIL })}
-          >
-            {t("plan.changePlan")}
+          <button className={BTN_G} onClick={ouvrirAbonnement} disabled={portailEnCours}>
+            {plan === "free" ? t("plan.choose") : t("plan.changePlan")}
           </button>
         </div>
+        {abonnementMsg ? <p className="mt-2 text-[11px] text-[var(--danger)]">{abonnementMsg}</p> : null}
       </div>
 
       {/* Budget IA du mois */}
@@ -508,8 +548,8 @@ export default function ParametresModal({
       })() : null}
 
       {/* Plan comparison */}
-      <div className="grid grid-cols-3 gap-3">
-        {(["free", "pro", "agency"] as const).map((p) => {
+      <div className="grid grid-cols-2 gap-3">
+        {(["pro", "agency"] as const).map((p) => {
           const style = PLAN_STYLE[p];
           const isCurrent = plan === p;
           return (
@@ -517,7 +557,7 @@ export default function ParametresModal({
               <div className="flex items-center justify-between">
                 <div>
                   <span className="text-sm font-semibold text-[var(--text-primary)]">{t(`plan.meta.${p}.label`)}</span>
-                  <p className="text-[11px] text-[var(--text-faint)] mt-0.5">{t(`plan.price.${p}`)}</p>
+                  <p className="text-[11px] text-[var(--text-faint)] mt-0.5">{t("plan.prixParMois", { prix: formatEuros(PRIX_PLAN_EUR[p], locale) })}</p>
                 </div>
                 {isCurrent && (
                   <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${style.badge}`}>{t("plan.current")}</span>
@@ -533,9 +573,9 @@ export default function ParametresModal({
               </ul>
               {!isCurrent && (
                 <button
-                  className="mt-auto w-full py-1.5 rounded-lg text-xs font-semibold bg-[var(--surface-2)] border border-[var(--border-strong)] text-[var(--text-primary)] opacity-40 cursor-not-allowed"
-                  disabled
-                  title={t("plan.chooseTooltip", { email: SUPPORT_EMAIL })}
+                  className="mt-auto w-full py-1.5 rounded-lg text-xs font-semibold bg-[var(--surface-2)] border border-[var(--border-strong)] text-[var(--text-primary)] disabled:opacity-40"
+                  onClick={ouvrirAbonnement}
+                  disabled={portailEnCours}
                 >
                   {t("plan.choose")}
                 </button>
@@ -713,6 +753,15 @@ export default function ParametresModal({
               </div>
               <Toggle on={notifPush} onChange={setNotifPush} />
             </div>
+            {notifEmailVentes !== null && (
+              <div className={ROW}>
+                <div>
+                  <p className="text-sm text-[var(--text-primary)]">{t("preferences.notifVentesLabel")}</p>
+                  <p className="text-[11px] text-[var(--text-faint)] mt-0.5">{t("preferences.notifVentesCaption")}</p>
+                </div>
+                <Toggle on={notifEmailVentes} onChange={setNotifEmailVentes} />
+              </div>
+            )}
           </div>
         </div>
 
@@ -914,11 +963,11 @@ export default function ParametresModal({
         <div className={DIVIDER} />
         <div className={ROW}>
           <p className="text-sm text-[var(--text-muted)]">{t("facturation.nextPayment")}</p>
-          <p className="text-sm text-[var(--text-faint)]">{plan === "free" ? "—" : t("facturation.notConfigured")}</p>
+          <p className="text-sm text-[var(--text-faint)]">{plan === "free" ? "—" : t("facturation.dansPortail")}</p>
         </div>
         <div className={ROW}>
           <p className="text-sm text-[var(--text-muted)]">{t("facturation.paymentMethod")}</p>
-          <p className="text-sm text-[var(--text-faint)]">{plan === "free" ? "—" : t("facturation.notConfigured")}</p>
+          <p className="text-sm text-[var(--text-faint)]">{plan === "free" ? "—" : t("facturation.dansPortail")}</p>
         </div>
       </div>
 
@@ -930,15 +979,10 @@ export default function ParametresModal({
         </div>
       </div>
 
-      {plan !== "free" && (
-        <button
-          className={`${BTN_G} self-start opacity-40 cursor-not-allowed`}
-          disabled
-          title={t("facturation.manageTooltip", { email: SUPPORT_EMAIL })}
-        >
-          {t("facturation.manage")}
-        </button>
-      )}
+      <button className={`${BTN_G} self-start`} onClick={ouvrirAbonnement} disabled={portailEnCours}>
+        {plan === "free" ? t("plan.choose") : t("facturation.manage")}
+      </button>
+      {abonnementMsg ? <p className="text-[11px] text-[var(--danger)]">{abonnementMsg}</p> : null}
     </div>
   );
 

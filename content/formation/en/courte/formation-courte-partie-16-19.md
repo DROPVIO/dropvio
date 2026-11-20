@@ -1,3 +1,6 @@
+---
+ordre: 16
+---
 # Dropshipping Course — Short version (continued 3)
 
 ## Part 16 — Anatomy of a typical failure

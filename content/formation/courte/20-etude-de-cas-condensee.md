@@ -1,3 +1,6 @@
+---
+ordre: 20
+---
 # Partie 20 — Étude de cas condensée : une année de boutique
 
 Voici, sous forme condensée, comment ces principes s'articulent dans le temps sur une boutique fictive suivie sur douze mois — l'objectif n'est pas de décrire un cas réel précis, mais de montrer la méthode en mouvement plutôt que sujet par sujet isolé.

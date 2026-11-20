@@ -1,6 +1,9 @@
-# Partie 36 — Les erreurs les plus fréquentes, formulées comme des mises en garde directes
+---
+ordre: 34
+---
+# Partie 34 — Les erreurs les plus fréquentes, formulées comme des mises en garde directes
 
-Cette dernière partie reprend l'ensemble de la formation sous un angle différent : plutôt que ce qu'il faut faire, voici ce qu'il faut éviter, formulé directement, pour celles et ceux qui retiennent mieux une mise en garde claire qu'une recommandation positive.
+Cette partie reprend l'ensemble de la formation sous un angle différent : plutôt que ce qu'il faut faire, voici ce qu'il faut éviter, formulé directement, pour celles et ceux qui retiennent mieux une mise en garde claire qu'une recommandation positive.
 
 Ne lance jamais une campagne publicitaire sans avoir calculé la marge nette complète du produit au préalable — un prix de vente qui semble intéressant sur le papier peut devenir non viable une fois tous les coûts réels intégrés. Ne t'engage jamais avec un fournisseur sur la seule base d'un prix attractif sans avoir comparé sa fiabilité à d'autres candidats et sans avoir passé une commande test.
 

@@ -56,7 +56,7 @@ export async function POST(request: NextRequest) {
   if (!user) {
     return NextResponse.json({ error: "Connecte-toi pour ajouter des avis.", code: "auth_required" }, { status: 401 });
   }
-  if (!checkRateLimit(`avis-capture:${user.id}`, { max: 20, windowMs: 3_600_000 })) {
+  if (!(await checkRateLimit(`avis-capture:${user.id}`, { max: 20, windowMs: 3_600_000 }))) {
     return NextResponse.json(
       { error: "Trop de demandes en peu de temps. Réessaie dans quelques minutes.", code: "rate_limit" },
       { status: 429 }

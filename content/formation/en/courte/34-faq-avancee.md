@@ -1,4 +1,7 @@
-# Part 34 — Frequently asked questions, continued
+---
+ordre: 32
+---
+# Part 32 — Frequently asked questions, continued
 
 ## What if two complementary products I thought were obvious don't sell well together?
 
@@ -20,7 +23,7 @@ Rarely in the same way, as mentioned from the introduction of this course: a pro
 
 Not necessarily in person for every message once a large volume is reached, but the quality and speed of the reply must stay constant regardless of who writes it — well-built reply templates, mentioned in this course, let you delegate part of this work without sacrificing quality, as long as you keep these templates customizable enough never to seem automatic in the face of real frustration.
 
-# Part 35 — Mindset: what helps you last
+# Part 33 — Mindset: what helps you last
 
 Beyond the technical and financial aspects detailed in this course, a less often discussed dimension deserves to be named clearly: the ability to hold on over time in the face of results that never progress in a perfectly linear way.
 

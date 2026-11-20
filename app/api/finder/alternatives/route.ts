@@ -3,6 +3,7 @@ import { getServerUserAndPlan } from "@/lib/supabase-server";
 import { PLAN_LIMITS, planLabel, getMonthlyUsage, incrementMonthlyUsage } from "@/lib/plan-limits";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { getProductDetail, queryProducts, type AliExpressProduct } from "@/lib/aliexpress";
+import { createSupabaseAdminClient } from "@/lib/supabase-admin";
 
 const CANDIDATE_FIELDS =
   "product_id,product_title,product_main_image_url,target_sale_price,target_sale_price_currency,evaluate_rate,lastest_volume,shop_id,shop_url,shop_name,first_level_category_id,second_level_category_id,product_detail_url,promotion_link";
@@ -69,7 +70,7 @@ export async function POST(request: NextRequest) {
   // Garde-fou technique indépendant du quota métier mensuel : chaque appel déclenche 2
   // requêtes AliExpress (quota API affilié partagé par tout Dropvio) — évite qu'un compte
   // enchaîne des dizaines de recherches d'affilée même sous le plafond mensuel.
-  if (!checkRateLimit(`finder-alternatives:${user.id}`, { max: 10, windowMs: 3_600_000 })) {
+  if (!(await checkRateLimit(`finder-alternatives:${user.id}`, { max: 10, windowMs: 3_600_000 }))) {
     return NextResponse.json(
       { error: "Trop de recherches en peu de temps. Réessaie dans quelques minutes.", code: "rate_limit" },
       { status: 429 }
@@ -198,7 +199,7 @@ export async function POST(request: NextRequest) {
       link: s.product.promotion_link || s.product.product_detail_url || null,
     }));
 
-  await incrementMonthlyUsage(supabase, user.id, "finder_alternatives");
+  await incrementMonthlyUsage(createSupabaseAdminClient(), user.id, "finder_alternatives");
 
   return NextResponse.json({ alternatives });
 }

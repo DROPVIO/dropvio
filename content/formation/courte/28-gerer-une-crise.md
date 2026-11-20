@@ -1,3 +1,6 @@
+---
+ordre: 28
+---
 # Partie 28 — Gérer une crise fournisseur ou financière sans paniquer
 
 Malgré toutes les précautions détaillées dans cette formation, une crise finit presque toujours par survenir sous une forme ou une autre — une rupture de stock soudaine, un fournisseur qui se dégrade brutalement, un mois de trésorerie particulièrement tendu. Cette partie donne une méthode pour réagir dans ces moments-là, plutôt que de improviser sous la pression.

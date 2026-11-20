@@ -1,4 +1,7 @@
-# Partie 33 — Récapitulatif final : la méthode complète en un seul endroit
+---
+ordre: 35
+---
+# Partie 35 — Récapitulatif final : la méthode complète en un seul endroit
 
 Cette dernière partie rassemble, étape par étape, l'ensemble des vérifications détaillées séparément dans les parties précédentes, pour que tu puisses t'y référer rapidement sans avoir à relire toute la formation à chaque nouvelle décision.
 

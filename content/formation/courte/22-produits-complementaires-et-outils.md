@@ -1,3 +1,6 @@
+---
+ordre: 22
+---
 # Partie 22 — Construire une gamme complémentaire qui se vend elle-même
 
 Un produit peut être complémentaire d'un autre de trois façons distinctes, à ne pas confondre. La complémentarité fonctionnelle concerne un accessoire nécessaire à l'usage du produit principal — c'est celle qui convertit le mieux en vente croisée immédiate, parce que sa pertinence est évidente pour le client sans explication supplémentaire. La complémentarité d'usage concerne des produits utilisés dans un même contexte sans dépendance fonctionnelle directe. La complémentarité de montée en gamme concerne une version supérieure proposée après un premier achat plus modeste, une fois une base de clients fidèles déjà constituée.

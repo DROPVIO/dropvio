@@ -47,7 +47,7 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
     return NextResponse.json({ error: "Connecte-toi pour générer le contenu de ta boutique.", code: "auth_required" }, { status: 401 });
   }
 
-  if (!checkRateLimit(`generer-contenu-boutique:${user.id}`, { max: 20, windowMs: 3_600_000 })) {
+  if (!(await checkRateLimit(`generer-contenu-boutique:${user.id}`, { max: 20, windowMs: 3_600_000 }))) {
     return NextResponse.json(
       { error: "Trop de générations en peu de temps. Réessaie dans quelques minutes.", code: "rate_limit" },
       { status: 429 }

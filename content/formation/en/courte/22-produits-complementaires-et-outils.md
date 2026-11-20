@@ -1,3 +1,6 @@
+---
+ordre: 22
+---
 # Part 22 — Building a complementary range that sells itself
 
 A product can complement another in three distinct ways, not to be confused. Functional complementarity concerns an accessory needed to use the main product — it's the one that converts best as an immediate cross-sell, because its relevance is obvious to the customer without further explanation. Usage complementarity concerns products used in the same context without direct functional dependence. Upgrade complementarity concerns a higher version offered after a first, more modest purchase, once a base of loyal customers already exists.

@@ -79,3 +79,24 @@ export async function isUrlAllowed(rawUrl: string): Promise<boolean> {
 
   return true;
 }
+
+const REDIRECTIONS_MAX = 5;
+
+/** fetch() vers une URL fournie par l'utilisateur. Les redirections sont suivies à la main et
+ *  chaque destination repasse par isUrlAllowed : sans cela, une URL publique qui redirige vers
+ *  169.254.169.254 ou le réseau interne contournerait la vérification faite au départ.
+ *  Lève une erreur si une étape est refusée ou s'il y a trop de redirections. */
+export async function fetchUrlExterne(rawUrl: string, init: RequestInit = {}): Promise<Response> {
+  let url = rawUrl;
+  for (let etape = 0; etape <= REDIRECTIONS_MAX; etape++) {
+    if (!(await isUrlAllowed(url))) {
+      throw new Error("URL non autorisée");
+    }
+    const res = await fetch(url, { ...init, redirect: "manual" });
+    if (res.status < 300 || res.status >= 400) return res;
+    const destination = res.headers.get("location");
+    if (!destination) return res;
+    url = new URL(destination, url).toString();
+  }
+  throw new Error("Trop de redirections");
+}

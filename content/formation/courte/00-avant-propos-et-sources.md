@@ -1,3 +1,6 @@
+---
+ordre: 0
+---
 # Avant-propos
 
 Cette version courte n'est pas un résumé superficiel de la version longue — c'est une formation à part entière, construite pour donner l'essentiel de chaque sujet en un format plus resserré, pour celles et ceux qui veulent démarrer vite avec des bases solides, quitte à approfondir certains points plus tard dans la version longue. Chaque partie garde la même exigence de rigueur : quand un chiffre n'est pas confirmé par une source primaire vérifiable, il est présenté comme une approximation largement citée dans le secteur, jamais comme un fait établi.

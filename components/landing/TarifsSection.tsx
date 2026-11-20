@@ -1,17 +1,20 @@
 "use client";
 
 import Link from "next/link";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
+import { ExpertCarte } from "@/components/landing/ExpertOffre";
 import { AI_BUDGET_PART_JOUR, AI_BUDGET_PART_SEMAINE, type Plan } from "@/lib/plan-limits";
+import { PRIX_PLAN_EUR, formatEuros, type PlanPayantAffiche } from "@/lib/prix";
 
-const PLANS: Plan[] = ["free", "pro", "agency"];
+const PLANS: (PlanPayantAffiche & Plan)[] = ["pro", "agency"];
 
 /** Tarifs de la landing. Les chiffres des cartes (sites, audits, produits) suivent
  *  lib/plan-limits.ts ; les limites glissantes du budget IA sont lues directement dans les
- *  constantes pour ne jamais diverger du code. Pro et Agency ne sont pas encore ouverts : la
- *  carte le dit, et aucun texte ne promet d'essai ni de résiliation. */
+ *  constantes pour ne jamais diverger du code. Le plan se choisit après l'inscription, sur
+ *  /abonnement. Aucune mention d'essai sur la landing. */
 export default function TarifsSection() {
   const t = useTranslations("landing.pricing");
+  const locale = useLocale();
 
   return (
     <section
@@ -24,7 +27,8 @@ export default function TarifsSection() {
         <h2 className="m-0 mt-3 text-[clamp(26px,2.4cqw,34px)] font-[650] leading-[1.15] tracking-[-0.03em]">{t("title")}</h2>
       </div>
 
-      <div className="mt-8 grid gap-4 md:grid-cols-3">
+      {/* Expert en premier sur mobile et tablette (pleine largeur), en dernier sur grand écran. */}
+      <div className="mt-8 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {PLANS.map((plan, i) => {
           const misEnAvant = plan === "pro";
           return (
@@ -41,10 +45,9 @@ export default function TarifsSection() {
                 ) : null}
               </div>
               <p className="m-0 mt-3 flex items-baseline gap-1 text-[#111]">
-                <span className="text-[34px] font-[650] tracking-[-0.03em]">{t(`prix.${plan}`)}</span>
+                <span className="text-[34px] font-[650] tracking-[-0.03em]">{formatEuros(PRIX_PLAN_EUR[plan], locale)}</span>
                 <span className="text-sm text-[#666]">{t("perMonth")}</span>
               </p>
-              <p className="m-0 mt-1 text-[13px] text-[#666]">{t(`note.${plan}`)}</p>
 
               <ul className="m-0 mt-5 flex list-none flex-col gap-2.5 p-0 text-sm leading-[1.45] text-[#333]">
                 {(t.raw(`features.${plan}`) as string[]).map((f) => (
@@ -55,21 +58,19 @@ export default function TarifsSection() {
                 ))}
               </ul>
 
-              {plan === "free" ? (
-                <Link
-                  href="/register"
-                  className="mt-6 rounded-[10px] bg-[#7c3aed] px-4 py-3 text-center text-sm font-semibold text-white no-underline transition-colors hover:bg-[#6d28d9] hover:text-white"
-                >
-                  {t("ctaFree")}
-                </Link>
-              ) : (
-                <span className="mt-6 rounded-[10px] border border-[#e6e6e6] px-4 py-3 text-center text-sm font-semibold text-[#888]">
-                  {t("bientot")}
-                </span>
-              )}
+              <Link
+                href="/register"
+                className={`mt-6 rounded-[10px] px-4 py-3 text-center text-sm font-semibold no-underline transition-colors ${misEnAvant ? "bg-[#7c3aed] text-white hover:bg-[#6d28d9] hover:text-white" : "border border-[#d9d9d9] text-[#111] hover:border-[#7c3aed] hover:text-[#7c3aed]"}`}
+              >
+                {t(`cta.${plan}`)}
+              </Link>
             </div>
           );
         })}
+        <ExpertCarte
+          className="order-first md:col-span-2 lg:order-none lg:col-span-1"
+          style={{ "--dl": "200ms" } as React.CSSProperties}
+        />
       </div>
 
       <div

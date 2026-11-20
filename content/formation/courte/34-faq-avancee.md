@@ -1,4 +1,7 @@
-# Partie 34 — Questions fréquentes, suite
+---
+ordre: 32
+---
+# Partie 32 — Questions fréquentes, suite
 
 ## Que faire si deux produits complémentaires que je pensais évidents ne se vendent pas bien ensemble ?
 
@@ -20,7 +23,7 @@ Rarement de la même façon, comme évoqué dès l'introduction de cette formati
 
 Pas nécessairement en personne à chaque message une fois un volume important atteint, mais la qualité et la rapidité de la réponse doivent rester constantes indépendamment de qui la rédige — des modèles de réponse bien construits, mentionnés dans cette formation, permettent de déléguer une partie de ce travail sans sacrifier la qualité, à condition de garder ces modèles suffisamment personnalisables pour ne jamais paraître automatiques face à une vraie frustration.
 
-# Partie 35 — Mentalité : ce qui aide à tenir dans la durée
+# Partie 33 — Mentalité : ce qui aide à tenir dans la durée
 
 Au-delà des aspects techniques et financiers détaillés dans cette formation, une dimension moins souvent abordée mérite d'être nommée clairement : la capacité à tenir dans la durée face à des résultats qui ne progressent jamais de façon parfaitement linéaire.
 

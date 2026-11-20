@@ -1,14 +1,16 @@
 "use client";
 
 import { useState } from "react";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
+import { valeursPrix } from "@/lib/prix";
 
-const IDS = [1, 2, 3, 4, 5] as const;
+const IDS = [1, 2, 3, 4] as const;
 
-/** Accordéon de la landing. Les cinq questions sont celles de /faq, déjà vérifiées contre le
+/** Accordéon de la landing. Les quatre questions sont celles de /faq, déjà vérifiées contre le
  *  code — on ne réintroduit pas ici d'affirmation sur un essai ou une résiliation. */
 export default function FaqAccordion() {
   const t = useTranslations("landing.faq");
+  const prix = valeursPrix(useLocale());
   const [ouvert, setOuvert] = useState<number | null>(null);
 
   return (
@@ -50,7 +52,7 @@ export default function FaqAccordion() {
                   id={`dv-faq-${n}`}
                   className="m-0 max-w-[62ch] pb-[22px] pr-9 text-[15px] leading-[1.6] text-[#444]"
                 >
-                  {t(`a${n}`)}
+                  {t(`a${n}`, prix)}
                 </p>
               )}
             </div>

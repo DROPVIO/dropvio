@@ -37,7 +37,20 @@ function motifStorageSupabase(): RemotePattern[] {
   ];
 }
 
+// En-têtes de sécurité sur toutes les réponses. frame-ancestors : l'app ne peut être affichée
+// dans une iframe que par elle-même ou par l'admin Shopify (shopify.app.toml : embedded = true),
+// ce qui bloque le clickjacking sans casser l'intégration Shopify.
+const EN_TETES_SECURITE = [
+  { key: "X-Content-Type-Options", value: "nosniff" },
+  { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+  { key: "Content-Security-Policy", value: "frame-ancestors 'self' https://admin.shopify.com https://*.myshopify.com" },
+  { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
+];
+
 const nextConfig: NextConfig = {
+  async headers() {
+    return [{ source: "/:path*", headers: EN_TETES_SECURITE }];
+  },
   images: {
     remotePatterns: [
       // Images produits AliExpress (Produits gagnants, alternatives) — plusieurs sous-domaines

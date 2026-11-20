@@ -1,3 +1,6 @@
+---
+ordre: 20
+---
 # Part 20 — Condensed case study: a year in a store's life
 
 Here, in condensed form, is how these principles fit together over time in a fictional store followed over twelve months — the goal isn't to describe a specific real case, but to show the method in motion rather than topic by topic in isolation.

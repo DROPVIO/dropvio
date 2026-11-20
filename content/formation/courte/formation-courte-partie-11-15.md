@@ -1,3 +1,6 @@
+---
+ordre: 11
+---
 # Formation Dropshipping — Version courte (suite 2)
 
 ## Partie 11 — Fidéliser plutôt que reconquérir à chaque fois

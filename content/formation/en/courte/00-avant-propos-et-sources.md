@@ -1,3 +1,6 @@
+---
+ordre: 0
+---
 # Foreword
 
 This short version isn't a superficial summary of the long version — it's a course in its own right, built to give the essentials of each topic in a tighter format, for those who want to start quickly on solid foundations, even if it means going deeper on certain points later in the long version. Every part keeps the same demand for rigor: when a figure isn't confirmed by a verifiable primary source, it's presented as an approximation widely quoted in the industry, never as an established fact.

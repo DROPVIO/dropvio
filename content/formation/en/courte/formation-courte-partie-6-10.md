@@ -1,3 +1,6 @@
+---
+ordre: 6
+---
 # Dropshipping Course — Short version (continued)
 ## Part 6 — Acquisition and marketing
 

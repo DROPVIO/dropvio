@@ -1,6 +1,6 @@
 import { getServerUserAndPlan } from "@/lib/supabase-server";
 import { checkRateLimit } from "@/lib/rate-limit";
-import { isUrlAllowed, normalizeUrl } from "@/lib/ssrf-guard";
+import { isUrlAllowed, normalizeUrl, fetchUrlExterne } from "@/lib/ssrf-guard";
 
 export async function GET(request: Request) {
   const { user } = await getServerUserAndPlan();
@@ -8,7 +8,7 @@ export async function GET(request: Request) {
     return Response.json({ error: "Connecte-toi pour utiliser le spy tool.", code: "auth_required" }, { status: 401 });
   }
 
-  if (!checkRateLimit(`spy:${user.id}`, { max: 10, windowMs: 60_000 })) {
+  if (!(await checkRateLimit(`spy:${user.id}`, { max: 10, windowMs: 60_000 }))) {
     return Response.json(
       { error: "Trop de requêtes. Réessaie dans une minute.", code: "rate_limit" },
       { status: 429 }
@@ -31,7 +31,7 @@ export async function GET(request: Request) {
   let data: { products: Array<{ variants: Array<{ price: string }> }> };
 
   try {
-    const res = await fetch(`${storeUrl}/products.json?limit=250`, {
+    const res = await fetchUrlExterne(`${storeUrl}/products.json?limit=250`, {
       headers: { "User-Agent": "Mozilla/5.0" },
     });
 

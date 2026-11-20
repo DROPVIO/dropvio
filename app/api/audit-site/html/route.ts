@@ -5,6 +5,7 @@ import { PLAN_LIMITS, planLabel, getMonthlyUsage, incrementMonthlyUsage } from "
 import { SuiviBudgetIa } from "@/lib/ai-budget";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { AUDIT_MODELE, compacterHtml, restaurerHtml, verifierBudgetAudit } from "@/lib/audit-config";
+import { createSupabaseAdminClient } from "@/lib/supabase-admin";
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
@@ -80,7 +81,7 @@ export async function POST(request: NextRequest) {
 
     // Même garde-fou technique que /api/audit-site (appel Claude facturé, clé de rate
     // limit distincte pour ne pas partager le compteur avec l'analyse elle-même).
-    if (!checkRateLimit(`audit-site-html:${user.id}`, { max: 10, windowMs: 3_600_000 })) {
+    if (!(await checkRateLimit(`audit-site-html:${user.id}`, { max: 10, windowMs: 3_600_000 }))) {
       return NextResponse.json(
         { error: "Trop de requêtes en peu de temps. Réessaie dans quelques minutes.", code: "rate_limit" },
         { status: 429 }
@@ -182,12 +183,15 @@ ${compacte}`,
     }
     const clean = restaurerHtml(corrige, blocs);
 
-    await incrementMonthlyUsage(supabase, user.id, "audit_ia");
+    await incrementMonthlyUsage(createSupabaseAdminClient(), user.id, "audit_ia");
 
     return new NextResponse(clean, {
       headers: {
         "Content-Type": "text/html; charset=utf-8",
         "Content-Disposition": 'attachment; filename="landing-page-corrigee.html"',
+        // HTML fourni par l'utilisateur, servi depuis notre domaine : jamais exécuté ici.
+        "Content-Security-Policy": "sandbox",
+        "X-Content-Type-Options": "nosniff",
         "X-Corrections-Appliquees": String(appliquees),
         "X-Corrections-Proposees": String(modifications.length),
       },

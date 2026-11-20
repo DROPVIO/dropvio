@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerUserAndPlan } from "@/lib/supabase-server";
 import { checkRateLimit } from "@/lib/rate-limit";
-import { isUrlAllowed, normalizeUrl } from "@/lib/ssrf-guard";
+import { isUrlAllowed, normalizeUrl, fetchUrlExterne } from "@/lib/ssrf-guard";
 
 // L'audit lit la page entière (plus de troncature, voir lib/audit-config.ts) : le plafond laisse
 // passer les pages autour de 2 000 000 de caractères avec de la marge, et n'existe que pour
@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Connecte-toi pour utiliser cette fonctionnalité.", code: "auth_required" }, { status: 401 });
   }
 
-  if (!checkRateLimit(`audit-site-from-url:${user.id}`, { max: 10, windowMs: 60_000 })) {
+  if (!(await checkRateLimit(`audit-site-from-url:${user.id}`, { max: 10, windowMs: 60_000 }))) {
     return NextResponse.json(
       { error: "Trop de requêtes. Réessaie dans une minute.", code: "rate_limit" },
       { status: 429 }
@@ -41,7 +41,7 @@ export async function POST(request: NextRequest) {
 
   let res: Response;
   try {
-    res = await fetch(url, {
+    res = await fetchUrlExterne(url, {
       headers: { "User-Agent": "Mozilla/5.0" },
       signal: controller.signal,
     });

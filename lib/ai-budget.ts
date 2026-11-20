@@ -20,7 +20,9 @@ import {
   type UsageFeature,
 } from "@/lib/plan-limits";
 import { coutEuros, prixEuros, type ModeleIa } from "@/lib/ai-pricing";
+import { IMAGE_PRICE_EUR } from "@/lib/expert-pricing";
 import { apiError } from "@/lib/api-errors";
+import { createSupabaseAdminClient } from "@/lib/supabase-admin";
 
 export const MODELE_PAR_FONCTION: Record<UsageFeature, ModeleIa | null> = {
   site_builder: "claude-sonnet-5-5",
@@ -30,6 +32,9 @@ export const MODELE_PAR_FONCTION: Record<UsageFeature, ModeleIa | null> = {
   textes_ia: "claude-haiku-4-5",
   // Aucune IA (API AliExpress) : jamais de tokens.
   finder_alternatives: null,
+  // Images (Pro, Agency) : pas de tokens, et hors budget IA : elles ont leur propre budget
+  // (IMAGE_BUDGET_EUR_PAR_PLAN, getImagesUsedEuros ci-dessous).
+  images_ia: null,
 };
 
 // Fonctions ajoutées par la migration 043. Si elle n'est pas appliquée, leurs tokens sont
@@ -37,7 +42,20 @@ export const MODELE_PAR_FONCTION: Record<UsageFeature, ModeleIa | null> = {
 const FONCTIONS_MIGRATION_043: UsageFeature[] = ["inspiration_ia", "boutique_ia", "textes_ia"];
 const FONCTION_DE_REPLI: UsageFeature = "audit_ia";
 
-export const MESSAGE_BUDGET_DEPASSE = "Budget IA du mois atteint. Il sera remis à zéro le 1er du mois prochain.";
+export const MESSAGE_BUDGET_DEPASSE = "Ton budget IA du mois est épuisé. Il sera remis à zéro le 1er du mois prochain.";
+export const MESSAGE_BUDGET_INSUFFISANT = "Budget IA du mois insuffisant pour cette demande.";
+
+// En dessous d'un centime restant, le budget est considéré comme épuisé (message dédié).
+const SEUIL_EPUISE_EUROS = 0.01;
+
+export type DecisionBudget = { ok: boolean; restantEuros: number };
+
+/** Décision pure : l'appel estimé tient-il dans le budget du mois ? `engageEuros` : consommé par
+ *  la requête en cours mais pas encore enregistré. */
+export function decisionBudget(budgetEuros: number, utiliseEuros: number, engageEuros: number, estimeEuros: number): DecisionBudget {
+  const restantEuros = Math.max(0, budgetEuros - utiliseEuros - engageEuros);
+  return { ok: estimeEuros <= restantEuros, restantEuros };
+}
 
 export class BudgetIaDepasse extends Error {
   constructor(
@@ -48,13 +66,28 @@ export class BudgetIaDepasse extends Error {
     super(MESSAGE_BUDGET_DEPASSE);
     this.name = "BudgetIaDepasse";
   }
+
+  get restantEuros(): number {
+    return Math.max(0, this.budgetEuros - this.utiliseEuros);
+  }
 }
 
-/** Réponse HTTP 402 renvoyée quand le budget du mois ne couvre pas l'appel demandé. */
+/** Réponse HTTP 402 renvoyée quand le budget du mois ne couvre pas l'appel demandé : « épuisé »
+ *  s'il ne reste (presque) rien, sinon « insuffisant », avec le budget restant à afficher. */
 export function reponseBudgetDepasse(err: BudgetIaDepasse) {
-  return apiError("budget_ia_depasse", 402, MESSAGE_BUDGET_DEPASSE, {
-    budget: { utilise: arrondiCentime(err.utiliseEuros), max: err.budgetEuros },
+  const restant = arrondiCentime(err.restantEuros);
+  const epuise = err.restantEuros < SEUIL_EPUISE_EUROS;
+  return apiError(epuise ? "budget_ia_depasse" : "budget_ia_insuffisant", 402, epuise ? MESSAGE_BUDGET_DEPASSE : MESSAGE_BUDGET_INSUFFISANT, {
+    budget: { utilise: arrondiCentime(err.utiliseEuros), max: err.budgetEuros, restant },
+    values: { restant },
   });
+}
+
+/** Tokens de sortie qu'un montant en euros permet encore sur un modèle : indication affichée,
+ *  la sortie étant la partie la plus chère d'une génération (l'entrée en consomme aussi). */
+export function tokensSortieEquivalents(euros: number, modele: ModeleIa): number {
+  const prix = prixEuros(modele).sortie;
+  return prix > 0 ? Math.floor((Math.max(0, euros) * 1_000_000) / prix) : 0;
 }
 
 export function arrondiCentime(euros: number): number {
@@ -79,11 +112,35 @@ export async function getBudgetUsedEuros(supabase: SupabaseClient, userId: strin
   return Object.values(parFonction).reduce((total, euros) => total + euros, 0);
 }
 
-/** Coût IA consommé ce mois-ci, fonction par fonction (fonctions sans dépense absentes). */
+const FEATURE_IMAGES: UsageFeature = "images_ia";
+
+/** Coût en euros d'un nombre d'images (budget images, jamais budget IA). */
+export function coutImagesEuros(images: number): number {
+  return Math.max(0, images) * IMAGE_PRICE_EUR;
+}
+
+/** Budget images consommé ce mois-ci (plans Pro et Agency) : images comptées dans
+ *  usage_mensuel (feature images_ia) au prix IMAGE_PRICE_EUR. Jamais compté dans le budget IA. */
+export async function getImagesUsedEuros(supabase: SupabaseClient, userId: string): Promise<number> {
+  const { data, error } = await supabase
+    .from("usage_mensuel")
+    .select("feature, compteur")
+    .eq("user_id", userId)
+    .eq("feature", FEATURE_IMAGES)
+    .eq("mois", currentMonthKey());
+  if (error) throw new Error(error.message);
+  const images = ((data ?? []) as { feature: UsageFeature; compteur: number | null }[])
+    .filter((l) => l.feature === FEATURE_IMAGES)
+    .reduce((total, l) => total + (l.compteur ?? 0), 0);
+  return coutImagesEuros(images);
+}
+
+/** Coût IA consommé ce mois-ci, fonction par fonction (fonctions sans dépense absentes). Les
+ *  images n'y figurent pas : elles ont leur propre budget (getImagesUsedEuros). */
 export async function getBudgetParFonction(supabase: SupabaseClient, userId: string): Promise<Partial<Record<UsageFeature, number>>> {
   const { data, error } = await supabase
     .from("usage_mensuel")
-    .select("feature, tokens_entree, tokens_sortie")
+    .select("feature, compteur, tokens_entree, tokens_sortie")
     .eq("user_id", userId)
     .eq("mois", currentMonthKey());
   if (error) {
@@ -93,7 +150,9 @@ export async function getBudgetParFonction(supabase: SupabaseClient, userId: str
     return {};
   }
   const parFonction: Partial<Record<UsageFeature, number>> = {};
-  for (const ligne of (data ?? []) as { feature: UsageFeature; tokens_entree: number | null; tokens_sortie: number | null }[]) {
+  for (const ligne of (data ?? []) as { feature: UsageFeature; compteur: number | null; tokens_entree: number | null; tokens_sortie: number | null }[]) {
+    // Images : budget images séparé, jamais décomptées du budget IA.
+    if (ligne.feature === FEATURE_IMAGES) continue;
     const modele = MODELE_PAR_FONCTION[ligne.feature];
     if (!modele) continue;
     const euros = coutEuros(modele, ligne.tokens_entree ?? 0, ligne.tokens_sortie ?? 0);
@@ -112,9 +171,9 @@ export async function assertBudgetDisponible(
   dejaEngageEuros = 0
 ): Promise<void> {
   const budget = AI_BUDGET_EUR_PAR_PLAN[plan];
-  const utilise = (await getBudgetUsedEuros(supabase, userId)) + dejaEngageEuros;
-  if (utilise + coutEstimeEuros > budget) {
-    throw new BudgetIaDepasse(utilise, budget, coutEstimeEuros);
+  const dejaUtilise = await getBudgetUsedEuros(supabase, userId);
+  if (!decisionBudget(budget, dejaUtilise, dejaEngageEuros, coutEstimeEuros).ok) {
+    throw new BudgetIaDepasse(dejaUtilise + dejaEngageEuros, budget, coutEstimeEuros);
   }
 }
 
@@ -166,6 +225,9 @@ async function lireJournal(supabase: SupabaseClient, userId: string): Promise<{ 
     .from("usage_ia_journal")
     .select("cout_eur, created_at")
     .eq("user_id", userId)
+    // Images : hors budget IA, donc hors limites glissantes (lignes éventuellement journalisées
+    // avant la séparation des deux budgets).
+    .neq("fonction", FEATURE_IMAGES)
     .gte("created_at", depuis)
     .order("created_at", { ascending: true });
   if (error) {
@@ -243,20 +305,31 @@ function convertir(de: string, vers: ModeleIa, entree: number, sortie: number): 
   return [Math.ceil((entree * pDe.entree) / pVers.entree), Math.ceil((sortie * pDe.sortie) / pVers.sortie)];
 }
 
+type UsageAppel = {
+  input_tokens?: number | null;
+  output_tokens?: number | null;
+  cache_creation_input_tokens?: number | null;
+  cache_read_input_tokens?: number | null;
+};
+
 /** Suivi du budget pendant une requête qui fait un ou plusieurs appels IA d'une même fonction. */
 export class SuiviBudgetIa {
   private entree = 0;
   private sortie = 0;
+  readonly tokensReels = { entree: 0, sortie: 0, cacheEcriture: 0, cacheLecture: 0 };
   readonly modele: ModeleIa;
 
   /** `options.fenetres` : applique aussi les limites sur 24 heures et 7 jours (création de
-   *  site et audit). Toutes les fonctions sont de toute façon comptées dans ces limites. */
+   *  site et audit). Toutes les fonctions sont de toute façon comptées dans ces limites.
+   *  `options.ecriture` : client des écritures (service role par défaut ; injectable pour les tests).
+   *  `options.horsBudget` : génération déjà payée par une unité du plan Expert. Rien n'est
+   *  vérifié ni enregistré ici : les tokens réels vont dans expert_generations (tokensReels). */
   constructor(
     private readonly supabase: SupabaseClient,
     private readonly userId: string,
     private readonly plan: Plan,
     readonly fonction: UsageFeature,
-    private readonly options: { fenetres?: boolean } = {}
+    private readonly options: { fenetres?: boolean; horsBudget?: boolean; ecriture?: SupabaseClient } = {}
   ) {
     const modele = MODELE_PAR_FONCTION[fonction];
     if (!modele) throw new Error(`Aucun modèle IA associé à la fonction ${fonction}.`);
@@ -272,6 +345,7 @@ export class SuiviBudgetIa {
    *  atteinte (seulement avec options.fenetres), BudgetIaDepasse si l'appel ne tient pas dans
    *  le budget du mois. */
   async verifier(coutEstimeEuros: number): Promise<void> {
+    if (this.options.horsBudget) return;
     if (this.options.fenetres) await assertFenetresDisponibles(this.supabase, this.userId, this.plan, this.coutEngageEuros);
     await assertBudgetDisponible(this.supabase, this.userId, this.plan, coutEstimeEuros, this.coutEngageEuros);
   }
@@ -282,10 +356,30 @@ export class SuiviBudgetIa {
   }
 
   /** Consommation réelle d'un appel. `modeleReel` : le modèle qui a répondu (message.model). */
-  ajouter(modeleReel: string, usage: { input_tokens?: number | null; output_tokens?: number | null } | null | undefined): void {
-    const [entree, sortie] = convertir(modeleReel, this.modele, usage?.input_tokens ?? 0, usage?.output_tokens ?? 0);
+  ajouter(modeleReel: string, usage: UsageAppel | null | undefined): void {
+    const cacheEcriture = usage?.cache_creation_input_tokens ?? 0;
+    const cacheLecture = usage?.cache_read_input_tokens ?? 0;
+    this.tokensReels.entree += usage?.input_tokens ?? 0;
+    this.tokensReels.sortie += usage?.output_tokens ?? 0;
+    this.tokensReels.cacheEcriture += cacheEcriture;
+    this.tokensReels.cacheLecture += cacheLecture;
+    if (this.options.horsBudget) return;
+    // input_tokens exclut le cache : sans ces deux termes, le budget serait sous-estimé. Écriture
+    // à 1,25 fois l'entrée, lecture à 0,1 fois, ramenées en tokens d'entrée de même coût.
+    const entreeEquivalente = Math.ceil((usage?.input_tokens ?? 0) + cacheEcriture * 1.25 + cacheLecture * 0.1);
+    const [entree, sortie] = convertir(modeleReel, this.modele, entreeEquivalente, usage?.output_tokens ?? 0);
     this.entree += entree;
     this.sortie += sortie;
+  }
+
+  /** Génération en échec : le coût accumulé par cette requête est rendu, rien n'est enregistré
+   *  (budget du mois ni limites glissantes). Renvoie le coût abandonné, pour les logs. */
+  abandonner(): number {
+    const cout = this.coutEngageEuros;
+    this.entree = 0;
+    this.sortie = 0;
+    if (cout > 0) console.warn(`[ai-budget] ${this.fonction} : génération en échec, ${cout.toFixed(4)} € rendus au budget.`);
+    return cout;
   }
 
   /** Enregistre la consommation accumulée (un seul appel à logTokensUsage par requête : ses
@@ -298,20 +392,23 @@ export class SuiviBudgetIa {
     this.sortie = 0;
     if (entree === 0 && sortie === 0) return;
     try {
+      // Écritures par le service role, jamais par la session de l'utilisateur : il ne doit pas
+      // pouvoir modifier ses propres compteurs (migration 055 : plus d'écriture via RLS).
+      const ecriture = this.options.ecriture ?? createSupabaseAdminClient();
       // Journal horodaté des limites glissantes (migration 044). Indépendant de usage_mensuel :
       // l'un peut échouer sans l'autre.
-      const { error: journalErr } = await this.supabase
+      const { error: journalErr } = await ecriture
         .from("usage_ia_journal")
         .insert({ user_id: this.userId, fonction: this.fonction, cout_eur: Number(cout.toFixed(6)) });
       if (journalErr) console.warn("[ai-budget] Journal IA non écrit (migration 044 appliquée ?) :", journalErr.message);
 
-      const ok = await logTokensUsage(this.supabase, this.userId, this.fonction, entree, sortie);
+      const ok = await logTokensUsage(ecriture, this.userId, this.fonction, entree, sortie);
       if (ok || !FONCTIONS_MIGRATION_043.includes(this.fonction)) return;
       // Migration 043 absente : la fonction n'est pas encore acceptée par la contrainte.
       const repli = MODELE_PAR_FONCTION[FONCTION_DE_REPLI]!;
       const [e, s] = convertir(this.modele, repli, entree, sortie);
       console.warn(`[ai-budget] ${this.fonction} enregistré sous ${FONCTION_DE_REPLI} : applique la migration 043_usage_mensuel_fonctions_ia.sql.`);
-      await logTokensUsage(this.supabase, this.userId, FONCTION_DE_REPLI, e, s);
+      await logTokensUsage(ecriture, this.userId, FONCTION_DE_REPLI, e, s);
     } catch (err) {
       console.error("[ai-budget] Enregistrement des tokens échoué :", err);
     }

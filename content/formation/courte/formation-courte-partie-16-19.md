@@ -1,3 +1,6 @@
+---
+ordre: 16
+---
 # Formation Dropshipping — Version courte (suite 3)
 
 ## Partie 16 — Anatomie d'un échec type

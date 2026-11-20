@@ -1,0 +1,16 @@
+---
+ordre: 20
+---
+# Parte 20 — Caso práctico condensado: un año de tienda
+
+He aquí, de forma condensada, cómo estos principios se articulan en el tiempo en una tienda ficticia seguida durante doce meses; el objetivo no es describir un caso real concreto, sino mostrar el método en movimiento en lugar de tema por tema de forma aislada.
+
+Mes 1: lanzamiento prudente con un solo producto elegido según el método de la parte 2, proveedor comparado en cuanto a fiabilidad, presupuesto publicitario dividido en etapas. Mes 2: un proveedor anuncia un alargamiento del plazo; la tienda comunica de forma proactiva antes de que los clientes se preocupen e identifica un segundo proveedor de reserva. Meses 3-4: se añaden dos productos complementarios coherentes, se prueba una oferta en pack que mejora el margen por cliente sin coste de adquisición adicional. Mes 5: una rotura de stock en el proveedor principal se absorbe gracias al proveedor de reserva ya validado y a la reserva de tesorería ya constituida. Mes 6: la facturación se acerca a un umbral que justifica revisar el régimen fiscal con un contable, de forma anticipada en lugar de descubrirlo demasiado tarde.
+
+Meses 7-9: el presupuesto publicitario aumenta progresivamente con un seguimiento constante del coste de adquisición en relación con el margen; una erosión de la tasa de conversión en la ficha principal se detecta mediante una auditoría regular y se corrige. Mes 10: surge una disputa, y un seguimiento regular revela que forma parte de un ligero aumento de la tasa de reembolso en un producto concreto desde hace varias semanas; la causa, una descripción imprecisa, se corrige de inmediato. Meses 11-12: en lugar de acelerar sin control, el final del año consolida lo que funciona: documentación de las elecciones de productos acertadas, reserva de precaución revisada al alza, primeras reflexiones sobre una identidad de marca más marcada.
+
+Ninguna de estas situaciones es excepcional por sí sola. Lo que distingue a esta tienda de una tienda que habría cerrado en el año es que cada problema se anticipó o se trató rápidamente gracias a un seguimiento regular, en lugar de descubrirse tarde: la tesis central de esta formación, de principio a fin.
+
+# Parte 21 — Glosario esencial
+
+Margen neto: lo que queda tras deducir todos los costes reales, a diferencia del margen bruto, que a menudo solo deduce el coste del producto. Coste de adquisición de cliente (CAC): importe medio gastado en publicidad para conseguir un cliente que paga. Venta cruzada: propuesta de un producto complementario en el momento de la compra, que mejora el margen sin coste de adquisición adicional. Devolución: reenvío físico de un producto por parte del cliente. Reembolso: restitución del dinero, con o sin devolución física. Disputa (chargeback): impugnación del pago directamente ante el banco del cliente, juzgada por un tercero, la situación más grave de las tres. Micro-entreprise: régimen simplificado con cotizaciones calculadas sobre la facturación cobrada. IOSS: sistema europeo que simplifica el IVA de los envíos de bajo valor. Producto gancho: producto de bajo precio utilizado para atraer una primera compra, a menudo con un margen unitario reducido. Proveedor de reserva: segundo proveedor validado, no utilizado de forma activa, listo para tomar el relevo en caso de fallo del proveedor principal.

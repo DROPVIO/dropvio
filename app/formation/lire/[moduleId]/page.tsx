@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import { getLocale } from "next-intl/server";
 import { getServerUserAndPlan } from "@/lib/supabase-server";
@@ -10,6 +11,11 @@ import PagedReader from "./PagedReader";
 // client tant que la collection du module n'est pas possédée par l'utilisateur connecté — un
 // module inexistant donne 404, un module non possédé (ou visiteur anonyme) redirige vers
 // /formation sans jamais construire la prop contenuHtml.
+// Contenu payant : jamais indexé (robots.ts bloque aussi /formation/lire/).
+export const metadata: Metadata = {
+  robots: { index: false, follow: false, googleBot: { index: false, follow: false } },
+};
+
 export default async function LireModulePage({
   params,
 }: {
@@ -18,13 +24,13 @@ export default async function LireModulePage({
   const { moduleId } = await params;
   const rawLocale = await getLocale();
   const locale = isAppLocale(rawLocale) ? rawLocale : DEFAULT_LOCALE;
-  const module = getFormationModules(locale).find((m) => m.id === moduleId);
-  if (!module) notFound();
+  const moduleFormation = getFormationModules(locale).find((m) => m.id === moduleId);
+  if (!moduleFormation) notFound();
 
   const { user, formationOwned } = await getServerUserAndPlan();
-  if (!user || !formationOwned[module.collection]) {
+  if (!user || !formationOwned[moduleFormation.collection]) {
     redirect("/formation");
   }
 
-  return <PagedReader titre={module.titre} contenuHtml={module.contenuHtml} />;
+  return <PagedReader titre={moduleFormation.titre} contenuHtml={moduleFormation.contenuHtml} />;
 }

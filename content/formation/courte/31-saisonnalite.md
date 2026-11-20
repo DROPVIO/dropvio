@@ -1,4 +1,7 @@
-# Partie 31 — Anticiper la saisonnalité plutôt que la subir
+---
+ordre: 30
+---
+# Partie 30 — Anticiper la saisonnalité plutôt que la subir
 
 Certains produits se comportent de façon prévisible d'une année sur l'autre, à des périodes similaires — une vraie saisonnalité, distincte à la fois d'une tendance de fond durable et d'un pic ponctuel de mode évoqués dans la partie sur le choix du produit. Un produit fortement saisonnier peut être un excellent choix commercial, à condition d'anticiper correctement les périodes hautes et basses plutôt que de les découvrir à chaque cycle comme une surprise.
 
@@ -6,7 +9,7 @@ Un fournisseur confronté à une hausse soudaine de la demande à l'approche d'u
 
 Les périodes de forte saisonnalité génèrent aussi davantage de sollicitations de service client, en particulier sur les délais de livraison — préparer à l'avance des réponses adaptées à cette période précise évite d'improviser dans l'urgence au moment où le volume de messages est le plus élevé. À l'inverse, les périodes creuses ne doivent pas être vécues comme un temps mort, mais comme une fenêtre pour préparer la période suivante : rechercher de nouveaux produits, enrichir les fiches existantes, consolider la trésorerie avant la prochaine période de forte activité.
 
-# Partie 32 — Un troisième exemple chiffré : l'effet d'un client qui revient
+# Partie 31 — Un troisième exemple chiffré : l'effet d'un client qui revient
 
 Les parties précédentes ont chiffré l'effet de la vente croisée sur une même commande. Voici comment un second achat, quelques semaines plus tard, change le calcul global d'un même client acquis une seule fois.
 

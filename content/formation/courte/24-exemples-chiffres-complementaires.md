@@ -1,6 +1,9 @@
+---
+ordre: 24
+---
 # Partie 24 — Deux exemples de marge supplémentaires, pour ancrer la méthode
 
-L'annexe C a déjà déroulé un calcul complet sur un produit de niche. Voici deux exemples supplémentaires, plus courts, pour couvrir des profils de produits différents et t'aider à reproduire ce raisonnement quel que soit ton propre positionnement de prix.
+L'annexe C, en fin de formation, déroule un calcul complet sur un produit de niche. Voici deux exemples supplémentaires, plus courts, pour couvrir des profils de produits différents et t'aider à reproduire ce raisonnement quel que soit ton propre positionnement de prix.
 
 ## Le produit d'appel à faible prix
 

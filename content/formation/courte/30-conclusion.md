@@ -1,3 +1,6 @@
+---
+ordre: 36
+---
 # Conclusion — Ce qu'il faut retenir de cette formation
 
 Cette version courte a couvert, de façon condensée mais sans rien sacrifier d'essentiel, l'ensemble des sujets qui déterminent si une activité de dropshipping dure ou s'arrête dans l'année : le choix méthodique d'un produit, un calcul de marge complet avant chaque lancement, une fiche produit construite pour répondre aux questions du visiteur avant qu'il ne les pose, une vérification sérieuse de chaque fournisseur, une acquisition testée par paliers plutôt qu'engagée d'un coup, un service après-vente traité comme une priorité et non une contrainte, une gestion financière qui distingue rentabilité et trésorerie, un cadre légal et fiscal anticipé plutôt que régularisé dans l'urgence, et une croissance qui consolide avant d'accélérer.

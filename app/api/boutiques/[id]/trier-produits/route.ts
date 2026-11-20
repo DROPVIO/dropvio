@@ -128,7 +128,7 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
     return NextResponse.json({ error: "Connecte-toi pour trier tes produits.", code: "auth_required" }, { status: 401 });
   }
 
-  if (!checkRateLimit(`trier-produits:${user.id}`, { max: 10, windowMs: 3_600_000 })) {
+  if (!(await checkRateLimit(`trier-produits:${user.id}`, { max: 10, windowMs: 3_600_000 }))) {
     return NextResponse.json(
       { error: "Trop de requêtes en peu de temps. Réessaie dans quelques minutes.", code: "rate_limit" },
       { status: 429 }
