@@ -59,6 +59,8 @@ export const AGENCY_PRICE_EUR = 59;
 // l'utilisateur. produitsMax (Free) n'en est que le total, pour la pagination.
 export const CATALOGUE_FREE = { niches: 10, produitsParNiche: 40 } as const;
 
+// produitsBoutiqueMax est aussi appliqué par la base (trigger de la migration 059) : toute
+// modification de ces limites doit y être reportée.
 export const PLAN_LIMITS: Record<Plan, {
   produitsMax: number | null;
   produitsBoutiqueMax: number | null;

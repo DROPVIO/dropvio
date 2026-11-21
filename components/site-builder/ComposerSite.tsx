@@ -114,10 +114,10 @@ export default function ComposerSite({
   const aStyle = inspiration.apercus.length > 0 || fiche !== null;
 
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-1">
       <div className="rounded-3xl border border-[var(--border-strong)] bg-[var(--surface)] shadow-lg shadow-black/5 transition focus-within:border-violet-500/60 focus-within:ring-1 focus-within:ring-violet-500/30">
         {(piecesJointes.length > 0 || aStyle) && (
-          <div className="flex flex-wrap gap-2 px-3 pt-3">
+          <div className="flex flex-wrap gap-1.5 px-2.5 pt-2.5">
             {piecesJointes.map((p) => (
               <PieceJointeChip key={p.id} piece={p} libelleRetirer={t("retirer")} />
             ))}
@@ -186,17 +186,17 @@ export default function ComposerSite({
           rows={2}
           aria-label={tPrompt("label")}
           placeholder={t("placeholder")}
-          className="block w-full resize-none bg-transparent px-5 pt-4 pb-2 text-[15px] leading-relaxed text-[var(--text-primary)] placeholder-[var(--text-faint)] outline-none"
+          className="block w-full resize-none bg-transparent px-4 pt-3 pb-1 text-[15px] leading-relaxed text-[var(--text-primary)] placeholder-[var(--text-faint)] outline-none"
         />
 
-        <div className="flex items-center gap-2 px-3 pb-3">
+        <div className="flex items-center gap-1 px-2 pb-2">
           <div ref={menuRef} className="relative">
             <button
               type="button"
               onClick={() => setMenuOuvert((o) => !o)}
               aria-label={t("ajouter")}
               aria-expanded={menuOuvert}
-              className={`flex h-9 w-9 items-center justify-center rounded-full border text-xl leading-none transition ${
+              className={`flex h-8 w-8 items-center justify-center rounded-full border text-xl leading-none transition ${
                 menuOuvert
                   ? "border-violet-500/50 bg-violet-500/10 text-[var(--accent)] rotate-45"
                   : "border-[var(--border-strong)] text-[var(--text-muted)] hover:bg-[var(--surface-2)] hover:text-[var(--text-primary)]"
@@ -325,7 +325,7 @@ export default function ComposerSite({
             disabled={!peutEnvoyer}
             aria-label={t("envoyer")}
             title={t("envoyer")}
-            className="ml-auto flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-violet-600 to-blue-600 text-white shadow-md shadow-violet-900/30 transition hover:from-violet-500 hover:to-blue-500 disabled:cursor-not-allowed disabled:from-[var(--surface-3)] disabled:to-[var(--surface-3)] disabled:text-[var(--text-faint)] disabled:shadow-none sm:ml-0"
+            className="ml-auto flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-violet-600 to-blue-600 text-white shadow-md shadow-violet-900/30 transition hover:from-violet-500 hover:to-blue-500 disabled:cursor-not-allowed disabled:from-[var(--surface-3)] disabled:to-[var(--surface-3)] disabled:text-[var(--text-faint)] disabled:shadow-none sm:ml-0"
           >
             <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
               <path d="M12 19V5M5 12l7-7 7 7" />
@@ -337,7 +337,7 @@ export default function ComposerSite({
       {inspiration.erreurs.map((e) => (
         <p key={e} className="px-2 text-xs text-[var(--danger)]">{e}</p>
       ))}
-      <p className="px-2 text-[11px] text-[var(--text-faint)]">
+      <p className="px-2 text-[11px] leading-tight text-[var(--text-faint)]">
         {aide ?? t("raccourci")}
       </p>
     </div>
@@ -362,7 +362,7 @@ export function BoutonOutil({
       onClick={onClick}
       aria-pressed={actif}
       title={title}
-      className={`flex h-9 shrink-0 items-center gap-1.5 rounded-full border px-3 text-xs font-semibold transition ${
+      className={`flex h-8 shrink-0 items-center gap-1 rounded-full border px-2.5 text-xs font-semibold transition ${
         actif
           ? "border-violet-500 bg-violet-500/10 text-[var(--accent)]"
           : "border-[var(--border-strong)] text-[var(--text-muted)] hover:bg-[var(--surface-2)] hover:text-[var(--text-primary)]"

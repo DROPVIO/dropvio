@@ -41,6 +41,8 @@ function buildChartData(createdAts: string[], intlTag: string): ChartPoint[] {
     const label = dCur.toLocaleDateString(intlTag, { day: "numeric", month: "short" });
     return {
       date: label,
+      t: dCur.getTime(),
+      previousDate: dPrev.toLocaleDateString(intlTag, { day: "numeric", month: "short" }),
       current: counts[kCur] || 0,
       previous: counts[kPrev] || 0,
     };

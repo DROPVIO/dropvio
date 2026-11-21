@@ -19,6 +19,7 @@ import {
 import { isAppLocale, toIntlTag } from "@/lib/locale";
 import { HEURE_MS, JOUR_MS, debutTranche, libelleTranche, pasPourPlage, trancheSuivante, tranches, type Pas } from "@/lib/temps-graphique";
 import { useIsLightTheme } from "@/components/dashboard/useIsLightTheme";
+import { EnTeteTendance, LegendeTendance, LigneTooltip, VariationCourte, couleursTendance, formatPlage } from "@/components/dashboard/Tendance";
 
 // Tableau des ventes Shopify du dashboard (données : /api/dashboard/ventes). Chiffres clés de
 // la période et comparaison avec la période précédente de même durée, ventes par produit,
@@ -46,7 +47,9 @@ const MARGE_GAUCHE = 0;
 const LARGEUR_AXE_Y = 56;
 const ZOOM_MIN_MS = 2 * HEURE_MS;
 
-type Point = { t: number; total: number; commandes: number } & Record<string, number>;
+// precedent : CA de la période précédente, décalé de la durée affichée pour se superposer
+// tranche par tranche à la période actuelle (courbe en pointillés).
+type Point = { t: number; total: number; commandes: number; precedent: number } & Record<string, number>;
 
 function variation(actuel: number, precedent: number): number | null {
   if (precedent === 0) return actuel === 0 ? 0 : null;
@@ -143,7 +146,7 @@ export default function VentesDashboard() {
     const cleDe = new Map(principaux.map((nom, i) => [nom, `p${i}`]));
 
     const points: Point[] = tranches(debut, fin, pas).map((tt) => {
-      const p = { t: tt, total: 0, commandes: 0 } as Point;
+      const p = { t: tt, total: 0, commandes: 0, precedent: 0 } as Point;
       for (const s of series) p[s.cle] = 0;
       return p;
     });
@@ -158,6 +161,10 @@ export default function VentesDashboard() {
         if (cle in points[i]) points[i][cle] += l.montant;
       }
     }
+    for (const v of avant) {
+      const i = indexDe.get(debutTranche(v.t + duree, pas));
+      if (i !== undefined) points[i].precedent += v.total;
+    }
 
     const somme = (vs: Vente[]) => vs.reduce((s, v) => s + v.total, 0);
     const unites = (vs: Vente[]) => vs.reduce((s, v) => s + v.lignes.reduce((a, l) => a + l.quantite, 0), 0);
@@ -167,6 +174,7 @@ export default function VentesDashboard() {
     const uAvant = unites(avant);
     return {
       points,
+      aPrecedent: avant.length > 0,
       series,
       barres: classement.slice(0, PRODUITS_MAX).map(([nom, v], i) => ({ nom, ...v, couleur: COULEURS[i] })),
       kpi: {
@@ -251,8 +259,9 @@ export default function VentesDashboard() {
     onMouseLeave: () => setSelection(null),
   };
 
-  const grille = isLight ? "rgba(0,0,0,0.07)" : "rgba(255,255,255,0.06)";
-  const axe = isLight ? "#71717a" : "#71717a";
+  const couleurs = couleursTendance(isLight);
+  const grille = couleurs.grille;
+  const axe = couleurs.axe;
   const fondTooltip = "var(--surface)";
   const libelleAxe = (v: number) => libelleTranche(v, pas, intlTag);
 
@@ -305,7 +314,8 @@ export default function VentesDashboard() {
     );
   }
 
-  const { kpi, barres, series, points } = calcul;
+  const { kpi, barres, series, points, aPrecedent } = calcul;
+  const duree = fin - debut;
   const maxBarreCa = Math.max(1, ...barres.map((b) => b.montant));
   const maxBarreUnites = Math.max(1, ...barres.map((b) => b.quantite));
 
@@ -342,6 +352,30 @@ export default function VentesDashboard() {
     />
   );
 
+  // Tooltip du graphique total : jour affiché vs même position dans la période précédente.
+  const tooltipTotal = (
+    <Tooltip
+      cursor={{ stroke: couleurs.curseur }}
+      content={({ active, payload }) => {
+        if (!active || !payload?.length) return null;
+        const p = payload[0].payload as Point;
+        const date = (tt: number) => (pas === "semaine" ? t("semaineDu", { date: libelleTranche(tt, pas, intlTag, true) }) : libelleTranche(tt, pas, intlTag, true));
+        return (
+          <div className="rounded-xl border border-[var(--border)] px-3 py-2.5 shadow-xl text-xs min-w-[220px] flex flex-col gap-1.5" style={{ background: fondTooltip }}>
+            <LigneTooltip libelle={date(p.t)} valeur={argent.precis.format(p.total)} couleur={couleurs.actuel} />
+            {aPrecedent ? (
+              <LigneTooltip libelle={date(p.t - duree)} valeur={argent.precis.format(p.precedent)} couleur={couleurs.actuel} opacite={couleurs.precedentOpacite} pointilles />
+            ) : null}
+            <p className="flex justify-between gap-4 border-t border-[var(--border)] pt-1.5 text-[var(--text-faint)]">
+              <span>{t("commandes")}</span>
+              <span className="tabular-nums">{entier.format(p.commandes)}</span>
+            </p>
+          </div>
+        );
+      }}
+    />
+  );
+
   const xAxe = (
     <XAxis
       dataKey="t"
@@ -352,12 +386,14 @@ export default function VentesDashboard() {
       tick={{ fill: axe, fontSize: 10 }}
       axisLine={false}
       tickLine={false}
-      minTickGap={28}
+      minTickGap={48}
     />
   );
   const yAxe = (
     <YAxis
       tickFormatter={(v: number) => argent.compact.format(v)}
+      tickCount={3}
+      domain={[0, "auto"]}
       tick={{ fill: axe, fontSize: 10 }}
       axisLine={false}
       tickLine={false}
@@ -407,26 +443,40 @@ export default function VentesDashboard() {
           </p>
         </div>
         <div className="grid gap-4 lg:grid-cols-2">
-          <div>
-            <p className="text-xs text-[var(--text-muted)] mb-2">{t("total")}</p>
+          <div className="flex flex-col gap-3">
+            <EnTeteTendance
+              titre={t("total")}
+              aide={t("plage", { debut: libelleTranche(debut, "jour", intlTag, true), fin: libelleTranche(fin, "jour", intlTag, true) })}
+              valeur={argent.f.format(kpi.ca)}
+              variation={<VariationCourte valeur={kpi.caVar} intlTag={intlTag} nouveau={t("nouveau")} />}
+            />
             <div ref={zoneTotal} className="select-none cursor-crosshair [&_.recharts-wrapper:focus:not(:focus-visible)]:outline-none [&_.recharts-surface:focus:not(:focus-visible)]:outline-none" style={{ touchAction: "pan-y" }}>
-              <ResponsiveContainer width="100%" height={260}>
+              <ResponsiveContainer width="100%" height={220}>
                 <AreaChart data={points} margin={{ top: 6, right: 8, left: MARGE_GAUCHE, bottom: 0 }} {...evenementsZoom}>
                   <defs>
                     <linearGradient id="dv-ventes-total" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#22d3ee" stopOpacity={0.35} />
-                      <stop offset="100%" stopColor="#22d3ee" stopOpacity={0} />
+                      <stop offset="0%" stopColor={couleurs.actuel} stopOpacity={0.16} />
+                      <stop offset="100%" stopColor={couleurs.actuel} stopOpacity={0} />
                     </linearGradient>
                   </defs>
                   <CartesianGrid stroke={grille} vertical={false} />
                   {xAxe}
                   {yAxe}
-                  {tooltip(false)}
-                  <Area type="monotone" dataKey="total" stroke="#22d3ee" strokeWidth={2} fill="url(#dv-ventes-total)" isAnimationActive={false} activeDot={{ r: 3 }} />
+                  {tooltipTotal}
+                  {aPrecedent ? (
+                    <Area type="monotone" dataKey="precedent" stroke={couleurs.actuel} strokeOpacity={couleurs.precedentOpacite} strokeWidth={2} strokeDasharray="0.5 5" strokeLinecap="round" fill="none" isAnimationActive={false} activeDot={false} />
+                  ) : null}
+                  <Area type="monotone" dataKey="total" stroke={couleurs.actuel} strokeWidth={2.5} fill="url(#dv-ventes-total)" isAnimationActive={false} activeDot={{ r: 4, strokeWidth: 2, stroke: isLight ? "#ffffff" : "#2e2e3b" }} />
                   {zoneSelection}
                 </AreaChart>
               </ResponsiveContainer>
             </div>
+            <LegendeTendance
+              actuel={formatPlage(debut, fin, intlTag)}
+              precedent={aPrecedent ? formatPlage(debut - duree, debut, intlTag) : undefined}
+              couleur={couleurs.actuel}
+              opacitePrecedent={couleurs.precedentOpacite}
+            />
           </div>
           <div>
             <div className="mb-2 flex flex-wrap items-center gap-x-3 gap-y-1">
@@ -469,7 +519,7 @@ export default function VentesDashboard() {
                 startIndex={brushDebut}
                 endIndex={brushFin}
                 stroke="#7c3aed"
-                fill={isLight ? "#ffffff" : "#13131f"}
+                fill={isLight ? "#ffffff" : "#2e2e3b"}
                 travellerWidth={8}
                 tickFormatter={(v: number) => libelleTranche(v, "jour", intlTag)}
                 onChange={(r: { startIndex?: number; endIndex?: number }) => {

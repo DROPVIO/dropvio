@@ -11,6 +11,7 @@ import { applyTheme, getStoredTheme, type Theme } from "@/lib/theme";
 import { setLocaleCookie, isAppLocale, toIntlTag, type AppLocale } from "@/lib/locale";
 import { useApiErrorMessage } from "@/lib/use-api-error";
 import { PRIX_PLAN_EUR, formatEuros } from "@/lib/prix";
+import { AI_BUDGET_PART_JOUR, AI_BUDGET_PART_SEMAINE } from "@/lib/plan-limits";
 
 const SUPPORT_EMAIL = "support@dropvio.com";
 const LEGAL_EMAIL = "legal@dropvio.com";
@@ -540,7 +541,7 @@ export default function ParametresModal({
                     </div>
                   );
                 })}
-                <p className="text-[11px] text-[var(--text-faint)]">{t("plan.limitesAide")}</p>
+                <p className="text-[11px] text-[var(--text-faint)]">{t("plan.limitesAide", { jour: Math.round(AI_BUDGET_PART_JOUR * 100), semaine: Math.round(AI_BUDGET_PART_SEMAINE * 100) })}</p>
               </div>
             ) : null}
           </div>

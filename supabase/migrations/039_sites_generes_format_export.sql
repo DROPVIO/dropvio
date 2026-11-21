@@ -1,0 +1,23 @@
+-- 039_sites_generes_format_export.sql
+-- Format du fichier remis à l'utilisateur pour un site généré : 'html' (page standalone) ou
+-- 'liquid' (section Shopify).
+--
+-- Ce format ne décrit QUE l'export. La génération reste inchangée : Claude produit toujours
+-- du HTML standalone, et c'est lui seul qui est stocké dans html_content. La conversion vers
+-- Liquid est faite à la demande, au téléchargement ou au push Shopify, par
+-- lib/html-to-liquid.ts — déjà partagé entre le client (app/site-builder, app/mes-sites) et
+-- le serveur (app/api/sites-generes/[id]/shopify-push). Changer de format après création est
+-- donc instantané, réversible, et ne réécrit jamais le site sauvegardé.
+--
+-- Défaut 'html' : c'est le comportement actuel, donc tous les sites existants gardent
+-- exactement l'export qu'ils avaient avant cette migration.
+--
+-- Pas de contrainte check sur les valeurs : la validation se fait côté application
+-- (estFormatExport, lib/format-export.ts), et un check devrait être reconstruit à chaque
+-- nouveau format — c'est précisément ce qu'a coûté l'ajout de 'finder_alternatives' au check
+-- de usage_mensuel (voir 017_finder_alternatives_usage.sql). À arbitrer si un format tiers
+-- apparaît.
+--
+-- Idempotente (add column if not exists), non destructive.
+alter table sites_generes
+  add column if not exists format_export text not null default 'html';

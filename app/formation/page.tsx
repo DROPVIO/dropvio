@@ -4,12 +4,10 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
-import Sidebar from "@/components/Sidebar";
-import OnboardingProvider from "@/components/onboarding/OnboardingProvider";
-import OnboardingTour from "@/components/onboarding/OnboardingTour";
 import { useApiErrorMessage } from "@/lib/use-api-error";
 
 import { FORMATION_PRIX, type FormationOffre } from "@/lib/formation";
+import { CadreApp } from "@/components/AppShell";
 
 type FormationCollection = "courte" | "longue";
 
@@ -63,7 +61,6 @@ export default function FormationPage() {
   // encore su" de "confirmé déconnecté", pour ne jamais flasher la mauvaise mise en page.
   const [authChecked, setAuthChecked] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const isLight = useIsLightTheme();
 
   useEffect(() => {
@@ -233,7 +230,7 @@ export default function FormationPage() {
                         >
                           {buying === collection
                             ? t("redirecting")
-                            : t("buy", { prix: formatPrix(FORMATION_PRIX[collection]) })}
+                            : t("buy")}
                         </button>
                       </div>
                     );
@@ -265,7 +262,7 @@ export default function FormationPage() {
                     >
                       {buying === "bundle"
                         ? t("redirecting")
-                        : t("buyBundle", { prix: formatPrix(FORMATION_PRIX.bundle) })}
+                        : t("buyBundle")}
                     </button>
                   </div>
                 )}
@@ -330,19 +327,5 @@ export default function FormationPage() {
     return content;
   }
 
-  return (
-    <OnboardingProvider>
-      <div className="flex min-h-screen">
-        <Sidebar collapsed={sidebarCollapsed} onCollapse={() => setSidebarCollapsed((c) => !c)} />
-        <main
-          className={`flex-1 min-w-0 transition-[margin-left] duration-200 ease-in-out ${
-            sidebarCollapsed ? "ml-16" : "ml-[260px]"
-          }`}
-        >
-          {content}
-        </main>
-      </div>
-      <OnboardingTour />
-    </OnboardingProvider>
-  );
+  return <CadreApp>{content}</CadreApp>;
 }

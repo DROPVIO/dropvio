@@ -16,7 +16,7 @@ The landing page auditor automatically scores the page out of a hundred points a
 
 ## When building the store itself
 
-The site builder generates a product page or a multi-product store from styles and color palettes, with a mobile preview before publishing, as recommended in Part 4. The result can be exported to Shopify; with a connected Shopify store, products are sent there and kept up to date, and orders and tracking numbers stay in sync. Other tools are planned but not yet available — a Chrome extension for importing from AliExpress, Alibaba as a second product source, AI image generation and a catalog of bulky products: until they're released, don't build your method around them.
+The site builder generates a product page or a multi-product store from styles and color palettes, with a mobile preview before publishing, as recommended in Part 4. The result can be exported to Shopify; with a connected Shopify store, products are sent there and kept up to date, and orders and tracking numbers stay in sync. The AI Studio lets you create your visuals and find them in your media library (image generation is available on paid plans), and the Catalog lets you send products to a store or to the AI Studio. Other tools are planned but not yet available — a Chrome extension for importing from AliExpress and Alibaba as a second product source: until they're released, don't build your method around them.
 
 ## Once the business is running, to track after-sales incidents
 

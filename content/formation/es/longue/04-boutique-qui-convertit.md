@@ -1,0 +1,33 @@
+# Parte 4 — Construir una tienda que convierte
+
+## El tráfico no sirve de nada en una tienda que no convierte
+
+Muchos vendedores principiantes concentran toda su energía en la adquisición de tráfico —publicidad, redes sociales, influencers— descuidando por completo lo que ocurre una vez que el visitante llega a la tienda. Es un poco como llenar un cubo agujereado: cuanta más agua echas, más pierdes, y el problema nunca se resuelve echando más. Una tienda que convierte al 1 % en lugar de al 2 % te hace pagar el doble por cada cliente adquirido, con un tráfico estrictamente idéntico. Mejorar la conversión suele ser la palanca menos costosa y más descuidada de todo el dropshipping.
+
+## Lo que los visitantes juzgan en unos segundos
+
+La investigación sobre comportamiento de compra en línea muestra de forma constante que los visitantes se forman una primera impresión de confianza en unos pocos segundos, antes incluso de leer el menor texto. Esta impresión se construye a partir de señales visuales sencillas: una maquetación coherente y no ensamblada al azar, fotos de calidad en lugar de imágenes comprimidas o mal recortadas, una tipografía legible y la ausencia de esos detalles que delatan una tienda montada deprisa y corriendo: faltas de ortografía, elementos que se solapan en el móvil, incoherencia entre los colores de la marca y los del sitio.
+
+Una parte muy importante del tráfico llega hoy desde un teléfono y no desde un ordenador. Una tienda pensada primero para la pantalla del ordenador y "adaptada" al móvil en el último momento pierde sistemáticamente ventas con esta mayoría de visitantes: comprobar la experiencia móvil no es una opción secundaria, es el formato que la mayoría de tus visitantes va a usar realmente. Acostúmbrate a previsualizar cada página en formato teléfono antes de publicarla —el constructor de sitios de Dropvio muestra esta vista previa directamente— en lugar de descubrir un botón cortado o un texto ilegible cuando el tráfico de pago ya está en marcha.
+
+## Las señales de confianza que sustituyen a una reputación que todavía no se tiene
+
+Una marca consolidada desde hace años goza de una reputación que tranquiliza automáticamente. Una tienda nueva no tiene ese capital y debe reconstruirlo por otros medios: opiniones de clientes visibles, una política de devoluciones y de envío claramente mostrada en lugar de escondida en una página perdida, datos de contacto reales y una coherencia general que transmita la sensación de una empresa seria y no de una página montada en una tarde.
+
+La claridad sobre los plazos de entrega merece una atención especial, ya que vimos en la primera parte que es uno de los puntos de fricción más citados por los clientes del dropshipping. Anunciar un plazo realista, aunque sea de dos semanas en lugar de dos días, siempre es mejor que prometer un plazo que no podrás cumplir: un cliente informado de antemano de un plazo más largo tiene paciencia, un cliente sorprendido por un retraso no anunciado se siente engañado, y es esta diferencia de percepción la que desencadena la mayoría de las opiniones negativas y de las solicitudes de reembolso.
+
+## Los productos complementarios: la palanca más infrautilizada
+
+Una vez que un visitante ha decidido comprar, el coste de venderle un segundo artículo es casi nulo en comparación con el coste de adquisición inicial del cliente. Es el principio de los productos complementarios —también llamado venta cruzada— y es una de las palancas más rentables del comercio en línea, precisamente porque no añade ningún coste publicitario adicional.
+
+La lógica funciona mejor cuando los productos complementarios tienen un vínculo de uso evidente con el producto principal: un accesorio que se usa con el artículo que ya está en el carrito, una variante que completa la experiencia, un artículo que responde a la misma necesidad desde otro ángulo. Proponer productos sin vínculo lógico entre ellos no funciona: el cliente no ve el valor añadido y percibe la sugerencia como un intento de venta forzada y no como un servicio.
+
+Construir una tienda multiproducto coherente en torno a una temática clara, en lugar de una colección de productos dispares reunidos únicamente porque cada uno era rentable por separado, sirve exactamente a este objetivo: cuanto más vínculo lógico tienen entre sí los productos de una misma tienda, más natural resulta proponer un producto complementario en el momento de la compra y más aumenta el ticket medio sin esfuerzo adicional de adquisición. Es la diferencia entre una tienda generalista que vende un poco de todo sin hilo conductor y una tienda construida como una verdadera oferta de nicho en la que cada producto refuerza la pertinencia de los demás. El constructor de sitios de Dropvio permite montar tanto una página de producto único como una tienda multiproducto, a partir de estilos y paletas de colores, y después exportar el resultado a Shopify; una vez conectada tu tienda Shopify, los productos se envían y se actualizan allí, y los pedidos y números de seguimiento se mantienen sincronizados.
+
+## El papel de una auditoría antes de poner presupuesto publicitario detrás
+
+Antes de invertir un presupuesto publicitario en tráfico, es más rentable hacer auditar primero tu página de venta según los criterios que marcan realmente la diferencia en la conversión: claridad de la oferta, coherencia visual, señales de confianza, experiencia móvil, presencia y claridad de la información sobre envíos y devoluciones. Es exactamente lo que hace el auditor IA de páginas de destino de Dropvio: puntúa la página sobre cien puntos repartidos en nueve criterios —jerarquía visual, espacio en blanco, tipografía, imagen del producto, botón de llamada a la acción, prueba social, calidad del texto, urgencia y presentación del precio, y versión móvil—, detallando con precisión qué elementos hay que corregir antes de gastar un solo euro en adquisición. Corregir estos puntos antes de lanzar una campaña lleva unos minutos; corregirlos después de haber quemado ya un presupuesto publicitario en una página que convertía mal equivale a haber pagado por aprender una lección que una auditoría previa te habría dado mucho antes.
+
+## El diseño nunca sustituye la claridad de la oferta
+
+Un último punto merece decirse con claridad porque a menudo se entiende mal: una tienda preciosa con una oferta confusa convierte peor que una tienda sencilla con una oferta clarísima. El visitante debe entender en unos segundos qué vendes, a qué precio y por qué debería confiar en ti. Todo el trabajo estético refuerza esta claridad, nunca la sustituye. Si un visitante tiene que pensar para entender tu oferta, se va antes de haberlo pensado.

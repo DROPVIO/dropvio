@@ -1,20 +1,22 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { slugify } from "@/lib/slugify";
 import ProduitsSuggeres from "@/components/ProduitsSuggeres";
-import { NICHES } from "@/lib/niches";
 import { getBoutiquePublicUrl } from "@/lib/boutique-subdomains";
 import PaletteEditor, { type Palette } from "@/app/components/PaletteEditor";
 import { writeBoutiqueDraft, type ProduitBoutiqueDraft } from "@/lib/site-builder-handoff";
-import { PLAN_LIMITS } from "@/lib/plan-limits";
-import BoutiqueReglages from "@/components/site-builder/BoutiqueReglages";
+import Image from "next/image";
+import MediathequeModal from "@/components/studio/MediathequeModal";
+import { PLAN_LIMITS, type Plan } from "@/lib/plan-limits";
+import BoutiqueReglages, { BoutiqueSuppression } from "@/components/site-builder/BoutiqueReglages";
 import BoutiqueShopifyPush from "@/components/site-builder/BoutiqueShopifyPush";
 import TriCollectionsIA from "@/components/site-builder/TriCollectionsIA";
 import ActionProduitsIA from "@/components/site-builder/ActionProduitsIA";
+import GenerationImagesBoutique from "@/components/site-builder/GenerationImagesBoutique";
 import { AlerteLimiteProduits, BandeauDepassementProduits, CompteurProduits, limiteProduitsAtteinte } from "@/components/site-builder/LimiteProduitsBoutique";
 import { useApiErrorMessage } from "@/lib/use-api-error";
 import type { AppLocale } from "@/lib/locale";
@@ -38,6 +40,8 @@ type BoutiqueCategory = {
   position: number;
 };
 
+type CibleMedia = { mode: "principale" } | { mode: "galerie" } | { mode: "produit"; produit: BoutiqueProduct };
+
 type BoutiqueProduct = {
   id: string;
   nom: string;
@@ -50,12 +54,17 @@ type BoutiqueProduct = {
   // prix_avant_ajustement : prix d'avant le dernier ajustement IA (route ajuster-prix).
   meta?: { prix_avant_ajustement?: number } & Record<string, unknown>;
   boutique_categories?: { nom: string; slug: string } | null;
+  // Produit du catalogue d'origine (null : produit ajouté à la main).
+  source_produit_id?: string | null;
   position: number;
   created_at: string;
   updated_at: string;
 };
 
-const DEFAULT_PAGE_SIZE = 20;
+// Produits par page de la liste. Le « + » d'ajout occupe la place qui suit le dernier produit :
+// quand la dernière page atteint cette limite, la liste est pleine et le « + » passe sur la
+// page suivante.
+const PRODUITS_PAR_PAGE = 20;
 // Taille de page du chargement complet (loadAllProduits) — sans rapport avec la liste affichée.
 const CHARGEMENT_COMPLET_PAGE_SIZE = 100;
 
@@ -85,7 +94,6 @@ export default function BoutiqueBuilderDetailPage() {
   const router = useRouter();
   const apiErrorMessage = useApiErrorMessage();
   const t = useTranslations("siteBuilder.boutique.gestion");
-  const tNiches = useTranslations("niches");
   const locale = useLocale() as AppLocale;
   const [boutique, setBoutique] = useState<Boutique | null>(null);
   // Compteurs non filtrés renvoyés par GET /api/boutiques/[id] (réglages, limite du plan).
@@ -139,6 +147,9 @@ export default function BoutiqueBuilderDetailPage() {
   const [reformulatingNom, setReformulatingNom] = useState(false);
   const [generatingDescription, setGeneratingDescription] = useState(false);
   const [productImageUrl, setProductImageUrl] = useState("");
+  // Images suivantes de image_urls : à conserver quand le formulaire enregistre le produit.
+  const [productGalerie, setProductGalerie] = useState<string[]>([]);
+  const [cibleMedia, setCibleMedia] = useState<CibleMedia | null>(null);
   const [productPrixVente, setProductPrixVente] = useState("");
   const [productPrixOriginal, setProductPrixOriginal] = useState("");
   const [productCategoryId, setProductCategoryId] = useState<string>("");
@@ -150,7 +161,34 @@ export default function BoutiqueBuilderDetailPage() {
   const [suggestionsRefreshKey, setSuggestionsRefreshKey] = useState(0);
 
   const [reorderLoading, setReorderLoading] = useState(false);
-  const [savingNiche, setSavingNiche] = useState(false);
+
+  // Menu du « + » de la liste produits : ajouter un produit (formulaire de droite) ou une
+  // boutique (formulaire de création de /site-builder/boutique).
+  const [menuAjoutOuvert, setMenuAjoutOuvert] = useState(false);
+  const menuAjoutRef = useRef<HTMLDivElement>(null);
+  const formulaireRef = useRef<HTMLElement>(null);
+  const nomProduitRef = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    if (!menuAjoutOuvert) return;
+    function fermer(event: MouseEvent | KeyboardEvent) {
+      if (event instanceof KeyboardEvent ? event.key === "Escape" : !menuAjoutRef.current?.contains(event.target as Node)) {
+        setMenuAjoutOuvert(false);
+      }
+    }
+    document.addEventListener("mousedown", fermer);
+    document.addEventListener("keydown", fermer);
+    return () => {
+      document.removeEventListener("mousedown", fermer);
+      document.removeEventListener("keydown", fermer);
+    };
+  }, [menuAjoutOuvert]);
+
+  function ouvrirAjoutProduit() {
+    setMenuAjoutOuvert(false);
+    resetProductForm();
+    formulaireRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    requestAnimationFrame(() => nomProduitRef.current?.focus({ preventScroll: true }));
+  }
 
   const [mentionsLegales, setMentionsLegales] = useState("");
   const [savingMentions, setSavingMentions] = useState(false);
@@ -222,14 +260,14 @@ export default function BoutiqueBuilderDetailPage() {
   // Restriction plan free — export HTML boutique et publication Shopify réservés à
   // Pro/Agency (voir diagnostic "restriction export Site Builder", même règle que
   // app/site-builder/page.tsx). plan démarre à null tant que /api/plan n'a pas répondu.
-  const [plan, setPlan] = useState<"free" | "pro" | "agency" | null>(null);
+  const [plan, setPlan] = useState<Plan | null>(null);
   useEffect(() => {
     fetch("/api/plan")
       .then((res) => res.json())
       .then((json) => setPlan(json.plan ?? "free"))
       .catch(() => setPlan("free"));
   }, []);
-  const canExport = plan === "pro" || plan === "agency";
+  const canExport = plan === "pro" || plan === "agency" || plan === "expert";
   // plan vaut null tant que /api/plan n'a pas répondu (succès ou erreur, l'erreur donnant
   // "free") — « Créer mon site » attend cette réponse pour ne jamais transmettre au builder
   // la limite Free par défaut à un compte Pro/Agency.
@@ -331,32 +369,6 @@ export default function BoutiqueBuilderDetailPage() {
     }
   }
 
-  async function handleSetNiche(niche: string) {
-    if (!boutique) return;
-    const nextSettings = { ...(boutique.settings ?? {}) };
-    if (niche) nextSettings.niche = niche;
-    else delete nextSettings.niche;
-    setSavingNiche(true);
-    setGlobalError(null);
-    try {
-      const response = await fetch(`/api/boutiques/${params?.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ settings: nextSettings }),
-      });
-      const json = await response.json();
-      if (!response.ok) {
-        setGlobalError(apiErrorMessage(json, t("erreurs.niche")));
-        return;
-      }
-      setBoutique({ ...boutique, settings: nextSettings });
-    } catch {
-      setGlobalError(apiErrorMessage({ code: "network" }));
-    } finally {
-      setSavingNiche(false);
-    }
-  }
-
   async function fetchCategories() {
     setCategoriesLoading(true);
     setCategoriesError(null);
@@ -383,7 +395,7 @@ export default function BoutiqueBuilderDetailPage() {
     try {
       const paramsList = new URLSearchParams();
       paramsList.set("page", String(page));
-      paramsList.set("limit", String(DEFAULT_PAGE_SIZE));
+      paramsList.set("limit", String(PRODUITS_PAR_PAGE));
       if (productSearch.trim()) paramsList.set("search", productSearch.trim());
       if (productCategoryFilter) paramsList.set("categoryId", productCategoryFilter);
       const response = await fetch(`/api/boutiques/${params?.id}/produits?${paramsList.toString()}`);
@@ -613,6 +625,7 @@ export default function BoutiqueBuilderDetailPage() {
     setProductSlug("");
     setProductDescription("");
     setProductImageUrl("");
+    setProductGalerie([]);
     setProductPrixVente("");
     setProductPrixOriginal("");
     setProductCategoryId("");
@@ -627,11 +640,52 @@ export default function BoutiqueBuilderDetailPage() {
     setProductSlug(product.slug);
     setProductDescription(product.description ?? "");
     setProductImageUrl(product.image_urls?.[0] ?? "");
+    setProductGalerie(product.image_urls?.slice(1) ?? []);
     setProductPrixVente(product.prix_vente.toString());
     setProductPrixOriginal(product.prix_original?.toString() ?? "");
     setProductCategoryId(product.category_id ?? "");
     setProductFormError(null);
     setProductFormSuccess(null);
+  }
+
+  // Le formulaire ne fait que préparer l'image, enregistrée avec le produit. Depuis la liste,
+  // le changement est immédiat : il ne remplace que l'image principale, pas la galerie.
+  async function choisirMedia(url: string) {
+    const cible = cibleMedia;
+    setCibleMedia(null);
+    if (!cible) return;
+
+    if (cible.mode === "principale") {
+      setProductImageUrl(url);
+      setProductGalerie((galerie) => galerie.filter((image) => image !== url));
+      return;
+    }
+    if (cible.mode === "galerie") {
+      if (!productImageUrl.trim()) setProductImageUrl(url);
+      else if (url !== productImageUrl.trim()) setProductGalerie((galerie) => (galerie.includes(url) ? galerie : [...galerie, url]));
+      return;
+    }
+
+    const { produit } = cible;
+    const imageUrls = [url, ...(produit.image_urls ?? []).slice(1).filter((image) => image !== url)];
+    try {
+      const response = await fetch(`/api/boutiques/${params?.id}/produits/${produit.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ image_urls: imageUrls }),
+      });
+      if (!response.ok) {
+        setProductsError(apiErrorMessage(await response.json().catch(() => null), t("erreurs.imageProduit")));
+        return;
+      }
+      setProducts((liste) => liste.map((p) => (p.id === produit.id ? { ...p, image_urls: imageUrls } : p)));
+      if (editingProductId === produit.id) {
+        setProductImageUrl(url);
+        setProductGalerie(imageUrls.slice(1));
+      }
+    } catch {
+      setProductsError(apiErrorMessage({ code: "network" }));
+    }
   }
 
   async function handleImportAliexpress() {
@@ -735,7 +789,7 @@ export default function BoutiqueBuilderDetailPage() {
         nom: productName.trim(),
         slug: slugify(productSlug.trim()),
         description: productDescription.trim(),
-        image_urls: productImageUrl.trim() ? [productImageUrl.trim()] : [],
+        image_urls: [productImageUrl.trim(), ...productGalerie].filter(Boolean),
         prix_vente: prixVente,
         prix_original: prixOriginal,
         category_id: productCategoryId || null,
@@ -911,13 +965,66 @@ export default function BoutiqueBuilderDetailPage() {
     }
   }
 
+  // Le « + » occupe la place qui suit le dernier produit : une dernière page pleine
+  // (PRODUITS_PAR_PAGE produits) le renvoie sur une page de plus.
+  const pagesListe = Math.max(totalPages, Math.floor(totalProduits / PRODUITS_PAR_PAGE) + 1);
+  const surDernierePage = productPage >= pagesListe;
+
+  const boutonAjout = (
+    <div ref={menuAjoutRef} className="relative inline-block">
+      <button
+        type="button"
+        onClick={() => setMenuAjoutOuvert((o) => !o)}
+        aria-label={t("produits.ajouterMenu")}
+        title={t("produits.ajouterMenu")}
+        aria-haspopup="menu"
+        aria-expanded={menuAjoutOuvert}
+        className={`flex h-9 w-9 items-center justify-center rounded-full border text-xl leading-none transition ${
+          menuAjoutOuvert
+            ? "border-violet-500/50 bg-violet-500/10 text-[var(--accent)] rotate-45"
+            : "border-[var(--border-strong)] text-[var(--text-muted)] hover:bg-[var(--surface)] hover:text-[var(--text-primary)]"
+        }`}
+      >
+        +
+      </button>
+      {menuAjoutOuvert && (
+        <div
+          role="menu"
+          className="absolute bottom-full right-0 z-20 mb-2 w-56 rounded-2xl border border-[var(--border-strong)] bg-[var(--surface)] p-1.5 text-left shadow-xl shadow-black/10"
+        >
+          <button
+            type="button"
+            role="menuitem"
+            onClick={ouvrirAjoutProduit}
+            className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-sm font-medium text-[var(--text-primary)] transition hover:bg-[var(--surface-2)]"
+          >
+            <span aria-hidden="true">📦</span>
+            {t("produits.ajouterProduit")}
+          </button>
+          <button
+            type="button"
+            role="menuitem"
+            onClick={() => {
+              setMenuAjoutOuvert(false);
+              router.push("/site-builder/boutique");
+            }}
+            className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-sm font-medium text-[var(--text-primary)] transition hover:bg-[var(--surface-2)]"
+          >
+            <span aria-hidden="true">🏪</span>
+            {t("produits.ajouterBoutique")}
+          </button>
+        </div>
+      )}
+    </div>
+  );
+
   return (
-    <div className="min-h-screen bg-[var(--bg)] px-4 py-14 text-[var(--text-primary)]">
-      <div className="mx-auto max-w-7xl space-y-8">
-        <div className="mb-4 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+    <div className="min-h-screen bg-[var(--bg)] px-4 py-8 text-[var(--text-primary)]">
+      <div className="mx-auto max-w-7xl space-y-4">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <p className="text-sm uppercase tracking-[0.2em] text-violet-400">{t("surtitre")}</p>
-            <h1 className="mt-3 text-3xl font-bold">{t("titre")}</h1>
+            <h1 className="mt-2 text-3xl font-bold">{t("titre")}</h1>
             <p className="mt-2 max-w-2xl text-sm text-[var(--text-muted)]">
               {t("intro")}
             </p>
@@ -951,9 +1058,9 @@ export default function BoutiqueBuilderDetailPage() {
 
         {plan !== null ? <BandeauDepassementProduits plan={plan} count={produitsCount} /> : null}
 
-        <div className="grid gap-6 xl:grid-cols-[0.9fr_0.55fr]">
-          <section className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-6">
-            <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="grid gap-4 xl:grid-cols-[0.9fr_0.55fr]">
+          <section className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-5">
+            <div className="mb-2 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <p className="text-xs uppercase tracking-[0.3em] text-violet-400">{t("boutique")}</p>
                 <h2 className="mt-2 text-2xl font-semibold text-[var(--text-primary)]">{boutique?.nom || t("chargement")}</h2>
@@ -964,15 +1071,12 @@ export default function BoutiqueBuilderDetailPage() {
               <BoutiqueReglages
                 boutique={boutique}
                 produitsCount={produitsCount}
-                categoriesCount={categories.length}
-                sitesCount={sitesCount}
                 langueDisponible={langueDisponible}
                 onUpdated={(patch) => setBoutique((prev) => (prev ? { ...prev, ...patch } : prev))}
-                onDeleted={() => router.push("/site-builder/boutique")}
               />
             ) : null}
 
-            <div className="mt-6 rounded-3xl border border-[var(--border)] bg-[var(--surface-2)] p-4">
+            <div className="mt-3 rounded-2xl border border-[var(--border)] bg-[var(--surface-2)] p-3">
               <h3 className="text-sm font-semibold text-[var(--text-primary)]">{t("mentions.titre")}</h3>
               <p className="mt-1 text-xs text-[var(--text-muted)]">
                 {t("mentions.aide")}
@@ -982,9 +1086,9 @@ export default function BoutiqueBuilderDetailPage() {
                 onChange={(e) => setMentionsLegales(e.target.value)}
                 rows={5}
                 placeholder={t("mentions.placeholder")}
-                className="mt-3 w-full rounded-2xl border border-[var(--border)] bg-[var(--bg-sunken)] px-4 py-3 text-sm text-[var(--text-primary)] outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
+                className="mt-2 w-full rounded-2xl border border-[var(--border)] bg-[var(--bg-sunken)] px-3 py-2 text-sm text-[var(--text-primary)] outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
               />
-              <div className="mt-3 flex items-center gap-3">
+              <div className="mt-2 flex items-center gap-2">
                 <button
                   type="button"
                   onClick={handleSaveMentionsLegales}
@@ -998,7 +1102,7 @@ export default function BoutiqueBuilderDetailPage() {
               </div>
             </div>
 
-            <div className="mt-6 rounded-3xl border border-[var(--border)] bg-[var(--surface-2)] p-4">
+            <div className="mt-3 rounded-2xl border border-[var(--border)] bg-[var(--surface-2)] p-3">
               <h3 className="text-sm font-semibold text-[var(--text-primary)]">{t("bandeau.titre")}</h3>
               <p className="mt-1 text-xs text-[var(--text-muted)]">
                 {t("bandeau.aide")}
@@ -1008,9 +1112,9 @@ export default function BoutiqueBuilderDetailPage() {
                 onChange={(e) => setBandeauTexte(e.target.value)}
                 rows={2}
                 placeholder={t("bandeau.placeholder")}
-                className="mt-3 w-full rounded-2xl border border-[var(--border)] bg-[var(--bg-sunken)] px-4 py-3 text-sm text-[var(--text-primary)] outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
+                className="mt-2 w-full rounded-2xl border border-[var(--border)] bg-[var(--bg-sunken)] px-3 py-2 text-sm text-[var(--text-primary)] outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
               />
-              <div className="mt-3 space-y-2">
+              <div className="mt-2 space-y-1.5">
                 {bandeauVideos.map((url, index) => (
                   <div key={index} className="flex items-center gap-2">
                     <input
@@ -1019,7 +1123,7 @@ export default function BoutiqueBuilderDetailPage() {
                         setBandeauVideos((prev) => prev.map((v, i) => (i === index ? e.target.value : v)))
                       }
                       placeholder={t("bandeau.videoPlaceholder")}
-                      className="w-full rounded-2xl border border-[var(--border)] bg-[var(--bg-sunken)] px-4 py-2.5 text-sm text-[var(--text-primary)] outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
+                      className="w-full rounded-2xl border border-[var(--border)] bg-[var(--bg-sunken)] px-3 py-2 text-sm text-[var(--text-primary)] outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
                     />
                     <button
                       type="button"
@@ -1039,7 +1143,7 @@ export default function BoutiqueBuilderDetailPage() {
                   {t("bandeau.ajouterVideo")}
                 </button>
               </div>
-              <div className="mt-3 flex items-center gap-3">
+              <div className="mt-2 flex items-center gap-2">
                 <button
                   type="button"
                   onClick={handleSaveBandeau}
@@ -1053,39 +1157,21 @@ export default function BoutiqueBuilderDetailPage() {
               </div>
             </div>
 
-            <div className="mt-6 rounded-3xl border border-[var(--border)] bg-[var(--surface-2)] p-4">
-              <h3 className="text-sm font-semibold text-[var(--text-primary)]">{t("parametres.titre")}</h3>
-              <p className="mt-1 text-xs text-[var(--text-muted)]">
-                {t("parametres.nicheAide")}
-              </p>
-              <select
-                value={(boutique?.settings?.niche as string | undefined) ?? ""}
-                onChange={(event) => handleSetNiche(event.target.value)}
-                disabled={!boutique || savingNiche}
-                className="mt-3 w-full max-w-xs rounded-2xl border border-[var(--border)] bg-[var(--surface)] px-4 py-2 text-sm text-[var(--text-primary)] outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 disabled:opacity-50"
-              >
-                <option value="">{t("parametres.aucuneNiche")}</option>
-                {NICHES.map((n) => (
-                  <option key={n.id} value={n.id}>{n.emoji} {tNiches.has(`${n.id}.label`) ? tNiches(`${n.id}.label`) : n.label}</option>
-                ))}
-              </select>
-            </div>
-
-            <div className="mt-6 grid gap-4 sm:grid-cols-2">
-              <div className="rounded-3xl border border-[var(--border)] bg-[var(--surface-2)] p-4">
+            <div className="mt-3 grid gap-3 sm:grid-cols-2">
+              <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface-2)] p-3">
                 <p className="text-xs uppercase tracking-[0.2em] text-[var(--text-muted)]">{t("stats.produitsAffiches")}</p>
-                <p className="mt-2 text-sm text-[var(--text-primary)]">{t("stats.parPage", { count: products.length, max: DEFAULT_PAGE_SIZE })}</p>
+                <p className="mt-2 text-sm text-[var(--text-primary)]">{t("stats.parPage", { count: products.length, max: PRODUITS_PAR_PAGE })}</p>
               </div>
-              <div className="rounded-3xl border border-[var(--border)] bg-[var(--surface-2)] p-4">
+              <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface-2)] p-3">
                 <p className="text-xs uppercase tracking-[0.2em] text-[var(--text-muted)]">{t("categories.titre")}</p>
                 <p className="mt-2 text-sm text-[var(--text-primary)]">{categories.length}</p>
               </div>
             </div>
           </section>
 
-          <section className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-6">
+          <section className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-5">
             <h3 className="text-lg font-semibold text-[var(--text-primary)]">{t("filtres.titre")}</h3>
-            <div className="mt-4 space-y-4">
+            <div className="mt-2 space-y-2">
               <div>
                 <label className="text-sm text-[var(--text-muted)]">{t("filtres.recherche")}</label>
                 <input
@@ -1096,7 +1182,7 @@ export default function BoutiqueBuilderDetailPage() {
                     if (event.key === "Enter") void fetchProducts(1);
                   }}
                   placeholder={t("filtres.recherchePlaceholder")}
-                  className="mt-2 w-full rounded-2xl border border-[var(--border)] bg-[var(--bg-sunken)] px-4 py-3 text-sm text-[var(--text-primary)] outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
+                  className="mt-1 w-full rounded-xl border border-[var(--border)] bg-[var(--bg-sunken)] px-3 py-2 text-sm text-[var(--text-primary)] outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
                 />
               </div>
               <div>
@@ -1107,7 +1193,7 @@ export default function BoutiqueBuilderDetailPage() {
                     setProductCategoryFilter(event.target.value);
                     void fetchProducts(1);
                   }}
-                  className="mt-2 w-full rounded-2xl border border-[var(--border)] bg-[var(--bg-sunken)] px-4 py-3 text-sm text-[var(--text-primary)] outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
+                  className="mt-1 w-full rounded-xl border border-[var(--border)] bg-[var(--bg-sunken)] px-3 py-2 text-sm text-[var(--text-primary)] outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
                 >
                   <option value="">{t("filtres.toutesCategories")}</option>
                   {categories.map((category) => (
@@ -1118,7 +1204,7 @@ export default function BoutiqueBuilderDetailPage() {
               <button
                 type="button"
                 onClick={() => void fetchProducts(1)}
-                className="w-full rounded-2xl bg-violet-500 px-4 py-3 text-sm font-semibold text-white transition hover:bg-violet-400"
+                className="w-full rounded-xl bg-violet-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-violet-400"
               >
                 {t("filtres.appliquer")}
               </button>
@@ -1127,7 +1213,7 @@ export default function BoutiqueBuilderDetailPage() {
         </div>
 
         {/* Créer un site pour cette boutique */}
-        <section className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-6">
+        <section className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-5">
           <p className="text-xs uppercase tracking-[0.3em] text-violet-400">Site Builder</p>
           {totalProduits > 1 ? (
             <>
@@ -1139,7 +1225,7 @@ export default function BoutiqueBuilderDetailPage() {
                 <p className="mt-2 text-sm text-[var(--danger)]">{contenuError}</p>
               )}
               {reviewPalette === null ? (
-                <div className="mt-4">
+                <div className="mt-3">
                   <button
                     type="button"
                     onClick={() => void handleGenererContenu()}
@@ -1150,14 +1236,14 @@ export default function BoutiqueBuilderDetailPage() {
                   </button>
                 </div>
               ) : (
-                <div className="mt-4 space-y-4">
+                <div className="mt-3 space-y-3">
                   <div>
                     <label className="text-sm font-medium text-[var(--text-muted)]">{t("site.description")}</label>
                     <textarea
                       value={reviewDescription ?? ""}
                       onChange={(e) => setReviewDescription(e.target.value)}
                       rows={3}
-                      className="mt-2 w-full rounded-2xl border border-[var(--border)] bg-[var(--bg-sunken)] px-4 py-3 text-sm text-[var(--text-primary)] outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 resize-none"
+                      className="mt-1 w-full rounded-xl border border-[var(--border)] bg-[var(--bg-sunken)] px-3 py-2 text-sm text-[var(--text-primary)] outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 resize-none"
                     />
                   </div>
                   <div>
@@ -1194,7 +1280,7 @@ export default function BoutiqueBuilderDetailPage() {
               <p className="mt-1 text-sm text-[var(--text-faint)]">
                 {t("site.creerAide")}
               </p>
-              <div className="mt-4 flex flex-wrap gap-3">
+              <div className="mt-3 flex flex-wrap gap-2">
                 {/* Le lien préremplit le Site Builder (mode produit unique) avec le nom, la description et l'image du premier produit de la boutique. */}
                 <Link
                   href={buildSiteBuilderPrefillUrl("ia")}
@@ -1227,12 +1313,12 @@ export default function BoutiqueBuilderDetailPage() {
           />
         )}
 
-        <div className="grid gap-6 xl:grid-cols-[0.9fr_0.55fr]">
-          <section className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-6">
-            <div className="mb-6 flex items-center justify-between gap-4">
+        <div className="grid gap-4 xl:grid-cols-[0.9fr_0.55fr]">
+          <section className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-5">
+            <div className="mb-3 flex items-center justify-between gap-3">
               <div>
                 <h3 className="text-xl font-semibold text-[var(--text-primary)]">{t("produits.titre")}</h3>
-                <p className="mt-2 text-sm text-[var(--text-muted)]">{t("produits.aide")}</p>
+                <p className="mt-1 text-sm text-[var(--text-muted)]">{t("produits.aide")}</p>
                 <p className="mt-1 text-sm font-medium text-[var(--text-primary)]">
                   {t("produits.total", { count: totalProduits })}
                 </p>
@@ -1241,7 +1327,7 @@ export default function BoutiqueBuilderDetailPage() {
             </div>
 
             {params?.id ? (
-              <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-start">
+              <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-start">
                 {(["reecrire-produits", "ajuster-prix"] as const).map((action) => (
                   <ActionProduitsIA
                     key={action}
@@ -1251,6 +1337,12 @@ export default function BoutiqueBuilderDetailPage() {
                     onTermine={() => fetchProducts(productPage)}
                   />
                 ))}
+                <GenerationImagesBoutique
+                  boutiqueId={String(params.id)}
+                  plan={plan}
+                  chargerProduits={async () => (await loadAllProduits()).produits}
+                  onTermine={() => fetchProducts(productPage)}
+                />
               </div>
             ) : null}
 
@@ -1260,7 +1352,10 @@ export default function BoutiqueBuilderDetailPage() {
               ) : productsError ? (
                 <p className="text-sm text-[var(--danger)]">{productsError}</p>
               ) : products.length === 0 ? (
-                <p className="text-sm text-[var(--text-muted)]">{t("produits.vide")}</p>
+                <div className="flex items-center justify-between gap-3">
+                  <p className="text-sm text-[var(--text-muted)]">{t("produits.vide")}</p>
+                  {surDernierePage ? boutonAjout : null}
+                </div>
               ) : (
                 <div className="overflow-x-auto">
                   <table className="min-w-full border-separate border-spacing-0 text-left text-sm">
@@ -1300,6 +1395,21 @@ export default function BoutiqueBuilderDetailPage() {
                             </button>
                             <button
                               type="button"
+                              onClick={() => setCibleMedia({ mode: "produit", produit: product })}
+                              className="w-full rounded-xl border border-[var(--border)] px-3 py-2 text-xs font-semibold text-[var(--text-primary)] transition hover:bg-[var(--surface)]"
+                            >
+                              {t("produits.changerImage")}
+                            </button>
+                            {product.source_produit_id ? (
+                              <Link
+                                href={`/produits-gagnants/catalogue/${encodeURIComponent(product.source_produit_id)}?boutiqueProduit=${product.id}`}
+                                className="block w-full rounded-xl border border-[var(--border)] px-3 py-2 text-center text-xs font-semibold text-[var(--text-primary)] transition hover:bg-[var(--surface)]"
+                              >
+                                {t("produits.ficheCatalogue")}
+                              </Link>
+                            ) : null}
+                            <button
+                              type="button"
                               onClick={() => void handleDeleteProduct(product.id)}
                               disabled={deletingProductId === product.id}
                               className="rounded-xl bg-[var(--danger)]/10 px-3 py-2 text-xs font-semibold text-[var(--danger)] transition hover:bg-[var(--danger)]/20 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -1331,10 +1441,15 @@ export default function BoutiqueBuilderDetailPage() {
                   </table>
                 </div>
               )}
+              {/* « + » à droite, juste après le dernier produit (hors du conteneur défilant du
+                  tableau, qui couperait le menu). */}
+              {!productsLoading && !productsError && products.length > 0 && surDernierePage ? (
+                <div className="mt-2 flex justify-end">{boutonAjout}</div>
+              ) : null}
             </div>
 
-            <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-sm text-[var(--text-muted)]">
-              <span>{t("pagination.page", { page: productPage, total: totalPages })}</span>
+            <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-sm text-[var(--text-muted)]">
+              <span>{t("pagination.page", { page: productPage, total: pagesListe })}</span>
               <div className="flex gap-2">
                 <button
                   type="button"
@@ -1346,7 +1461,7 @@ export default function BoutiqueBuilderDetailPage() {
                 </button>
                 <button
                   type="button"
-                  disabled={productPage >= totalPages || productsLoading}
+                  disabled={productPage >= pagesListe || productsLoading}
                   onClick={() => void fetchProducts(productPage + 1)}
                   className="rounded-2xl border border-[var(--border)] bg-[var(--surface-2)] px-4 py-2 text-xs transition hover:border-violet-500/40 disabled:opacity-40"
                 >
@@ -1356,33 +1471,33 @@ export default function BoutiqueBuilderDetailPage() {
             </div>
           </section>
 
-          <section className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-6">
-            <h3 className="text-xl font-semibold text-[var(--text-primary)]">{t("formulaire.titre")}</h3>
-            <p className="mt-2 text-sm text-[var(--text-muted)]">
+          <section ref={formulaireRef} className="scroll-mt-4 rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-4 xl:sticky xl:top-4 xl:self-start">
+            <h3 className="text-lg font-semibold text-[var(--text-primary)]">{t("formulaire.titre")}</h3>
+            <p className="mt-0.5 text-xs text-[var(--text-muted)]">
               {t("formulaire.aide")}
             </p>
             {plan !== null ? (
-              <div className="mt-4 flex flex-col items-start gap-3">
+              <div className="mt-2 flex flex-col items-start gap-1.5">
                 <CompteurProduits plan={plan} count={produitsCount} />
                 <AlerteLimiteProduits plan={plan} count={produitsCount} />
               </div>
             ) : null}
-            <form onSubmit={handleSubmitProduct} className="mt-6 space-y-4">
-              <div className="space-y-3 rounded-3xl border border-[var(--border)] bg-[var(--surface-2)] p-4">
-                <label className="text-sm font-medium text-[var(--text-muted)]">{t("formulaire.importer")}</label>
+            <form onSubmit={handleSubmitProduct} className="mt-3 space-y-2.5">
+              <div className="space-y-1.5 rounded-2xl border border-[var(--border)] bg-[var(--surface-2)] p-2.5">
+                <label className="text-xs font-medium text-[var(--text-muted)]">{t("formulaire.importer")}</label>
                 <div className="flex gap-2">
                   <input
                     type="url"
                     value={importUrl}
                     onChange={(event) => setImportUrl(event.target.value)}
                     placeholder="https://www.aliexpress.com/item/123456789.html"
-                    className="flex-1 rounded-2xl border border-[var(--border)] bg-[var(--bg-sunken)] px-4 py-3 text-sm text-[var(--text-primary)] outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
+                    className="flex-1 rounded-xl border border-[var(--border)] bg-[var(--bg-sunken)] px-3 py-2 text-sm text-[var(--text-primary)] outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
                   />
                   <button
                     type="button"
                     onClick={handleImportAliexpress}
                     disabled={importLoading || !importUrl.trim()}
-                    className="rounded-2xl bg-violet-500 px-4 py-3 text-sm font-semibold text-white transition hover:bg-violet-400 disabled:opacity-50"
+                    className="rounded-xl bg-violet-500 px-3 py-2 text-sm font-semibold text-white transition hover:bg-violet-400 disabled:opacity-50"
                   >
                     {importLoading ? t("formulaire.importation") : t("formulaire.importerBouton")}
                   </button>
@@ -1390,47 +1505,48 @@ export default function BoutiqueBuilderDetailPage() {
                 {importError ? <p className="text-xs text-[var(--danger)]">{importError}</p> : null}
               </div>
 
-              <div className="grid gap-4 sm:grid-cols-2">
-                <label className="block text-sm text-[var(--text-muted)]">
+              <div className="grid gap-2.5 sm:grid-cols-2">
+                <label className="block text-xs text-[var(--text-muted)]">
                   <div className="flex items-center justify-between gap-2">
                     <span>{t("formulaire.nom")}</span>
                     <button
                       type="button"
                       onClick={handleReformulerNom}
                       disabled={!productName.trim() || reformulatingNom}
-                      className="shrink-0 rounded-xl border border-[var(--border)] bg-[var(--surface-2)] px-2.5 py-1 text-xs font-semibold text-[var(--text-primary)] transition hover:border-violet-500/40 hover:bg-violet-500/10 disabled:opacity-50"
+                      className="shrink-0 rounded-xl border border-[var(--border)] bg-[var(--surface-2)] px-2 py-0.5 text-xs font-semibold text-[var(--text-primary)] transition hover:border-violet-500/40 hover:bg-violet-500/10 disabled:opacity-50"
                     >
                       {reformulatingNom ? "…" : t("formulaire.reformuler")}
                     </button>
                   </div>
                   <input
                     type="text"
+                    ref={nomProduitRef}
                     value={productName}
                     onChange={(event) => setProductName(event.target.value)}
-                    className="mt-2 w-full rounded-2xl border border-[var(--border)] bg-[var(--bg-sunken)] px-4 py-3 text-sm text-[var(--text-primary)] outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
+                    className="mt-1 w-full rounded-xl border border-[var(--border)] bg-[var(--bg-sunken)] px-3 py-2 text-sm text-[var(--text-primary)] outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
                     placeholder={t("formulaire.nomPlaceholder")}
                   />
                 </label>
-                <label className="block text-sm text-[var(--text-muted)]">
+                <label className="block text-xs text-[var(--text-muted)]">
                   {t("formulaire.slug")}
                   <input
                     type="text"
                     value={productSlug}
                     onChange={(event) => setProductSlug(event.target.value)}
-                    className="mt-2 w-full rounded-2xl border border-[var(--border)] bg-[var(--bg-sunken)] px-4 py-3 text-sm text-[var(--text-primary)] outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
+                    className="mt-1 w-full rounded-xl border border-[var(--border)] bg-[var(--bg-sunken)] px-3 py-2 text-sm text-[var(--text-primary)] outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
                     placeholder={t("formulaire.slugPlaceholder")}
                   />
                 </label>
               </div>
 
-              <label className="block text-sm text-[var(--text-muted)]">
+              <label className="block text-xs text-[var(--text-muted)]">
                 <div className="flex items-center justify-between gap-2">
                   <span>{t("formulaire.description")}</span>
                   <button
                     type="button"
                     onClick={handleGenererDescription}
                     disabled={!productName.trim() || generatingDescription}
-                    className="shrink-0 rounded-xl border border-[var(--border)] bg-[var(--surface-2)] px-2.5 py-1 text-xs font-semibold text-[var(--text-primary)] transition hover:border-violet-500/40 hover:bg-violet-500/10 disabled:opacity-50"
+                    className="shrink-0 rounded-xl border border-[var(--border)] bg-[var(--surface-2)] px-2 py-0.5 text-xs font-semibold text-[var(--text-primary)] transition hover:border-violet-500/40 hover:bg-violet-500/10 disabled:opacity-50"
                     title={!productName.trim() ? t("formulaire.nomDabord") : undefined}
                   >
                     {generatingDescription ? "…" : t("formulaire.genererDescription")}
@@ -1439,25 +1555,52 @@ export default function BoutiqueBuilderDetailPage() {
                 <textarea
                   value={productDescription}
                   onChange={(event) => setProductDescription(event.target.value)}
-                  rows={4}
-                  className="mt-2 w-full rounded-2xl border border-[var(--border)] bg-[var(--bg-sunken)] px-4 py-3 text-sm text-[var(--text-primary)] outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 resize-none"
+                  rows={3}
+                  className="mt-1 w-full rounded-xl border border-[var(--border)] bg-[var(--bg-sunken)] px-3 py-2 text-sm text-[var(--text-primary)] outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 resize-none"
                   placeholder={t("formulaire.descriptionPlaceholder")}
                 />
               </label>
 
-              <label className="block text-sm text-[var(--text-muted)]">
+              <label className="block text-xs text-[var(--text-muted)]">
                 {t("formulaire.image")}
                 <input
                   type="url"
                   value={productImageUrl}
                   onChange={(event) => setProductImageUrl(event.target.value)}
-                  className="mt-2 w-full rounded-2xl border border-[var(--border)] bg-[var(--bg-sunken)] px-4 py-3 text-sm text-[var(--text-primary)] outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
+                  className="mt-1 w-full rounded-xl border border-[var(--border)] bg-[var(--bg-sunken)] px-3 py-2 text-sm text-[var(--text-primary)] outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
                   placeholder="https://..."
                 />
               </label>
 
-              <div className="grid gap-4 sm:grid-cols-2">
-                <label className="block text-sm text-[var(--text-muted)]">
+              <div className="flex flex-wrap items-center gap-2">
+                <button type="button" onClick={() => setCibleMedia({ mode: "principale" })} className="rounded-lg border border-[var(--border)] px-2.5 py-1 text-xs font-semibold text-[var(--text-primary)] transition hover:bg-[var(--surface)]">
+                  {t("formulaire.changerImage")}
+                </button>
+                <button type="button" onClick={() => setCibleMedia({ mode: "galerie" })} className="rounded-lg border border-[var(--border)] px-2.5 py-1 text-xs font-semibold text-[var(--text-primary)] transition hover:bg-[var(--surface)]">
+                  {t("formulaire.ajouterGalerie")}
+                </button>
+              </div>
+
+              {productGalerie.length > 0 && (
+                <ul aria-label={t("formulaire.galerie")} className="flex flex-wrap gap-1.5">
+                  {productGalerie.map((image) => (
+                    <li key={image} className="relative h-12 w-12 overflow-hidden rounded-lg border border-[var(--border)]">
+                      <Image src={image} alt="" fill unoptimized sizes="48px" className="object-cover" />
+                      <button
+                        type="button"
+                        aria-label={t("formulaire.retirerGalerie")}
+                        onClick={() => setProductGalerie((galerie) => galerie.filter((autre) => autre !== image))}
+                        className="absolute right-0.5 top-0.5 h-5 w-5 rounded-full bg-black/70 text-xs text-white"
+                      >
+                        ×
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+
+              <div className="grid gap-2.5 sm:grid-cols-2">
+                <label className="block text-xs text-[var(--text-muted)]">
                   {t("formulaire.prixVente")}
                   <input
                     type="number"
@@ -1465,11 +1608,11 @@ export default function BoutiqueBuilderDetailPage() {
                     step="0.01"
                     value={productPrixVente}
                     onChange={(event) => setProductPrixVente(event.target.value)}
-                    className="mt-2 w-full rounded-2xl border border-[var(--border)] bg-[var(--bg-sunken)] px-4 py-3 text-sm text-[var(--text-primary)] outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
+                    className="mt-1 w-full rounded-xl border border-[var(--border)] bg-[var(--bg-sunken)] px-3 py-2 text-sm text-[var(--text-primary)] outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
                     placeholder="29.99"
                   />
                 </label>
-                <label className="block text-sm text-[var(--text-muted)]">
+                <label className="block text-xs text-[var(--text-muted)]">
                   {t("formulaire.prixOriginal")}
                   <input
                     type="number"
@@ -1477,18 +1620,18 @@ export default function BoutiqueBuilderDetailPage() {
                     step="0.01"
                     value={productPrixOriginal}
                     onChange={(event) => setProductPrixOriginal(event.target.value)}
-                    className="mt-2 w-full rounded-2xl border border-[var(--border)] bg-[var(--bg-sunken)] px-4 py-3 text-sm text-[var(--text-primary)] outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
+                    className="mt-1 w-full rounded-xl border border-[var(--border)] bg-[var(--bg-sunken)] px-3 py-2 text-sm text-[var(--text-primary)] outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
                     placeholder="59.99"
                   />
                 </label>
               </div>
 
-              <label className="block text-sm text-[var(--text-muted)]">
+              <label className="block text-xs text-[var(--text-muted)]">
                 {t("formulaire.categorie")}
                 <select
                   value={productCategoryId}
                   onChange={(event) => setProductCategoryId(event.target.value)}
-                  className="mt-2 w-full rounded-2xl border border-[var(--border)] bg-[var(--bg-sunken)] px-4 py-3 text-sm text-[var(--text-primary)] outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
+                  className="mt-1 w-full rounded-xl border border-[var(--border)] bg-[var(--bg-sunken)] px-3 py-2 text-sm text-[var(--text-primary)] outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
                 >
                   {categoryOptions.map((category) => (
                     <option key={category.id} value={category.id}>{category.nom}</option>
@@ -1497,23 +1640,23 @@ export default function BoutiqueBuilderDetailPage() {
               </label>
 
               {productFormError ? (
-                <p className="text-sm text-[var(--danger)]">{productFormError}</p>
+                <p className="text-xs text-[var(--danger)]">{productFormError}</p>
               ) : productFormSuccess ? (
-                <p className="text-sm text-[var(--success)]">{productFormSuccess}</p>
+                <p className="text-xs text-[var(--success)]">{productFormSuccess}</p>
               ) : null}
 
               <div className="flex flex-wrap gap-2">
                 <button
                   type="submit"
                   disabled={savingProduct || (!editingProductId && ajoutBloque)}
-                  className="rounded-2xl bg-violet-500 px-4 py-3 text-sm font-semibold text-white transition hover:bg-violet-400 disabled:opacity-50"
+                  className="rounded-xl bg-violet-500 px-3 py-2 text-sm font-semibold text-white transition hover:bg-violet-400 disabled:opacity-50"
                 >
                   {editingProductId ? t("formulaire.mettreAJour") : t("formulaire.ajouter")}
                 </button>
                 <button
                   type="button"
                   onClick={resetProductForm}
-                  className="rounded-2xl border border-[var(--border)] bg-[var(--surface-2)] px-4 py-3 text-sm font-semibold text-[var(--text-primary)] transition hover:border-violet-500/40"
+                  className="rounded-xl border border-[var(--border)] bg-[var(--surface-2)] px-3 py-2 text-sm font-semibold text-[var(--text-primary)] transition hover:border-violet-500/40"
                 >
                   {t("formulaire.reinitialiser")}
                 </button>
@@ -1521,22 +1664,22 @@ export default function BoutiqueBuilderDetailPage() {
             </form>
           </section>
 
-          <section className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-6">
+          <section className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-5">
             <div className="flex items-center justify-between gap-4">
               <div>
                 <h3 className="text-xl font-semibold text-[var(--text-primary)]">{t("categories.titre")}</h3>
-                <p className="mt-2 text-sm text-[var(--text-muted)]">{t("categories.aide")}</p>
+                <p className="mt-1 text-sm text-[var(--text-muted)]">{t("categories.aide")}</p>
               </div>
             </div>
 
-            <form onSubmit={handleCreateCategory} className="mt-6 space-y-4 rounded-3xl border border-[var(--border)] bg-[var(--surface-2)] p-4">
+            <form onSubmit={handleCreateCategory} className="mt-3 space-y-2.5 rounded-2xl border border-[var(--border)] bg-[var(--surface-2)] p-3">
               <label className="block text-sm text-[var(--text-muted)]">
                 {t("categories.nom")}
                 <input
                   type="text"
                   value={categoryName}
                   onChange={(event) => setCategoryName(event.target.value)}
-                  className="mt-2 w-full rounded-2xl border border-[var(--border)] bg-[var(--bg-sunken)] px-4 py-3 text-sm text-[var(--text-primary)] outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
+                  className="mt-1 w-full rounded-xl border border-[var(--border)] bg-[var(--bg-sunken)] px-3 py-2 text-sm text-[var(--text-primary)] outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
                   placeholder={t("categories.nomPlaceholder")}
                 />
               </label>
@@ -1546,14 +1689,14 @@ export default function BoutiqueBuilderDetailPage() {
                   type="text"
                   value={categorySlug}
                   onChange={(event) => setCategorySlug(event.target.value)}
-                  className="mt-2 w-full rounded-2xl border border-[var(--border)] bg-[var(--bg-sunken)] px-4 py-3 text-sm text-[var(--text-primary)] outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
+                  className="mt-1 w-full rounded-xl border border-[var(--border)] bg-[var(--bg-sunken)] px-3 py-2 text-sm text-[var(--text-primary)] outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500"
                   placeholder="fitness"
                 />
               </label>
               <button
                 type="submit"
                 disabled={creatingCategory}
-                className="w-full rounded-2xl bg-violet-500 px-4 py-3 text-sm font-semibold text-white transition hover:bg-violet-400 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full rounded-xl bg-violet-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-violet-400 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {creatingCategory ? t("categories.creation") : t("categories.creer")}
               </button>
@@ -1570,15 +1713,15 @@ export default function BoutiqueBuilderDetailPage() {
             ) : null}
 
             {categoriesLoading ? (
-              <p className="mt-6 text-sm text-[var(--text-muted)]">{t("categories.chargement")}</p>
+              <p className="mt-3 text-sm text-[var(--text-muted)]">{t("categories.chargement")}</p>
             ) : categoriesError ? (
-              <p className="mt-6 text-sm text-[var(--danger)]">{categoriesError}</p>
+              <p className="mt-3 text-sm text-[var(--danger)]">{categoriesError}</p>
             ) : categories.length === 0 ? (
-              <p className="mt-6 text-sm text-[var(--text-muted)]">{t("categories.vide")}</p>
+              <p className="mt-3 text-sm text-[var(--text-muted)]">{t("categories.vide")}</p>
             ) : (
-              <div className="mt-6 space-y-3">
+              <div className="mt-3 space-y-2">
                 {categories.map((category) => (
-                  <div key={category.id} className="rounded-3xl border border-[var(--border)] bg-[var(--surface-2)] p-4">
+                  <div key={category.id} className="rounded-2xl border border-[var(--border)] bg-[var(--surface-2)] p-3">
                     <div className="flex flex-wrap items-center justify-between gap-3">
                       <div>
                         <p className="font-semibold text-[var(--text-primary)]">{category.nom}</p>
@@ -1640,7 +1783,18 @@ export default function BoutiqueBuilderDetailPage() {
             )}
           </section>
         </div>
+
+        {boutique ? (
+          <BoutiqueSuppression
+            boutique={boutique}
+            produitsCount={produitsCount}
+            categoriesCount={categories.length}
+            sitesCount={sitesCount}
+            onDeleted={() => router.push("/site-builder/boutique")}
+          />
+        ) : null}
       </div>
+      {cibleMedia && <MediathequeModal plan={plan} onChoisir={(url) => void choisirMedia(url)} onFermer={() => setCibleMedia(null)} />}
     </div>
   );
 }

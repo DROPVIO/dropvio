@@ -30,8 +30,12 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
+# sorties des scripts de test des modèles
+/.tests-modeles/
+
 # env files (can opt-in for committing if needed)
 .env*
+!.env.example
 resend-smtp-notes.txt
 
 # vercel

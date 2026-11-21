@@ -22,19 +22,19 @@
    --purple/--green) plus loin dans ce fichier, sans le réutiliser tel quel
    (cette palette-là reste scopée à /faq, cf. son propre commentaire). */
 :root {
-  --bg: #0d0d14;
-  --bg-sunken: #09090f;
-  --surface: #13131f;
+  --bg: #24242f;
+  --bg-sunken: #1d1d27;
+  --surface: #2e2e3b;
   --surface-2: rgba(255, 255, 255, 0.05);
   --surface-3: rgba(255, 255, 255, 0.10);
-  --border: rgba(255, 255, 255, 0.06);
-  --border-strong: rgba(255, 255, 255, 0.12);
+  --border: rgba(255, 255, 255, 0.08);
+  --border-strong: rgba(255, 255, 255, 0.14);
   --text-primary: #ffffff;
-  --text-muted: #a1a1aa;
+  --text-muted: #c0c0c8;
   /* #90909a (pas #71717a) : le gris d'origine tombait sous 4.5:1 (WCAG AA) sur tous les
      fonds sombres, jusqu'à 3.14:1 sur --surface-3 — voir l'audit de contraste qui a précédé
      ce changement. */
-  --text-faint: #90909a;
+  --text-faint: #acacb5;
   --accent: #7c3aed;
   --accent-secondary: #60a5fa;
   --success: #10b981;
@@ -67,17 +67,17 @@
    sur le wrapper du layout boutique et écraser ce qui a cascadé depuis <html> — duplique donc
    les deux blocs ci-dessus plutôt que de les référencer. */
 [data-boutique-theme="dark"] {
-  --bg: #0d0d14;
-  --bg-sunken: #09090f;
-  --surface: #13131f;
+  --bg: #24242f;
+  --bg-sunken: #1d1d27;
+  --surface: #2e2e3b;
   --surface-2: rgba(255, 255, 255, 0.05);
   --surface-3: rgba(255, 255, 255, 0.10);
-  --border: rgba(255, 255, 255, 0.06);
-  --border-strong: rgba(255, 255, 255, 0.12);
+  --border: rgba(255, 255, 255, 0.08);
+  --border-strong: rgba(255, 255, 255, 0.14);
   --text-primary: #ffffff;
-  --text-muted: #a1a1aa;
+  --text-muted: #c0c0c8;
   /* Même correctif de contraste que le bloc :root ci-dessus. */
-  --text-faint: #90909a;
+  --text-faint: #acacb5;
   --accent: #7c3aed;
   --accent-secondary: #60a5fa;
   --success: #10b981;
@@ -348,9 +348,9 @@ body {
    `.faq-section` pour `padding` à spécificité égale de classe). ─────────── */
 
 .faq-page {
-  --bg: #0B0A10;
-  --surface: #15131C;
-  --surface-2: #1C1926;
+  --bg: #221F2A;
+  --surface: #2C2836;
+  --surface-2: #353041;
   --border: rgba(255,255,255,0.08);
   --border-strong: rgba(255,255,255,0.14);
   --text: #F5F3F7;
@@ -381,7 +381,7 @@ body {
 /* Nav */
 .lp-nav {
   position: sticky; top: 0; z-index: 50;
-  background: rgba(11,10,16,0.85);
+  background: rgba(34,31,42,0.85);
   backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--border);
 }
@@ -475,6 +475,59 @@ footer.lp-cta p { color: var(--text-2); margin-bottom: 32px; }
 .dv-home [data-dv-scroll]::-webkit-scrollbar { width: 6px; }
 .dv-home [data-dv-scroll]::-webkit-scrollbar-track { background: transparent; }
 .dv-home [data-dv-scroll]::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.3); border-radius: 6px; }
+
+/* Curseurs du configurateur Expert (components/landing/ExpertOffre.tsx) : input range natif.
+   L'input fait 44px de haut pour la zone tactile ; seule la piste de 6px est dessinée, remplie
+   jusqu'au pouce via --rempli. */
+.dv-home input[type="range"][data-dv-range] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 44px;
+  margin: 0;
+  background: transparent;
+  cursor: pointer;
+  touch-action: pan-y;
+}
+.dv-home input[type="range"][data-dv-range]::-webkit-slider-runnable-track {
+  height: 6px;
+  border-radius: 999px;
+  background: linear-gradient(to right, #7c3aed var(--rempli, 0%), #e4e4e7 var(--rempli, 0%));
+}
+.dv-home input[type="range"][data-dv-range]::-moz-range-track {
+  height: 6px;
+  border-radius: 999px;
+  background: #e4e4e7;
+}
+.dv-home input[type="range"][data-dv-range]::-moz-range-progress {
+  height: 6px;
+  border-radius: 999px;
+  background: #7c3aed;
+}
+.dv-home input[type="range"][data-dv-range]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 24px;
+  height: 24px;
+  margin-top: -9px;
+  border-radius: 50%;
+  background: #fff;
+  border: 2px solid #7c3aed;
+  box-shadow: 0 2px 6px rgba(17, 17, 17, 0.18);
+  transition: transform 120ms ease;
+}
+.dv-home input[type="range"][data-dv-range]::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #fff;
+  border: 2px solid #7c3aed;
+  box-shadow: 0 2px 6px rgba(17, 17, 17, 0.18);
+}
+.dv-home input[type="range"][data-dv-range]:active::-webkit-slider-thumb { transform: scale(1.12); }
+.dv-home input[type="range"][data-dv-range]:focus { outline: none; }
+.dv-home input[type="range"][data-dv-range]:focus-visible::-webkit-slider-thumb { box-shadow: 0 0 0 4px rgba(124, 58, 237, 0.3); }
+.dv-home input[type="range"][data-dv-range]:focus-visible::-moz-range-thumb { box-shadow: 0 0 0 4px rgba(124, 58, 237, 0.3); }
 
 .dv-home textarea[data-dv-code]::placeholder,
 .dv-home input[data-dv-url]::placeholder { color: #b4b4be; opacity: 1; }
@@ -592,9 +645,11 @@ footer.lp-cta p { color: var(--text-2); margin-bottom: 32px; }
   min-height: clamp(48px, 7vh, 64px);
   font-size: clamp(16px, 2.2vh, 20px);
 }
-.dv-hero-terms {
+/* Fournisseur d'IA : une ligne discrète sous les boutons (même écart que l'ancienne ligne
+   des conditions d'essai, retirée). */
+.dv-hero-ia {
   margin-top: clamp(10px, 1.6vh, 18px);
-  font-size: 15px;
+  font-size: 13px;
 }
 /* Les appareils ne prennent jamais plus de place que le bloc de texte. */
 .dv-hero-devices { height: min(62vh, 100%); }
@@ -616,5 +671,4 @@ footer.lp-cta p { color: var(--text-2); margin-bottom: 32px; }
      plafond. */
   .dv-hero-h1 { font-size: clamp(36px, min(5.4vw, 7vh), 72px); }
   .dv-hero-sub { font-size: clamp(16px, min(1.35vw, 2.3vh), 22px); }
-  .dv-hero-terms { white-space: nowrap; }
 }

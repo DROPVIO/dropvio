@@ -2,11 +2,12 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useTranslations } from "next-intl";
+import { useFormatter, useTranslations } from "next-intl";
 import { UsageMeter } from "@/components/UsageMeter";
 import { useApiErrorMessage } from "@/lib/use-api-error";
 
-type UsageMetric = { key: string; label: string; used: number; max: number | null };
+// informatif : compteur affiché sans plafond (sites des plans Pro et Agency, limités par le budget IA).
+type UsageMetric = { key: string; label: string; used: number; max: number | null; informatif?: boolean };
 type BoutiqueUsage = { id: string; nom: string; used: number; max: number | null };
 type UsageData = {
   plan: string;
@@ -14,9 +15,13 @@ type UsageData = {
   total: UsageMetric[];
   catalogue: { max: number | null };
   boutiques: BoutiqueUsage[];
+  // Deux budgets séparés : le budget IA (textes, sites, audits) et le budget images (Pro,
+  // Agency ; null pour Expert, qui a un quota d'images).
+  budgetIa?: { utilise: number; max: number; restant?: number };
+  budgetImages?: { utilise: number; max: number; restant: number; imagesRestantes: number } | null;
 };
 
-const PLAN_LABEL: Record<string, string> = { free: "Free", pro: "Pro", agency: "Agency" };
+const PLAN_LABEL: Record<string, string> = { free: "Free", pro: "Pro", agency: "Agency", expert: "Expert" };
 
 // /api/usage renvoie un libellé en dur (français) à côté de chaque `key` — on ignore ce
 // libellé et on traduit à partir de la clé stable, pour ne pas dépendre de la langue du
@@ -75,10 +80,39 @@ export default function UtilisationDetailPage() {
               <p className="text-[11px] font-semibold text-[var(--text-faint)] uppercase tracking-widest">
                 {t("utilisation.thisMonth")}
               </p>
-              {usage.monthly.map((m) => (
-                <UsageMeter key={m.key} label={metricLabel(m.key, m.label)} used={m.used} max={m.max} />
-              ))}
+              {usage.monthly.map((m) =>
+                m.informatif ? (
+                  <div key={m.key} className="rounded-xl border border-[var(--border)] px-4 py-3.5 flex items-center justify-between gap-4">
+                    <p className="text-sm font-medium text-[var(--text-primary)]">{metricLabel(m.key, m.label)}</p>
+                    <p className="text-xs font-semibold text-[var(--text-muted)]">{t("utilisation.sitesCrees", { count: m.used })}</p>
+                  </div>
+                ) : (
+                  <UsageMeter key={m.key} label={metricLabel(m.key, m.label)} used={m.used} max={m.max} />
+                )
+              )}
             </div>
+
+            {usage.budgetIa && usage.budgetIa.max > 0 && (
+              <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface-2)] p-6 flex flex-col gap-3">
+                <p className="text-[11px] font-semibold text-[var(--text-faint)] uppercase tracking-widest">
+                  {t("utilisation.budgetsTitre")}
+                </p>
+                <BudgetLigne
+                  libelle={t("utilisation.budgetIa")}
+                  aide={t("utilisation.budgetIaAide")}
+                  restant={usage.budgetIa.restant ?? Math.max(0, usage.budgetIa.max - usage.budgetIa.utilise)}
+                  max={usage.budgetIa.max}
+                />
+                {usage.budgetImages && (
+                  <BudgetLigne
+                    libelle={t("utilisation.budgetImages")}
+                    aide={t("utilisation.budgetImagesAide", { images: usage.budgetImages.imagesRestantes })}
+                    restant={usage.budgetImages.restant}
+                    max={usage.budgetImages.max}
+                  />
+                )}
+              </div>
+            )}
 
             <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface-2)] p-6 flex flex-col gap-3">
               <p className="text-[11px] font-semibold text-[var(--text-faint)] uppercase tracking-widest">
@@ -124,6 +158,31 @@ export default function UtilisationDetailPage() {
             </div>
           </div>
         ) : null}
+      </div>
+    </div>
+  );
+}
+
+/** Budget restant du mois, en euros, avec sa barre (même présentation que UsageMeter). */
+function BudgetLigne({ libelle, aide, restant, max }: { libelle: string; aide: string; restant: number; max: number }) {
+  const t = useTranslations("dashboard");
+  const format = useFormatter();
+  const euros = (v: number) => format.number(v, { style: "currency", currency: "EUR" });
+  const ratio = max > 0 ? Math.min(1, Math.max(0, (max - restant) / max)) : 1;
+  const barre = ratio >= 1 ? "bg-red-500" : ratio >= 0.8 ? "bg-amber-500" : "bg-violet-500";
+  return (
+    <div className="rounded-xl border border-[var(--border)] px-4 py-3.5 flex flex-col gap-2">
+      <div className="flex items-center justify-between gap-4">
+        <div>
+          <p className="text-sm font-medium text-[var(--text-primary)]">{libelle}</p>
+          <p className="text-[11px] text-[var(--text-faint)] mt-0.5">{aide}</p>
+        </div>
+        <p className="text-xs font-semibold shrink-0 whitespace-nowrap text-[var(--text-muted)]">
+          {t("utilisation.budgetRestant", { restant: euros(restant), max: euros(max) })}
+        </p>
+      </div>
+      <div className="h-1.5 rounded-full bg-[var(--surface-3)] overflow-hidden">
+        <div className={`h-full rounded-full ${barre}`} style={{ width: `${ratio * 100}%` }} />
       </div>
     </div>
   );

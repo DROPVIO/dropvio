@@ -70,6 +70,7 @@ export default function BoutiqueProduitsEditor({
           {limite !== null ? t("ajouterMax", { max: limite }) : t("ajouter")}
         </button>
       </div>
+      <p className="-mt-3 text-xs text-[var(--text-muted)]">ℹ️ {t("mentionCatalogue")}</p>
 
       <div className="flex flex-col gap-4">
         {draft.produits.map((p, i) => (
@@ -123,13 +124,8 @@ export default function BoutiqueProduitsEditor({
                 <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-faint)] text-sm">€</span>
               </div>
             </div>
-            <input
-              type="url"
-              placeholder={t("image")}
-              value={p.image ?? ""}
-              onChange={(e) => updateProduit(i, { image: e.target.value.trim() || null })}
-              className="bg-[var(--bg)] border border-[var(--border-strong)] rounded-lg px-3 py-2 text-sm text-[var(--text-primary)] placeholder-[var(--text-faint)] focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition"
-            />
+            {/* Image produit en lecture seule : elle se modifie dans « Catalogue », pas ici. */}
+            {!p.image && <p className="text-xs text-[var(--text-faint)]">{t("imageAucune")}</p>}
             {p.image && (
               <div className="rounded-lg overflow-hidden border border-[var(--border-strong)] bg-[var(--bg)] h-24 w-24 flex items-center justify-center">
                 {/* eslint-disable-next-line @next/next/no-img-element */}

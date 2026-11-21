@@ -43,8 +43,11 @@ function toggleCollapsed(): void {
 
 const PROTECTED_PATHS = ["/studio", "/quota", "/produits-gagnants", "/site-builder", "/mes-sites", "/dashboard", "/audit", "/tools/calculateur-marge", "/ventes"];
 
-export default function AppShell({ children }: { children: React.ReactNode }) {
-  const pathname  = usePathname();
+/** Cadre des pages de l'outil : barre latérale (repliable sur desktop, état mémorisé) et, sous
+ *  md, tiroir avec fond semi-transparent, bouton d'ouverture et défilement du corps bloqué.
+ *  Utilisé par AppShell et par les pages qui ne montrent la barre qu'à un compte connecté
+ *  (/formation). */
+export function CadreApp({ children }: { children: React.ReactNode }) {
   const collapsed = useSyncExternalStore(subscribeCollapsed, readCollapsed, () => false);
   const t = useTranslations("dashboard.nav");
   // Tiroir de navigation mobile (< md).
@@ -58,11 +61,20 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     return () => window.removeEventListener("keydown", onKey);
   }, [mobileOpen]);
 
-  const showSidebar = PROTECTED_PATHS.some((p) => pathname.startsWith(p));
-
-  if (!showSidebar) {
-    return <>{children}</>;
-  }
+  // Tiroir ouvert : le corps de page ne défile plus. Passage en largeur desktop (≥ md) : le
+  // tiroir se ferme, sinon le défilement resterait bloqué alors que le tiroir n'existe plus.
+  useEffect(() => {
+    if (!mobileOpen) return;
+    const precedent = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const desktop = window.matchMedia("(min-width: 768px)");
+    const surChangement = (e: MediaQueryListEvent) => { if (e.matches) setMobileOpen(false); };
+    desktop.addEventListener("change", surChangement);
+    return () => {
+      document.body.style.overflow = precedent;
+      desktop.removeEventListener("change", surChangement);
+    };
+  }, [mobileOpen]);
 
   return (
     <OnboardingProvider>
@@ -103,12 +115,27 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
               Dropvio
             </span>
           </div>
-          <ClocheVentes />
-          <PaiementActionBanner />
           {children}
         </main>
       </div>
       <OnboardingTour />
     </OnboardingProvider>
+  );
+}
+
+export default function AppShell({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
+  const showSidebar = PROTECTED_PATHS.some((p) => pathname.startsWith(p));
+
+  if (!showSidebar) {
+    return <>{children}</>;
+  }
+
+  return (
+    <CadreApp>
+      <ClocheVentes />
+      <PaiementActionBanner />
+      {children}
+    </CadreApp>
   );
 }

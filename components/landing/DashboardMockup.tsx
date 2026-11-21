@@ -9,7 +9,7 @@ import { useTranslations } from "next-intl";
  * à la main en 6px. La maquette utilisait la propriété `zoom` : scale() donne le même rendu
  * et est supporté partout.
  *
- * Palette volontairement figée (#0d0d14 / #13131f / accent #7c3aed) : c'est une « capture »
+ * Palette volontairement figée (#24242f / #2e2e3b / accent #7c3aed) : c'est une « capture »
  * du thème sombre de l'app, elle ne doit pas suivre le thème de la landing.
  *
  * Les noms de produits restent en anglais (noms de catalogue AliExpress). Les libellés d'axe
@@ -182,9 +182,9 @@ export function MockupMobile({ largeur, hauteur }: { largeur: number; hauteur: n
     <div style={{ width: largeur, height: hauteur, overflow: "hidden" }}>
       <div
         style={{ width: 375, height: 783, transform: `scale(${k})`, transformOrigin: "top left" }}
-        className="flex flex-col bg-[#0d0d14] font-[family-name:var(--font-geist-sans)] text-white"
+        className="flex flex-col bg-[#24242f] font-[family-name:var(--font-geist-sans)] text-white"
       >
-        <div className="flex h-11 flex-none items-center justify-between bg-[#13131f] px-[26px] text-sm font-semibold">
+        <div className="flex h-11 flex-none items-center justify-between bg-[#2e2e3b] px-[26px] text-sm font-semibold">
           <span>9:41</span>
           <span className="flex gap-1">
             <span className="h-2.5 w-4 rounded-sm bg-white" />
@@ -192,7 +192,7 @@ export function MockupMobile({ largeur, hauteur }: { largeur: number; hauteur: n
           </span>
         </div>
 
-        <div className="flex flex-none items-center justify-between border-b border-white/[0.06] bg-[#13131f] px-[18px] pb-[14px] pt-2.5">
+        <div className="flex flex-none items-center justify-between border-b border-white/[0.06] bg-[#2e2e3b] px-[18px] pb-[14px] pt-2.5">
           <div className="flex items-center gap-2">
             <span className="h-[22px] w-[22px] rounded-md bg-[#7c3aed]" />
             <span className="text-[19px] font-bold">{t("dashboard")}</span>
@@ -203,26 +203,26 @@ export function MockupMobile({ largeur, hauteur }: { largeur: number; hauteur: n
         <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-hidden p-4">
           <div className="grid grid-cols-2 gap-2.5">
             {STATS.map((s) => (
-              <div key={s.k} className="rounded-xl border border-white/[0.07] bg-[#13131f] px-[14px] py-3">
+              <div key={s.k} className="rounded-xl border border-white/[0.07] bg-[#2e2e3b] px-[14px] py-3">
                 <div className="text-xs text-white/45">{t(s.k)}</div>
                 <div className="mt-1 text-[22px] font-bold tabular-nums" style={{ color: s.c }}>{s.v}</div>
               </div>
             ))}
           </div>
 
-          <div className="rounded-xl border border-white/[0.07] bg-[#13131f] p-[14px]">
+          <div className="rounded-xl border border-white/[0.07] bg-[#2e2e3b] p-[14px]">
             <div className="mb-2.5 text-sm font-semibold">{t("chart")}</div>
             <Sparkline h={150} />
           </div>
 
-          <div className="rounded-xl border border-white/[0.07] bg-[#13131f] px-[14px] py-1.5">
+          <div className="rounded-xl border border-white/[0.07] bg-[#2e2e3b] px-[14px] py-1.5">
             {RECENTS.slice(0, 2).map((r, i) => (
               <LigneRecente key={r.nom} r={r} bordure={i > 0} />
             ))}
           </div>
         </div>
 
-        <div className="flex flex-none justify-around border-t border-white/[0.06] bg-[#13131f] px-1.5 pb-[26px] pt-2.5">
+        <div className="flex flex-none justify-around border-t border-white/[0.06] bg-[#2e2e3b] px-1.5 pb-[26px] pt-2.5">
           {([["tabHome", true], ["navProducts", false], ["tabMargin", false], ["tabAudit", false], ["tabStores", false]] as const).map(
             ([key, actif]) => (
               <div

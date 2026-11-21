@@ -4,19 +4,8 @@ import { useEffect, useMemo, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { toIntlTag, type AppLocale } from "@/lib/locale";
 import { useIsLightTheme } from "@/components/dashboard/useIsLightTheme";
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  Brush,
-  ResponsiveContainer,
-} from "recharts";
-
-const PERIOD_DAYS = 30;
+import { LegendeTendance, LigneTooltip, VariationCourte, couleursTendance, formatPlage } from "@/components/dashboard/Tendance";
+import { Area, AreaChart, Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
 // Les 5 sources ci-dessous sont déjà chargées par app/dashboard/page.tsx (mêmes lignes
 // réutilisées pour ses propres stats) — ce composant ne les refetch plus lui-même. Ça
@@ -31,124 +20,61 @@ export type DashboardChartData = {
   boutiqueProduits: { created_at: string }[];
 };
 
-type DayPoint = {
-  dateKey: string;
-  dateLabel: string;
-  margeEur: number;
-  margeHasData: boolean;
-  margePct: number;
-  auditScore: number;
-  auditHasData: boolean;
-  auditPct: number;
-  shopifyIncidents: number;
-  shopifyPct: number;
-  sites: number;
-  sitesPct: number;
-  boutiqueProduits: number;
-  boutiquesPct: number;
-  utilisation: number;
-  utilisationPct: number;
-};
+// Activité façon analytics Shopify : un onglet par indicateur (valeur de la période +
+// variation vs période précédente), un seul graphique pour l'indicateur choisi, période
+// précédente en pointillés. Vue « cumulée » par défaut : l'activité étant ponctuelle (quelques
+// jours actifs sur 30), une courbe journalière ne ferait que des pics isolés ; le cumul montre
+// la progression. Vue « par jour » en barres pour le détail.
 
-type SerieKey = "margePct" | "auditPct" | "shopifyPct" | "sitesPct" | "boutiquesPct" | "utilisationPct";
-type SerieConfig = { key: SerieKey; name: string; color: string };
+const PERIODES = [7, 30, 90] as const;
+type Periode = (typeof PERIODES)[number];
+type Mode = "cumul" | "jour";
+const JOUR_MS = 24 * 60 * 60 * 1000;
 
-// Le libellé de chaque série est résolu au rendu (traduction) — seules la clé de données
-// et la couleur sont statiques ici.
-const SERIE_DEFS: { key: SerieKey; labelKey: string; color: string }[] = [
-  { key: "margePct",       labelKey: "serieMarges",      color: "#a78bfa" },
-  { key: "auditPct",       labelKey: "serieAudits",      color: "#60a5fa" },
-  { key: "shopifyPct",     labelKey: "serieShopify",     color: "#fb7185" },
-  { key: "sitesPct",       labelKey: "serieSites",       color: "#34d399" },
-  { key: "boutiquesPct",   labelKey: "serieBoutiques",   color: "#fbbf24" },
-  { key: "utilisationPct", labelKey: "serieUtilisation", color: "#22d3ee" },
+// "somme" : compte d'événements par jour. "moyenne" : moyenne des valeurs du jour (marge nette
+// en €, score d'audit /100) — cumul = moyenne glissante depuis le début de la période.
+type MetricKey = "sites" | "produits" | "audits" | "marges" | "shopify" | "utilisation";
+type Metric = { key: MetricKey; labelKey: string; type: "somme" | "moyenne"; inverse?: boolean };
+const METRICS: Metric[] = [
+  { key: "sites", labelKey: "metricSites", type: "somme" },
+  { key: "produits", labelKey: "metricProduits", type: "somme" },
+  { key: "audits", labelKey: "metricAudits", type: "moyenne" },
+  { key: "marges", labelKey: "metricMarges", type: "moyenne" },
+  // Hausse des incidents = mauvaise nouvelle : couleurs de variation inversées.
+  { key: "shopify", labelKey: "metricShopify", type: "somme", inverse: true },
+  { key: "utilisation", labelKey: "metricUtilisation", type: "somme" },
 ];
 
-/** Libellés du tooltip, passés en props plutôt que lus via un hook : recharts invoque
- *  `content` comme une simple fonction, pas comme un composant monté. */
-type TooltipTexts = {
-  noSimulation: string;
-  noAudit: string;
-  incidents: (count: number) => string;
-  sites: (count: number) => string;
-  produits: (count: number) => string;
-  actions: (count: number) => string;
+type Agregat = { somme: number; nb: number };
+type Point = {
+  t: number;
+  tPrecedent: number;
+  actuel: number | null;
+  precedent: number | null;
+  jourActuel: Agregat;
+  jourPrecedent: Agregat;
 };
 
-function dateKeyOf(d: Date): string {
-  return d.toISOString().slice(0, 10);
+function dateKeyOf(t: number): string {
+  return new Date(t).toISOString().slice(0, 10);
 }
 
-// 30 jours vides (clé + libellé), du plus ancien au plus récent — le squelette sur lequel
-// on vient agréger chaque source, pour que les jours sans activité restent des points à 0
-// plutôt que des trous dans la courbe.
-function buildEmptyDays(intlTag: string): { dateKey: string; dateLabel: string }[] {
-  const now = new Date();
-  return Array.from({ length: PERIOD_DAYS }, (_, i) => {
-    const d = new Date(now);
-    d.setUTCDate(now.getUTCDate() - (PERIOD_DAYS - 1 - i));
-    return { dateKey: dateKeyOf(d), dateLabel: d.toLocaleDateString(intlTag, { day: "numeric", month: "short" }) };
-  });
-}
-
-function ActiviteTooltip({
-  active,
-  payload,
-  label,
-  series,
-  texts,
-}: {
-  active?: boolean;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  payload?: readonly any[];
-  label?: string | number;
-  series: SerieConfig[];
-  texts: TooltipTexts;
-}) {
-  if (!active || !payload?.length) return null;
-  const point: DayPoint = payload[0].payload;
-
-  const rows: { key: SerieKey; raw: string }[] = [
-    { key: "margePct", raw: point.margeHasData ? `${point.margeEur.toFixed(2)}€` : texts.noSimulation },
-    { key: "auditPct", raw: point.auditHasData ? `${Math.round(point.auditScore)}/100` : texts.noAudit },
-    { key: "shopifyPct", raw: texts.incidents(point.shopifyIncidents) },
-    { key: "sitesPct", raw: texts.sites(point.sites) },
-    { key: "boutiquesPct", raw: texts.produits(point.boutiqueProduits) },
-    { key: "utilisationPct", raw: texts.actions(point.utilisation) },
-  ];
-
-  return (
-    <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 py-2.5 shadow-xl flex flex-col gap-1.5 min-w-[220px]">
-      <p className="text-[10px] text-[var(--text-faint)] mb-0.5">{label}</p>
-      {rows.map(({ key, raw }) => {
-        const serie = series.find((s) => s.key === key)!;
-        return (
-          <p key={key} className="text-xs flex items-center justify-between gap-4" style={{ color: serie.color }}>
-            <span>{serie.name}</span>
-            <span className="font-semibold text-right">
-              {raw} <span className="text-[var(--text-faint)]">({Math.round(point[key])}%)</span>
-            </span>
-          </p>
-        );
-      })}
-    </div>
-  );
+function variation(actuel: number | null, precedent: number | null): number | null {
+  if (actuel === null || precedent === null) return null;
+  if (precedent === 0) return actuel === 0 ? 0 : null;
+  return ((actuel - precedent) / precedent) * 100;
 }
 
 export default function DashboardActiviteChart({ chartData }: { chartData: DashboardChartData | null }) {
   const t = useTranslations("dashboard.chart");
+  const tVentes = useTranslations("dashboard.ventes");
   const intlTag = toIntlTag(useLocale() as AppLocale);
-  const isLight = useIsLightTheme();
+  const couleurs = couleursTendance(useIsLightTheme());
 
-  const series: SerieConfig[] = SERIE_DEFS.map((s) => ({ key: s.key, name: t(s.labelKey), color: s.color }));
-  const tooltipTexts: TooltipTexts = {
-    noSimulation: t("noSimulation"),
-    noAudit: t("noAudit"),
-    incidents: (count) => t("incidents", { count }),
-    sites: (count) => t("sites", { count }),
-    produits: (count) => t("produits", { count }),
-    actions: (count) => t("actions", { count }),
-  };
+  const [periode, setPeriode] = useState<Periode>(30);
+  const [metricKey, setMetricKey] = useState<MetricKey>("sites");
+  const [mode, setMode] = useState<Mode>("cumul");
+  const [maintenant] = useState(() => Date.now());
 
   // Seule requête restante ici : les incidents Shopify, non chargés par le parent. Démarre
   // dès le montage — pas besoin d'attendre chartData ni un auth.getUser() local, la route
@@ -164,163 +90,236 @@ export default function DashboardActiviteChart({ chartData }: { chartData: Dashb
 
   const loading = chartData === null || incidents === null;
 
-  const { data, hasActivity } = useMemo<{ data: DayPoint[]; hasActivity: boolean }>(() => {
-    if (chartData === null || incidents === null) return { data: [], hasActivity: false };
-
-    const now = new Date();
-    const cutoff = new Date(now);
-    cutoff.setUTCDate(now.getUTCDate() - (PERIOD_DAYS - 1));
-    cutoff.setUTCHours(0, 0, 0, 0);
-    const cutoffIso = cutoff.toISOString();
-
-    // chartData vient du parent sans filtre de date (réutilisé tel quel pour ses propres
-    // stats all-time) — on restreint aux 30 derniers jours ici, en mémoire, sans requête.
-    const sims = chartData.simulations.filter((s) => s.created_at >= cutoffIso);
-    const auds = chartData.audits.filter((a) => a.created_at >= cutoffIso);
-    const sites = chartData.sites.filter((s) => s.created_at >= cutoffIso);
-    const boutiqueProduits = chartData.boutiqueProduits.filter((p) => p.created_at >= cutoffIso);
-    const incidentsRecents = incidents.filter((i) => i.created_at >= cutoffIso);
-
-    const margeSum = new Map<string, number>();
-    const margeCount = new Map<string, number>();
-    const auditSum = new Map<string, number>();
-    const auditCount = new Map<string, number>();
-    const shopifyCount = new Map<string, number>();
-    const sitesCount = new Map<string, number>();
-    const boutiquesCount = new Map<string, number>();
-
-    for (const s of sims) {
-      const key = s.created_at.slice(0, 10);
-      const eur = (s.resultats as { margeNette?: number } | null)?.margeNette;
-      if (typeof eur === "number") {
-        margeSum.set(key, (margeSum.get(key) ?? 0) + eur);
-        margeCount.set(key, (margeCount.get(key) ?? 0) + 1);
-      }
-    }
-    for (const a of auds) {
-      const key = a.created_at.slice(0, 10);
-      auditSum.set(key, (auditSum.get(key) ?? 0) + a.score_total);
-      auditCount.set(key, (auditCount.get(key) ?? 0) + 1);
-    }
-    for (const i of incidentsRecents) {
-      const key = i.created_at.slice(0, 10);
-      shopifyCount.set(key, (shopifyCount.get(key) ?? 0) + 1);
-    }
-    for (const s of sites) {
-      const key = s.created_at.slice(0, 10);
-      sitesCount.set(key, (sitesCount.get(key) ?? 0) + 1);
-    }
-    for (const p of boutiqueProduits) {
-      const key = p.created_at.slice(0, 10);
-      boutiquesCount.set(key, (boutiquesCount.get(key) ?? 0) + 1);
-    }
-
-    const points: DayPoint[] = buildEmptyDays(intlTag).map((d) => {
-      const margeN = margeCount.get(d.dateKey) ?? 0;
-      const auditN = auditCount.get(d.dateKey) ?? 0;
-      const sitesN = sitesCount.get(d.dateKey) ?? 0;
-      return {
-        dateKey: d.dateKey,
-        dateLabel: d.dateLabel,
-        margeEur: margeN > 0 ? (margeSum.get(d.dateKey) ?? 0) / margeN : 0,
-        margeHasData: margeN > 0,
-        margePct: 0,
-        auditScore: auditN > 0 ? (auditSum.get(d.dateKey) ?? 0) / auditN : 0,
-        auditHasData: auditN > 0,
-        auditPct: 0,
-        shopifyIncidents: shopifyCount.get(d.dateKey) ?? 0,
-        shopifyPct: 0,
-        sites: sitesN,
-        sitesPct: 0,
-        boutiqueProduits: boutiquesCount.get(d.dateKey) ?? 0,
-        boutiquesPct: 0,
-        utilisation: auditN + sitesN,
-        utilisationPct: 0,
-      };
-    });
-
-    // Normalisation en % du max propre de chaque série sur la période affichée — Math.max
-    // avec 0 en plancher pour ne jamais diviser par une valeur négative (marge nette
-    // moyenne qui serait une perte tous les jours actifs, par exemple).
-    const maxOf = (sel: (p: DayPoint) => number) => Math.max(0, ...points.map(sel));
-    const margeMax = maxOf((p) => p.margeEur);
-    const auditMax = maxOf((p) => p.auditScore);
-    const shopifyMax = maxOf((p) => p.shopifyIncidents);
-    const sitesMax = maxOf((p) => p.sites);
-    const boutiquesMax = maxOf((p) => p.boutiqueProduits);
-    const utilisationMax = maxOf((p) => p.utilisation);
-
-    for (const p of points) {
-      p.margePct = margeMax > 0 ? (p.margeEur / margeMax) * 100 : 0;
-      p.auditPct = auditMax > 0 ? (p.auditScore / auditMax) * 100 : 0;
-      p.shopifyPct = shopifyMax > 0 ? (p.shopifyIncidents / shopifyMax) * 100 : 0;
-      p.sitesPct = sitesMax > 0 ? (p.sites / sitesMax) * 100 : 0;
-      p.boutiquesPct = boutiquesMax > 0 ? (p.boutiqueProduits / boutiquesMax) * 100 : 0;
-      p.utilisationPct = utilisationMax > 0 ? (p.utilisation / utilisationMax) * 100 : 0;
-    }
-
-    return {
-      data: points,
-      hasActivity: points.some((p) => p.margeHasData || p.auditHasData || p.shopifyIncidents > 0 || p.sites > 0 || p.boutiqueProduits > 0),
+  // Agrégats journaliers de tout l'historique, par indicateur (clé = AAAA-MM-JJ).
+  const parJour = useMemo(() => {
+    const maps = Object.fromEntries(METRICS.map((m) => [m.key, new Map<string, Agregat>()])) as Record<MetricKey, Map<string, Agregat>>;
+    if (chartData === null || incidents === null) return maps;
+    const ajouter = (k: MetricKey, createdAt: string, valeur: number) => {
+      const key = createdAt.slice(0, 10);
+      const a = maps[k].get(key) ?? { somme: 0, nb: 0 };
+      a.somme += valeur;
+      a.nb += 1;
+      maps[k].set(key, a);
     };
-  }, [chartData, incidents, intlTag]);
+    for (const s of chartData.simulations) {
+      const eur = (s.resultats as { margeNette?: number } | null)?.margeNette;
+      if (typeof eur === "number") ajouter("marges", s.created_at, eur);
+    }
+    for (const a of chartData.audits) {
+      ajouter("audits", a.created_at, a.score_total);
+      ajouter("utilisation", a.created_at, 1);
+    }
+    for (const s of chartData.sites) {
+      ajouter("sites", s.created_at, 1);
+      ajouter("utilisation", s.created_at, 1);
+    }
+    for (const p of chartData.boutiqueProduits) ajouter("produits", p.created_at, 1);
+    for (const i of incidents) ajouter("shopify", i.created_at, 1);
+    return maps;
+  }, [chartData, incidents]);
 
-  // Valeurs recharts non-Tailwind, recalculées selon le thème (voir useIsLightTheme
-  // ci-dessus) — le reste du composant utilise déjà var(--token) via className.
-  const gridStroke = isLight ? "rgba(0,0,0,0.06)" : "rgba(255,255,255,0.04)";
-  const cursorStroke = isLight ? "rgba(0,0,0,0.08)" : "rgba(255,255,255,0.06)";
-  const axisTickFill = isLight ? "#a1a1aa" : "#52525b";
-  const legendColor = isLight ? "#52525b" : "#a1a1aa";
+  // Jours de la période (du plus ancien à aujourd'hui) et ceux de la période précédente.
+  const jours = useMemo(() => {
+    const aujourdhui = new Date(maintenant);
+    aujourdhui.setUTCHours(0, 0, 0, 0);
+    const fin = aujourdhui.getTime();
+    return Array.from({ length: periode }, (_, i) => {
+      const tt = fin - (periode - 1 - i) * JOUR_MS;
+      return { t: tt, tPrecedent: tt - periode * JOUR_MS };
+    });
+  }, [periode, maintenant]);
+
+  // Valeur de la période, variation et série du graphique pour chaque indicateur.
+  const resume = useMemo(() => {
+    const vide: Agregat = { somme: 0, nb: 0 };
+    return Object.fromEntries(
+      METRICS.map((m) => {
+        const map = parJour[m.key];
+        const total = (cle: "t" | "tPrecedent") =>
+          jours.reduce<Agregat>((acc, j) => {
+            const a = map.get(dateKeyOf(j[cle])) ?? vide;
+            return { somme: acc.somme + a.somme, nb: acc.nb + a.nb };
+          }, { somme: 0, nb: 0 });
+        const valeurDe = (a: Agregat): number | null => (m.type === "somme" ? a.somme : a.nb > 0 ? a.somme / a.nb : null);
+        const actuel = valeurDe(total("t"));
+        const precedent = valeurDe(total("tPrecedent"));
+
+        const cumulA = { somme: 0, nb: 0 };
+        const cumulP = { somme: 0, nb: 0 };
+        const points: Point[] = jours.map((j) => {
+          const jourActuel = map.get(dateKeyOf(j.t)) ?? vide;
+          const jourPrecedent = map.get(dateKeyOf(j.tPrecedent)) ?? vide;
+          cumulA.somme += jourActuel.somme; cumulA.nb += jourActuel.nb;
+          cumulP.somme += jourPrecedent.somme; cumulP.nb += jourPrecedent.nb;
+          return { ...j, jourActuel, jourPrecedent, actuel: valeurDe(cumulA), precedent: valeurDe(cumulP) };
+        });
+        return [m.key, { actuel, precedent, variation: variation(actuel, precedent), points, aPrecedent: total("tPrecedent").nb > 0 }];
+      })
+    ) as Record<MetricKey, { actuel: number | null; precedent: number | null; variation: number | null; points: Point[]; aPrecedent: boolean }>;
+  }, [parJour, jours]);
+
+  const formats = useMemo(() => {
+    const entier = new Intl.NumberFormat(intlTag);
+    const euro = new Intl.NumberFormat(intlTag, { style: "currency", currency: "EUR", maximumFractionDigits: 2 });
+    const euroCompact = new Intl.NumberFormat(intlTag, { style: "currency", currency: "EUR", notation: "compact", maximumFractionDigits: 1 });
+    return {
+      valeur: (k: MetricKey, v: number | null) => (v === null ? "—" : k === "marges" ? euro.format(v) : k === "audits" ? `${Math.round(v)}/100` : entier.format(v)),
+      axe: (k: MetricKey, v: number) => (k === "marges" ? euroCompact.format(v) : entier.format(v)),
+      date: (tt: number) => new Date(tt).toLocaleDateString(intlTag, { day: "numeric", month: "short" }),
+    };
+  }, [intlTag]);
+
+  const metric = METRICS.find((m) => m.key === metricKey)!;
+  const courant = resume[metricKey];
+  const hasActivity = METRICS.some((m) => resume[m.key].points.some((p) => p.jourActuel.nb > 0));
+  const debut = jours[0].t;
+  const fin = jours[jours.length - 1].t;
+
+  // Par jour : valeur brute du jour (somme ou moyenne), null pour une moyenne sans donnée.
+  const valeurJour = (a: Agregat): number | null => (metric.type === "somme" ? a.somme : a.nb > 0 ? a.somme / a.nb : null);
+  const donneesJour = courant.points.map((p) => ({ ...p, actuel: valeurJour(p.jourActuel), precedent: valeurJour(p.jourPrecedent) }));
+  const donnees = mode === "cumul" ? courant.points : donneesJour;
+
+  const tooltip = (
+    <Tooltip
+      cursor={mode === "cumul" ? { stroke: couleurs.curseur } : { fill: couleurs.grille }}
+      content={({ active, payload }) => {
+        if (!active || !payload?.length) return null;
+        const p = payload[0].payload as Point;
+        const vide = metricKey === "marges" ? t("noSimulation") : metricKey === "audits" ? t("noAudit") : "—";
+        const texte = (v: number | null) => (v === null ? vide : formats.valeur(metricKey, v));
+        return (
+          <div className="rounded-xl border border-[var(--border)] bg-[var(--surface)] px-3 py-2.5 shadow-xl text-xs min-w-[200px] flex flex-col gap-1.5">
+            <p className="text-[11px] text-[var(--text-faint)]">{mode === "cumul" ? t("tooltipCumul") : t("tooltipJour")}</p>
+            <LigneTooltip libelle={formats.date(p.t)} valeur={texte(p.actuel)} couleur={couleurs.actuel} />
+            {courant.aPrecedent ? (
+              <LigneTooltip libelle={formats.date(p.tPrecedent)} valeur={texte(p.precedent)} couleur={couleurs.actuel} opacite={couleurs.precedentOpacite} pointilles />
+            ) : null}
+          </div>
+        );
+      }}
+    />
+  );
+
+  const axes = (
+    <>
+      <CartesianGrid stroke={couleurs.grille} vertical={false} />
+      <XAxis dataKey="t" tickFormatter={formats.date} tick={{ fill: couleurs.axe, fontSize: 11 }} axisLine={false} tickLine={false} minTickGap={48} />
+      <YAxis
+        tickFormatter={(v: number) => formats.axe(metricKey, v)}
+        tick={{ fill: couleurs.axe, fontSize: 11 }}
+        axisLine={false}
+        tickLine={false}
+        allowDecimals={metric.type === "moyenne"}
+        tickCount={3}
+        domain={metricKey === "audits" ? [0, 100] : [0, "auto"]}
+        width={56}
+      />
+    </>
+  );
+
+  const bouton = (actif: boolean) =>
+    `rounded-md px-2.5 py-1 text-xs font-medium transition-colors ${
+      actif ? "bg-[var(--surface)] text-[var(--text-primary)] shadow-sm" : "text-[var(--text-muted)] hover:text-[var(--text-primary)]"
+    }`;
 
   return (
-    <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-6">
-      <div className="mb-6">
-        <p className="text-sm font-semibold text-[var(--text-primary)]">{t("title")}</p>
-        <p className="text-[11px] text-[var(--text-faint)] mt-0.5">{t("caption")}</p>
+    <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] overflow-hidden">
+      {/* ── En-tête : titre + période ─────────────────────────────────── */}
+      <div className="flex flex-wrap items-start justify-between gap-3 px-6 pt-5">
+        <div>
+          <p className="text-base font-semibold text-[var(--text-primary)]">{t("title")}</p>
+          <p className="text-xs text-[var(--text-faint)] mt-0.5">{t("caption")}</p>
+        </div>
+        <div className="flex rounded-lg bg-[var(--surface-2)] p-0.5">
+          {PERIODES.map((p) => (
+            <button key={p} type="button" onClick={() => setPeriode(p)} className={bouton(periode === p)}>
+              {tVentes(`periodes.${p}j`)}
+            </button>
+          ))}
+        </div>
       </div>
 
-      {loading ? (
-        <div className="h-[320px] flex items-center justify-center">
-          <div className="w-5 h-5 rounded-full border-2 border-[var(--accent)] border-t-transparent animate-spin" />
+      {/* ── Onglets indicateurs : valeur de la période + variation ─────── */}
+      <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 border-y border-[var(--border)]">
+        {METRICS.map((m) => {
+          const r = resume[m.key];
+          const actif = m.key === metricKey;
+          return (
+            <button
+              key={m.key}
+              type="button"
+              onClick={() => setMetricKey(m.key)}
+              aria-pressed={actif}
+              className={`relative flex flex-col items-start gap-1 px-5 py-3.5 text-left border-[var(--border)] [&:not(:last-child)]:border-r transition-colors ${
+                actif ? "bg-[var(--surface-2)]" : "hover:bg-[var(--surface-2)]/60"
+              }`}
+            >
+              {actif && <span className="absolute inset-x-0 top-0 h-0.5" style={{ background: couleurs.actuel }} />}
+              <span className="text-xs text-[var(--text-muted)]">{t(m.labelKey)}</span>
+              <span className="flex items-baseline gap-2">
+                <span className="text-xl font-bold tabular-nums text-[var(--text-primary)]">{loading ? "…" : formats.valeur(m.key, r.actuel)}</span>
+                {!loading && r.actuel !== null ? (
+                  <VariationCourte valeur={r.variation} intlTag={intlTag} nouveau={tVentes("nouveau")} inverse={m.inverse} />
+                ) : null}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* ── Graphique de l'indicateur choisi ───────────────────────────── */}
+      <div className="px-6 pt-4 pb-5 flex flex-col gap-3">
+        <div className="flex justify-end">
+          <div className="flex rounded-lg bg-[var(--surface-2)] p-0.5">
+            <button type="button" onClick={() => setMode("cumul")} className={bouton(mode === "cumul")}>{t("modeCumul")}</button>
+            <button type="button" onClick={() => setMode("jour")} className={bouton(mode === "jour")}>{t("modeJour")}</button>
+          </div>
         </div>
-      ) : !hasActivity ? (
-        <div className="h-[220px] flex items-center justify-center">
-          <p className="text-[var(--text-faint)] text-sm">{t("empty")}</p>
-        </div>
-      ) : (
-        <ResponsiveContainer width="100%" height={340}>
-          <LineChart data={data} margin={{ top: 4, right: 8, left: -24, bottom: 0 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} vertical={false} />
-            <XAxis dataKey="dateLabel" tick={{ fill: axisTickFill, fontSize: 10 }} axisLine={false} tickLine={false} interval={4} />
-            <YAxis
-              domain={[0, 100]}
-              tickFormatter={(v) => `${v}%`}
-              tick={{ fill: axisTickFill, fontSize: 10 }}
-              axisLine={false}
-              tickLine={false}
-              width={40}
-            />
-            <Tooltip
-              content={(props) => <ActiviteTooltip {...props} series={series} texts={tooltipTexts} />}
-              cursor={{ stroke: cursorStroke, strokeWidth: 1 }}
-            />
-            <Legend iconType="plainline" iconSize={16} wrapperStyle={{ fontSize: 11, color: legendColor, paddingTop: 12 }} />
-            {series.map((s) => (
-              <Line
-                key={s.key}
-                type="monotone"
-                dataKey={s.key}
-                name={s.name}
-                stroke={s.color}
-                strokeWidth={2}
-                dot={false}
-                activeDot={{ r: 3, strokeWidth: 0 }}
-              />
-            ))}
-            <Brush dataKey="dateLabel" height={24} stroke="#7c3aed" fill={isLight ? "#ffffff" : "#13131f"} travellerWidth={8} />
-          </LineChart>
-        </ResponsiveContainer>
-      )}
+
+        {loading ? (
+          <div className="h-[260px] flex items-center justify-center">
+            <div className="w-5 h-5 rounded-full border-2 border-[var(--accent)] border-t-transparent animate-spin" />
+          </div>
+        ) : !hasActivity ? (
+          <div className="h-[220px] flex items-center justify-center">
+            <p className="text-[var(--text-faint)] text-sm">{t("empty")}</p>
+          </div>
+        ) : (
+          <ResponsiveContainer width="100%" height={260}>
+            {mode === "cumul" ? (
+              <AreaChart data={donnees} margin={{ top: 6, right: 8, left: 0, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="dv-activite" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor={couleurs.actuel} stopOpacity={0.16} />
+                    <stop offset="100%" stopColor={couleurs.actuel} stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                {axes}
+                {tooltip}
+                {courant.aPrecedent ? (
+                  <Area type="monotone" dataKey="precedent" stroke={couleurs.actuel} strokeOpacity={couleurs.precedentOpacite} strokeWidth={2} strokeDasharray="0.5 5" strokeLinecap="round" fill="none" isAnimationActive={false} activeDot={false} connectNulls />
+                ) : null}
+                <Area type="monotone" dataKey="actuel" stroke={couleurs.actuel} strokeWidth={2.5} fill="url(#dv-activite)" isAnimationActive={false} activeDot={{ r: 4, strokeWidth: 0 }} connectNulls />
+              </AreaChart>
+            ) : (
+              <BarChart data={donnees} margin={{ top: 6, right: 8, left: 0, bottom: 0 }} barGap={1} barCategoryGap={periode === 90 ? "15%" : "25%"}>
+                {axes}
+                {tooltip}
+                {courant.aPrecedent ? <Bar dataKey="precedent" fill={couleurs.actuel} fillOpacity={couleurs.precedentOpacite * 0.6} radius={[3, 3, 0, 0]} isAnimationActive={false} /> : null}
+                <Bar dataKey="actuel" fill={couleurs.actuel} radius={[3, 3, 0, 0]} isAnimationActive={false} />
+              </BarChart>
+            )}
+          </ResponsiveContainer>
+        )}
+
+        <LegendeTendance
+          actuel={formatPlage(debut, fin, intlTag)}
+          precedent={courant.aPrecedent ? formatPlage(debut - periode * JOUR_MS, fin - periode * JOUR_MS, intlTag) : undefined}
+          couleur={couleurs.actuel}
+          opacitePrecedent={couleurs.precedentOpacite}
+        />
+      </div>
     </div>
   );
 }

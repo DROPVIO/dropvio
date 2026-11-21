@@ -247,7 +247,7 @@
       "budgetIaAtteint": "Budget IA del mese raggiunto. Verrà azzerato il 1° del mese prossimo.",
       "limiteJour": "Ultime 24 ore: {utilise} / {max}",
       "limiteSemaine": "Ultimi 7 giorni: {utilise} / {max}",
-      "limitesAide": "Il tuo budget è distribuito nel tempo: al massimo il 15% in 24 ore e il 30% in 7 giorni, per poter creare siti e fare audit per tutto il mese. Questi limiti si liberano con il passare delle ore.",
+      "limitesAide": "Il tuo budget è distribuito nel tempo: al massimo il {jour}% in 24 ore e il {semaine}% in 7 giorni, per poter creare siti e fare audit per tutto il mese. Questi limiti si liberano con il passare delle ore.",
       "limiteReprise": "Si libera il {reprise, date, short} alle {reprise, time, short}"
     },
     "profil": {
@@ -732,8 +732,8 @@
       "bundleTitle": "Entrambi i corsi",
       "bundleDesc": "Versione breve per partire subito, versione completa per approfondire tutto — accesso a entrambe, a vita.",
       "bundleSave": "risparmi {montant}",
-      "buy": "Acquista — {prix}",
-      "buyBundle": "Acquista il pacchetto — {prix}",
+      "buy": "Acquista",
+      "buyBundle": "Acquista il pacchetto",
       "redirecting": "Reindirizzamento…",
       "read": "Leggi →",
       "readerBack": "← Torna alla formazione",
@@ -1185,6 +1185,8 @@
     }
   },
   "landing": {
+    "metaTitre": "Prodotti vincenti, margine netto e negozio Shopify | Dropvio",
+    "metaDescription": "Trova prodotti vincenti su AliExpress, calcola il tuo margine netto dopo commissioni, spedizione e tasse, e genera un negozio pronto a vendere.",
     "nav": {
       "pricing": "Prezzi",
       "login": "Accedi",

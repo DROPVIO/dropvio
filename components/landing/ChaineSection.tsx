@@ -493,7 +493,6 @@ export default function ChaineSection() {
               >
                 {tHero("ctaPrimary")}
               </Link>
-              <p className="m-0 text-sm leading-[1.45] text-[#52525B]">{tHero("note")}</p>
             </div>
           </div>
         </div>

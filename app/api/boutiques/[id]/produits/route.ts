@@ -122,6 +122,10 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
     .single();
 
   if (error) {
+    // Limite vérifiée aussi par la base (trigger de la migration 059), pour un ajout simultané.
+    if (error.message.startsWith("limite_produits_boutique")) {
+      return apiError("boutique_product_limit_max", 403, `Tu as atteint la limite maximale de ${max} produits par boutique.`, { values: { max: max ?? 0 } });
+    }
     return NextResponse.json({ error: error.message, code: "server_error" }, { status: 500 });
   }
 

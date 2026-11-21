@@ -247,7 +247,7 @@
       "budgetIaAtteint": "Se ha alcanzado el presupuesto de IA del mes. Se reiniciará el día 1 del mes que viene.",
       "limiteJour": "Últimas 24 horas: {utilise} / {max}",
       "limiteSemaine": "Últimos 7 días: {utilise} / {max}",
-      "limitesAide": "Tu presupuesto se reparte en el tiempo: como máximo un 15 % en 24 horas y un 30 % en 7 días, para poder crear sitios y hacer auditorías todo el mes. Estos límites se liberan con las horas.",
+      "limitesAide": "Tu presupuesto se reparte en el tiempo: como máximo un {jour} % en 24 horas y un {semaine} % en 7 días, para poder crear sitios y hacer auditorías todo el mes. Estos límites se liberan con las horas.",
       "limiteReprise": "Se libera el {reprise, date, short} a las {reprise, time, short}"
     },
     "profil": {
@@ -732,8 +732,8 @@
       "bundleTitle": "Las dos formaciones",
       "bundleDesc": "Versión corta para empezar rápido, versión larga para profundizar — acceso a ambas, de por vida.",
       "bundleSave": "ahorra {montant}",
-      "buy": "Comprar — {prix}",
-      "buyBundle": "Comprar el pack — {prix}",
+      "buy": "Comprar",
+      "buyBundle": "Comprar el pack",
       "redirecting": "Redirigiendo…",
       "read": "Leer →",
       "readerBack": "← Volver a la formación",
@@ -1185,6 +1185,8 @@
     }
   },
   "landing": {
+    "metaTitre": "Productos ganadores, margen neto y tienda Shopify | Dropvio",
+    "metaDescription": "Encuentra productos ganadores en AliExpress, calcula tu margen neto tras comisiones, envío e impuestos, y genera una tienda lista para vender.",
     "nav": {
       "pricing": "Precios",
       "login": "Iniciar sesión",

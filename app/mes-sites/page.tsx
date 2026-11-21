@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import type { Plan } from "@/lib/plan-limits";
 import { useLocale, useTranslations } from "next-intl";
 import { toIntlTag, type AppLocale } from "@/lib/locale";
 import { slugFichier, telechargerTexte } from "@/lib/audit-download";
@@ -52,8 +53,8 @@ export default function MesSitesPage() {
   // Plan free : téléchargement et publication Shopify réservés à Pro/Agency (voir diagnostic
   // "restriction export Site Builder") — démarre à false (état le plus restrictif) tant que
   // /api/plan n'a pas répondu.
-  const [plan, setPlan] = useState<"free" | "pro" | "agency" | null>(null);
-  const canExport = plan === "pro" || plan === "agency";
+  const [plan, setPlan] = useState<Plan | null>(null);
+  const canExport = plan === "pro" || plan === "agency" || plan === "expert";
 
   // Sites sur lesquels une correction IA a été appliquée et reste annulable
   // (html_content_precedent non null côté serveur, voir /api/sites-generes). Vide si la

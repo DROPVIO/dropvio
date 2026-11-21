@@ -22,6 +22,21 @@ export async function createSupabaseServerClient() {
 
 const NO_FORMATION_OWNED: FormationOwnership = { courte: false, longue: false };
 
+// Sans période payée en cours, profils.plan = "expert" ne donne aucun droit : le plan n'existe
+// qu'à travers une configuration choisie et payée (ou offerte).
+async function resolvePlan(supabase: SupabaseClient, userId: string, profilPlan: unknown): Promise<Plan> {
+  const plan = (profilPlan as Plan | undefined) ?? "free";
+  if (plan !== "expert") return plan;
+
+  const { data } = await supabase
+    .from("expert_periodes")
+    .select("id")
+    .eq("user_id", userId)
+    .gt("periode_fin", new Date().toISOString())
+    .limit(1);
+  return data?.length ? "expert" : "free";
+}
+
 // Utilisateur + plan résolus côté serveur, à partir de la session (jamais d'un champ
 // envoyé par le client). Pas de session ou pas de ligne profils -> "free" par défaut, le
 // choix le plus restrictif. formationOwned suit le même principe (jamais de confiance dans
@@ -45,7 +60,7 @@ export async function getServerUserAndPlan(): Promise<{
     supabase.from("formation_achats").select("collection").eq("user_id", user.id),
   ]);
 
-  const plan = (profil?.plan as Plan | undefined) ?? "free";
+  const plan = await resolvePlan(supabase, user.id, profil?.plan);
   const formationOwned: FormationOwnership = {
     courte: achats?.some((a) => a.collection === "courte") ?? false,
     longue: achats?.some((a) => a.collection === "longue") ?? false,
@@ -73,6 +88,6 @@ export async function getServerUserPlanOnly(): Promise<{
   }
 
   const { data: profil } = await supabase.from("profils").select("plan").eq("id", user.id).maybeSingle();
-  const plan = (profil?.plan as Plan | undefined) ?? "free";
+  const plan = await resolvePlan(supabase, user.id, profil?.plan);
   return { supabase, user, plan };
 }

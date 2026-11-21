@@ -16,7 +16,7 @@ L'auditeur de page de destination note automatiquement la page sur cent points r
 
 ## Au moment de construire la boutique elle-même
 
-Le constructeur de sites génère une page produit ou une boutique multi-produits à partir de styles et de palettes de couleurs, avec une prévisualisation mobile avant publication, comme recommandé dans la partie 4. Le résultat peut être exporté vers Shopify ; avec une boutique Shopify connectée, les produits y sont envoyés et mis à jour, et les commandes et numéros de suivi restent synchronisés. D'autres outils sont prévus mais pas encore disponibles — une extension Chrome d'import depuis AliExpress, Alibaba comme seconde source de produits, la génération d'images par IA et un catalogue de produits volumineux : tant qu'ils ne sont pas livrés, ne construis pas ta méthode en comptant dessus.
+Le constructeur de sites génère une page produit ou une boutique multi-produits à partir de styles et de palettes de couleurs, avec une prévisualisation mobile avant publication, comme recommandé dans la partie 4. Le résultat peut être exporté vers Shopify ; avec une boutique Shopify connectée, les produits y sont envoyés et mis à jour, et les commandes et numéros de suivi restent synchronisés. Le Studio IA te permet de créer tes visuels et de les retrouver dans ta médiathèque (la génération d'images est réservée aux plans payants), et le Catalogue te permet d'envoyer des produits dans une boutique ou dans le Studio IA. D'autres outils sont prévus mais pas encore disponibles — une extension Chrome d'import depuis AliExpress et Alibaba comme seconde source de produits : tant qu'ils ne sont pas livrés, ne construis pas ta méthode en comptant dessus.
 
 ## Une fois l'activité en cours, pour suivre les incidents après-vente
 

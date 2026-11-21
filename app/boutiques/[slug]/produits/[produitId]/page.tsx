@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import AddToCartButton from "@/app/components/AddToCartButton";
+import GalerieProduit from "./GalerieProduit";
 import { notFound } from "next/navigation";
 import { getBaseUrl } from "@/lib/get-base-url";
 import { fetchBoutiqueApi } from "@/lib/boutique-internal-fetch";
@@ -102,19 +102,11 @@ export default async function ProduitPage({
             </div>
             <div className="grid gap-6 lg:grid-cols-[0.8fr_0.4fr]">
               <div>
-                <div className="relative aspect-square rounded-3xl overflow-hidden border border-[var(--border)] bg-[var(--surface-2)]">
-                  {produit.image_urls?.[0] ? (
-                    <Image
-                      src={produit.image_urls[0]}
-                      alt={produit.nom}
-                      fill
-                      sizes="(max-width: 1024px) 100vw, 60vw"
-                      className="object-cover"
-                    />
-                  ) : (
-                    <div className="flex h-full w-full items-center justify-center text-5xl text-[var(--text-faint)]">🖼️</div>
-                  )}
-                </div>
+                <GalerieProduit
+                  images={images}
+                  alt={produit.nom}
+                  vide={<div className="flex h-full w-full items-center justify-center text-5xl text-[var(--text-faint)]">🖼️</div>}
+                />
                 <div className="mt-6 rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-6">
                   <h2 className="text-xl font-semibold text-[var(--text-primary)]">{t("produit.description")}</h2>
                   <p className="mt-4 text-sm leading-7 text-[var(--text-muted)]">{produit.description || t("produit.sansDescription")}</p>

@@ -17,23 +17,18 @@ export type BoutiqueReglable = {
 type Props = {
   boutique: BoutiqueReglable;
   produitsCount: number;
-  categoriesCount: number;
-  sitesCount: number;
   // false tant que la migration 042 (boutiques.langue) n'est pas appliquée.
   langueDisponible: boolean;
   onUpdated: (patch: Partial<BoutiqueReglable>) => void;
-  onDeleted: () => void;
 };
 
-// Réglages de la boutique : nom et slug, langue, visibilité publique, suppression.
+// Réglages de la boutique : nom et slug, langue, visibilité publique. La suppression est à part
+// (BoutiqueSuppression ci-dessous), affichée tout en bas de la page boutique.
 export default function BoutiqueReglages({
   boutique,
   produitsCount,
-  categoriesCount,
-  sitesCount,
   langueDisponible,
   onUpdated,
-  onDeleted,
 }: Props) {
   const t = useTranslations("siteBuilder.boutique.reglages");
   const apiErrorMessage = useApiErrorMessage();
@@ -46,9 +41,6 @@ export default function BoutiqueReglages({
 
   const [langueEnCours, setLangueEnCours] = useState(false);
   const [langueErreur, setLangueErreur] = useState<string | null>(null);
-
-  const [suppressionEnCours, setSuppressionEnCours] = useState(false);
-  const [suppressionErreur, setSuppressionErreur] = useState<string | null>(null);
 
   const [visibiliteEnCours, setVisibiliteEnCours] = useState(false);
   const [visibiliteErreur, setVisibiliteErreur] = useState<string | null>(null);
@@ -134,6 +126,120 @@ export default function BoutiqueReglages({
     onUpdated({ est_publique: rendrePublique });
   }
 
+  const champ =
+    "mt-1.5 w-full rounded-2xl border border-[var(--border)] bg-[var(--bg-sunken)] px-3 py-2 text-sm text-[var(--text-primary)] outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500";
+  const identiteModifiee = nom.trim() !== boutique.nom || slugify(slug) !== boutique.slug;
+
+  return (
+    <>
+      <div className="mt-3 rounded-2xl border border-[var(--border)] bg-[var(--surface-2)] p-3">
+        <h3 className="text-sm font-semibold text-[var(--text-primary)]">{t("identite.titre")}</h3>
+        <div className="mt-2 grid gap-3 sm:grid-cols-2">
+          <label className="block text-sm text-[var(--text-muted)]">
+            {t("identite.nom")}
+            <input type="text" value={nom} onChange={(e) => setNom(e.target.value)} className={champ} />
+          </label>
+          <label className="block text-sm text-[var(--text-muted)]">
+            {t("identite.slug")}
+            <input
+              type="text"
+              value={slug}
+              onChange={(e) => setSlug(e.target.value)}
+              onBlur={() => setSlug(slugify(slug))}
+              className={champ}
+            />
+          </label>
+        </div>
+        <p className="mt-2 text-xs text-[var(--text-muted)]">{t("identite.aideSlug")}</p>
+        {boutique.est_publique && slugify(slug) !== boutique.slug ? (
+          <p className="mt-2 text-xs text-[var(--warning)]">{t("identite.avertissementSlug")}</p>
+        ) : null}
+        <div className="mt-2 flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => void enregistrerIdentite()}
+            disabled={identiteEnCours || !identiteModifiee}
+            className="rounded-2xl bg-violet-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-violet-400 disabled:opacity-50"
+          >
+            {identiteEnCours ? t("enregistrement") : t("enregistrer")}
+          </button>
+          {identiteSucces ? <span className="text-sm text-[var(--success)]">{t("enregistre")}</span> : null}
+          {identiteErreur ? <span className="text-sm text-[var(--danger)]">{identiteErreur}</span> : null}
+        </div>
+      </div>
+
+      <div className="mt-3 rounded-2xl border border-[var(--border)] bg-[var(--surface-2)] p-3">
+        <h3 className="text-sm font-semibold text-[var(--text-primary)]">{t("langue.titre")}</h3>
+        <p className="mt-1 text-xs text-[var(--text-muted)]">{t("langue.aide")}</p>
+        <select
+          value={boutique.langue}
+          onChange={(e) => void changerLangue(e.target.value as AppLocale)}
+          disabled={langueEnCours || !langueDisponible}
+          className="mt-2 w-full max-w-xs rounded-2xl border border-[var(--border)] bg-[var(--surface)] px-4 py-2 text-sm text-[var(--text-primary)] outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 disabled:opacity-50"
+        >
+          {SUPPORTED_LOCALES.map((locale) => (
+            <option key={locale} value={locale}>
+              {t(`langue.options.${locale}`)}
+            </option>
+          ))}
+        </select>
+        {!langueDisponible ? <p className="mt-2 text-xs text-[var(--warning)]">{t("langue.indisponible")}</p> : null}
+        {langueErreur ? <p className="mt-2 text-sm text-[var(--danger)]">{langueErreur}</p> : null}
+      </div>
+
+      <div className="mt-3 rounded-2xl border border-[var(--border)] bg-[var(--surface-2)] p-3">
+        <h3 className="text-sm font-semibold text-[var(--text-primary)]">{t("visibilite.titre")}</h3>
+        <div className="mt-2 flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            role="switch"
+            aria-checked={boutique.est_publique}
+            onClick={() => void basculerVisibilite()}
+            disabled={visibiliteEnCours}
+            className={`relative h-7 w-12 shrink-0 rounded-full transition disabled:opacity-50 ${
+              boutique.est_publique ? "bg-[var(--success)]" : "bg-[var(--surface-3)]"
+            }`}
+          >
+            <span className="sr-only">{t("visibilite.titre")}</span>
+            <span
+              className={`absolute top-1 h-5 w-5 rounded-full bg-white transition-all ${
+                boutique.est_publique ? "left-6" : "left-1"
+              }`}
+            />
+          </button>
+          <span className="text-sm font-semibold text-[var(--text-primary)]">
+            {boutique.est_publique ? t("visibilite.publique") : t("visibilite.privee")}
+          </span>
+        </div>
+        <p className="mt-2 text-xs text-[var(--text-muted)]">
+          {boutique.est_publique ? t("visibilite.aidePublique") : t("visibilite.aidePrivee")}
+        </p>
+        {visibiliteErreur ? <p className="mt-2 text-sm text-[var(--danger)]">{visibiliteErreur}</p> : null}
+      </div>
+
+    </>
+  );
+}
+
+// Suppression de la boutique : bandeau secondaire discret, en bas de la page boutique.
+export function BoutiqueSuppression({
+  boutique,
+  produitsCount,
+  categoriesCount,
+  sitesCount,
+  onDeleted,
+}: {
+  boutique: Pick<BoutiqueReglable, "id" | "nom">;
+  produitsCount: number;
+  categoriesCount: number;
+  sitesCount: number;
+  onDeleted: () => void;
+}) {
+  const t = useTranslations("siteBuilder.boutique.reglages");
+  const apiErrorMessage = useApiErrorMessage();
+  const [suppressionEnCours, setSuppressionEnCours] = useState(false);
+  const [suppressionErreur, setSuppressionErreur] = useState<string | null>(null);
+
   // Suppression définitive : produits et catégories partent en cascade, les sites générés
   // restent dans « Mes sites » sans lien vers la boutique (sites_generes.boutique_id → null).
   async function supprimer() {
@@ -167,112 +273,20 @@ export default function BoutiqueReglages({
     }
   }
 
-  const champ =
-    "mt-2 w-full rounded-2xl border border-[var(--border)] bg-[var(--bg-sunken)] px-4 py-3 text-sm text-[var(--text-primary)] outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500";
-  const identiteModifiee = nom.trim() !== boutique.nom || slugify(slug) !== boutique.slug;
-
   return (
-    <>
-      <div className="mt-6 rounded-3xl border border-[var(--border)] bg-[var(--surface-2)] p-4">
-        <h3 className="text-sm font-semibold text-[var(--text-primary)]">{t("identite.titre")}</h3>
-        <div className="mt-3 grid gap-4 sm:grid-cols-2">
-          <label className="block text-sm text-[var(--text-muted)]">
-            {t("identite.nom")}
-            <input type="text" value={nom} onChange={(e) => setNom(e.target.value)} className={champ} />
-          </label>
-          <label className="block text-sm text-[var(--text-muted)]">
-            {t("identite.slug")}
-            <input
-              type="text"
-              value={slug}
-              onChange={(e) => setSlug(e.target.value)}
-              onBlur={() => setSlug(slugify(slug))}
-              className={champ}
-            />
-          </label>
-        </div>
-        <p className="mt-2 text-xs text-[var(--text-muted)]">{t("identite.aideSlug")}</p>
-        {boutique.est_publique && slugify(slug) !== boutique.slug ? (
-          <p className="mt-2 text-xs text-[var(--warning)]">{t("identite.avertissementSlug")}</p>
-        ) : null}
-        <div className="mt-3 flex items-center gap-3">
-          <button
-            type="button"
-            onClick={() => void enregistrerIdentite()}
-            disabled={identiteEnCours || !identiteModifiee}
-            className="rounded-2xl bg-violet-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-violet-400 disabled:opacity-50"
-          >
-            {identiteEnCours ? t("enregistrement") : t("enregistrer")}
-          </button>
-          {identiteSucces ? <span className="text-sm text-[var(--success)]">{t("enregistre")}</span> : null}
-          {identiteErreur ? <span className="text-sm text-[var(--danger)]">{identiteErreur}</span> : null}
-        </div>
-      </div>
-
-      <div className="mt-6 rounded-3xl border border-[var(--border)] bg-[var(--surface-2)] p-4">
-        <h3 className="text-sm font-semibold text-[var(--text-primary)]">{t("langue.titre")}</h3>
-        <p className="mt-1 text-xs text-[var(--text-muted)]">{t("langue.aide")}</p>
-        <select
-          value={boutique.langue}
-          onChange={(e) => void changerLangue(e.target.value as AppLocale)}
-          disabled={langueEnCours || !langueDisponible}
-          className="mt-3 w-full max-w-xs rounded-2xl border border-[var(--border)] bg-[var(--surface)] px-4 py-2 text-sm text-[var(--text-primary)] outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 disabled:opacity-50"
-        >
-          {SUPPORTED_LOCALES.map((locale) => (
-            <option key={locale} value={locale}>
-              {t(`langue.options.${locale}`)}
-            </option>
-          ))}
-        </select>
-        {!langueDisponible ? <p className="mt-2 text-xs text-[var(--warning)]">{t("langue.indisponible")}</p> : null}
-        {langueErreur ? <p className="mt-2 text-sm text-[var(--danger)]">{langueErreur}</p> : null}
-      </div>
-
-      <div className="mt-6 rounded-3xl border border-[var(--border)] bg-[var(--surface-2)] p-4">
-        <h3 className="text-sm font-semibold text-[var(--text-primary)]">{t("visibilite.titre")}</h3>
-        <div className="mt-3 flex flex-wrap items-center gap-3">
-          <button
-            type="button"
-            role="switch"
-            aria-checked={boutique.est_publique}
-            onClick={() => void basculerVisibilite()}
-            disabled={visibiliteEnCours}
-            className={`relative h-7 w-12 shrink-0 rounded-full transition disabled:opacity-50 ${
-              boutique.est_publique ? "bg-[var(--success)]" : "bg-[var(--surface-3)]"
-            }`}
-          >
-            <span className="sr-only">{t("visibilite.titre")}</span>
-            <span
-              className={`absolute top-1 h-5 w-5 rounded-full bg-white transition-all ${
-                boutique.est_publique ? "left-6" : "left-1"
-              }`}
-            />
-          </button>
-          <span className="text-sm font-semibold text-[var(--text-primary)]">
-            {boutique.est_publique ? t("visibilite.publique") : t("visibilite.privee")}
-          </span>
-        </div>
-        <p className="mt-2 text-xs text-[var(--text-muted)]">
-          {boutique.est_publique ? t("visibilite.aidePublique") : t("visibilite.aidePrivee")}
-        </p>
-        {visibiliteErreur ? <p className="mt-2 text-sm text-[var(--danger)]">{visibiliteErreur}</p> : null}
-      </div>
-
-      <div className="mt-6 rounded-3xl border border-[var(--danger)]/30 bg-[var(--danger)]/5 p-4">
-        <h3 className="text-sm font-semibold text-[var(--danger)]">{t("suppression.titre")}</h3>
-        <p className="mt-1 text-xs text-[var(--text-muted)]">
-          {t("suppression.aide", { produits: produitsCount, categories: categoriesCount, sites: sitesCount })}
-        </p>
-        <button
-          type="button"
-          onClick={() => void supprimer()}
-          disabled={suppressionEnCours}
-          className="mt-3 rounded-2xl bg-[var(--danger)] px-4 py-2 text-sm font-semibold text-white transition hover:opacity-90 disabled:opacity-50"
-        >
-          {suppressionEnCours ? t("suppression.enCours") : t("suppression.bouton")}
-        </button>
-        {suppressionErreur ? <p className="mt-2 text-sm text-[var(--danger)]">{suppressionErreur}</p> : null}
-      </div>
-    </>
+    <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 rounded-2xl border border-[var(--border)] px-4 py-2.5">
+      <p className="text-xs text-[var(--text-faint)]">
+        {t("suppression.aide", { produits: produitsCount, categories: categoriesCount, sites: sitesCount })}
+      </p>
+      <button
+        type="button"
+        onClick={() => void supprimer()}
+        disabled={suppressionEnCours}
+        className="shrink-0 text-xs font-semibold text-[var(--danger)] transition hover:underline disabled:opacity-50"
+      >
+        {suppressionEnCours ? t("suppression.enCours") : t("suppression.bouton")}
+      </button>
+      {suppressionErreur ? <p className="w-full text-xs text-[var(--danger)]">{suppressionErreur}</p> : null}
+    </div>
   );
 }

@@ -247,7 +247,7 @@
       "budgetIaAtteint": "This month's AI budget has been reached. It will reset on the 1st of next month.",
       "limiteJour": "Last 24 hours: {utilise} / {max}",
       "limiteSemaine": "Last 7 days: {utilise} / {max}",
-      "limitesAide": "Your budget is spread over time: at most 15% over 24 hours and 30% over 7 days, so you can create sites and run audits all month. These limits free up as the hours pass.",
+      "limitesAide": "Your budget is spread over time: at most {jour}% over 24 hours and {semaine}% over 7 days, so you can create sites and run audits all month. These limits free up as the hours pass.",
       "limiteReprise": "Frees up on {reprise, date, short} at {reprise, time, short}"
     },
     "profil": {
@@ -732,8 +732,8 @@
       "bundleTitle": "Both courses",
       "bundleDesc": "The short version to start fast, the long one to go deep — lifetime access to both.",
       "bundleSave": "save {montant}",
-      "buy": "Buy — {prix}",
-      "buyBundle": "Buy the bundle — {prix}",
+      "buy": "Buy",
+      "buyBundle": "Buy the bundle",
       "redirecting": "Redirecting…",
       "read": "Read →",
       "readerBack": "← Back to the training",
@@ -1185,6 +1185,8 @@
     }
   },
   "landing": {
+    "metaTitre": "Winning products, real net margin and Shopify store | Dropvio",
+    "metaDescription": "Find winning products on AliExpress, calculate your net margin after fees, shipping and taxes, and generate a store that is ready to sell.",
     "nav": {
       "pricing": "Pricing",
       "login": "Log in",

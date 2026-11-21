@@ -4,6 +4,7 @@ import { useTranslations } from "next-intl";
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { CLE_ACCUEIL, CLE_CATALOGUE } from "@/lib/site-builder-pages";
+import CadreTelephone from "./CadreTelephone";
 
 // Aperçu d'un site multi-pages (sites_generes.pages, clé → HTML standalone) : UNE page à la
 // fois dans une même iframe, et une barre de pages au-dessus. Les liens internes de la page
@@ -85,9 +86,12 @@ function avecInterception(html: string, selection: Selection): string {
 export default function ApercuPages({
   pages,
   hauteur = "70vh",
+  telephone = false,
 }: {
   pages: Record<string, string>;
   hauteur?: string;
+  // Aperçu mobile : la page est rendue dans un cadre de téléphone, à la largeur d'un écran mobile.
+  telephone?: boolean;
 }) {
   const t = useTranslations("siteBuilder.apercu");
   const tPages = (cle: string) => (t.has(`pages.${cle}`) ? t(`pages.${cle}`) : undefined);
@@ -127,6 +131,20 @@ export default function ApercuPages({
     return () => window.removeEventListener("message", surMessage);
   }, [pages]);
 
+  function iframe(hauteurIframe: string) {
+    return (
+      <iframe
+        ref={iframeRef}
+        key={cleAffichee}
+        srcDoc={srcDoc}
+        title={t("titreIframe", { page: cleAffichee ? libellePage(cleAffichee, tPages) : "" })}
+        className="w-full"
+        style={{ height: hauteurIframe, border: "none", background: "#fff" }}
+        sandbox="allow-scripts"
+      />
+    );
+  }
+
   return (
     <div ref={zoneRef} className="flex flex-col">
       <nav
@@ -150,15 +168,7 @@ export default function ApercuPages({
         ))}
       </nav>
       {/* Fond blanc comme l'aperçu d'une seule page : rendu fidèle de la page générée. */}
-      <iframe
-        ref={iframeRef}
-        key={cleAffichee}
-        srcDoc={srcDoc}
-        title={t("titreIframe", { page: cleAffichee ? libellePage(cleAffichee, tPages) : "" })}
-        className="w-full"
-        style={{ height: hauteur, border: "none", background: "#fff" }}
-        sandbox="allow-scripts"
-      />
+      {telephone ? <CadreTelephone>{iframe("100%")}</CadreTelephone> : iframe(hauteur)}
     </div>
   );
 }

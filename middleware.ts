@@ -4,10 +4,14 @@ import type { NextRequest } from "next/server";
 import type { SupabaseClient, User } from "@supabase/supabase-js";
 import { resolveBoutiqueSlugFromHost } from "@/lib/boutique-subdomains";
 import { DEFAULT_LOCALE, LOCALE_COOKIE, LOCALE_HEADER, isAppLocale, type AppLocale } from "@/lib/locale";
+import { planEffectif } from "@/lib/plan-effectif";
 
 // /formation est une page de vente publique (achat unique par formation) — le contrôle
 // d'accès réel se joue sur /api/formation/checkout, pas ici.
-const PROTECTED_PATHS = ["/produits-gagnants", "/site-builder", "/mes-sites", "/dashboard", "/audit", "/tools/calculateur-marge"];
+const PROTECTED_PATHS = ["/studio", "/quota", "/produits-gagnants", "/site-builder", "/mes-sites", "/dashboard", "/audit", "/tools/calculateur-marge", "/ventes"];
+
+// Page de choix du plan : connexion requise, mais pas d'abonnement (c'est là qu'on en prend un).
+const ABONNEMENT_PATH = "/abonnement";
 
 function parseAcceptLanguage(header: string | null): AppLocale {
   if (!header) return DEFAULT_LOCALE;
@@ -27,24 +31,32 @@ function parseAcceptLanguage(header: string | null): AppLocale {
 // Cookie NEXT_LOCALE > Accept-Language (fr/en/es/it, fallback fr) > profils.langue si
 // l'utilisateur est connecté (préférence explicite enregistrée depuis Paramètres >
 // Préférences, migration 034) — cette dernière prime sur les deux premières.
-async function resolveLocale(
-  request: NextRequest,
-  supabase: SupabaseClient,
-  user: User | null
-): Promise<AppLocale> {
+function resolveLocale(request: NextRequest, profil: { langue?: string | null } | null): AppLocale {
   const cookieLocale = request.cookies.get(LOCALE_COOKIE)?.value;
-  let locale: AppLocale = isAppLocale(cookieLocale)
+  const locale: AppLocale = isAppLocale(cookieLocale)
     ? cookieLocale
     : parseAcceptLanguage(request.headers.get("accept-language"));
 
-  if (user) {
-    const { data: profil } = await supabase.from("profils").select("langue").eq("id", user.id).maybeSingle();
-    if (isAppLocale(profil?.langue)) {
-      locale = profil.langue;
-    }
-  }
+  return isAppLocale(profil?.langue) ? profil.langue : locale;
+}
 
-  return locale;
+// Une seule lecture de profils par requête, partagée entre la langue et la garde d'abonnement.
+async function readProfil(supabase: SupabaseClient, user: User | null) {
+  if (!user) return null;
+  const { data } = await supabase.from("profils").select("langue, plan").eq("id", user.id).maybeSingle();
+  const profil = data as { langue: string | null; plan: string | null } | null;
+  // Même règle que resolvePlan (lib/supabase-server.ts) et que la fonction SQL a_un_plan_payant :
+  // « expert » sans période payée en cours ne donne aucun droit, le compte est traité comme Free.
+  if (profil?.plan === "expert") {
+    const { data: periodes } = await supabase
+      .from("expert_periodes")
+      .select("id")
+      .eq("user_id", user.id)
+      .gt("periode_fin", new Date().toISOString())
+      .limit(1);
+    return { ...profil, plan: planEffectif(profil.plan, Boolean(periodes?.length)) };
+  }
+  return profil;
 }
 
 export async function middleware(request: NextRequest) {
@@ -106,13 +118,26 @@ export async function middleware(request: NextRequest) {
   const hasAuthCookie = request.cookies.getAll().some((c) => c.name.startsWith("sb-") && c.name.includes("-auth-token"));
   const { data: { user } } = hasAuthCookie ? await supabase.auth.getUser() : { data: { user: null } };
 
-  if (isProtected && !user) {
+  const needsLogin = isProtected || pathname.startsWith(ABONNEMENT_PATH);
+  if (needsLogin && !user) {
     const loginUrl = new URL("/login", request.url);
     loginUrl.searchParams.set("redirect", pathname + request.nextUrl.search);
     return NextResponse.redirect(loginUrl);
   }
 
-  const locale = await resolveLocale(request, supabase, user);
+  const profil = await readProfil(supabase, user);
+
+  // Les outils (PROTECTED_PATHS) demandent un abonnement actif ou en essai : un compte resté en
+  // plan "free" (jamais abonné, essai terminé sans paiement, abonnement résilié ou impayé) est
+  // renvoyé vers /abonnement. Profil absent = ligne pas encore créée (022) : même traitement.
+  if (user && isProtected && (profil?.plan ?? "free") === "free") {
+    const abonnementUrl = new URL(ABONNEMENT_PATH, request.url);
+    const redirection = NextResponse.redirect(abonnementUrl);
+    cookiesToApply.forEach(({ name, value, options }) => redirection.cookies.set(name, value, options));
+    return redirection;
+  }
+
+  const locale = resolveLocale(request, profil);
 
   // Transmis à i18n/request.ts via un en-tête de requête (seul canal entre ce middleware Edge
   // et le contexte RSC où tourne getRequestConfig) — voir lib/locale.ts.

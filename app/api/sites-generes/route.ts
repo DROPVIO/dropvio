@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerUserAndPlan } from "@/lib/supabase-server";
-import { PLAN_LIMITS, planLabel, currentMonthKey } from "@/lib/plan-limits";
 import { estFormatExport } from "@/lib/format-export";
 import { pagesValides } from "@/lib/site-builder-pages";
 
@@ -63,7 +62,7 @@ export async function GET() {
 
 
 export async function POST(request: NextRequest) {
-  const { supabase, user, plan } = await getServerUserAndPlan();
+  const { supabase, user } = await getServerUserAndPlan();
 
   if (!user) {
     return NextResponse.json({ error: "Connecte-toi pour sauvegarder un site.", code: "auth_required" }, { status: 401 });
@@ -108,30 +107,8 @@ export async function POST(request: NextRequest) {
     if (boutique) verifiedBoutiqueId = boutique.id;
   }
 
-  const max = PLAN_LIMITS[plan].sitesParMoisMax;
-  if (max !== null) {
-    const debutMois = `${currentMonthKey()}T00:00:00.000Z`;
-    const { count, error: countError } = await supabase
-      .from("sites_generes")
-      .select("id", { count: "exact", head: true })
-      .eq("user_id", user.id)
-      .eq("is_trace", false)
-      .gte("created_at", debutMois);
-
-    if (countError) {
-      return NextResponse.json({ error: countError.message, code: "server_error" }, { status: 500 });
-    }
-    if ((count ?? 0) >= max) {
-      return NextResponse.json(
-        {
-          error: `Tu as atteint la limite de ${max} sites générés ce mois-ci sur le plan ${planLabel(plan)}. ${
-            plan === "free" ? "Passe Pro pour 20 sites par mois." : plan === "pro" ? "Passe Agency pour 50 sites par mois." : "La limite se réinitialise le mois prochain."
-          }`, code: "sites_limit", values: { max, plan: planLabel(plan) },
-        },
-        { status: 403 }
-      );
-    }
-  }
+  // Aucune limite sur le nombre de sites sauvegardés : le nombre de sites est informatif, la
+  // limite de création est le budget IA du mois (voir app/api/generate-site/route.ts).
 
   // prix_vente/prix_original sont numeric(10,2) en base — une chaîne vide ("", état par
   // défaut du champ prix côté Site Builder) ferait échouer l'insert si envoyée telle quelle.

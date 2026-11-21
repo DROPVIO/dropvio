@@ -2,6 +2,11 @@ import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import LegalPageLayout, { TitreSection, balisesLegales } from "@/components/LegalPageLayout";
 
+// [MENTION_OPENAI À VALIDER] : OpenAI reçoit les prompts d'images (Studio IA, Site Builder). Le
+// texte est prêt (legal.confidentialite.sousTraitantOpenAI) mais n'est pas publié tant que
+// cette constante est à false.
+const AFFICHER_SOUS_TRAITANT_OPENAI = false;
+
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("legal.confidentialite");
   return { title: t("metaTitre") };
@@ -53,6 +58,7 @@ export default async function ConfidentialitePage() {
           <li>{t.rich("sousTraitantVercel", balisesLegales)}</li>
           <li>{t.rich("sousTraitantStripe", balisesLegales)}</li>
           <li>{t.rich("sousTraitantAnthropic", balisesLegales)}</li>
+          {AFFICHER_SOUS_TRAITANT_OPENAI && <li>{t.rich("sousTraitantOpenAI", balisesLegales)}</li>}
           <li>{t.rich("sousTraitantResend", balisesLegales)}</li>
           <li>{t.rich("sousTraitantShopify", balisesLegales)}</li>
         </ul>

@@ -10,6 +10,7 @@ import ComposerSite, { BoutonOutil, type ActionMenu, type PieceJointe } from "@/
 import { reduirePourEnvoi } from "@/components/site-builder/InspirationStyle";
 import { MAX_AVIS, validerAvis, type AvisProduit } from "@/lib/avis-produit";
 import ApercuPages from "@/components/site-builder/ApercuPages";
+import CadreTelephone from "@/components/site-builder/CadreTelephone";
 import ModifierSiteIA from "@/components/site-builder/ModifierSiteIA";
 import { pagesSiMultiples } from "@/lib/site-builder-pages";
 import type { FicheStyle } from "@/lib/style-fiche";
@@ -17,6 +18,7 @@ import { applyTokenValue } from "@/lib/color-tokens";
 import { htmlToLiquidSection } from "@/lib/html-to-liquid";
 import { SHOW_LEGACY_TEMPLATES } from "@/lib/flags";
 import { useBoutiqueDraft } from "@/lib/site-builder-handoff";
+import type { Plan } from "@/lib/plan-limits";
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
 import { slugFichier, telechargerTexte } from "@/lib/audit-download";
 import { telechargerPageSeule, telechargerSiteMultiPages } from "@/lib/telechargement-site";
@@ -25,6 +27,26 @@ import { LIEN_CHANGER_DE_PLAN } from "@/lib/plan-links";
 import { useTranslations } from "next-intl";
 import { isAppLocale, type AppLocale } from "@/lib/locale";
 import { useApiErrorMessage } from "@/lib/use-api-error";
+import ChoixPhotosSite, { type ChoixPhotos } from "@/components/site-builder/ChoixPhotosSite";
+import BudgetIaSite from "@/components/site-builder/BudgetIaSite";
+import {
+  NOMBRE_PHOTOS_SITE_DEFAUT,
+  SOURCE_PHOTOS_DEFAUT,
+  bornerNombrePhotos,
+  photosFournies,
+  utiliserPhotoProduit,
+} from "@/lib/media/photos-site";
+import { generationDisponible } from "@/lib/media/config";
+import { lireImagesRestantes } from "@/lib/media/quota-images";
+import {
+  FORMAT_IMAGES_SITE,
+  etatCaseImages,
+  genererSiteEtImages,
+  promptsImagesSite,
+  remplacerEmplacements,
+  type ContenuSite,
+  type ResultatImage,
+} from "@/lib/media/images-site";
 
 type Step = 1 | 2 | 3;
 
@@ -72,6 +94,7 @@ function prixFromParam(value: string | null): string {
 function SiteBuilderContent() {
   const { toast, succes, fermer } = useToast();
   const t = useTranslations("siteBuilder.builder");
+  const tNav = useTranslations("dashboard.nav");
   const apiErrorMessage = useApiErrorMessage();
   const searchParams = useSearchParams();
 
@@ -82,6 +105,8 @@ function SiteBuilderContent() {
   // conversion à la demande (lib/html-to-liquid.ts). Il est modifiable après coup depuis
   // « Mes sites ».
   const [formatExport, setFormatExport] = useState<"html" | "liquid">("html");
+  // Aperçu du site généré : version ordinateur ou téléphone (étape résultat).
+  const [apercuTelephone, setApercuTelephone] = useState(false);
   const [step, setStep] = useState<Step>(1);
 
   // Modes de création offerts par le sélecteur. « template » n'y figure que si le flag est
@@ -314,14 +339,34 @@ function SiteBuilderContent() {
   // fonctionnel pour tous, mais téléchargement/export Liquid/publication Shopify sont réservés
   // à Pro/Agency. canExport démarre à false (état le plus restrictif) tant que /api/plan n'a
   // pas répondu, pour ne jamais afficher un bouton actif qui deviendrait grisé juste après.
-  const [plan, setPlan] = useState<"free" | "pro" | "agency" | null>(null);
+  const [plan, setPlan] = useState<Plan | null>(null);
+
+  // Photos du site (components/site-builder/ChoixPhotosSite.tsx) : source et nombre choisis par
+  // l'utilisateur. La génération OpenAI n'est plus qu'une source, jamais choisie par défaut.
+  // imagesEssai : images IA d'un essai dont le site a échoué, réutilisées au prochain essai pour
+  // le même contenu (le quota n'est décompté qu'une fois).
+  const [photos, setPhotos] = useState<ChoixPhotos>({
+    source: SOURCE_PHOTOS_DEFAUT,
+    nombre: NOMBRE_PHOTOS_SITE_DEFAUT,
+    choisies: [],
+    liens: [],
+  });
+  const [imagesRestantes, setImagesRestantes] = useState<number | null>(null);
+  const [imagesEssai, setImagesEssai] = useState<{ cle: string; images: ResultatImage[] } | null>(null);
+  const [imagesAvertissement, setImagesAvertissement] = useState<string | null>(null);
   useEffect(() => {
     fetch("/api/plan")
       .then((res) => res.json())
-      .then((json) => setPlan(json.plan ?? "free"))
+      .then((json) => {
+        const lu: Plan = json.plan ?? "free";
+        setPlan(lu);
+        // Quota d'images lu d'avance : la source « Générer avec l'IA » en dépend.
+        if (generationDisponible(lu)) void lireImagesRestantes().then(setImagesRestantes);
+      })
       .catch(() => setPlan("free"));
   }, []);
-  const canExport = plan === "pro" || plan === "agency";
+  const canExport = plan === "pro" || plan === "agency" || plan === "expert";
+  const [quotaEpuise, setQuotaEpuise] = useState(false);
 
   function handleConnectShopify() {
     const shop = shopifyDomainInput.trim().toLowerCase();
@@ -460,6 +505,18 @@ function SiteBuilderContent() {
     const isAuto = !boutiqueDraft && (withAutoMode || autoMode);
     setStep(2);
     setError(null);
+    setImagesAvertissement(null);
+
+    // Photos du site : générées avec l'IA seulement si cette source est choisie (et encore
+    // valable), sinon photos de la médiathèque / liens placées dans les emplacements du site.
+    const nombrePhotos = bornerNombrePhotos(photos.nombre);
+    const imagesDemandees =
+      plan !== null && photos.source === "ia" && etatCaseImages(plan, imagesRestantes, nombrePhotos).active;
+    const photosAPlacer = photosFournies(photos.source, nombrePhotos, photos.choisies, photos.liens);
+    const contenu: ContenuSite = boutiqueDraft
+      ? { titre: boutiqueDraft.nomBoutique, description: boutiqueDraft.descriptionBoutique, brief: promptSite.trim(), produits: boutiqueDraft.produits.map((p) => p.nom) }
+      : { titre: productName, description, brief: promptSite.trim() };
+    const cleImages = JSON.stringify({ contenu, nombrePhotos });
     try {
       const payload = boutiqueDraft
         ? {
@@ -484,7 +541,9 @@ function SiteBuilderContent() {
             colorSecondary: isAuto ? undefined : palette.secondary,
             colorAccent: isAuto ? undefined : palette.accent,
             style: isAuto ? "auto" : selectedStyleId,
-            imageUrl: imageUrl.trim() || undefined,
+            // Photo du produit seulement avec la source « Photos du produit » : avec une autre
+            // source, le site garde ses emplacements libres pour les photos choisies.
+            imageUrl: utiliserPhotoProduit(photos.source) ? imageUrl.trim() || undefined : undefined,
             rating,
             orders,
             salePrice: salePrice.trim() || undefined,
@@ -495,16 +554,62 @@ function SiteBuilderContent() {
             prompt: promptSite.trim(),
             langue: langueSite,
           };
-      const res = await fetch("/api/generate-site", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-      const json = await res.json();
-      if (!res.ok) {
-        setError(apiErrorMessage(json, t("erreurs.generation")));
+      const appelSite = async () => {
+        const res = await fetch("/api/generate-site", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        return { res, json: await res.json() };
+      };
+      const { site, images } = imagesDemandees
+        ? await genererSiteEtImages({
+            genererSite: appelSite,
+            genererImage: genererImageSite,
+            prompts: promptsImagesSite(contenu, nombrePhotos),
+            dejaGenerees: imagesEssai?.cle === cleImages ? imagesEssai.images : [],
+          })
+        : { site: { ok: true as const, valeur: await appelSite() }, images: [] as ResultatImage[] };
+      const imagesReussies = images.filter((i): i is Extract<ResultatImage, { url: string }> => "url" in i);
+      if (imagesDemandees) void lireImagesRestantes().then(setImagesRestantes);
+
+      if (!site.ok || !site.valeur.res.ok) {
+        // Le site a échoué : les images déjà générées restent dans la médiathèque et seront
+        // réutilisées au prochain essai, sans nouveau décompte.
+        if (imagesReussies.length > 0) setImagesEssai({ cle: cleImages, images });
+        if (!site.ok) throw site.erreur;
+        const json = site.valeur.json;
+        const conservees = imagesReussies.length > 0 ? ` ${t("imagesOpenAI.conservees", { count: imagesReussies.length })}` : "";
+        setError(apiErrorMessage(json, t("erreurs.generation")) + conservees);
+        setQuotaEpuise(json?.code === "expert_quota");
         setStep(1);
         return;
+      }
+      const json = site.valeur.json;
+      setImagesEssai(null);
+      if (imagesDemandees) {
+        const remplacement = remplacerEmplacements(
+          json.html,
+          images.map((image) => ("url" in image ? { url: image.url, alt: `${contenu.titre} — ${t(`imagesOpenAI.role_${image.role}`)}` } : null))
+        );
+        json.html = remplacement.html;
+        if (json.pages?.accueil) json.pages.accueil = remplacement.html;
+        const messages = images.flatMap((image) =>
+          "erreur" in image ? [t("imagesOpenAI.echec", { role: t(`imagesOpenAI.role_${image.role}`), raison: image.erreur })] : []
+        );
+        const horsSite = images.slice(remplacement.emplacements).filter((image) => "url" in image).length;
+        if (horsSite > 0) messages.push(t("imagesOpenAI.horsSite", { count: horsSite }));
+        setImagesAvertissement(messages.length > 0 ? messages.join(" ") : null);
+      } else if (photosAPlacer.length > 0) {
+        // Photos de la médiathèque ou liens : placées dans l'ordre dans les emplacements libres.
+        const remplacement = remplacerEmplacements(
+          json.html,
+          photosAPlacer.map((url) => ({ url, alt: contenu.titre }))
+        );
+        json.html = remplacement.html;
+        if (json.pages?.accueil) json.pages.accueil = remplacement.html;
+        const nonPlacees = photosAPlacer.length - remplacement.remplaces;
+        setImagesAvertissement(nonPlacees > 0 ? t("photos.horsSite", { count: nonPlacees }) : null);
       }
       const finalHtml = addTargetBlank(json.html);
       setGeneratedHtml(finalHtml);
@@ -553,12 +658,37 @@ function SiteBuilderContent() {
           // Publier sur Shopify (route /api/sites-generes/[id]/shopify-push) a besoin de
           // cet id — sans sauvegarde réussie, il n'y a rien à publier.
           setSavedSiteId(data.id ?? null);
+          // Images générées avec ce site : rattachées à lui dans la médiathèque (migration 050).
+          if (data.id && imagesReussies.length > 0) {
+            fetch("/api/media/rattacher-site", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ siteId: data.id, mediaIds: imagesReussies.map((i) => i.mediaId) }),
+            }).catch(() => {});
+          }
         })
         .catch(() => setSaveWarning(t("erreurs.sauvegardeReseau")));
     } catch {
       setError(apiErrorMessage({ code: "network" }));
       setStep(1);
     }
+  }
+
+  /** Une image du site : génération (réserve une image du quota), puis copie publique pour
+   *  l'insérer dans le HTML. Lève une erreur au message déjà traduit. */
+  async function genererImageSite(prompt: string): Promise<{ mediaId: string; url: string }> {
+    const res = await fetch("/api/media/generer", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      // Outil « landing_page » des pauses par outil (lib/pauses-outils.ts).
+      body: JSON.stringify({ prompt, format: FORMAT_IMAGES_SITE, outil: "landing_page" }),
+    });
+    const json = await res.json().catch(() => null);
+    if (!res.ok || typeof json?.id !== "string") throw new Error(apiErrorMessage(json, apiErrorMessage({ code: "media_service_indisponible" })));
+    const publication = await fetch(`/api/media/${json.id}/publier`, { method: "POST" });
+    const publie = await publication.json().catch(() => null);
+    if (!publication.ok || typeof publie?.url !== "string") throw new Error(apiErrorMessage(publie, t("imagesOpenAI.publicationErreur")));
+    return { mediaId: json.id, url: publie.url };
   }
 
   function handleDownload() {
@@ -811,6 +941,7 @@ function SiteBuilderContent() {
               <p className="text-[var(--text-muted)] text-sm max-w-md mt-3">
                 {t("intro")}
               </p>
+              <BudgetIaSite />
             </div>
             <Link
               href="/site-builder/boutique"
@@ -904,11 +1035,20 @@ function SiteBuilderContent() {
             {error && (
               <div className="rounded-xl bg-[var(--danger)]/10 border border-[var(--danger)]/20 px-4 py-3 text-[var(--danger)] text-sm">
                 {error}
+                {quotaEpuise && <Link href="/quota" className="ml-1 underline">{tNav("itemQuota")}</Link>}
               </div>
             )}
             {/* Barre de saisie calée en bas de la zone (mt-auto) et collante quand la page
                 défile (sticky) ; le dégradé masque le contenu qui passe dessous. */}
-            <div className="sticky bottom-0 z-10 mt-auto -mx-2 px-2 pt-6 pb-2 bg-gradient-to-t from-[var(--bg)] from-70% to-transparent">
+            <div className="sticky bottom-0 z-10 mt-auto -mx-2 px-2 pt-3 pb-1 bg-gradient-to-t from-[var(--bg)] from-70% to-transparent">
+              <ChoixPhotosSite
+                plan={plan}
+                imagesRestantes={imagesRestantes}
+                valeur={photos}
+                onChange={setPhotos}
+                modeBoutique
+                aPhotoProduit={boutiqueDraft.produits.some((p) => Boolean(p.image))}
+              />
               <ComposerSite
                 prompt={promptSite}
                 onPromptChange={setPromptSite}
@@ -951,6 +1091,7 @@ function SiteBuilderContent() {
             {error && (
               <div className="rounded-xl bg-[var(--danger)]/10 border border-[var(--danger)]/20 px-4 py-3 text-[var(--danger)] text-sm">
                 {error}
+                {quotaEpuise && <Link href="/quota" className="ml-1 underline">{tNav("itemQuota")}</Link>}
               </div>
             )}
 
@@ -1057,25 +1198,14 @@ function SiteBuilderContent() {
                     {texteIaError ? <p className="text-xs text-[var(--danger)]">{texteIaError}</p> : null}
                   </div>
 
-                  {/* Image URL */}
+                  {/* Photo du produit : lecture seule ici (import AliExpress ou pré-remplissage).
+                      Les images produits se modifient dans « Catalogue », pas depuis cet écran. */}
                   <div className="flex flex-col gap-2">
-                    <div className="rounded-xl bg-amber-500/[0.08] border border-amber-500/20 px-4 py-3 flex gap-2.5 items-start">
-                      <span className="shrink-0">📷</span>
-                      <p className="text-xs text-[var(--warning)] leading-relaxed">
-                        {t.rich("formulaire.imageAvertissement", { strong: (chunks) => <strong>{chunks}</strong> })}
-                      </p>
-                    </div>
-                    <label className="text-sm font-medium text-[var(--text-muted)]">
-                      {t("formulaire.image")}{" "}
-                      <span className="text-[var(--text-faint)] font-normal">{t("facultatif")}</span>
-                    </label>
-                    <input
-                      type="url"
-                      value={imageUrl}
-                      onChange={(e) => setImageUrl(e.target.value)}
-                      placeholder={t("formulaire.imagePlaceholder")}
-                      className="bg-[var(--bg)] border border-[var(--border-strong)] rounded-xl px-4 py-3 text-sm text-[var(--text-primary)] placeholder-[var(--text-faint)] focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition"
-                    />
+                    <span className="text-sm font-medium text-[var(--text-muted)]">{t("formulaire.imageProduit")}</span>
+                    {!imageUrl.trim() && (
+                      <p className="text-xs text-[var(--text-faint)]">{t("formulaire.imageAucune")}</p>
+                    )}
+                    <p className="text-xs text-[var(--text-muted)]">ℹ️ {t("photos.mentionCatalogue")}</p>
                     {imageUrl.trim() && (
                       <div className="mt-1 rounded-xl overflow-hidden border border-[var(--border-strong)] bg-[var(--bg)] h-32 flex items-center justify-center">
                         {/* <img> volontairement conservé (pas next/image) : aperçu en direct d'une URL
@@ -1208,10 +1338,18 @@ function SiteBuilderContent() {
               {/* Collante seulement sans panneau ouvert : sinon une barre haute (long prompt)
                   recouvrirait la fiche produit, les corrections ou les avis. */}
               <div
-                className={`z-10 -mx-2 px-2 pt-6 pb-2 bg-gradient-to-t from-[var(--bg)] from-70% to-transparent ${
+                className={`z-10 -mx-2 px-2 pt-3 pb-1 bg-gradient-to-t from-[var(--bg)] from-70% to-transparent ${
                   produitOuvert || correctionsOuvertes || (avisOuverts && avis.length > 0) ? "" : "sticky bottom-0"
                 }`}
               >
+                <ChoixPhotosSite
+                  plan={plan}
+                  imagesRestantes={imagesRestantes}
+                  valeur={photos}
+                  onChange={setPhotos}
+                  modeBoutique={false}
+                  aPhotoProduit={Boolean(imageUrl.trim())}
+                />
                 <ComposerSite
                   prompt={promptSite}
                   onPromptChange={setPromptSite}
@@ -1254,6 +1392,11 @@ function SiteBuilderContent() {
             {saveWarning && (
               <div className="rounded-xl bg-amber-500/10 border border-amber-500/20 px-4 py-3 text-[var(--warning)] text-sm">
                 ⚠️ {saveWarning}
+              </div>
+            )}
+            {imagesAvertissement && (
+              <div role="status" className="rounded-xl bg-amber-500/10 border border-amber-500/20 px-4 py-3 text-[var(--warning)] text-sm">
+                ⚠️ {imagesAvertissement}
               </div>
             )}
             <div className="flex items-center justify-between">
@@ -1316,15 +1459,46 @@ function SiteBuilderContent() {
                 <div className="w-2.5 h-2.5 rounded-full bg-red-500/60" />
                 <div className="w-2.5 h-2.5 rounded-full bg-amber-500/60" />
                 <div className="w-2.5 h-2.5 rounded-full bg-emerald-500/60" />
-                <span className="ml-3 text-xs text-[var(--text-faint)] font-mono">
+                <span className="ml-3 min-w-0 truncate text-xs text-[var(--text-faint)] font-mono">
                   {(boutiqueDraft ? boutiqueDraft.nomBoutique : productName).replace(/\s+/g, "-").toLowerCase()}-landing.html
                 </span>
+                <div
+                  role="group"
+                  aria-label={t("resultat.apercuAppareil")}
+                  className="ml-auto inline-flex shrink-0 gap-1 rounded-lg border border-[var(--border-strong)] bg-[var(--bg)] p-0.5"
+                >
+                  {([false, true] as const).map((tel) => (
+                    <button
+                      key={String(tel)}
+                      type="button"
+                      onClick={() => setApercuTelephone(tel)}
+                      aria-pressed={apercuTelephone === tel}
+                      className={`rounded-md px-2.5 py-1 text-xs font-semibold transition ${
+                        apercuTelephone === tel
+                          ? "bg-violet-600 text-white"
+                          : "text-[var(--text-faint)] hover:text-[var(--text-primary)]"
+                      }`}
+                    >
+                      {tel ? t("resultat.apercuTelephone") : t("resultat.apercuOrdinateur")}
+                    </button>
+                  ))}
+                </div>
               </div>
               {/* L'aperçu est toujours rendu sur fond blanc (background: "#fff") quel que
                   soit le thème de l'app : c'est un aperçu fidèle de la landing page générée
                   telle qu'elle apparaîtra réellement, pas un élément de chrome de l'app. */}
               {generatedPages ? (
-                <ApercuPages pages={generatedPages} />
+                <ApercuPages pages={generatedPages} telephone={apercuTelephone} />
+              ) : apercuTelephone ? (
+                <CadreTelephone>
+                  <iframe
+                    srcDoc={generatedHtml}
+                    title={t("resultat.titreApercu")}
+                    className="h-full w-full"
+                    style={{ border: "none", background: "#fff" }}
+                    sandbox="allow-same-origin"
+                  />
+                </CadreTelephone>
               ) : (
                 <iframe
                   srcDoc={generatedHtml}
