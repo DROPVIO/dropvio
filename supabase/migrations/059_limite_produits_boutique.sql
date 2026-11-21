@@ -1,3 +1,4 @@
+-- Dans une fonction SECURITY DEFINER, current_user vaut le propriétaire (postgres) : on lit le rôle effectif.
 -- 059 — Limite de produits par boutique appliquée par la base.
 --
 -- La limite du plan (PLAN_LIMITS.produitsBoutiqueMax dans lib/plan-limits.ts) n'était vérifiée
@@ -25,7 +26,7 @@ declare
   v_max integer;
   v_nombre integer;
 begin
-  if current_user not in ('anon', 'authenticated') then
+  if coalesce(current_setting('role', true), '') not in ('anon', 'authenticated') then
     return new;
   end if;
 
