@@ -11,7 +11,7 @@ export async function GET(_request: NextRequest, context: { params: Promise<{ id
   const { id } = await context.params;
   const { supabase, user, plan } = await getServerUserPlanOnly();
   if (!user) {
-    return apiError("auth_required", 401, "Connecte-toi pour voir ce produit.");
+    return apiError("auth_required", 401, "Connectez-vous pour voir ce produit.");
   }
   if (plan === null) return reponseAbonnementRequis();
 

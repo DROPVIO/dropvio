@@ -17,7 +17,7 @@ Un seul suffit dans la plupart des cas, à condition qu'il ait réellement été
 
 ## Est-ce qu'un produit qui a bien marché pour un autre vendeur reste une bonne idée pour moi ?
 
-Rarement de la même façon, comme évoqué dès l'introduction de cette formation : un produit qui a fonctionné pour quelqu'un d'autre a souvent déjà été rendu public, ce qui a pu saturer une partie de son opportunité au moment où tu le découvres. Ce qui mérite d'être copié n'est jamais le produit lui-même, mais la méthode qui a permis de le trouver et de l'exploiter correctement — cette méthode, elle, reste valable indépendamment de la saturation d'un produit précis.
+Rarement de la même façon, comme évoqué dès l'introduction de cette formation : un produit qui a fonctionné pour quelqu'un d'autre a souvent déjà été rendu public, ce qui a pu saturer une partie de son opportunité au moment où vous le découvrez. Ce qui mérite d'être copié n'est jamais le produit lui-même, mais la méthode qui a permis de le trouver et de l'exploiter correctement — cette méthode, elle, reste valable indépendamment de la saturation d'un produit précis.
 
 ## Faut-il répondre soi-même à toutes les demandes du service client, même une fois l'activité développée ?
 

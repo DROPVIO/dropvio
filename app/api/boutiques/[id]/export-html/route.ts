@@ -21,7 +21,7 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
   const params = await context.params;
   const { supabase, user, plan } = await getServerUserPlanOnly();
   if (!user) {
-    return NextResponse.json({ error: "Connecte-toi pour exporter cette boutique.", code: "auth_required" }, { status: 401 });
+    return NextResponse.json({ error: "Connectez-vous pour exporter cette boutique.", code: "auth_required" }, { status: 401 });
   }
 
   // Restriction sans abonnement — cet endpoint renvoie le HTML complet (CSS inliné) prêt à être

@@ -15,7 +15,7 @@ export async function POST(request: Request) {
   const { supabase, user } = await getServerUserPlanOnly();
 
   if (!user) {
-    return NextResponse.json({ error: "Connecte-toi pour choisir un plan.", code: "auth_required" }, { status: 401 });
+    return NextResponse.json({ error: "Connectez-vous pour choisir un plan.", code: "auth_required" }, { status: 401 });
   }
 
   if (!isStripeConfigured()) {
@@ -53,7 +53,7 @@ export async function POST(request: Request) {
   });
   if (refus) {
     return NextResponse.json(
-      { error: "Tu as déjà un abonnement Expert en cours : il doit être terminé avant de souscrire Pro ou Agency.", code: refus },
+      { error: "Vous avez déjà un abonnement Expert en cours : il doit être terminé avant de souscrire Pro ou Agency.", code: refus },
       { status: 409 }
     );
   }
@@ -61,7 +61,7 @@ export async function POST(request: Request) {
   // Un abonnement encore vivant se modifie dans le portail Stripe (changement de plan,
   // résiliation), jamais en en créant un second qui serait facturé en double.
   if (profil?.abonnement_statut === "trialing" || profil?.abonnement_statut === "active" || profil?.abonnement_statut === "past_due") {
-    return NextResponse.json({ error: "Tu as déjà un abonnement en cours.", code: "subscription_exists" }, { status: 400 });
+    return NextResponse.json({ error: "Vous avez déjà un abonnement en cours.", code: "subscription_exists" }, { status: 400 });
   }
 
   // Un client Stripe par compte, créé une fois puis réutilisé : sans ça, chaque tentative de

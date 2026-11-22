@@ -4,7 +4,7 @@ Cette formation a jusqu'ici surtout traité l'acquisition d'un nouveau client. C
 
 ## Pourquoi un client existant coûte presque toujours moins cher qu'un nouveau
 
-Convaincre une personne qui a déjà acheté, qui a déjà reçu son produit et qui te connaît déjà, demande structurellement moins d'efforts et moins de budget publicitaire que convaincre un inconnu qui découvre ta boutique pour la première fois. C'est un principe largement documenté en commerce, quel que soit le secteur, et le dropshipping n'y échappe pas : un client satisfait qui revient pour un second achat n'a généralement nécessité aucun coût d'acquisition supplémentaire, ce qui rend cette seconde vente nettement plus rentable que la première, à marge produit identique.
+Convaincre une personne qui a déjà acheté, qui a déjà reçu son produit et qui vous connaît déjà, demande structurellement moins d'efforts et moins de budget publicitaire que convaincre un inconnu qui découvre votre boutique pour la première fois. C'est un principe largement documenté en commerce, quel que soit le secteur, et le dropshipping n'y échappe pas : un client satisfait qui revient pour un second achat n'a généralement nécessité aucun coût d'acquisition supplémentaire, ce qui rend cette seconde vente nettement plus rentable que la première, à marge produit identique.
 
 ## Le rôle de la communication après l'achat
 
@@ -12,7 +12,7 @@ L'e-mail ou le message envoyé après un achat n'a pas vocation à se limiter à
 
 ## Construire une liste de contacts est un actif, pas un détail technique
 
-Chaque client qui accepte de recevoir des communications de la boutique constitue un actif qui t'appartient, contrairement à l'audience d'une plateforme publicitaire tierce dont les règles et les coûts peuvent changer sans préavis. Une liste de contacts construite progressivement, même modestement, offre un canal de communication direct qui ne dépend d'aucun algorithme externe — un point qui rejoint directement la logique de réduction de dépendance à un canal unique évoquée dans les parties 6 et 10.
+Chaque client qui accepte de recevoir des communications de la boutique constitue un actif qui vous appartient, contrairement à l'audience d'une plateforme publicitaire tierce dont les règles et les coûts peuvent changer sans préavis. Une liste de contacts construite progressivement, même modestement, offre un canal de communication direct qui ne dépend d'aucun algorithme externe — un point qui rejoint directement la logique de réduction de dépendance à un canal unique évoquée dans les parties 6 et 10.
 
 ## Le packaging et l'expérience de réception, souvent négligés
 

@@ -9,7 +9,7 @@ export async function GET() {
   const { supabase, user, plan } = await getServerUserPlanOnly();
 
   if (!user) {
-    return NextResponse.json({ error: "Connecte-toi pour voir ton quota." }, { status: 401 });
+    return NextResponse.json({ error: "Connectez-vous pour voir votre quota." }, { status: 401 });
   }
   if (plan !== "expert") {
     return NextResponse.json({ error: "Cette page est réservée aux abonnés Expert." }, { status: 403 });

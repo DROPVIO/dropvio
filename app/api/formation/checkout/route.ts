@@ -10,7 +10,7 @@ export async function POST(request: Request) {
   const { user, formationOwned } = await getServerUserAndPlan();
 
   if (!user) {
-    return NextResponse.json({ error: "Connecte-toi pour acheter une formation.", code: "auth_required" }, { status: 401 });
+    return NextResponse.json({ error: "Connectez-vous pour acheter une formation.", code: "auth_required" }, { status: 401 });
   }
 
   if (!isStripeConfigured()) {

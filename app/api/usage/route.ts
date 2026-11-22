@@ -15,7 +15,7 @@ import { imagesPossiblesBudget } from "@/lib/media/quota-images-regles";
 export async function GET() {
   const { supabase, user, plan } = await getServerUserAndPlan();
   if (!user) {
-    return NextResponse.json({ error: "Connecte-toi pour voir ton utilisation.", code: "auth_required" }, { status: 401 });
+    return NextResponse.json({ error: "Connectez-vous pour voir votre utilisation.", code: "auth_required" }, { status: 401 });
   }
 
   const limits = limitesDuPlan(plan);

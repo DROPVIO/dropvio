@@ -63,7 +63,7 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
   const { id } = await context.params;
   const { supabase, user, plan } = await getServerUserAndPlan();
   if (!user) {
-    return NextResponse.json({ error: "Connecte-toi pour publier cette boutique sur Shopify.", code: "auth_required" }, { status: 401 });
+    return NextResponse.json({ error: "Connectez-vous pour publier cette boutique sur Shopify.", code: "auth_required" }, { status: 401 });
   }
 
   // Restriction sans abonnement — même règle que sites-generes/[id]/shopify-push : publier une
@@ -73,7 +73,7 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
     return apiError(
       "shopify_push_plan",
       403,
-      "La publication sur Shopify est réservée aux plans Pro et Agency. Passe au plan Pro pour publier cette boutique."
+      "La publication sur Shopify est réservée aux plans Pro et Agency. Passez au plan Pro pour publier cette boutique."
     );
   }
 
@@ -106,7 +106,7 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
     return apiError(
       "shopify_not_connected",
       400,
-      "Connecte d'abord ta boutique Shopify dans les paramètres avant de pousser tes produits."
+      "Connectez d'abord votre boutique Shopify dans les paramètres avant d'envoyer vos produits."
     );
   }
 

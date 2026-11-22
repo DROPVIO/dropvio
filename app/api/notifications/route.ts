@@ -11,7 +11,7 @@ const TABLE_ABSENTE = "42P01";
 // donnée personnelle : numéro de commande et produit seulement.
 export async function GET() {
   const { user } = await getServerUserPlanOnly();
-  if (!user) return apiError("auth_required", 401, "Connecte-toi.");
+  if (!user) return apiError("auth_required", 401, "Connectez-vous.");
 
   const admin = createSupabaseAdminClient();
   const [compte, liste] = await Promise.all([

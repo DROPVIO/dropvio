@@ -76,14 +76,14 @@ export async function POST(request: NextRequest) {
     const { supabase, user, plan } = await getServerUserAndPlan();
 
     if (!user) {
-      return NextResponse.json({ error: "Connecte-toi pour utiliser l'audit IA.", code: "auth_required" }, { status: 401 });
+      return NextResponse.json({ error: "Connectez-vous pour utiliser l'audit IA.", code: "auth_required" }, { status: 401 });
     }
 
     // Même garde-fou technique que /api/audit-site (appel Claude facturé, clé de rate
     // limit distincte pour ne pas partager le compteur avec l'analyse elle-même).
     if (!(await checkRateLimit(`audit-site-html:${user.id}`, { max: 10, windowMs: 3_600_000 }))) {
       return NextResponse.json(
-        { error: "Trop de requêtes en peu de temps. Réessaie dans quelques minutes.", code: "rate_limit" },
+        { error: "Trop de requêtes en peu de temps. Réessayez dans quelques minutes.", code: "rate_limit" },
         { status: 429 }
       );
     }
@@ -104,7 +104,7 @@ export async function POST(request: NextRequest) {
       if (used >= maxParMois) {
         return NextResponse.json(
           {
-            error: `Tu as atteint la limite de ${maxParMois} audits ce mois-ci sur le plan ${planLabel(plan)}. ${
+            error: `Vous avez atteint la limite de ${maxParMois} audits ce mois-ci sur le plan ${planLabel(plan)}. ${
               plan === "pro" ? "Passe Agency pour 100 audits par mois." : "La limite se réinitialise le mois prochain."
             }`, code: "audit_limit", values: { max: maxParMois, plan: planLabel(plan) },
           },

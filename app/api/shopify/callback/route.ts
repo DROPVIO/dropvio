@@ -39,7 +39,7 @@ export async function GET(request: NextRequest) {
     return fail("Réponse Shopify invalide.");
   }
   if (!cookieState || state !== cookieState || !cookieShop || shop !== cookieShop) {
-    return fail("La demande de connexion Shopify a expiré ou est invalide. Réessaie.");
+    return fail("La demande de connexion Shopify a expiré ou est invalide. Réessayez.");
   }
   if (!verifyShopifyHmac(searchParams)) {
     return fail("Signature Shopify invalide — connexion refusée par sécurité.");
@@ -47,7 +47,7 @@ export async function GET(request: NextRequest) {
 
   const { user } = await getServerUserAndPlan();
   if (!user) {
-    return fail("Ta session dropvio a expiré pendant la connexion Shopify. Reconnecte-toi puis réessaie.");
+    return fail("Votre session Dropvio a expiré pendant la connexion Shopify. Reconnectez-vous puis réessayez.");
   }
 
   let accessToken: string;
@@ -57,7 +57,7 @@ export async function GET(request: NextRequest) {
     accessToken = tokenRes.access_token;
     scope = tokenRes.scope;
   } catch {
-    return fail("Impossible d'échanger le code d'autorisation avec Shopify. Réessaie.");
+    return fail("Impossible d'échanger le code d'autorisation avec Shopify. Réessayez.");
   }
 
   let shopName: string | null = null;
@@ -70,7 +70,7 @@ export async function GET(request: NextRequest) {
 
   const saveResult = await saveShopifyConnection({ userId: user.id, shop, shopName, accessToken, scope });
   if (!saveResult.ok) {
-    return fail("Impossible d'enregistrer la connexion Shopify. Réessaie.");
+    return fail("Impossible d'enregistrer la connexion Shopify. Réessayez.");
   }
 
   // Best-effort : un échec d'enregistrement webhook ne doit pas faire échouer toute la

@@ -13,7 +13,7 @@ export async function GET() {
   const { supabase, user } = await getServerUserAndPlan();
 
   if (!user) {
-    return NextResponse.json({ error: "Connecte-toi pour voir tes sites.", code: "auth_required" }, { status: 401 });
+    return NextResponse.json({ error: "Connectez-vous pour voir vos sites.", code: "auth_required" }, { status: 401 });
   }
 
   const { data, error } = await supabase
@@ -66,7 +66,7 @@ export async function POST(request: NextRequest) {
   const { supabase, user } = await getServerUserAndPlan();
 
   if (!user) {
-    return NextResponse.json({ error: "Connecte-toi pour sauvegarder un site.", code: "auth_required" }, { status: 401 });
+    return NextResponse.json({ error: "Connectez-vous pour sauvegarder un site.", code: "auth_required" }, { status: 401 });
   }
 
   const {

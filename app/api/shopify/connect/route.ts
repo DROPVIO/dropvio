@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
   const { user } = await getServerUserAndPlan();
   if (!user) {
     return NextResponse.json(
-      { error: "Connecte-toi à ton compte dropvio avant de connecter Shopify.", code: "auth_required" },
+      { error: "Connectez-vous à votre compte Dropvio avant de connecter Shopify.", code: "auth_required" },
       { status: 401 }
     );
   }

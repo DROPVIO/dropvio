@@ -1,6 +1,6 @@
 # Partie 2 (complément) — Étude de cas complète : de l'idée au choix final
 
-La partie 2 a posé les critères. Voici comment ils s'articulent concrètement, à travers un exemple de bout en bout — depuis une idée vague jusqu'à une décision de lancement argumentée. Les chiffres sont des exemples pédagogiques et non des données mesurées sur un produit réel ; ce qui compte est la méthode, reproductible sur n'importe quelle idée qui te vient.
+La partie 2 a posé les critères. Voici comment ils s'articulent concrètement, à travers un exemple de bout en bout — depuis une idée vague jusqu'à une décision de lancement argumentée. Les chiffres sont des exemples pédagogiques et non des données mesurées sur un produit réel ; ce qui compte est la méthode, reproductible sur n'importe quelle idée qui vous vient.
 
 ## Le point de départ : une idée trop large
 
@@ -16,7 +16,7 @@ Une variante peut avoir un volume de recherche correct au moment où on l'observ
 
 ## Troisième filtre : la vérification fournisseur avant tout engagement financier
 
-Une fois une ou deux variantes retenues sur les deux premiers filtres, l'étape suivante consiste à identifier plusieurs fournisseurs potentiels pour ce produit précis, jamais un seul par défaut. Compare plusieurs fournisseurs potentiels pour ce même produit sur des critères de fiabilité — note du produit, volume de commandes déjà passées via ce fournisseur — plutôt que de t'engager avec le premier résultat venu. Pour chaque fournisseur candidat, il faut vérifier que le prix réellement facturé, une fois converti dans ta devise de référence, laisse une marge cohérente avec les calculs de la partie 3 — un produit qui semble intéressant sur le papier peut devenir non viable une fois le vrai coût fournisseur confirmé.
+Une fois une ou deux variantes retenues sur les deux premiers filtres, l'étape suivante consiste à identifier plusieurs fournisseurs potentiels pour ce produit précis, jamais un seul par défaut. Comparez plusieurs fournisseurs potentiels pour ce même produit sur des critères de fiabilité — note du produit, volume de commandes déjà passées via ce fournisseur — plutôt que de vous engager avec le premier résultat venu. Pour chaque fournisseur candidat, il faut vérifier que le prix réellement facturé, une fois converti dans votre devise de référence, laisse une marge cohérente avec les calculs de la partie 3 — un produit qui semble intéressant sur le papier peut devenir non viable une fois le vrai coût fournisseur confirmé.
 
 ## Quatrième filtre : le test de complémentarité avec l'offre existante
 

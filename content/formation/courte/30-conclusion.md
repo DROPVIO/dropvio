@@ -9,4 +9,4 @@ Aucune de ces disciplines n'est complexe prise isolément. Ce qui distingue les 
 
 Si un sujet précis dans cette version courte mérite davantage d'approfondissement une fois les bases posées — un exemple chiffré supplémentaire, une grille d'évaluation plus détaillée, une étude de cas complète sur une année entière —, la version longue de cette formation développe chacun de ces points avec le niveau de détail correspondant. Les deux versions partagent la même méthode et la même exigence ; seule la profondeur de traitement de chaque sujet diffère entre elles.
 
-Tu as maintenant les repères essentiels pour démarrer avec méthode plutôt qu'avec la seule improvisation. La suite se joue dans la mise en pratique, semaine après semaine, avec la même rigueur que celle décrite dans ces pages.
+Vous avez maintenant les repères essentiels pour démarrer avec méthode plutôt qu'avec la seule improvisation. La suite se joue dans la mise en pratique, semaine après semaine, avec la même rigueur que celle décrite dans ces pages.

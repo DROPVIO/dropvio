@@ -25,7 +25,7 @@ const MAX_OCTETS = 15 * 1024 * 1024;
 const MODELE_VISION = "claude-sonnet-4-6";
 const MAX_TOKENS_FICHE = 1024;
 const TOKENS_PAR_IMAGE_MAX = 3200;
-const MESSAGE_ILLISIBLE = "Cette image ne peut pas être lue. Essaie une capture d'écran ou un export JPEG.";
+const MESSAGE_ILLISIBLE = "Cette image ne peut pas être lue. Essayez une capture d'écran ou un export JPEG.";
 
 const PROMPT_SYSTEME = `Tu analyses 1 à 3 captures d'écran de sites web pour en extraire UNIQUEMENT des valeurs de style abstraites.
 
@@ -55,11 +55,11 @@ function extraireJson(texte: string): unknown {
 export async function POST(request: NextRequest) {
   const { supabase, user, plan } = await getServerUserPlanOnly();
   if (!user) {
-    return NextResponse.json({ error: "Connecte-toi pour analyser des captures.", code: "auth_required" }, { status: 401 });
+    return NextResponse.json({ error: "Connectez-vous pour analyser des captures.", code: "auth_required" }, { status: 401 });
   }
   // Analyse d'images par Claude : garde-fou anti-rafale, en plus du budget IA du mois.
   if (!(await checkRateLimit(`inspiration:${user.id}`, { max: 20, windowMs: 3_600_000 }))) {
-    return NextResponse.json({ error: "Trop d'analyses en peu de temps. Réessaie dans quelques minutes.", code: "rate_limit" }, { status: 429 });
+    return NextResponse.json({ error: "Trop d'analyses en peu de temps. Réessayez dans quelques minutes.", code: "rate_limit" }, { status: 429 });
   }
 
   const form = await request.formData();
@@ -167,7 +167,7 @@ export async function POST(request: NextRequest) {
     } catch {
       console.error("[inspiration] réponse non JSON :", texte.slice(0, 300));
       return NextResponse.json(
-        { error: "L'analyse n'a pas renvoyé de fiche exploitable. Réessaie.", code: "inspiration_fiche_invalide", erreursFichiers },
+        { error: "L'analyse n'a pas renvoyé de fiche exploitable. Réessayez.", code: "inspiration_fiche_invalide", erreursFichiers },
         { status: 502 }
       );
     }

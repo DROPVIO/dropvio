@@ -1,6 +1,6 @@
 # Partie 14 — Comparer les canaux publicitaires : ce qui les distingue réellement
 
-La partie 6 a posé les principes généraux de l'acquisition. Cette partie détaille les différences concrètes entre les principaux canaux disponibles pour un vendeur en dropshipping, pour t'aider à choisir où concentrer un premier test plutôt que de disperser un budget limité sur trop de canaux à la fois.
+La partie 6 a posé les principes généraux de l'acquisition. Cette partie détaille les différences concrètes entre les principaux canaux disponibles pour un vendeur en dropshipping, pour vous aider à choisir où concentrer un premier test plutôt que de disperser un budget limité sur trop de canaux à la fois.
 
 ## La publicité sur les réseaux sociaux à forte composante visuelle
 

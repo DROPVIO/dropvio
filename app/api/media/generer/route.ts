@@ -51,7 +51,7 @@ function avecConsigne(prompt: string, consigne: string): string {
 export async function POST(request: Request) {
   const { supabase, user, plan } = await getServerUserPlanOnly();
   if (!user) {
-    return apiError("auth_required", 401, "Connecte-toi pour générer une image.");
+    return apiError("auth_required", 401, "Connectez-vous pour générer une image.");
   }
   const source = sourceQuotaImages(plan);
   if (!generationDisponible(plan) || !source) {

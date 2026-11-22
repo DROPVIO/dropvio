@@ -4,7 +4,7 @@ Une part importante de l'activité de dropshipping repose sur une expédition qu
 
 ## Le colis bloqué en douane, un des pires scénarios pour la satisfaction client
 
-Un colis retenu en douane, avec des frais additionnels à régler par le client avant réception, constitue l'une des expériences les plus négatives qu'un client puisse vivre après un achat — non seulement à cause du retard supplémentaire, mais surtout à cause du sentiment d'avoir été mal informé sur le coût réel de son achat au moment de payer. Le dispositif IOSS, déjà évoqué dans la partie 9, répond directement à ce problème pour les envois de valeur modeste en permettant de collecter la TVA au moment de la vente plutôt que de la laisser apparaître comme une surprise douanière — un point qui mérite d'être vérifié avec ton mode d'expédition et ton pays de destination principal. Depuis le 1er juillet 2026, ces mêmes colis de moins de 150 euros venant de hors UE supportent en plus une taxe forfaitaire européenne de 3 euros par catégorie d'article, à intégrer dans le prix plutôt qu'à laisser découvrir au client. Hors UE, chaque pays applique ses propres seuils : le Royaume-Uni, par exemple, ne prélève pas de droits de douane en dessous de 135 livres.
+Un colis retenu en douane, avec des frais additionnels à régler par le client avant réception, constitue l'une des expériences les plus négatives qu'un client puisse vivre après un achat — non seulement à cause du retard supplémentaire, mais surtout à cause du sentiment d'avoir été mal informé sur le coût réel de son achat au moment de payer. Le dispositif IOSS, déjà évoqué dans la partie 9, répond directement à ce problème pour les envois de valeur modeste en permettant de collecter la TVA au moment de la vente plutôt que de la laisser apparaître comme une surprise douanière — un point qui mérite d'être vérifié avec votre mode d'expédition et votre pays de destination principal. Depuis le 1er juillet 2026, ces mêmes colis de moins de 150 euros venant de hors UE supportent en plus une taxe forfaitaire européenne de 3 euros par catégorie d'article, à intégrer dans le prix plutôt qu'à laisser découvrir au client. Hors UE, chaque pays applique ses propres seuils : le Royaume-Uni, par exemple, ne prélève pas de droits de douane en dessous de 135 livres.
 
 ## La variabilité des délais selon la destination
 
@@ -16,7 +16,7 @@ Certaines catégories de produits, sans être interdites de façon universelle, 
 
 ## L'emballage adapté à un trajet plus long
 
-Un produit expédié depuis l'autre bout du monde subit un trajet logistique plus long et souvent plus mouvementé qu'une livraison locale, avec davantage de manipulations intermédiaires. Vérifier, lors de la commande test évoquée dans la partie 5, que l'emballage résiste correctement à ce trajet plus exigeant évite une bonne partie des réclamations liées à des produits endommagés à réception, qui pèsent directement sur le taux de retour intégré dans le calcul de marge de la partie 3.
+Un produit expédié depuis l'autre bout du monde subit un trajet logistique plus long et souvent plus mouvementé qu'une livraison locale, avec davantage de manipulations intermédiaires. Vérifiezr, lors de la commande test évoquée dans la partie 5, que l'emballage résiste correctement à ce trajet plus exigeant évite une bonne partie des réclamations liées à des produits endommagés à réception, qui pèsent directement sur le taux de retour intégré dans le calcul de marge de la partie 3.
 
 ## Ce que cette dimension internationale change dans la communication avec le client
 

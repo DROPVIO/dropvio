@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
     const { supabase, user, plan } = await getServerUserAndPlan();
 
     if (!user) {
-      return NextResponse.json({ error: "Connecte-toi pour utiliser l'audit IA.", code: "auth_required" }, { status: 401 });
+      return NextResponse.json({ error: "Connectez-vous pour utiliser l'audit IA.", code: "auth_required" }, { status: 401 });
     }
 
     // Garde-fou technique indépendant du quota métier mensuel : évite qu'un script ou
@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
     // même sous le plafond mensuel.
     if (!(await checkRateLimit(`audit-site:${user.id}`, { max: 10, windowMs: 3_600_000 }))) {
       return NextResponse.json(
-        { error: "Trop d'audits en peu de temps. Réessaie dans quelques minutes.", code: "rate_limit" },
+        { error: "Trop d'audits en peu de temps. Réessayez dans quelques minutes.", code: "rate_limit" },
         { status: 429 }
       );
     }
@@ -53,7 +53,7 @@ export async function POST(request: NextRequest) {
       if (used >= maxParMois) {
         return NextResponse.json(
           {
-            error: `Tu as atteint la limite de ${maxParMois} audits ce mois-ci sur le plan ${planLabel(plan)}. ${
+            error: `Vous avez atteint la limite de ${maxParMois} audits ce mois-ci sur le plan ${planLabel(plan)}. ${
               plan === "pro" ? "Passe Agency pour 100 audits par mois." : "La limite se réinitialise le mois prochain."
             }`, code: "audit_limit", values: { max: maxParMois, plan: planLabel(plan) },
           },
@@ -109,7 +109,7 @@ export async function POST(request: NextRequest) {
     if (raw === undefined) {
       console.error("[audit-site] no text block in response, stop_reason:", message.stop_reason);
       return NextResponse.json(
-        { error: "Réponse Claude vide ou inattendue. Réessaie.", code: "ai_invalid_response" },
+        { error: "Réponse Claude vide ou inattendue. Réessayez.", code: "ai_invalid_response" },
         { status: 500 }
       );
     }
@@ -183,7 +183,7 @@ export async function POST(request: NextRequest) {
   } catch (err) {
     console.error("[audit-site] unexpected error:", err);
     return NextResponse.json(
-      { error: "Erreur lors de l'analyse. Réessaie dans un instant.", code: "audit_failed" },
+      { error: "Erreur lors de l'analyse. Réessayez dans un instant.", code: "audit_failed" },
       { status: 500 }
     );
   }

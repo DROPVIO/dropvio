@@ -78,7 +78,7 @@ export async function PATCH(
 
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) {
-    return NextResponse.json({ error: "Connecte-toi pour modifier ce site.", code: "auth_required" }, { status: 401 });
+    return NextResponse.json({ error: "Connectez-vous pour modifier ce site.", code: "auth_required" }, { status: 401 });
   }
 
   const body = await request.json();
@@ -219,7 +219,7 @@ export async function DELETE(
 
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) {
-    return NextResponse.json({ error: "Connecte-toi pour supprimer ce site.", code: "auth_required" }, { status: 401 });
+    return NextResponse.json({ error: "Connectez-vous pour supprimer ce site.", code: "auth_required" }, { status: 401 });
   }
 
   const { error } = await supabase.from("sites_generes").delete().eq("id", id);

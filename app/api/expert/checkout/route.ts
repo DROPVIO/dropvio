@@ -13,7 +13,7 @@ export async function POST(request: Request) {
   const { supabase, user, plan } = await getServerUserPlanOnly();
 
   if (!user) {
-    return NextResponse.json({ error: "Connecte-toi pour choisir le plan Expert." }, { status: 401 });
+    return NextResponse.json({ error: "Connectez-vous pour choisir le plan Expert." }, { status: 401 });
   }
 
   if (plan === "expert") {
@@ -51,7 +51,7 @@ export async function POST(request: Request) {
     // Un seul abonnement à la fois : Expert ne s'ajoute jamais à un abonnement existant.
     if (await findSubscriptionEnCours(stripe, customerId)) {
       return NextResponse.json(
-        { error: "Tu as déjà un abonnement en cours. Il doit être terminé avant de souscrire au plan Expert." },
+        { error: "Vous avez déjà un abonnement en cours. Il doit être terminé avant de souscrire au plan Expert." },
         { status: 409 }
       );
     }

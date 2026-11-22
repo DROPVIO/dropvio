@@ -17,12 +17,12 @@ const FETCH_TIMEOUT_MS = 10_000;
 export async function POST(request: NextRequest) {
   const { user } = await getServerUserAndPlan();
   if (!user) {
-    return NextResponse.json({ error: "Connecte-toi pour utiliser cette fonctionnalité.", code: "auth_required" }, { status: 401 });
+    return NextResponse.json({ error: "Connectez-vous pour utiliser cette fonctionnalité.", code: "auth_required" }, { status: 401 });
   }
 
   if (!(await checkRateLimit(`audit-site-from-url:${user.id}`, { max: 10, windowMs: 60_000 }))) {
     return NextResponse.json(
-      { error: "Trop de requêtes. Réessaie dans une minute.", code: "rate_limit" },
+      { error: "Trop de requêtes. Réessayez dans une minute.", code: "rate_limit" },
       { status: 429 }
     );
   }

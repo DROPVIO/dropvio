@@ -14,7 +14,7 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
   const { id } = await context.params;
   const { supabase, user } = await getServerUserAndPlan();
   if (!user) {
-    return NextResponse.json({ error: "Connecte-toi pour voir les suggestions.", code: "auth_required" }, { status: 401 });
+    return NextResponse.json({ error: "Connectez-vous pour voir les suggestions.", code: "auth_required" }, { status: 401 });
   }
 
   const { data: boutique, error: boutiqueError } = await supabase

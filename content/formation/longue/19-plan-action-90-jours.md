@@ -4,7 +4,7 @@ Cette partie synthétise l'ensemble de la formation sous la forme d'un plan conc
 
 ## Semaines 1 à 2 — Recherche et validation du produit
 
-Resserrer une idée large en plusieurs variantes concrètes, comme détaillé dans la partie 2 et son étude de cas. Vérifier le volume de recherche et la tendance dans le temps de chaque variante. Comparer au moins deux ou trois fournisseurs potentiels sur leur note moyenne et leur volume de commandes. Passer une commande test chez le fournisseur retenu avant tout engagement à volume.
+Resserrer une idée large en plusieurs variantes concrètes, comme détaillé dans la partie 2 et son étude de cas. Vérifiezr le volume de recherche et la tendance dans le temps de chaque variante. Comparer au moins deux ou trois fournisseurs potentiels sur leur note moyenne et leur volume de commandes. Passer une commande test chez le fournisseur retenu avant tout engagement à volume.
 
 ## Semaines 3 à 4 — Construction de la boutique et calcul financier
 

@@ -11,7 +11,7 @@ const IDS_MAX = 100;
 export async function GET(request: NextRequest) {
   const { supabase, user, plan } = await getServerUserPlanOnly();
   if (!user) {
-    return apiError("auth_required", 401, "Connecte-toi pour voir le catalogue.");
+    return apiError("auth_required", 401, "Connectez-vous pour voir le catalogue.");
   }
   if (plan === null) return reponseAbonnementRequis();
 

@@ -9,7 +9,7 @@ import { erreurServeur } from "@/lib/api-errors";
 export async function POST() {
   const { user } = await getServerUserAndPlan();
   if (!user) {
-    return NextResponse.json({ error: "Connecte-toi.", code: "auth_required" }, { status: 401 });
+    return NextResponse.json({ error: "Connectez-vous.", code: "auth_required" }, { status: 401 });
   }
 
   const admin = createSupabaseAdminClient();

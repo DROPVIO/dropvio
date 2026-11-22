@@ -6,7 +6,7 @@ C'est un des paradoxes les moins compris du commerce en ligne : une activité pe
 
 ## Comprendre le décalage entre encaisser et dépenser
 
-En dropshipping, ce décalage prend une forme particulière. Tu encaisses généralement le paiement du client immédiatement au moment de la commande, mais tu payes le fournisseur presque aussitôt après pour déclencher l'expédition — jusque-là, le décalage te profite plutôt qu'il ne te pénalise. Le vrai risque de trésorerie apparaît ailleurs : dans le délai que peuvent prendre certains processeurs de paiement pour te reverser réellement les fonds encaissés, dans les remboursements qui repartent parfois plusieurs semaines après l'encaissement initial, et surtout dans la tentation de réinvestir immédiatement chaque euro de chiffre d'affaires en publicité sans garder de réserve pour absorber ces décalages.
+En dropshipping, ce décalage prend une forme particulière. Vous encaissez généralement le paiement du client immédiatement au moment de la commande, mais vous payez le fournisseur presque aussitôt après pour déclencher l'expédition — jusque-là, le décalage vous profite plutôt qu'il ne vous pénalise. Le vrai risque de trésorerie apparaît ailleurs : dans le délai que peuvent prendre certains processeurs de paiement pour vous reverser réellement les fonds encaissés, dans les remboursements qui repartent parfois plusieurs semaines après l'encaissement initial, et surtout dans la tentation de réinvestir immédiatement chaque euro de chiffre d'affaires en publicité sans garder de réserve pour absorber ces décalages.
 
 ## La règle de la réserve de précaution
 

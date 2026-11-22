@@ -10,7 +10,7 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
   const params = await context.params;
   const { supabase, user } = await getServerUserAndPlan();
   if (!user) {
-    return NextResponse.json({ error: "Connecte-toi pour voir cette boutique.", code: "auth_required" }, { status: 401 });
+    return NextResponse.json({ error: "Connectez-vous pour voir cette boutique.", code: "auth_required" }, { status: 401 });
   }
 
   const colonnes = "id, nom, slug, description, theme, settings, mentions_legales, est_publique, created_at, updated_at";
@@ -55,7 +55,7 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
   const params = await context.params;
   const { supabase, user } = await getServerUserAndPlan();
   if (!user) {
-    return NextResponse.json({ error: "Connecte-toi pour modifier cette boutique.", code: "auth_required" }, { status: 401 });
+    return NextResponse.json({ error: "Connectez-vous pour modifier cette boutique.", code: "auth_required" }, { status: 401 });
   }
 
   const payload = await request.json();
@@ -113,7 +113,7 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
       return erreurServeur("api/boutiques/[id]", countErr);
     }
     if (!count) {
-      return apiError("publish_requires_product", 400, "Ajoute au moins un produit avant de rendre la boutique publique.");
+      return apiError("publish_requires_product", 400, "Ajoutez au moins un produit avant de rendre la boutique publique.");
     }
   }
 
@@ -146,7 +146,7 @@ export async function DELETE(request: NextRequest, context: { params: Promise<{ 
   const params = await context.params;
   const { supabase, user } = await getServerUserAndPlan();
   if (!user) {
-    return NextResponse.json({ error: "Connecte-toi pour supprimer cette boutique.", code: "auth_required" }, { status: 401 });
+    return NextResponse.json({ error: "Connectez-vous pour supprimer cette boutique.", code: "auth_required" }, { status: 401 });
   }
 
   const { data, error } = await supabase

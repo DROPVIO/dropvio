@@ -20,7 +20,7 @@ function reponseTableAbsente() {
 export async function PUT(request: NextRequest, context: { params: Promise<{ id: string }> }) {
   const { id } = await context.params;
   const { supabase, user, plan } = await getServerUserPlanOnly();
-  if (!user) return apiError("auth_required", 401, "Connecte-toi pour modifier les photos.");
+  if (!user) return apiError("auth_required", 401, "Connectez-vous pour modifier les photos.");
 
   if (plan === null) return reponseAbonnementRequis();
   const body = await request.json().catch(() => null);
@@ -36,7 +36,7 @@ export async function PUT(request: NextRequest, context: { params: Promise<{ id:
 export async function POST(request: NextRequest, context: { params: Promise<{ id: string }> }) {
   const { id } = await context.params;
   const { supabase, user, plan } = await getServerUserPlanOnly();
-  if (!user) return apiError("auth_required", 401, "Connecte-toi pour modifier les photos.");
+  if (!user) return apiError("auth_required", 401, "Connectez-vous pour modifier les photos.");
 
   if (plan === null) return reponseAbonnementRequis();
   const body = await request.json().catch(() => null);

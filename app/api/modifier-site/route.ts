@@ -48,12 +48,12 @@ ${CADRE_MODIFICATION_SITE}`;
 export async function POST(request: NextRequest) {
   const { supabase, user, plan } = await getServerUserAndPlan();
   if (!user) {
-    return NextResponse.json({ error: "Connecte-toi pour modifier ce site.", code: "auth_required" }, { status: 401 });
+    return NextResponse.json({ error: "Connectez-vous pour modifier ce site.", code: "auth_required" }, { status: 401 });
   }
 
   if (!(await checkRateLimit(`modifier-site:${user.id}`, { max: 20, windowMs: 3_600_000 }))) {
     return NextResponse.json(
-      { error: "Trop de générations en peu de temps. Réessaie dans quelques minutes.", code: "rate_limit" },
+      { error: "Trop de générations en peu de temps. Réessayez dans quelques minutes.", code: "rate_limit" },
       { status: 429 }
     );
   }
@@ -88,14 +88,14 @@ export async function POST(request: NextRequest) {
 
     if (message.stop_reason === "refusal" || message.stop_reason === "max_tokens") {
       console.error("[modifier-site] stop_reason:", message.stop_reason);
-      return apiError("modification_echec", 502, "La modification n'a pas pu être appliquée. Reformule ou découpe ta demande.");
+      return apiError("modification_echec", 502, "La modification n'a pas pu être appliquée. Reformulez ou découpez votre demande.");
     }
     const texte = message.content.find((b) => b.type === "text");
     let sortie: { modifications: ModificationSite[]; resume: string; hors_sujet?: boolean };
     try {
       sortie = JSON.parse(texte && texte.type === "text" ? texte.text : "");
     } catch {
-      return NextResponse.json({ error: "Réponse invalide. Réessaie.", code: "ai_invalid_response" }, { status: 500 });
+      return NextResponse.json({ error: "Réponse invalide. Réessayez.", code: "ai_invalid_response" }, { status: 500 });
     }
 
     if (sortie.hors_sujet === true) {
@@ -105,7 +105,7 @@ export async function POST(request: NextRequest) {
     const resultat = appliquerModificationsSite(pages, sortie.modifications ?? [], cible);
     console.log("[modifier-site] %d appliquée(s), %d ignorée(s), pages : %s", resultat.appliquees, resultat.ignorees, resultat.pagesModifiees.join(", "));
     if (resultat.appliquees === 0) {
-      return apiError("modification_echec", 502, "La modification n'a pas pu être appliquée. Reformule ou découpe ta demande.");
+      return apiError("modification_echec", 502, "La modification n'a pas pu être appliquée. Reformulez ou découpez votre demande.");
     }
     return NextResponse.json({
       pages: resultat.pages,
@@ -118,7 +118,7 @@ export async function POST(request: NextRequest) {
     const refus = reponseLimiteIa(err);
     if (refus) return refus;
     console.error("[modifier-site]", err);
-    return NextResponse.json({ error: "Erreur lors de la génération. Réessaie.", code: "generation_failed" }, { status: 500 });
+    return NextResponse.json({ error: "Erreur lors de la génération. Réessayez.", code: "generation_failed" }, { status: 500 });
   } finally {
     await suivi.enregistrer();
   }

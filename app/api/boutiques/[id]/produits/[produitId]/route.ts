@@ -21,7 +21,7 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
   const params = await context.params;
   const { supabase, user } = await getServerUserAndPlan();
   if (!user) {
-    return NextResponse.json({ error: "Connecte-toi pour modifier ce produit.", code: "auth_required" }, { status: 401 });
+    return NextResponse.json({ error: "Connectez-vous pour modifier ce produit.", code: "auth_required" }, { status: 401 });
   }
 
   const payload = await request.json();
@@ -56,7 +56,7 @@ export async function DELETE(request: NextRequest, context: { params: Promise<{ 
   const params = await context.params;
   const { supabase, user } = await getServerUserAndPlan();
   if (!user) {
-    return NextResponse.json({ error: "Connecte-toi pour supprimer ce produit.", code: "auth_required" }, { status: 401 });
+    return NextResponse.json({ error: "Connectez-vous pour supprimer ce produit.", code: "auth_required" }, { status: 401 });
   }
 
   const { data, error } = await supabase

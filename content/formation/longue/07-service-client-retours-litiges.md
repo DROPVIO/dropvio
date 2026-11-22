@@ -1,8 +1,8 @@
 # Partie 7 — Service client, retours et litiges
 
-## Le moment où se joue vraiment ta réputation
+## Le moment où se joue vraiment votre réputation
 
-La majorité des vendeurs en dropshipping concentrent leur attention sur tout ce qui précède la vente — trouver le produit, construire la boutique, faire venir du trafic — et relâchent cette attention une fois la commande passée. C'est une erreur stratégique, parce que c'est précisément après la vente que se joue la réputation durable d'une boutique : un client satisfait qui a eu un problème bien géré devient souvent plus fidèle qu'un client dont la commande s'est simplement bien passée sans incident, parce qu'il a pu vérifier concrètement que tu prends tes responsabilités au sérieux.
+La majorité des vendeurs en dropshipping concentrent leur attention sur tout ce qui précède la vente — trouver le produit, construire la boutique, faire venir du trafic — et relâchent cette attention une fois la commande passée. C'est une erreur stratégique, parce que c'est précisément après la vente que se joue la réputation durable d'une boutique : un client satisfait qui a eu un problème bien géré devient souvent plus fidèle qu'un client dont la commande s'est simplement bien passée sans incident, parce qu'il a pu vérifier concrètement que vous prenez vos responsabilités au sérieux.
 
 ## Ce que le client attend, même s'il ne le formule pas explicitement
 
@@ -16,7 +16,7 @@ Répondre à chaque réclamation en improvisant depuis zéro consomme un temps c
 
 ## Comprendre la différence entre un retour, un remboursement et un litige
 
-Ces trois situations ne se ressemblent qu'en apparence et méritent d'être distinguées clairement. Un retour est une demande du client de renvoyer un produit, généralement suivi d'un remboursement une fois le produit reçu ou dans certains cas sans exigence de retour physique compte tenu du coût que représenterait le retour d'un article à faible valeur depuis l'étranger. Un remboursement est le fait de rendre l'argent au client, que ce soit suite à un retour, à un geste commercial, ou à une erreur de ta part. Un litige, en revanche, est une situation où le client conteste directement le paiement auprès de sa banque ou de son moyen de paiement plutôt que de passer par toi — c'est la situation la plus grave des trois, parce qu'elle échappe à ton contrôle direct et qu'elle est traitée et jugée par un tiers.
+Ces trois situations ne se ressemblent qu'en apparence et méritent d'être distinguées clairement. Un retour est une demande du client de renvoyer un produit, généralement suivi d'un remboursement une fois le produit reçu ou dans certains cas sans exigence de retour physique compte tenu du coût que représenterait le retour d'un article à faible valeur depuis l'étranger. Un remboursement est le fait de rendre l'argent au client, que ce soit suite à un retour, à un geste commercial, ou à une erreur de votre part. Un litige, en revanche, est une situation où le client conteste directement le paiement auprès de sa banque ou de son moyen de paiement plutôt que de passer par vous — c'est la situation la plus grave des trois, parce qu'elle échappe à votre contrôle direct et qu'elle est traitée et jugée par un tiers.
 
 ## Pourquoi les litiges méritent une vigilance particulière
 
@@ -28,8 +28,8 @@ La meilleure prévention contre les litiges reste, une fois de plus, la transpar
 
 Un vendeur qui gère chaque remboursement et chaque litige au fil de l'eau, sans vue d'ensemble, ne voit jamais les tendances qui se dessinent — un produit particulier qui génère un taux de retour anormalement élevé, une période où les litiges augmentent sans raison apparente, un fournisseur dont la qualité s'est visiblement dégradée. C'est cette vue d'ensemble qui permet d'agir avant que la situation ne s'aggrave, plutôt que de réagir incident par incident sans jamais voir le problème de fond.
 
-Plutôt que de reconstituer manuellement cette vue à partir de dizaines d'emails et de notifications éparpillées, centralise toi-même ce suivi — remboursements et litiges, avec une distinction honnête entre "aucun litige enregistré" et "donnée non disponible" — une nuance importante, puisque la visibilité complète sur les litiges dépend du mode d'encaissement utilisé, et qu'un chiffre à zéro ne doit jamais être confondu avec une absence réelle de suivi possible.
+Plutôt que de reconstituer manuellement cette vue à partir de dizaines d'emails et de notifications éparpillées, centralisez vous-même ce suivi — remboursements et litiges, avec une distinction honnête entre "aucun litige enregistré" et "donnée non disponible" — une nuance importante, puisque la visibilité complète sur les litiges dépend du mode d'encaissement utilisé, et qu'un chiffre à zéro ne doit jamais être confondu avec une absence réelle de suivi possible.
 
 ## La règle générale qui résume toute cette partie
 
-Un problème après-vente bien géré coûte du temps mais rarement de l'argent au-delà du remboursement lui-même. Un problème après-vente mal géré coûte le client, souvent plusieurs clients potentiels via un avis négatif public, et dans les cas les plus graves, l'accès même à ton moyen d'encaissement. Le rapport coût-bénéfice entre bien traiter le service après-vente et le négliger est l'un des plus déséquilibrés de toute l'activité — ce qui en fait un des postes où investir du temps rapporte le plus, alors que c'est justement celui que la majorité des vendeurs sous-investissent le plus.
+Un problème après-vente bien géré coûte du temps mais rarement de l'argent au-delà du remboursement lui-même. Un problème après-vente mal géré coûte le client, souvent plusieurs clients potentiels via un avis négatif public, et dans les cas les plus graves, l'accès même à votre moyen d'encaissement. Le rapport coût-bénéfice entre bien traiter le service après-vente et le négliger est l'un des plus déséquilibrés de toute l'activité — ce qui en fait un des postes où investir du temps rapporte le plus, alors que c'est justement celui que la majorité des vendeurs sous-investissent le plus.

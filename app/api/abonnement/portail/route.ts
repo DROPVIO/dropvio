@@ -11,7 +11,7 @@ export async function POST(request: Request) {
   const { supabase, user, plan } = await getServerUserPlanOnly();
 
   if (!user) {
-    return NextResponse.json({ error: "Connecte-toi pour gérer ton abonnement.", code: "auth_required" }, { status: 401 });
+    return NextResponse.json({ error: "Connectez-vous pour gérer votre abonnement.", code: "auth_required" }, { status: 401 });
   }
 
   if (!isStripeConfigured()) {

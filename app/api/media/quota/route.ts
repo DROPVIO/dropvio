@@ -12,7 +12,7 @@ import { apiError } from "@/lib/api-errors";
 export async function GET(request: Request) {
   const { supabase, user, plan } = await getServerUserPlanOnly();
   if (!user) {
-    return apiError("auth_required", 401, "Connecte-toi pour voir ton quota d'images.");
+    return apiError("auth_required", 401, "Connectez-vous pour voir votre quota d'images.");
   }
   const demande = new URL(request.url).searchParams.get("outil");
   if (demande !== null && !estOutilIa(demande)) {

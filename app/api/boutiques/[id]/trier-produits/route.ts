@@ -125,12 +125,12 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
   const { id: boutiqueId } = await context.params;
   const { supabase, user, plan } = await getServerUserAndPlan();
   if (!user) {
-    return NextResponse.json({ error: "Connecte-toi pour trier tes produits.", code: "auth_required" }, { status: 401 });
+    return NextResponse.json({ error: "Connectez-vous pour trier vos produits.", code: "auth_required" }, { status: 401 });
   }
 
   if (!(await checkRateLimit(`trier-produits:${user.id}`, { max: 10, windowMs: 3_600_000 }))) {
     return NextResponse.json(
-      { error: "Trop de requêtes en peu de temps. Réessaie dans quelques minutes.", code: "rate_limit" },
+      { error: "Trop de requêtes en peu de temps. Réessayez dans quelques minutes.", code: "rate_limit" },
       { status: 429 }
     );
   }
@@ -157,7 +157,7 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
   }
   const produits = (produitsData ?? []) as Produit[];
   if (produits.length === 0) {
-    return apiError("tri_aucun_produit", 400, "Ajoute des produits à la boutique avant de les trier.");
+    return apiError("tri_aucun_produit", 400, "Ajoutez des produits à la boutique avant de les trier.");
   }
 
   // Une collection saisie qui porte le nom d'une collection existante la réutilise (avec la
@@ -193,14 +193,14 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
     for (const produitsLot of lots) {
       const lot = await classer(collections, produitsLot, suivi);
       if (!lot) {
-        return NextResponse.json({ error: "Réponse invalide. Réessaie.", code: "ai_invalid_response" }, { status: 500 });
+        return NextResponse.json({ error: "Réponse invalide. Réessayez.", code: "ai_invalid_response" }, { status: 500 });
       }
       affectations.push(...lot);
     }
   } catch (err) {
     if (err instanceof BudgetIaDepasse) return reponseBudgetDepasse(err);
     console.error("[trier-produits]", err);
-    return NextResponse.json({ error: "Erreur lors du tri. Réessaie.", code: "tri_echec" }, { status: 500 });
+    return NextResponse.json({ error: "Erreur lors du tri. Réessayez.", code: "tri_echec" }, { status: 500 });
   } finally {
     await suivi.enregistrer();
   }
@@ -271,7 +271,7 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
   const { id: boutiqueId } = await context.params;
   const { supabase, user } = await getServerUserAndPlan();
   if (!user) {
-    return NextResponse.json({ error: "Connecte-toi pour trier tes produits.", code: "auth_required" }, { status: 401 });
+    return NextResponse.json({ error: "Connectez-vous pour trier vos produits.", code: "auth_required" }, { status: 401 });
   }
 
   const corps = await request.json().catch(() => null);

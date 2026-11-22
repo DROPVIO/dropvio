@@ -6,12 +6,12 @@ import { fetchSur } from "@/lib/fetch-sur";
 export async function GET(request: Request) {
   const { user } = await getServerUserAndPlan();
   if (!user) {
-    return Response.json({ error: "Connecte-toi pour utiliser le spy tool.", code: "auth_required" }, { status: 401 });
+    return Response.json({ error: "Connectez-vous pour utiliser le spy tool.", code: "auth_required" }, { status: 401 });
   }
 
   if (!(await checkRateLimit(`spy:${user.id}`, { max: 10, windowMs: 60_000 }))) {
     return Response.json(
-      { error: "Trop de requêtes. Réessaie dans une minute.", code: "rate_limit" },
+      { error: "Trop de requêtes. Réessayez dans une minute.", code: "rate_limit" },
       { status: 429 }
     );
   }

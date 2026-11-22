@@ -9,7 +9,7 @@ import { apiError, reponseAbonnementRequis, erreurServeur } from "@/lib/api-erro
 export async function GET() {
   const { supabase, user, plan } = await getServerUserPlanOnly();
   if (!user) {
-    return apiError("auth_required", 401, "Connecte-toi pour voir le catalogue.");
+    return apiError("auth_required", 401, "Connectez-vous pour voir le catalogue.");
   }
   if (plan === null) return reponseAbonnementRequis();
 

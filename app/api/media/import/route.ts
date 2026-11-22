@@ -11,7 +11,7 @@ import { apiError, erreurServeur } from "@/lib/api-errors";
 export async function POST(request: Request) {
   const { user, plan } = await getServerUserPlanOnly();
   if (!user) {
-    return apiError("auth_required", 401, "Connecte-toi pour importer une image.");
+    return apiError("auth_required", 401, "Connectez-vous pour importer une image.");
   }
 
   const body = await request.json().catch(() => null);

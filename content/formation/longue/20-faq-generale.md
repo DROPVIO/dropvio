@@ -4,7 +4,7 @@ Cette partie regroupe les questions qui reviennent le plus souvent une fois les 
 
 ## Faut-il un budget de départ important pour se lancer ?
 
-Non, et c'est justement une des raisons d'être du dropshipping comme modèle — l'absence de stock à financer réduit considérablement la mise de départ nécessaire par rapport à un commerce classique. Le budget minimal réaliste dépend surtout du budget de test publicitaire que tu peux te permettre de perdre sans mettre en péril ta situation personnelle, conformément à la logique de paliers prudents de la partie 6, plus les frais administratifs de création d'activité évoqués dans la partie 9.
+Non, et c'est justement une des raisons d'être du dropshipping comme modèle — l'absence de stock à financer réduit considérablement la mise de départ nécessaire par rapport à un commerce classique. Le budget minimal réaliste dépend surtout du budget de test publicitaire que vous pouvez vous permettre de perdre sans mettre en péril votre situation personnelle, conformément à la logique de paliers prudents de la partie 6, plus les frais administratifs de création d'activité évoqués dans la partie 9.
 
 ## Combien de temps avant de voir si un produit fonctionne ?
 
@@ -16,7 +16,7 @@ Non, une activité commerciale régulière doit être déclarée dès le premier
 
 ## Comment savoir si un fournisseur est fiable avant de s'engager ?
 
-Aucune donnée publique ne garantit une fiabilité à 100 %, mais comparer toi-même plusieurs fournisseurs sur leur note moyenne et leur volume de commandes déjà passées donne une première indication solide. Cette comparaison doit toujours être suivie d'une commande test avant tout engagement à volume, comme détaillé dans la partie 5 et sa grille d'évaluation.
+Aucune donnée publique ne garantit une fiabilité à 100 %, mais comparer vous-même plusieurs fournisseurs sur leur note moyenne et leur volume de commandes déjà passées donne une première indication solide. Cette comparaison doit toujours être suivie d'une commande test avant tout engagement à volume, comme détaillé dans la partie 5 et sa grille d'évaluation.
 
 ## Que faire si un produit qui marchait bien commence à moins bien se vendre ?
 

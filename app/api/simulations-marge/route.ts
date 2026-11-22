@@ -9,7 +9,7 @@ export async function POST(request: NextRequest) {
   const { supabase, user, plan } = await getServerUserAndPlan();
 
   if (!user) {
-    return NextResponse.json({ error: "Connecte-toi pour sauvegarder une simulation.", code: "auth_required" }, { status: 401 });
+    return NextResponse.json({ error: "Connectez-vous pour sauvegarder une simulation.", code: "auth_required" }, { status: 401 });
   }
 
   const { nom, inputs, resultats } = await request.json();
@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
     if ((count ?? 0) >= max) {
       return NextResponse.json(
         {
-          error: `Tu as atteint la limite de ${max} simulations sur le plan ${planLabel(plan)}. Passe Pro pour un accès illimité.`, code: "simulations_limit", values: { max, plan: planLabel(plan) },
+          error: `Vous avez atteint la limite de ${max} simulations sur le plan ${planLabel(plan)}. Passez au plan Pro pour un accès illimité.`, code: "simulations_limit", values: { max, plan: planLabel(plan) },
         },
         { status: 403 }
       );

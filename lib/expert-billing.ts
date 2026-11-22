@@ -130,7 +130,7 @@ export async function createExpertCheckoutSession(
     subscription_data: { metadata },
     custom_text: {
       submit: {
-        message: `${label} : ${selection.sites} sites et ${selection.images} images par mois. Tu as demandé l'exécution immédiate du service.`,
+        message: `${label} : ${selection.sites} sites et ${selection.images} images par mois. Vous avez demandé l'exécution immédiate du service.`,
       },
     },
     success_url: `${origin}/dashboard?expert=success`,

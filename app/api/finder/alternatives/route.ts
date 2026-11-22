@@ -64,7 +64,7 @@ export async function POST(request: NextRequest) {
   const { supabase, user, plan } = await getServerUserAndPlan();
 
   if (!user) {
-    return NextResponse.json({ error: "Connecte-toi pour voir des alternatives.", code: "auth_required" }, { status: 401 });
+    return NextResponse.json({ error: "Connectez-vous pour voir des alternatives.", code: "auth_required" }, { status: 401 });
   }
 
   // Garde-fou technique indépendant du quota métier mensuel : chaque appel déclenche 2
@@ -72,7 +72,7 @@ export async function POST(request: NextRequest) {
   // enchaîne des dizaines de recherches d'affilée même sous le plafond mensuel.
   if (!(await checkRateLimit(`finder-alternatives:${user.id}`, { max: 10, windowMs: 3_600_000 }))) {
     return NextResponse.json(
-      { error: "Trop de recherches en peu de temps. Réessaie dans quelques minutes.", code: "rate_limit" },
+      { error: "Trop de recherches en peu de temps. Réessayez dans quelques minutes.", code: "rate_limit" },
       { status: 429 }
     );
   }
@@ -91,7 +91,7 @@ export async function POST(request: NextRequest) {
     if (used >= maxParMois) {
       return NextResponse.json(
         {
-          error: `Tu as atteint la limite de ${maxParMois} recherches d'alternatives ce mois-ci sur le plan ${planLabel(plan)}. Passe Pro pour un accès illimité.`, code: "alternatives_limit", values: { max: maxParMois, plan: planLabel(plan) },
+          error: `Vous avez atteint la limite de ${maxParMois} recherches d'alternatives ce mois-ci sur le plan ${planLabel(plan)}. Passez au plan Pro pour un accès illimité.`, code: "alternatives_limit", values: { max: maxParMois, plan: planLabel(plan) },
         },
         { status: 403 }
       );

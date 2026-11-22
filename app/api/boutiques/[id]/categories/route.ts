@@ -6,7 +6,7 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
   const params = await context.params;
   const { supabase, user } = await getServerUserAndPlan();
   if (!user) {
-    return NextResponse.json({ error: "Connecte-toi pour voir les catégories.", code: "auth_required" }, { status: 401 });
+    return NextResponse.json({ error: "Connectez-vous pour voir les catégories.", code: "auth_required" }, { status: 401 });
   }
 
   const { data, error } = await supabase
@@ -26,7 +26,7 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
   const params = await context.params;
   const { supabase, user } = await getServerUserAndPlan();
   if (!user) {
-    return NextResponse.json({ error: "Connecte-toi pour ajouter une catégorie.", code: "auth_required" }, { status: 401 });
+    return NextResponse.json({ error: "Connectez-vous pour ajouter une catégorie.", code: "auth_required" }, { status: 401 });
   }
 
   const { nom, slug, position } = await request.json();

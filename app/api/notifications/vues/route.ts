@@ -6,7 +6,7 @@ import { apiError, erreurServeur } from "@/lib/api-errors";
 // Ouverture de la cloche : toutes les notifications de l'utilisateur sont marquées vues.
 export async function POST() {
   const { user } = await getServerUserPlanOnly();
-  if (!user) return apiError("auth_required", 401, "Connecte-toi.");
+  if (!user) return apiError("auth_required", 401, "Connectez-vous.");
 
   const { error } = await createSupabaseAdminClient()
     .from("notifications")

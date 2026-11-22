@@ -39,7 +39,7 @@ export async function POST(request: NextRequest) {
   // Envoi vers un bucket public, avec traitement d'image côté serveur : plafonné pour éviter
   // qu'un compte ne s'en serve comme hébergement ou ne monopolise le CPU.
   if (!(await checkRateLimit(`upload-image:${user.id}`, { max: 60, windowMs: 3_600_000 }))) {
-    return NextResponse.json({ error: "Trop d'envois en peu de temps. Réessaie dans quelques minutes.", code: "rate_limit" }, { status: 429 });
+    return NextResponse.json({ error: "Trop d'envois en peu de temps. Réessayez dans quelques minutes.", code: "rate_limit" }, { status: 429 });
   }
 
   const form = await request.formData();

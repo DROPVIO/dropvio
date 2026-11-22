@@ -43,12 +43,12 @@ const MAX_TOKENS: Record<"nom" | "description", number> = {
 export async function POST(request: NextRequest) {
   const { supabase, user, plan } = await getServerUserAndPlan();
   if (!user) {
-    return NextResponse.json({ error: "Connecte-toi pour utiliser la génération de texte.", code: "auth_required" }, { status: 401 });
+    return NextResponse.json({ error: "Connectez-vous pour utiliser la génération de texte.", code: "auth_required" }, { status: 401 });
   }
 
   if (!(await checkRateLimit(`generer-texte-produit:${user.id}`, { max: 20, windowMs: 3_600_000 }))) {
     return NextResponse.json(
-      { error: "Trop de générations en peu de temps. Réessaie dans quelques minutes.", code: "rate_limit" },
+      { error: "Trop de générations en peu de temps. Réessayez dans quelques minutes.", code: "rate_limit" },
       { status: 429 }
     );
   }
@@ -84,7 +84,7 @@ export async function POST(request: NextRequest) {
     }
 
     if (!texte) {
-      return NextResponse.json({ error: "Réponse vide. Réessaie.", code: "ai_invalid_response" }, { status: 500 });
+      return NextResponse.json({ error: "Réponse vide. Réessayez.", code: "ai_invalid_response" }, { status: 500 });
     }
 
     // Filet de sécurité en sortie — la consigne du prompt système interdit déjà les
@@ -92,7 +92,7 @@ export async function POST(request: NextRequest) {
     // que de relancer automatiquement (pas de boucle de coût sur un cas censé rester rare).
     if (containsExcludedBrand(texte)) {
       return NextResponse.json(
-        { error: "Le texte généré mentionne une marque non autorisée. Réessaie, ou modifie le champ à la main.", code: "ai_brand_forbidden" },
+        { error: "Le texte généré mentionne une marque non autorisée. Réessayez, ou modifiez le champ à la main.", code: "ai_brand_forbidden" },
         { status: 422 }
       );
     }
@@ -101,7 +101,7 @@ export async function POST(request: NextRequest) {
   } catch (err) {
     if (err instanceof BudgetIaDepasse) return reponseBudgetDepasse(err);
     console.error("[generer-texte-produit]", err);
-    return NextResponse.json({ error: "Erreur lors de la génération. Réessaie.", code: "generation_failed" }, { status: 500 });
+    return NextResponse.json({ error: "Erreur lors de la génération. Réessayez.", code: "generation_failed" }, { status: 500 });
   } finally {
     await suivi.enregistrer();
   }

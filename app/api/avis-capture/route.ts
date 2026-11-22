@@ -54,11 +54,11 @@ const SCHEMA = {
 export async function POST(request: NextRequest) {
   const { supabase, user, plan } = await getServerUserPlanOnly();
   if (!user) {
-    return NextResponse.json({ error: "Connecte-toi pour ajouter des avis.", code: "auth_required" }, { status: 401 });
+    return NextResponse.json({ error: "Connectez-vous pour ajouter des avis.", code: "auth_required" }, { status: 401 });
   }
   if (!(await checkRateLimit(`avis-capture:${user.id}`, { max: 20, windowMs: 3_600_000 }))) {
     return NextResponse.json(
-      { error: "Trop de demandes en peu de temps. Réessaie dans quelques minutes.", code: "rate_limit" },
+      { error: "Trop de demandes en peu de temps. Réessayez dans quelques minutes.", code: "rate_limit" },
       { status: 429 }
     );
   }
@@ -125,14 +125,14 @@ export async function POST(request: NextRequest) {
 
     if (message.stop_reason === "refusal" || message.stop_reason === "max_tokens") {
       console.error("[avis-capture] stop_reason:", message.stop_reason);
-      return NextResponse.json({ error: "Impossible de lire les avis. Réessaie.", code: "avis_lecture_echec", erreursFichiers }, { status: 502 });
+      return NextResponse.json({ error: "Impossible de lire les avis. Réessayez.", code: "avis_lecture_echec", erreursFichiers }, { status: 502 });
     }
     const texte = message.content.find((b) => b.type === "text");
     let brut: { avis?: unknown[] };
     try {
       brut = JSON.parse(texte && texte.type === "text" ? texte.text : "");
     } catch {
-      return NextResponse.json({ error: "Impossible de lire les avis. Réessaie.", code: "avis_lecture_echec", erreursFichiers }, { status: 502 });
+      return NextResponse.json({ error: "Impossible de lire les avis. Réessayez.", code: "avis_lecture_echec", erreursFichiers }, { status: 502 });
     }
 
     const lus = Array.isArray(brut.avis) ? brut.avis : [];
@@ -147,7 +147,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ avis, ignores, erreursFichiers });
   } catch (err) {
     console.error("[avis-capture]", err);
-    return NextResponse.json({ error: "Impossible de lire les avis. Réessaie.", code: "avis_lecture_echec", erreursFichiers }, { status: 500 });
+    return NextResponse.json({ error: "Impossible de lire les avis. Réessayez.", code: "avis_lecture_echec", erreursFichiers }, { status: 500 });
   } finally {
     await suivi.enregistrer();
   }

@@ -10,7 +10,7 @@ export async function DELETE(_request: Request, context: { params: Promise<{ id:
   const { id } = await context.params;
   const { supabase, user } = await getServerUserPlanOnly();
   if (!user) {
-    return apiError("auth_required", 401, "Connecte-toi pour modifier ta médiathèque.");
+    return apiError("auth_required", 401, "Connectez-vous pour modifier votre médiathèque.");
   }
 
   const { data: media } = await supabase.from("medias").select("chemin, url_publique, chemin_public").eq("id", id).maybeSingle();

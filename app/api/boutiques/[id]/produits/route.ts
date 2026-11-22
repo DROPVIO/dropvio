@@ -20,7 +20,7 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
 
   const { supabase, user } = await getServerUserPlanOnly();
   if (!user) {
-    return NextResponse.json({ error: "Connecte-toi pour voir les produits.", code: "auth_required" }, { status: 401 });
+    return NextResponse.json({ error: "Connectez-vous pour voir les produits.", code: "auth_required" }, { status: 401 });
   }
 
   const categorieId = searchParams.get("categoryId");
@@ -64,7 +64,7 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
   const params = await context.params;
   const { supabase, user, plan } = await getServerUserPlanOnly();
   if (!user) {
-    return NextResponse.json({ error: "Connecte-toi pour ajouter un produit.", code: "auth_required" }, { status: 401 });
+    return NextResponse.json({ error: "Connectez-vous pour ajouter un produit.", code: "auth_required" }, { status: 401 });
   }
 
   const payload = await request.json();
@@ -94,14 +94,14 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
       return apiError(
         "boutique_product_limit_upgrade",
         403,
-        `Tu as atteint la limite de ${max} produits du plan ${planLabel(plan)}. Passe au plan ${planLabel(superieur)} pour aller jusqu'à ${maxSuperieur ?? "∞"} produits par boutique.`,
+        `Vous avez atteint la limite de ${max} produits du plan ${planLabel(plan)}. Passez au plan ${planLabel(superieur)} pour aller jusqu'à ${maxSuperieur ?? "∞"} produits par boutique.`,
         { values: { max, plan: planLabel(plan), planSuperieur: planLabel(superieur), maxSuperieur: maxSuperieur ?? "∞" } }
       );
     }
     return apiError(
       "boutique_product_limit_max",
       403,
-      `Tu as atteint la limite maximale de ${max} produits par boutique.`,
+      `Vous avez atteint la limite maximale de ${max} produits par boutique.`,
       { values: { max } }
     );
   }
@@ -127,7 +127,7 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
   if (error) {
     // Limite vérifiée aussi par la base (trigger de la migration 059), pour un ajout simultané.
     if (error.message.startsWith("limite_produits_boutique")) {
-      return apiError("boutique_product_limit_max", 403, `Tu as atteint la limite maximale de ${max} produits par boutique.`, { values: { max: max ?? 0 } });
+      return apiError("boutique_product_limit_max", 403, `Vous avez atteint la limite maximale de ${max} produits par boutique.`, { values: { max: max ?? 0 } });
     }
     return erreurServeur("api/boutiques/[id]/produits", error);
   }

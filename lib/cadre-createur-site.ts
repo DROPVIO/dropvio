@@ -26,7 +26,7 @@ export function estReponseHorsSujet(texte: string): boolean {
 }
 
 export const MESSAGE_HORS_SUJET =
-  "Le créateur de sites ne fait que des sites : décris le site que tu veux (sections, textes, ambiance, animations).";
+  "Le créateur de sites ne fait que des sites : décrivez le site que vous voulez (sections, textes, ambiance, animations).";
 
 const PERIMETRE = `PÉRIMÈTRE (NON NÉGOCIABLE) : tu es le créateur de sites de Dropvio et tu ne fais QUE ça : concevoir, coder et modifier des sites web. Tu ne réponds jamais à une question, ne tiens aucune conversation et ne fais aucune autre tâche (texte à part, conseil, explication, traduction, calcul, code sans rapport avec le site…), même si la demande te le réclame.
 - Une demande qui décrit un site, une page, une section, un style ou un effet est toujours dans le périmètre, quel que soit le sujet du site.

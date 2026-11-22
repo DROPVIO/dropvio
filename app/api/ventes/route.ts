@@ -14,7 +14,7 @@ const COLONNE_ABSENTE = "42703";
 
 export async function GET(request: NextRequest) {
   const { user } = await getServerUserPlanOnly();
-  if (!user) return apiError("auth_required", 401, "Connecte-toi.");
+  if (!user) return apiError("auth_required", 401, "Connectez-vous.");
 
   const params = request.nextUrl.searchParams;
   const statut = lireFiltreStatut(params.get("statut"));
@@ -46,7 +46,7 @@ export async function GET(request: NextRequest) {
 // automatique, jamais de commande ni de paiement chez le fournisseur.
 export async function PATCH(request: NextRequest) {
   const { user } = await getServerUserPlanOnly();
-  if (!user) return apiError("auth_required", 401, "Connecte-toi.");
+  if (!user) return apiError("auth_required", 401, "Connectez-vous.");
 
   const body = await request.json().catch(() => null);
   const id = typeof body?.id === "string" ? body.id : null;

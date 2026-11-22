@@ -290,7 +290,7 @@ export async function shopifyFetch<T = unknown>(
 
   if (res.status === 401 || res.status === 403) {
     throw new ShopifyApiError(
-      "Le token d'accès Shopify est invalide ou a expiré. Reconnecte ta boutique Shopify dans les paramètres.",
+      "Le token d'accès Shopify est invalide ou a expiré. Reconnectez votre boutique Shopify dans les paramètres.",
       res.status,
       "auth_expired"
     );
@@ -304,7 +304,7 @@ export async function shopifyFetch<T = unknown>(
   }
   if (res.status === 429) {
     throw new ShopifyApiError(
-      "Limite de requêtes Shopify atteinte. Réessaie dans quelques instants.",
+      "Limite de requêtes Shopify atteinte. Réessayez dans quelques instants.",
       res.status,
       "rate_limited"
     );

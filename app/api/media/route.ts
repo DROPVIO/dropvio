@@ -14,7 +14,7 @@ const DUREE_URL_SIGNEE_S = 3600;
 export async function GET(request: Request) {
   const { supabase, user, plan } = await getServerUserPlanOnly();
   if (!user) {
-    return apiError("auth_required", 401, "Connecte-toi pour voir ta médiathèque.");
+    return apiError("auth_required", 401, "Connectez-vous pour voir votre médiathèque.");
   }
 
   const params = new URL(request.url).searchParams;

@@ -45,12 +45,12 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
   const params = await context.params;
   const { supabase, user, plan } = await getServerUserPlanOnly();
   if (!user) {
-    return NextResponse.json({ error: "Connecte-toi pour générer le contenu de ta boutique.", code: "auth_required" }, { status: 401 });
+    return NextResponse.json({ error: "Connectez-vous pour générer le contenu de votre boutique.", code: "auth_required" }, { status: 401 });
   }
 
   if (!(await checkRateLimit(`generer-contenu-boutique:${user.id}`, { max: 20, windowMs: 3_600_000 }))) {
     return NextResponse.json(
-      { error: "Trop de générations en peu de temps. Réessaie dans quelques minutes.", code: "rate_limit" },
+      { error: "Trop de générations en peu de temps. Réessayez dans quelques minutes.", code: "rate_limit" },
       { status: 429 }
     );
   }
@@ -103,7 +103,7 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
       }
     }
     if (!raw) {
-      return NextResponse.json({ error: "Réponse vide. Réessaie.", code: "ai_invalid_response" }, { status: 500 });
+      return NextResponse.json({ error: "Réponse vide. Réessayez.", code: "ai_invalid_response" }, { status: 500 });
     }
 
     const clean = raw.startsWith("```")
@@ -114,7 +114,7 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
     try {
       parsed = JSON.parse(clean);
     } catch {
-      return NextResponse.json({ error: "Réponse invalide. Réessaie.", code: "ai_invalid_response" }, { status: 500 });
+      return NextResponse.json({ error: "Réponse invalide. Réessayez.", code: "ai_invalid_response" }, { status: 500 });
     }
 
     const palette = {
@@ -126,7 +126,7 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
 
     if (description && containsExcludedBrand(description)) {
       return NextResponse.json(
-        { error: "Le texte généré mentionne une marque non autorisée. Réessaie.", code: "ai_brand_forbidden" },
+        { error: "Le texte généré mentionne une marque non autorisée. Réessayez.", code: "ai_brand_forbidden" },
         { status: 422 }
       );
     }
@@ -135,7 +135,7 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
   } catch (err) {
     if (err instanceof BudgetIaDepasse) return reponseBudgetDepasse(err);
     console.error("[boutiques/generer-contenu]", err);
-    return NextResponse.json({ error: "Erreur lors de la génération. Réessaie.", code: "generation_failed" }, { status: 500 });
+    return NextResponse.json({ error: "Erreur lors de la génération. Réessayez.", code: "generation_failed" }, { status: 500 });
   } finally {
     await suivi.enregistrer();
   }

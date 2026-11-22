@@ -187,7 +187,7 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
   const { id } = await context.params;
   const { supabase, user, plan } = await getServerUserAndPlan();
   if (!user) {
-    return NextResponse.json({ error: "Connecte-toi pour publier ce site sur Shopify.", code: "auth_required" }, { status: 401 });
+    return NextResponse.json({ error: "Connectez-vous pour publier ce site sur Shopify.", code: "auth_required" }, { status: 401 });
   }
 
   // Restriction sans abonnement — voir diagnostic "restriction export Site Builder" : la publication
@@ -196,7 +196,7 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
   // uniquement du frontend (appel direct à l'API sinon possible).
   if (plan === null) {
     return NextResponse.json(
-      { error: "La publication sur Shopify est réservée aux plans Pro et Agency. Passe au plan Pro pour publier ce site.", code: "shopify_push_plan" },
+      { error: "La publication sur Shopify est réservée aux plans Pro et Agency. Passez au plan Pro pour publier ce site.", code: "shopify_push_plan" },
       { status: 403 }
     );
   }
@@ -248,7 +248,7 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
   const connection = await getShopifyConnection(user.id);
   if (!connection) {
     return NextResponse.json(
-      { error: "Connecte d'abord ta boutique Shopify dans les paramètres avant de publier ce site.", code: "shopify_not_connected" },
+      { error: "Connectez d'abord votre boutique Shopify dans les paramètres avant de publier ce site.", code: "shopify_not_connected" },
       { status: 400 }
     );
   }

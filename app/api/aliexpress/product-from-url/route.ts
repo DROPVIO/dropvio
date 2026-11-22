@@ -13,7 +13,7 @@ function extractProductId(url: string): string | null {
 export async function POST(request: NextRequest) {
   const { supabase, user, plan } = await getServerUserPlanOnly();
   if (!user) {
-    return apiError("auth_required", 401, "Connecte-toi pour utiliser le catalogue.");
+    return apiError("auth_required", 401, "Connectez-vous pour utiliser le catalogue.");
   }
   if (plan === null) return reponseAbonnementRequis();
 

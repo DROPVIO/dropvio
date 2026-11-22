@@ -22,7 +22,7 @@ type LigneCommande = {
 export async function GET() {
   const { user } = await getServerUserAndPlan();
   if (!user) {
-    return NextResponse.json({ error: "Connecte-toi.", code: "auth_required" }, { status: 401 });
+    return NextResponse.json({ error: "Connectez-vous.", code: "auth_required" }, { status: 401 });
   }
 
   const admin = createSupabaseAdminClient();
@@ -55,7 +55,7 @@ export async function GET() {
 export async function PATCH(request: NextRequest) {
   const { user } = await getServerUserAndPlan();
   if (!user) {
-    return NextResponse.json({ error: "Connecte-toi.", code: "auth_required" }, { status: 401 });
+    return NextResponse.json({ error: "Connectez-vous.", code: "auth_required" }, { status: 401 });
   }
 
   const body = await request.json().catch(() => null);

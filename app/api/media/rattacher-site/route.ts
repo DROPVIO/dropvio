@@ -11,7 +11,7 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 // Seuls le site et les images de l'utilisateur connecté sont concernés.
 export async function POST(request: Request) {
   const { supabase, user } = await getServerUserPlanOnly();
-  if (!user) return apiError("auth_required", 401, "Connecte-toi.");
+  if (!user) return apiError("auth_required", 401, "Connectez-vous.");
 
   const body = await request.json().catch(() => null);
   const siteId = typeof body?.siteId === "string" ? body.siteId : "";

@@ -486,7 +486,7 @@ export async function POST(request: NextRequest) {
   const { supabase, user, plan } = await getServerUserAndPlan();
 
   if (!user) {
-    return NextResponse.json({ error: "Connecte-toi pour générer une landing page.", code: "auth_required" }, { status: 401 });
+    return NextResponse.json({ error: "Connectez-vous pour générer une landing page.", code: "auth_required" }, { status: 401 });
   }
 
   // Lu et vérifié avant le compteur de générations et le quota : une demande sans prompt
@@ -495,7 +495,7 @@ export async function POST(request: NextRequest) {
   if (promptUtilisateurDe(body).length < PROMPT_MIN_CARACTERES) {
     return NextResponse.json(
       {
-        error: `Décris ton site en au moins ${PROMPT_MIN_CARACTERES} caractères : ce prompt guide toute la génération (sections, textes, animations).`, code: "prompt_too_short", values: { min: PROMPT_MIN_CARACTERES },
+        error: `Décrivez votre site en au moins ${PROMPT_MIN_CARACTERES} caractères : ce prompt guide toute la génération (sections, textes, animations).`, code: "prompt_too_short", values: { min: PROMPT_MIN_CARACTERES },
       },
       { status: 400 }
     );
@@ -507,7 +507,7 @@ export async function POST(request: NextRequest) {
   // compromis...).
   if (!(await checkRateLimit(`generate-site:${user.id}`, { max: 10, windowMs: 3_600_000 }))) {
     return NextResponse.json(
-      { error: "Trop de générations en peu de temps. Réessaie dans quelques minutes.", code: "rate_limit" },
+      { error: "Trop de générations en peu de temps. Réessayez dans quelques minutes.", code: "rate_limit" },
       { status: 429 }
     );
   }

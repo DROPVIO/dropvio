@@ -11,7 +11,7 @@ export async function POST(request: Request) {
   const { supabase, user, plan } = await getServerUserPlanOnly();
 
   if (!user) {
-    return NextResponse.json({ error: "Connecte-toi pour racheter des crédits." }, { status: 401 });
+    return NextResponse.json({ error: "Connectez-vous pour racheter des crédits." }, { status: 401 });
   }
   if (plan !== "expert") {
     return NextResponse.json({ error: "Cette action est réservée aux abonnés Expert." }, { status: 403 });

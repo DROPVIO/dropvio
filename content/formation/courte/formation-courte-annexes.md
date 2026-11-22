@@ -5,9 +5,9 @@ ordre: 37
 
 ## Annexe A — Check-list de lancement d'un nouveau produit
 
-Avant de lancer une campagne sur un nouveau produit, vérifie dans l'ordre : le coût produit exact chez le fournisseur retenu, frais de port inclus ; les frais de transaction réels de ton processeur de paiement ; les droits et taxes à l'importation du pays de livraison, dont la taxe européenne de 3 euros par catégorie d'article pour un colis venant de hors UE ; un coût d'acquisition estimé prudemment, à partir de données historiques si tu en as ; un taux de retour hypothétique cohérent avec la catégorie du produit, jamais supposé nul ; les cotisations ou taxes applicables à ton statut, calculées sur le chiffre d'affaires et non sur la marge. Ne lance la campagne que si la marge nette qui ressort de ce calcul complet reste positive avec une marge de sécurité raisonnable, pas seulement à l'équilibre exact.
+Avant de lancer une campagne sur un nouveau produit, vérifie dans l'ordre : le coût produit exact chez le fournisseur retenu, frais de port inclus ; les frais de transaction réels de votre processeur de paiement ; les droits et taxes à l'importation du pays de livraison, dont la taxe européenne de 3 euros par catégorie d'article pour un colis venant de hors UE ; un coût d'acquisition estimé prudemment, à partir de données historiques si vous en avez ; un taux de retour hypothétique cohérent avec la catégorie du produit, jamais supposé nul ; les cotisations ou taxes applicables à votre statut, calculées sur le chiffre d'affaires et non sur la marge. Ne lancez la campagne que si la marge nette qui ressort de ce calcul complet reste positive avec une marge de sécurité raisonnable, pas seulement à l'équilibre exact.
 
-Vérifie également, côté fournisseur, que tu as comparé au moins deux ou trois candidats sur leur note moyenne et leur volume de commandes déjà passées — c'est exactement ce qu'il faut comparer — et qu'une commande test a confirmé la qualité réelle avant tout engagement à volume.
+Vérifiez également, côté fournisseur, que vous avez comparé au moins deux ou trois candidats sur leur note moyenne et leur volume de commandes déjà passées — c'est exactement ce qu'il faut comparer — et qu'une commande test a confirmé la qualité réelle avant tout engagement à volume.
 
 ## Annexe B — Grille condensée d'audit d'une fiche produit
 
@@ -15,7 +15,7 @@ Une fiche produit qui convertit répond à six exigences minimales, inspirées d
 
 ## Annexe C — Un calcul de marge entièrement déroulé
 
-Prends un produit de niche à 9,50 euros de coût fournisseur, vendu 34,90 euros. Frais de transaction (environ 1,5 % + 0,25 euro avec une carte européenne) : environ 0,77 euro. Taxe européenne sur le colis expédié hors UE : 3 euros. Coût d'acquisition estimé : 9 euros. Il reste 12,63 euros avant cotisations et retours. Avec un taux de retour hypothétique de 12 %, cohérent avec un produit plus technique où le client peut se tromper sur la compatibilité, la marge moyenne réelle redescend à environ 11,11 euros. Les cotisations URSSAF en micro-entreprise, à environ 12,3 % du chiffre d'affaires encaissé, représentent environ 4,29 euros. Marge nette finale : environ 6,82 euros par vente, soit un peu moins de 20 % du prix de vente. Ce même raisonnement, appliqué à chacun de tes produits avec tes propres chiffres réels, doit précéder chaque lancement de campagne, sans exception.
+Prenez un produit de niche à 9,50 euros de coût fournisseur, vendu 34,90 euros. Frais de transaction (environ 1,5 % + 0,25 euro avec une carte européenne) : environ 0,77 euro. Taxe européenne sur le colis expédié hors UE : 3 euros. Coût d'acquisition estimé : 9 euros. Il reste 12,63 euros avant cotisations et retours. Avec un taux de retour hypothétique de 12 %, cohérent avec un produit plus technique où le client peut se tromper sur la compatibilité, la marge moyenne réelle redescend à environ 11,11 euros. Les cotisations URSSAF en micro-entreprise, à environ 12,3 % du chiffre d'affaires encaissé, représentent environ 4,29 euros. Marge nette finale : environ 6,82 euros par vente, soit un peu moins de 20 % du prix de vente. Ce même raisonnement, appliqué à chacun de vos produits avec vos propres chiffres réels, doit précéder chaque lancement de campagne, sans exception.
 
 ## Annexe D — Signaux à surveiller une fois l'activité lancée
 
@@ -27,4 +27,4 @@ Marge nette : ce qui reste réellement après déduction de tous les coûts (pro
 
 ## Pour aller plus loin
 
-Cette version courte donne les repères essentiels pour démarrer et tenir dans la durée sans se noyer dans le détail. La version longue de cette formation développe chacun de ces sujets avec des exemples chiffrés supplémentaires, une étude de cas complète sur une année d'activité, et des grilles d'évaluation détaillées — utile si un point précis te semble mériter davantage d'approfondissement une fois les bases posées.
+Cette version courte donne les repères essentiels pour démarrer et tenir dans la durée sans se noyer dans le détail. La version longue de cette formation développe chacun de ces sujets avec des exemples chiffrés supplémentaires, une étude de cas complète sur une année d'activité, et des grilles d'évaluation détaillées — utile si un point précis vous semble mériter davantage d'approfondissement une fois les bases posées.

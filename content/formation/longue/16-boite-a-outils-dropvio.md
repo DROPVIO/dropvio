@@ -1,6 +1,6 @@
 # Partie 16 — La boîte à outils : où chaque fonctionnalité de Dropvio s'inscrit dans la méthode
 
-Cette formation a évoqué, partie après partie, plusieurs fonctionnalités de Dropvio au moment où elles répondaient directement au sujet traité. Cette partie les rassemble en un seul endroit, pour clarifier à quel moment précis de ta démarche chacune intervient.
+Cette formation a évoqué, partie après partie, plusieurs fonctionnalités de Dropvio au moment où elles répondaient directement au sujet traité. Cette partie les rassemble en un seul endroit, pour clarifier à quel moment précis de votre démarche chacune intervient.
 
 ## Au moment de chercher et valider un produit
 
@@ -8,7 +8,7 @@ C'est à cette étape qu'intervient le Finder de Dropvio, qui interroge le catal
 
 ## Au moment de calculer une marge avant de lancer une campagne
 
-Le calculateur de marge intégré à Dropvio reprend exactement la logique déroulée manuellement dans la partie 3 de cette formation — coût produit, frais de transaction, taxes et droits à l'importation, coût d'acquisition, taux de retour, cotisations — dans le mode du pays où tu vends : France, Royaume-Uni, États-Unis, Belgique, Suisse, Canada/Québec, Luxembourg, Allemagne, Italie, Espagne, ou un mode international manuel pour les autres destinations, pour éviter de refaire ce calcul à la main pour chaque produit et réduire le risque d'oublier un poste de coût. Utiliser cet outil systématiquement avant chaque lancement, plutôt que ponctuellement, est ce qui transforme cette discipline en réflexe plutôt qu'en bonne intention oubliée sous la pression du lancement.
+Le calculateur de marge intégré à Dropvio reprend exactement la logique déroulée manuellement dans la partie 3 de cette formation — coût produit, frais de transaction, taxes et droits à l'importation, coût d'acquisition, taux de retour, cotisations — dans le mode du pays où vous vendez : France, Royaume-Uni, États-Unis, Belgique, Suisse, Canada/Québec, Luxembourg, Allemagne, Italie, Espagne, ou un mode international manuel pour les autres destinations, pour éviter de refaire ce calcul à la main pour chaque produit et réduire le risque d'oublier un poste de coût. Utiliser cet outil systématiquement avant chaque lancement, plutôt que ponctuellement, est ce qui transforme cette discipline en réflexe plutôt qu'en bonne intention oubliée sous la pression du lancement.
 
 ## Au moment de construire ou vérifier une fiche produit
 
@@ -16,11 +16,11 @@ L'auditeur de page de destination note automatiquement la page sur cent points r
 
 ## Au moment de construire la boutique elle-même
 
-Le constructeur de sites génère une page produit ou une boutique multi-produits à partir de styles et de palettes de couleurs, avec une prévisualisation mobile avant publication, comme recommandé dans la partie 4. Le résultat peut être exporté vers Shopify ; avec une boutique Shopify connectée, les produits y sont envoyés et mis à jour, et les commandes et numéros de suivi restent synchronisés. Le Studio IA te permet de créer tes visuels et de les retrouver dans ta médiathèque (la génération d'images est réservée aux plans payants), et le Catalogue te permet d'envoyer des produits dans une boutique ou dans le Studio IA. D'autres outils sont prévus mais pas encore disponibles — une extension Chrome d'import depuis AliExpress et Alibaba comme seconde source de produits : tant qu'ils ne sont pas livrés, ne construis pas ta méthode en comptant dessus.
+Le constructeur de sites génère une page produit ou une boutique multi-produits à partir de styles et de palettes de couleurs, avec une prévisualisation mobile avant publication, comme recommandé dans la partie 4. Le résultat peut être exporté vers Shopify ; avec une boutique Shopify connectée, les produits y sont envoyés et mis à jour, et les commandes et numéros de suivi restent synchronisés. Le Studio IA vous permet de créer vos visuels et de les retrouver dans votre médiathèque (la génération d'images est réservée aux plans payants), et le Catalogue vous permet d'envoyer des produits dans une boutique ou dans le Studio IA. D'autres outils sont prévus mais pas encore disponibles — une extension Chrome d'import depuis AliExpress et Alibaba comme seconde source de produits : tant qu'ils ne sont pas livrés, ne construisez pas votre méthode en comptant dessus.
 
 ## Une fois l'activité en cours, pour suivre les incidents après-vente
 
-Pour les boutiques connectées via Shopify, centralise toi-même le suivi des remboursements et litiges plutôt que de reconstituer manuellement cette vue à partir d'emails épars — avec la distinction honnête entre une absence réelle de litige et une donnée simplement non disponible selon le mode d'encaissement utilisé, un point de rigueur qui évite de tirer de fausses conclusions rassurantes d'un chiffre à zéro qui ne signifierait en réalité rien.
+Pour les boutiques connectées via Shopify, centralisez vous-même le suivi des remboursements et litiges plutôt que de reconstituer manuellement cette vue à partir d'emails épars — avec la distinction honnête entre une absence réelle de litige et une donnée simplement non disponible selon le mode d'encaissement utilisé, un point de rigueur qui évite de tirer de fausses conclusions rassurantes d'un chiffre à zéro qui ne signifierait en réalité rien.
 
 ## Pour prendre du recul sur l'ensemble de l'activité
 

@@ -145,12 +145,12 @@ export async function POST(_request: NextRequest, context: { params: Promise<{ i
   const { id: boutiqueId } = await context.params;
   const { supabase, user, plan } = await getServerUserAndPlan();
   if (!user) {
-    return NextResponse.json({ error: "Connecte-toi pour réécrire tes produits.", code: "auth_required" }, { status: 401 });
+    return NextResponse.json({ error: "Connectez-vous pour réécrire vos produits.", code: "auth_required" }, { status: 401 });
   }
 
   if (!(await checkRateLimit(`reecrire-produits:${user.id}`, { max: 5, windowMs: 3_600_000 }))) {
     return NextResponse.json(
-      { error: "Trop de générations en peu de temps. Réessaie dans quelques minutes.", code: "rate_limit" },
+      { error: "Trop de générations en peu de temps. Réessayez dans quelques minutes.", code: "rate_limit" },
       { status: 429 }
     );
   }
@@ -174,7 +174,7 @@ export async function POST(_request: NextRequest, context: { params: Promise<{ i
   }
   const produits = (data ?? []) as Produit[];
   if (produits.length === 0) {
-    return apiError("reecriture_aucun_produit", 400, "Ajoute des produits à la boutique avant de les réécrire.");
+    return apiError("reecriture_aucun_produit", 400, "Ajoutez des produits à la boutique avant de les réécrire.");
   }
 
   // Lots traités APPELS_SIMULTANES à la fois : 200 produits = 10 lots, environ 3 vagues.
@@ -194,14 +194,14 @@ export async function POST(_request: NextRequest, context: { params: Promise<{ i
   } catch (err) {
     if (err instanceof BudgetIaDepasse) return reponseBudgetDepasse(err);
     console.error("[reecrire-produits]", err);
-    return NextResponse.json({ error: "Erreur lors de la génération. Réessaie.", code: "generation_failed" }, { status: 500 });
+    return NextResponse.json({ error: "Erreur lors de la génération. Réessayez.", code: "generation_failed" }, { status: 500 });
   } finally {
     await suivi.enregistrer();
   }
 
   const modifies = produits.flatMap((p, i) => (textes[i] ? [{ id: p.id, ...textes[i]! }] : []));
   if (modifies.length === 0) {
-    return NextResponse.json({ error: "Réponse invalide. Réessaie.", code: "ai_invalid_response" }, { status: 500 });
+    return NextResponse.json({ error: "Réponse invalide. Réessayez.", code: "ai_invalid_response" }, { status: 500 });
   }
 
   const erreur = await mettreAJour(supabase, boutiqueId, modifies);
@@ -222,7 +222,7 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
   const { id: boutiqueId } = await context.params;
   const { supabase, user } = await getServerUserAndPlan();
   if (!user) {
-    return NextResponse.json({ error: "Connecte-toi pour réécrire tes produits.", code: "auth_required" }, { status: 401 });
+    return NextResponse.json({ error: "Connectez-vous pour réécrire vos produits.", code: "auth_required" }, { status: 401 });
   }
 
   const corps = await request.json().catch(() => null);

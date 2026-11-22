@@ -1,10 +1,10 @@
 # Partie 7 (complément) — Quatre modèles de réponse à adapter, jamais à copier tels quels
 
-La partie 7 a expliqué pourquoi préparer des réponses type change la qualité et la rapidité du service client. Voici quatre trames pour les situations les plus fréquentes, à personnaliser systématiquement avec le ton de ta boutique et les détails réels de chaque commande — une réponse visiblement recopiée mot pour mot produit l'effet inverse de celui recherché.
+La partie 7 a expliqué pourquoi préparer des réponses type change la qualité et la rapidité du service client. Voici quatre trames pour les situations les plus fréquentes, à personnaliser systématiquement avec le ton de votre boutique et les détails réels de chaque commande — une réponse visiblement recopiée mot pour mot produit l'effet inverse de celui recherché.
 
 ## Retard de livraison signalé de façon proactive, avant que le client ne réclame
 
-La trame commence toujours par reconnaître le fait avant de le justifier : indiquer que le colis a pris plus de temps que prévu, donner une estimation actualisée aussi précise que possible plutôt qu'une formule vague, et proposer un geste concret si le retard dépasse un seuil que tu auras fixé à l'avance pour ta boutique — un petit avoir, une réduction sur la prochaine commande, ou simplement la garantie explicite d'un remboursement automatique si le colis n'arrive pas dans un délai supplémentaire donné. L'élément le plus important de cette trame n'est pas le geste commercial, c'est le fait de contacter le client avant qu'il ne s'inquiète et n'écrive lui-même, comme souligné dans la partie 7.
+La trame commence toujours par reconnaître le fait avant de le justifier : indiquer que le colis a pris plus de temps que prévu, donner une estimation actualisée aussi précise que possible plutôt qu'une formule vague, et proposer un geste concret si le retard dépasse un seuil que vous aurez fixé à l'avance pour votre boutique — un petit avoir, une réduction sur la prochaine commande, ou simplement la garantie explicite d'un remboursement automatique si le colis n'arrive pas dans un délai supplémentaire donné. L'élément le plus important de cette trame n'est pas le geste commercial, c'est le fait de contacter le client avant qu'il ne s'inquiète et n'écrive lui-même, comme souligné dans la partie 7.
 
 ## Produit endommagé ou non conforme à réception
 
@@ -16,7 +16,7 @@ Cette situation demande une nuance particulière : il faut distinguer une erreur
 
 ## Demande de remboursement, y compris hors des motifs les plus favorables
 
-Face à une demande de remboursement qui ne correspond pas exactement à un motif de non-conformité, la trame évite le réflexe défensif consistant à énumérer immédiatement les conditions de la politique de retour. Elle commence par comprendre la raison réelle de l'insatisfaction, propose une solution avant de mentionner d'éventuelles limites, et rappelle en creux — jamais en menace directe — que la fluidité de cette expérience est précisément ce qui évite au client de se tourner vers un litige bancaire, la situation la plus coûteuse évoquée dans la partie 7 pour toi comme pour lui.
+Face à une demande de remboursement qui ne correspond pas exactement à un motif de non-conformité, la trame évite le réflexe défensif consistant à énumérer immédiatement les conditions de la politique de retour. Elle commence par comprendre la raison réelle de l'insatisfaction, propose une solution avant de mentionner d'éventuelles limites, et rappelle en creux — jamais en menace directe — que la fluidité de cette expérience est précisément ce qui évite au client de se tourner vers un litige bancaire, la situation la plus coûteuse évoquée dans la partie 7 pour vous comme pour lui.
 
 ## Le principe commun à ces quatre trames
 

@@ -148,12 +148,12 @@ export async function POST(_request: NextRequest, context: { params: Promise<{ i
   const { id: boutiqueId } = await context.params;
   const { supabase, user, plan } = await getServerUserAndPlan();
   if (!user) {
-    return NextResponse.json({ error: "Connecte-toi pour ajuster tes prix.", code: "auth_required" }, { status: 401 });
+    return NextResponse.json({ error: "Connectez-vous pour ajuster vos prix.", code: "auth_required" }, { status: 401 });
   }
 
   if (!(await checkRateLimit(`ajuster-prix:${user.id}`, { max: 5, windowMs: 3_600_000 }))) {
     return NextResponse.json(
-      { error: "Trop de générations en peu de temps. Réessaie dans quelques minutes.", code: "rate_limit" },
+      { error: "Trop de générations en peu de temps. Réessayez dans quelques minutes.", code: "rate_limit" },
       { status: 429 }
     );
   }
@@ -174,7 +174,7 @@ export async function POST(_request: NextRequest, context: { params: Promise<{ i
   }
   const produits = (data ?? []) as Produit[];
   if (produits.length === 0) {
-    return apiError("prix_aucun_produit", 400, "Ajoute des produits à la boutique avant d'ajuster leurs prix.");
+    return apiError("prix_aucun_produit", 400, "Ajoutez des produits à la boutique avant d'ajuster leurs prix.");
   }
 
   // Prix du Finder des produits reliés au catalogue Dropvio (lecture publique, voir 001_produits.sql).
@@ -203,7 +203,7 @@ export async function POST(_request: NextRequest, context: { params: Promise<{ i
   } catch (err) {
     if (err instanceof BudgetIaDepasse) return reponseBudgetDepasse(err);
     console.error("[ajuster-prix]", err);
-    return NextResponse.json({ error: "Erreur lors de la génération. Réessaie.", code: "generation_failed" }, { status: 500 });
+    return NextResponse.json({ error: "Erreur lors de la génération. Réessayez.", code: "generation_failed" }, { status: 500 });
   } finally {
     await suivi.enregistrer();
   }
@@ -234,7 +234,7 @@ export async function POST(_request: NextRequest, context: { params: Promise<{ i
   });
 
   if (ecritures.length === 0 && ignores === produits.length) {
-    return NextResponse.json({ error: "Réponse invalide. Réessaie.", code: "ai_invalid_response" }, { status: 500 });
+    return NextResponse.json({ error: "Réponse invalide. Réessayez.", code: "ai_invalid_response" }, { status: 500 });
   }
 
   const erreur = await ecrire(supabase, boutiqueId, ecritures);
@@ -250,7 +250,7 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
   const { id: boutiqueId } = await context.params;
   const { supabase, user } = await getServerUserAndPlan();
   if (!user) {
-    return NextResponse.json({ error: "Connecte-toi pour ajuster tes prix.", code: "auth_required" }, { status: 401 });
+    return NextResponse.json({ error: "Connectez-vous pour ajuster vos prix.", code: "auth_required" }, { status: 401 });
   }
 
   const corps = await request.json().catch(() => null);

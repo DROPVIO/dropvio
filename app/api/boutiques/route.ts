@@ -7,7 +7,7 @@ import { RESERVED_SUBDOMAINS } from "@/lib/boutique-subdomains";
 export async function GET() {
   const { supabase, user } = await getServerUserAndPlan();
   if (!user) {
-    return NextResponse.json({ error: "Connecte-toi pour voir tes boutiques.", code: "auth_required" }, { status: 401 });
+    return NextResponse.json({ error: "Connectez-vous pour voir vos boutiques.", code: "auth_required" }, { status: 401 });
   }
 
   const { data, error } = await supabase
@@ -26,7 +26,7 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   const { supabase, user } = await getServerUserAndPlan();
   if (!user) {
-    return NextResponse.json({ error: "Connecte-toi pour créer une boutique.", code: "auth_required" }, { status: 401 });
+    return NextResponse.json({ error: "Connectez-vous pour créer une boutique.", code: "auth_required" }, { status: 401 });
   }
 
   const { nom, slug, description, theme, settings } = await request.json();

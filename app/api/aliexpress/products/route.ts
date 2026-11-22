@@ -49,7 +49,7 @@ export async function GET(request: NextRequest) {
     // réserve le catalogue aux comptes abonnés, et aucun visiteur sans compte n'y a accès.
     const { supabase, user, plan } = await getServerUserPlanOnly();
     if (!user) {
-      return apiError("auth_required", 401, "Connecte-toi pour voir le catalogue.");
+      return apiError("auth_required", 401, "Connectez-vous pour voir le catalogue.");
     }
     if (plan === null) return reponseAbonnementRequis();
     const produitsMax = limitesDuPlan(plan).produitsMax; // null = illimité (Pro/Agency)
