@@ -23,5 +23,5 @@ alter table consentements_achat enable row level security;
 drop policy if exists "select_own" on consentements_achat;
 create policy "select_own" on consentements_achat
   for select to authenticated
-  using (auth.uid() = user_id);
+  using ((select auth.uid()) = user_id);
 -- Aucune policy d'écriture : seul le service role écrit.
