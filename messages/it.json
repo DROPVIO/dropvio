@@ -124,7 +124,7 @@
     "total": "Totale",
     "buy": "Paga",
     "redirecting": "Reindirizzamento…",
-    "manage": "Gestisci abbonamento / disdici",
+    "manage": "Gestisci abbonamento",
     "offered": "Abbonamento offerto",
     "rechargeSuccess": "Pagamento ricevuto. I crediti appariranno qui tra pochi istanti.",
     "loadError": "Impossibile caricare la tua quota.",
@@ -1546,7 +1546,8 @@
     "abonnement_requis_produits": "Scegli un abbonamento per aggiungere prodotti.",
     "abonnement_requis_outil": "Scegli un abbonamento per usare questo strumento.",
     "consentement_requis": "Seleziona le due caselle per procedere al pagamento.",
-    "retractation_invalide": "Verifica i campi del modulo."
+    "retractation_invalide": "Verifica i campi del modulo.",
+    "abonnement_manuel": "Il tuo accesso è stato aperto manualmente: non c'è alcun abbonamento da disdire."
   },
   "siteBuilder": {
     "boutique": {
@@ -2599,7 +2600,7 @@
       },
       "changerPlan": {
         "q": "Come passo a Pro o Agency, o cambio piano?",
-        "a": "Da Impostazioni → Il tuo piano o Fatturazione: il pulsante apre il portale di fatturazione, dove puoi cambiare piano, aggiornare la carta, scaricare le fatture o annullare."
+        "a": "Da Impostazioni → Il tuo piano o Fatturazione: il pulsante apre il portale di fatturazione, dove puoi cambiare piano, aggiornare la carta e scaricare le fatture. Per disdire, usa il link «Disdire il contratto», presente in Impostazioni, nella pagina Abbonamento e in fondo a ogni pagina."
       },
       "limite": {
         "q": "Cosa succede se raggiungo il limite del mio piano?",
@@ -2910,6 +2911,35 @@
       "formation_courte": "Corso breve",
       "formation_longue": "Corso lungo",
       "formation_bundle": "Entrambi i corsi"
+    }
+  },
+  "resiliation": {
+    "lien": "Disdire il contratto",
+    "metaTitre": "Disdici online il tuo abbonamento Dropvio | Dropvio",
+    "metaDescription": "Disdici online il tuo abbonamento Dropvio in tre clic: controlla il piano e la data di fine, conferma e ricevi una ricevuta di disdetta con riferimento.",
+    "titre": "Disdire il contratto",
+    "intro": "Il tuo abbonamento termina alla fine del periodo in corso: mantieni l'accesso fino a quella data. Per cambiare piano o carta, usa il portale di fatturazione dalla pagina Abbonamento.",
+    "chargement": "Caricamento…",
+    "recapTitre": "Il tuo abbonamento",
+    "plan": "Piano",
+    "finPeriode": "Fine del periodo in corso",
+    "finEssai": "Fine della prova",
+    "explication": "Confermando, il tuo abbonamento non verrà rinnovato: mantieni l'accesso fino al {date}, poi non verrà effettuato alcun altro addebito.",
+    "confirmer": "Conferma la disdetta",
+    "envoi": "Disdetta in corso…",
+    "dejaResilie": "La disdetta di questo abbonamento è già registrata: il tuo accesso termina il {date}.",
+    "accuseTitre": "Disdetta registrata",
+    "accuseTexte": "Il tuo abbonamento {plan} è disdetto. Mantieni l'accesso fino al {date}; non verrà effettuato alcun altro addebito.",
+    "reference": "Riferimento",
+    "enregistreLe": "Disdetta registrata il {date}.",
+    "accuseSuite": "Conserva questo numero di riferimento: ti verrà chiesto per qualsiasi comunicazione su questa disdetta.",
+    "retour": "Torna all'abbonamento",
+    "sansDate": "data non disponibile",
+    "plans": {
+      "pro": "Pro",
+      "agency": "Agency",
+      "expert": "Expert",
+      "inconnu": "Abbonamento"
     }
   }
 }

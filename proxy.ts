@@ -12,6 +12,9 @@ const PROTECTED_PATHS = ["/studio", "/quota", "/produits-gagnants", "/site-build
 
 // Page de choix du plan : connexion requise, mais pas d'abonnement (c'est là qu'on en prend un).
 const ABONNEMENT_PATH = "/abonnement";
+// Résiliation : connexion requise, mais pas de plan actif (un compte déjà sans accès doit
+// toujours pouvoir consulter sa résiliation).
+const RESILIATION_PATH = "/resiliation";
 
 function parseAcceptLanguage(header: string | null): AppLocale {
   if (!header) return DEFAULT_LOCALE;
@@ -118,7 +121,7 @@ export async function proxy(request: NextRequest) {
   const hasAuthCookie = request.cookies.getAll().some((c) => c.name.startsWith("sb-") && c.name.includes("-auth-token"));
   const { data: { user } } = hasAuthCookie ? await supabase.auth.getUser() : { data: { user: null } };
 
-  const needsLogin = isProtected || pathname.startsWith(ABONNEMENT_PATH);
+  const needsLogin = isProtected || pathname.startsWith(ABONNEMENT_PATH) || pathname.startsWith(RESILIATION_PATH);
   if (needsLogin && !user) {
     const loginUrl = new URL("/login", request.url);
     loginUrl.searchParams.set("redirect", pathname + request.nextUrl.search);

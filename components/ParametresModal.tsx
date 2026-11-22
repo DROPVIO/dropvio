@@ -178,6 +178,7 @@ export default function ParametresModal({
 }) {
   const t = useTranslations("parametres");
   const tRetractation = useTranslations("retractation");
+  const tResiliation = useTranslations("resiliation");
   const locale = useLocale();
   const apiErrorMessage = useApiErrorMessage();
   const supabase = createSupabaseBrowserClient();
@@ -276,7 +277,8 @@ export default function ParametresModal({
   const [intMsg, setIntMsg] = useState<{ ok: boolean; text: string } | null>(initialShopifyMessage ?? null);
 
   // Abonnement : un compte sans plan payant choisit son plan sur /abonnement ; un compte abonné
-  // change de plan, de carte ou résilie dans le portail Stripe (app/api/abonnement/portail).
+  // change de plan ou de carte dans le portail Stripe (app/api/abonnement/portail) et résilie
+  // par le parcours /resiliation (app/api/resiliation).
   const [portailEnCours, setPortailEnCours] = useState(false);
   const [abonnementMsg, setAbonnementMsg] = useState<string | null>(null);
   const ouvrirAbonnement = async () => {
@@ -987,6 +989,7 @@ export default function ParametresModal({
       </button>
       {abonnementMsg ? <p className="text-[11px] text-[var(--danger)]">{abonnementMsg}</p> : null}
       <div className="flex flex-wrap gap-x-5 gap-y-2 text-[12px]">
+        <Link href="/resiliation" className="text-[var(--text-muted)] underline-offset-4 hover:underline">{tResiliation("lien")}</Link>
         <Link href="/retractation" className="text-[var(--text-muted)] underline-offset-4 hover:underline">{tRetractation("lien")}</Link>
       </div>
     </div>

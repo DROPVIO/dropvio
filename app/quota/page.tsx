@@ -1,6 +1,7 @@
 "use client";
 
 import { Suspense, useEffect, useState } from "react";
+import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import ExpertSelecteur from "@/components/expert/ExpertSelecteur";
@@ -31,6 +32,7 @@ const LABEL_TYPE = { site: "sites", image: "images" } as const;
 
 function QuotaContenu() {
   const t = useTranslations("quota");
+  const tResiliation = useTranslations("resiliation");
   // Libellé sans nom de modèle (« Qualité standard », « Qualité avancée »).
   const libelleModele = useLibelleModele();
   const locale = useLocale() as AppLocale;
@@ -123,6 +125,11 @@ function QuotaContenu() {
                   {t("manage")}
                 </button>
               )}
+              {!data.abonnementOffert ? (
+                <Link href="/resiliation" className="self-start text-sm text-[var(--text-muted)] underline underline-offset-4">
+                  {tResiliation("lien")}
+                </Link>
+              ) : null}
             </section>
 
             <section className={CARTE}>

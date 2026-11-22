@@ -124,7 +124,7 @@
     "total": "Total",
     "buy": "Pagar",
     "redirecting": "Redirigiendo…",
-    "manage": "Gestionar mi suscripción / cancelar",
+    "manage": "Gestionar mi suscripción",
     "offered": "Suscripción gratuita",
     "rechargeSuccess": "Pago recibido. Tus créditos aparecerán aquí en unos instantes.",
     "loadError": "No se pudo cargar tu cuota.",
@@ -1546,7 +1546,8 @@
     "abonnement_requis_produits": "Elige una suscripción para añadir productos.",
     "abonnement_requis_outil": "Elige una suscripción para usar esta herramienta.",
     "consentement_requis": "Marca las dos casillas para continuar con el pago.",
-    "retractation_invalide": "Revisa los campos del formulario."
+    "retractation_invalide": "Revisa los campos del formulario.",
+    "abonnement_manuel": "Tu acceso se abrió manualmente: no hay ninguna suscripción que cancelar."
   },
   "siteBuilder": {
     "boutique": {
@@ -2599,7 +2600,7 @@
       },
       "changerPlan": {
         "q": "¿Cómo paso a Pro o Agency, o cambio de plan?",
-        "a": "Desde Ajustes → Tu plan o Facturación: el botón abre el portal de facturación, donde puedes cambiar de plan, actualizar tu tarjeta, descargar tus facturas o cancelar."
+        "a": "Desde Ajustes → Tu plan o Facturación: el botón abre el portal de facturación, donde puedes cambiar de plan, actualizar tu tarjeta y descargar tus facturas. Para cancelar, usa el enlace «Cancelar tu contrato», disponible en Ajustes, en la página Suscripción y al pie de cada página."
       },
       "limite": {
         "q": "¿Qué pasa si alcanzo el límite de mi plan?",
@@ -2910,6 +2911,35 @@
       "formation_courte": "Formación corta",
       "formation_longue": "Formación larga",
       "formation_bundle": "Las dos formaciones"
+    }
+  },
+  "resiliation": {
+    "lien": "Cancelar tu contrato",
+    "metaTitre": "Cancela tu suscripción a Dropvio en línea | Dropvio",
+    "metaDescription": "Cancela tu suscripción a Dropvio en línea en tres clics: revisa tu plan y su fecha de fin, confirma y recibe un justificante de cancelación con su referencia.",
+    "titre": "Cancelar tu contrato",
+    "intro": "Tu suscripción termina al final del periodo en curso: conservas el acceso hasta esa fecha. Para cambiar de plan o de tarjeta, usa el portal de facturación desde la página Suscripción.",
+    "chargement": "Cargando…",
+    "recapTitre": "Tu suscripción",
+    "plan": "Plan",
+    "finPeriode": "Fin del periodo en curso",
+    "finEssai": "Fin de la prueba",
+    "explication": "Si confirmas, tu suscripción no se renovará: conservas el acceso hasta el {date} y después no se hará ningún cargo más.",
+    "confirmer": "Confirmar la cancelación",
+    "envoi": "Cancelando…",
+    "dejaResilie": "La cancelación de esta suscripción ya está registrada: tu acceso termina el {date}.",
+    "accuseTitre": "Cancelación registrada",
+    "accuseTexte": "Tu suscripción {plan} está cancelada. Conservas el acceso hasta el {date}; no se hará ningún cargo más.",
+    "reference": "Referencia",
+    "enregistreLe": "Cancelación registrada el {date}.",
+    "accuseSuite": "Guarda este número de referencia: se te pedirá en cualquier intercambio sobre esta cancelación.",
+    "retour": "Volver a la suscripción",
+    "sansDate": "fecha no disponible",
+    "plans": {
+      "pro": "Pro",
+      "agency": "Agency",
+      "expert": "Expert",
+      "inconnu": "Suscripción"
     }
   }
 }

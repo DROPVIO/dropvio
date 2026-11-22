@@ -124,7 +124,7 @@
     "total": "Total",
     "buy": "Payer",
     "redirecting": "Redirection…",
-    "manage": "Gérer mon abonnement / résilier",
+    "manage": "Gérer mon abonnement",
     "offered": "Abonnement offert",
     "rechargeSuccess": "Paiement reçu. Vos crédits apparaissent ici dans quelques instants.",
     "loadError": "Impossible de charger votre quota.",
@@ -1546,7 +1546,8 @@
     "abonnement_requis_produits": "Choisissez un abonnement pour ajouter des produits.",
     "abonnement_requis_outil": "Choisissez un abonnement pour utiliser cet outil.",
     "consentement_requis": "Cochez les deux cases pour continuer vers le paiement.",
-    "retractation_invalide": "Vérifiez les champs du formulaire."
+    "retractation_invalide": "Vérifiez les champs du formulaire.",
+    "abonnement_manuel": "Votre accès a été ouvert manuellement : il n'y a pas d'abonnement à résilier."
   },
   "siteBuilder": {
     "boutique": {
@@ -2599,7 +2600,7 @@
       },
       "changerPlan": {
         "q": "Comment passer à Pro ou Agency, ou changer de plan ?",
-        "a": "Depuis Paramètres → Votre plan ou Facturation : le bouton ouvre le portail de facturation, où vous pouvez changer de plan, mettre à jour votre carte, télécharger vos factures ou résilier."
+        "a": "Depuis Paramètres → Votre plan ou Facturation : le bouton ouvre le portail de facturation, où vous pouvez changer de plan, mettre à jour votre carte et télécharger vos factures. Pour résilier, utilisez le lien « Résilier votre contrat », présent dans Paramètres, sur la page Abonnement et en bas de chaque page."
       },
       "limite": {
         "q": "Que se passe-t-il si j'atteins la limite de mon plan ?",
@@ -2910,6 +2911,35 @@
       "formation_courte": "Formation courte",
       "formation_longue": "Formation longue",
       "formation_bundle": "Les deux formations"
+    }
+  },
+  "resiliation": {
+    "lien": "Résilier votre contrat",
+    "metaTitre": "Résilier votre abonnement Dropvio en ligne | Dropvio",
+    "metaDescription": "Résiliez votre abonnement Dropvio en ligne en trois clics : vérifiez votre offre et sa date de fin, confirmez, puis recevez un accusé de résiliation référencé.",
+    "titre": "Résilier votre contrat",
+    "intro": "Votre abonnement prend fin à la fin de la période en cours : vous gardez l'accès jusqu'à cette date. Pour changer d'offre ou de carte, utilisez le portail de facturation depuis la page Abonnement.",
+    "chargement": "Chargement…",
+    "recapTitre": "Votre abonnement",
+    "plan": "Offre",
+    "finPeriode": "Fin de la période en cours",
+    "finEssai": "Fin de l'essai",
+    "explication": "En confirmant, votre abonnement ne sera pas renouvelé : vous gardez l'accès jusqu'au {date}, puis aucun nouveau prélèvement n'aura lieu.",
+    "confirmer": "Confirmer la résiliation",
+    "envoi": "Résiliation en cours…",
+    "dejaResilie": "La résiliation de cet abonnement est déjà enregistrée : votre accès prend fin le {date}.",
+    "accuseTitre": "Résiliation enregistrée",
+    "accuseTexte": "Votre abonnement {plan} est résilié. Vous gardez l'accès jusqu'au {date} ; aucun nouveau prélèvement n'aura lieu.",
+    "reference": "Référence",
+    "enregistreLe": "Résiliation enregistrée le {date}.",
+    "accuseSuite": "Conservez ce numéro de référence : il vous sera demandé pour tout échange à ce sujet.",
+    "retour": "Retour à l'abonnement",
+    "sansDate": "date non communiquée",
+    "plans": {
+      "pro": "Pro",
+      "agency": "Agency",
+      "expert": "Expert",
+      "inconnu": "Abonnement"
     }
   }
 }

@@ -124,7 +124,7 @@
     "total": "Total",
     "buy": "Pay",
     "redirecting": "Redirecting…",
-    "manage": "Manage my subscription / cancel",
+    "manage": "Manage my subscription",
     "offered": "Complimentary subscription",
     "rechargeSuccess": "Payment received. Your credits will appear here in a few moments.",
     "loadError": "Unable to load your quota.",
@@ -1546,7 +1546,8 @@
     "abonnement_requis_produits": "Choose a subscription to add products.",
     "abonnement_requis_outil": "Choose a subscription to use this tool.",
     "consentement_requis": "Tick both boxes to continue to payment.",
-    "retractation_invalide": "Please check the form fields."
+    "retractation_invalide": "Please check the form fields.",
+    "abonnement_manuel": "Your access was granted manually: there is no subscription to cancel."
   },
   "siteBuilder": {
     "boutique": {
@@ -2599,7 +2600,7 @@
       },
       "changerPlan": {
         "q": "How do I upgrade to Pro or Agency, or change plans?",
-        "a": "From Settings → Your plan or Billing: the button opens the billing portal, where you can change plan, update your card, download your invoices or cancel."
+        "a": "From Settings → Your plan or Billing: the button opens the billing portal, where you can change plan, update your card and download your invoices. To cancel, use the “Cancel your contract” link, available in Settings, on the Subscription page and at the bottom of every page."
       },
       "limite": {
         "q": "What happens if I reach my plan's limit?",
@@ -2910,6 +2911,35 @@
       "formation_courte": "Short course",
       "formation_longue": "Long course",
       "formation_bundle": "Both courses"
+    }
+  },
+  "resiliation": {
+    "lien": "Cancel your contract",
+    "metaTitre": "Cancel your Dropvio subscription online now | Dropvio",
+    "metaDescription": "Cancel your Dropvio subscription online in three clicks: check your plan and its end date, confirm, then receive a cancellation receipt with a reference number.",
+    "titre": "Cancel your contract",
+    "intro": "Your subscription ends at the end of the current period: you keep access until that date. To change plan or card, use the billing portal from the Subscription page.",
+    "chargement": "Loading…",
+    "recapTitre": "Your subscription",
+    "plan": "Plan",
+    "finPeriode": "End of the current period",
+    "finEssai": "End of the trial",
+    "explication": "If you confirm, your subscription will not renew: you keep access until {date}, then no further payment will be taken.",
+    "confirmer": "Confirm cancellation",
+    "envoi": "Cancelling…",
+    "dejaResilie": "This subscription is already cancelled: your access ends on {date}.",
+    "accuseTitre": "Cancellation recorded",
+    "accuseTexte": "Your {plan} subscription is cancelled. You keep access until {date}; no further payment will be taken.",
+    "reference": "Reference",
+    "enregistreLe": "Cancellation recorded on {date}.",
+    "accuseSuite": "Keep this reference number: you will be asked for it in any exchange about this cancellation.",
+    "retour": "Back to subscription",
+    "sansDate": "date not available",
+    "plans": {
+      "pro": "Pro",
+      "agency": "Agency",
+      "expert": "Expert",
+      "inconnu": "Subscription"
     }
   }
 }

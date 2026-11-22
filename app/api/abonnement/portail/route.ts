@@ -4,9 +4,9 @@ import { createStripeClient, isStripeConfigured } from "@/lib/stripe";
 import { getPeriodeExpert, isAbonnementManuel } from "@/lib/expert-quota";
 import { decisionPortail } from "@/lib/abonnement-regles";
 
-// Ouvre le portail client Stripe : changement de plan, moyen de paiement, factures,
-// résiliation. Les options proposées se règlent dans le dashboard Stripe (Settings > Billing >
-// Customer portal) ; chaque changement revient ici par le webhook customer.subscription.*.
+// Ouvre le portail client Stripe : changement de plan, moyen de paiement, factures. La
+// résiliation passe par le parcours /resiliation (app/api/resiliation). Les options proposées
+// se règlent dans le dashboard Stripe (Settings > Billing > Customer portal) ; chaque changement revient ici par le webhook customer.subscription.*.
 export async function POST(request: Request) {
   const { supabase, user, plan } = await getServerUserPlanOnly();
 
