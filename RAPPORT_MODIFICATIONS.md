@@ -1,5 +1,7 @@
 # Rapport de modifications
 
+## 22 novembre — Expert : 90 audits par mois (au lieu de 100), soit ≈ 0,165 € × 90 ≈ 14,85 € ≤ 15,60 € ; sites, réserve de 50 sites Opus et prix inchangés. Aucun texte n'affichait « 100 audits » : la ligne « Audit IA quasi illimité » des tarifs Expert devient « 90 audits IA par mois » (4 langues). Constat non corrigé : `dashboard.calculateur.margeCibleInatteignable` est encore au tutoiement (« Réduis… »).
+
 ## Séance du 22 novembre (suite) — quotas Agency ramenés dans le budget Claude
 
 Choix retenu : baisser les quotas Agency pour qu'ils tiennent dans 15,60 € au coût maximal par

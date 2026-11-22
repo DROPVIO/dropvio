@@ -216,3 +216,12 @@ describe("quotas Agency dans le budget Claude", () => {
     assert.ok(30 * site + 50 * audit <= AI_BUDGET_EUR_PAR_PLAN.agency);
   });
 });
+
+describe("quota d'audits Expert dans le budget Claude", () => {
+  it("90 audits par mois tiennent dans 15,60 € au coût maximal par audit", () => {
+    assert.equal(PLAN_LIMITS.expert.auditsParMoisMax, 90);
+    // Coût plafond d'un audit : 8 192 tokens de sortie, ~20 000 tokens d'entrée.
+    const audit = coutEuros("claude-sonnet-4-6", 20_000, 8_192);
+    assert.ok(90 * audit <= AI_BUDGET_EUR_PAR_PLAN.expert);
+  });
+});

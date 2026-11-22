@@ -79,7 +79,9 @@ export const PLAN_LIMITS: Record<Plan, LimitesPlan> = {
   // par appel (≈ 0,23 € par site, ≈ 0,165 € par audit : 6,90 € + 8,25 € ≈ 15,15 €).
   agency: { produitsMax: null, produitsBoutiqueMax: 200, simulationsMax: null, sitesParMoisMax: 30, auditsParMoisMax: 50, alternativesParMoisMax: null },
   // Expert : aucun plafond de produits par boutique, seul le quota d'images limite la génération.
-  expert: { produitsMax: null, produitsBoutiqueMax: null, simulationsMax: null, sitesParMoisMax: 0, auditsParMoisMax: 100, alternativesParMoisMax: null },
+  // Expert : 90 audits par mois, pour tenir dans le budget Claude de 15,60 € au coût maximal
+  // par audit (≈ 0,165 € × 90 ≈ 14,85 €). Ses sites, payés à l'unité, sont hors de ce budget.
+  expert: { produitsMax: null, produitsBoutiqueMax: null, simulationsMax: null, sitesParMoisMax: 0, auditsParMoisMax: 90, alternativesParMoisMax: null },
 };
 
 // Sans plan : aucun outil, donc toutes les limites à 0 (le proxy redirige déjà ces comptes vers
