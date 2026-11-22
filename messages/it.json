@@ -433,7 +433,8 @@
       "shopifyConnected": "Negozio Shopify collegato con successo.",
       "aucunAbonnement": "Nessun abbonamento",
       "choisirAbonnement": "Scegli un abbonamento",
-      "abonnementRequis": "Questo strumento richiede un abbonamento."
+      "abonnementRequis": "Questo strumento richiede un abbonamento.",
+      "navigation": "Navigazione"
     },
     "onboarding": {
       "ariaLabel": "Tutorial di benvenuto Dropvio",

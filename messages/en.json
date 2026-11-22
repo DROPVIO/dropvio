@@ -433,7 +433,8 @@
       "shopifyConnected": "Shopify store connected successfully.",
       "aucunAbonnement": "No subscription",
       "choisirAbonnement": "Choose a subscription",
-      "abonnementRequis": "This tool requires a subscription."
+      "abonnementRequis": "This tool requires a subscription.",
+      "navigation": "Navigation"
     },
     "onboarding": {
       "ariaLabel": "Dropvio welcome tour",

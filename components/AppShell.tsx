@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useSyncExternalStore } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { useTranslations } from "next-intl";
 import { usePathname } from "next/navigation";
 import Sidebar from "./Sidebar";
@@ -43,75 +43,87 @@ function toggleCollapsed(): void {
 
 const PROTECTED_PATHS = ["/studio", "/quota", "/produits-gagnants", "/site-builder", "/mes-sites", "/dashboard", "/audit", "/tools/calculateur-marge", "/ventes"];
 
-/** Cadre des pages de l'outil : barre latérale (repliable sur desktop, état mémorisé) et, sous
- *  md, tiroir avec fond semi-transparent, bouton d'ouverture et défilement du corps bloqué.
- *  Utilisé par AppShell et par les pages qui ne montrent la barre qu'à un compte connecté
- *  (/formation). */
+/** Cadre des pages de l'outil (et de /formation pour un compte connecté).
+ *  - Desktop (≥ 1024 px) : barre latérale en colonne fixe ; le contenu est décalé de sa largeur
+ *    réelle, étendue (260 px) ou repliée (64 px), portée par la variable CSS --largeur-barre.
+ *    L'état replié est mémorisé (localStorage).
+ *  - Mobile (< 1024 px) : tiroir <dialog> ouvert avec showModal() par le bouton en haut à gauche.
+ *    Échap, un clic sur le fond ou sur un lien le ferment ; le focus revient au bouton ; la page
+ *    derrière ne défile pas. */
 export function CadreApp({ children }: { children: React.ReactNode }) {
   const collapsed = useSyncExternalStore(subscribeCollapsed, readCollapsed, () => false);
   const t = useTranslations("dashboard.nav");
-  // Tiroir de navigation mobile (< md).
-  const [mobileOpen, setMobileOpen] = useState(false);
+  const tiroirRef = useRef<HTMLDialogElement>(null);
+  const boutonRef = useRef<HTMLButtonElement>(null);
+  const [tiroirOuvert, setTiroirOuvert] = useState(false);
 
-  // Échap ferme le tiroir mobile.
-  useEffect(() => {
-    if (!mobileOpen) return;
-    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setMobileOpen(false); };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [mobileOpen]);
+  const ouvrirTiroir = () => {
+    tiroirRef.current?.showModal();
+    setTiroirOuvert(true);
+  };
+  const fermerTiroir = () => tiroirRef.current?.close();
 
-  // Tiroir ouvert : le corps de page ne défile plus. Passage en largeur desktop (≥ md) : le
-  // tiroir se ferme, sinon le défilement resterait bloqué alors que le tiroir n'existe plus.
+  // Fermeture (Échap, fond, lien, passage en desktop) : défilement rendu, focus sur le bouton.
   useEffect(() => {
-    if (!mobileOpen) return;
+    const dialogue = tiroirRef.current;
+    if (!dialogue) return;
+    const surFermeture = () => {
+      setTiroirOuvert(false);
+      boutonRef.current?.focus();
+    };
+    dialogue.addEventListener("close", surFermeture);
+    return () => dialogue.removeEventListener("close", surFermeture);
+  }, []);
+
+  useEffect(() => {
+    if (!tiroirOuvert) return;
     const precedent = document.body.style.overflow;
     document.body.style.overflow = "hidden";
-    const desktop = window.matchMedia("(min-width: 768px)");
-    const surChangement = (e: MediaQueryListEvent) => { if (e.matches) setMobileOpen(false); };
+    const desktop = window.matchMedia("(min-width: 1024px)");
+    const surChangement = (e: MediaQueryListEvent) => { if (e.matches) tiroirRef.current?.close(); };
     desktop.addEventListener("change", surChangement);
     return () => {
       document.body.style.overflow = precedent;
       desktop.removeEventListener("change", surChangement);
     };
-  }, [mobileOpen]);
+  }, [tiroirOuvert]);
 
   return (
     <OnboardingProvider>
-      <div className="flex min-h-screen">
-        <Sidebar
-          collapsed={collapsed}
-          onCollapse={toggleCollapsed}
-          mobileOpen={mobileOpen}
-          onCloseMobile={() => setMobileOpen(false)}
-        />
-        {mobileOpen && (
-          <div
-            className="fixed inset-0 z-30 bg-black/50 md:hidden"
-            aria-hidden="true"
-            onClick={() => setMobileOpen(false)}
-          />
-        )}
-        <main
-          className={`flex-1 min-w-0 transition-[margin-left] duration-200 ease-in-out ${
-            collapsed ? "ml-0 md:ml-16" : "ml-0 md:ml-[260px]"
-          }`}
+      <div
+        className="flex min-h-screen"
+        style={{ "--largeur-barre": collapsed ? "64px" : "260px" } as React.CSSProperties}
+      >
+        <Sidebar collapsed={collapsed} onCollapse={toggleCollapsed} />
+
+        <dialog
+          ref={tiroirRef}
+          aria-label={t("navigation")}
+          // Un clic sur le fond (hors du panneau) atteint le <dialog> lui-même.
+          onClick={(e) => { if (e.target === e.currentTarget) fermerTiroir(); }}
+          className="m-0 h-dvh max-h-none w-[260px] max-w-[85vw] p-0 bg-transparent backdrop:bg-black/50 lg:hidden"
         >
+          {tiroirOuvert ? <Sidebar collapsed={false} onCollapse={toggleCollapsed} variante="tiroir" onCloseMobile={fermerTiroir} /> : null}
+        </dialog>
+
+        <main className="min-w-0 flex-1 transition-[margin-left] duration-200 ease-in-out lg:ml-[var(--largeur-barre)]">
           {/* Barre mobile : ouvre le tiroir de navigation. */}
-          <div className="md:hidden sticky top-0 z-20 h-14 flex items-center gap-2.5 px-4 bg-[var(--bg-sunken)] border-b border-[var(--border)]">
+          <div className="sticky top-0 z-20 flex h-14 items-center gap-2.5 border-b border-[var(--border)] bg-[var(--bg-sunken)] px-4 lg:hidden">
             <button
+              ref={boutonRef}
               type="button"
-              onClick={() => setMobileOpen(true)}
+              onClick={ouvrirTiroir}
               aria-label={t("openMenu")}
-              aria-expanded={mobileOpen}
-              className="-ml-2 flex h-10 w-10 items-center justify-center rounded-lg text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-2)] transition-colors"
+              aria-expanded={tiroirOuvert}
+              aria-haspopup="dialog"
+              className="-ml-2 flex h-10 w-10 items-center justify-center rounded-lg text-[var(--text-muted)] transition-colors hover:bg-[var(--surface-2)] hover:text-[var(--text-primary)]"
             >
               <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true">
                 <path d="M3 5h14M3 10h14M3 15h14" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
               </svg>
             </button>
-            <Logo className="w-6 h-6 shrink-0 text-[var(--logo-accent)]" />
-            <span className="text-[15px] font-bold bg-gradient-to-r from-[var(--accent)] to-[var(--accent-secondary)] bg-clip-text text-transparent">
+            <Logo className="h-6 w-6 shrink-0 text-[var(--logo-accent)]" />
+            <span className="bg-gradient-to-r from-[var(--accent)] to-[var(--accent-secondary)] bg-clip-text text-[15px] font-bold text-transparent">
               Dropvio
             </span>
           </div>

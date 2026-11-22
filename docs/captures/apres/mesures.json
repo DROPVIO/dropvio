@@ -1,0 +1,370 @@
+[
+  {
+    "chemin": "/",
+    "largeur": 375,
+    "urlFinale": "/",
+    "defilementHorizontal": false,
+    "scrollWidth": 375,
+    "innerWidth": 375,
+    "debordements": [
+      "div."
+    ]
+  },
+  {
+    "chemin": "/dashboard",
+    "largeur": 375,
+    "urlFinale": "/login",
+    "defilementHorizontal": false,
+    "scrollWidth": 375,
+    "innerWidth": 375,
+    "debordements": []
+  },
+  {
+    "chemin": "/site-builder",
+    "largeur": 375,
+    "urlFinale": "/login",
+    "defilementHorizontal": false,
+    "scrollWidth": 375,
+    "innerWidth": 375,
+    "debordements": []
+  },
+  {
+    "chemin": "/produits-gagnants",
+    "largeur": 375,
+    "urlFinale": "/login",
+    "defilementHorizontal": false,
+    "scrollWidth": 375,
+    "innerWidth": 375,
+    "debordements": []
+  },
+  {
+    "chemin": "/formation",
+    "largeur": 375,
+    "urlFinale": "/formation",
+    "defilementHorizontal": false,
+    "scrollWidth": 375,
+    "innerWidth": 375,
+    "debordements": []
+  },
+  {
+    "chemin": "/abonnement",
+    "largeur": 375,
+    "urlFinale": "/login",
+    "defilementHorizontal": false,
+    "scrollWidth": 375,
+    "innerWidth": 375,
+    "debordements": []
+  },
+  {
+    "chemin": "/quota",
+    "largeur": 375,
+    "urlFinale": "/login",
+    "defilementHorizontal": false,
+    "scrollWidth": 375,
+    "innerWidth": 375,
+    "debordements": []
+  },
+  {
+    "chemin": "/faq",
+    "largeur": 375,
+    "urlFinale": "/faq",
+    "defilementHorizontal": false,
+    "scrollWidth": 375,
+    "innerWidth": 375,
+    "debordements": []
+  },
+  {
+    "chemin": "/expert",
+    "largeur": 375,
+    "urlFinale": "/expert",
+    "defilementHorizontal": false,
+    "scrollWidth": 375,
+    "innerWidth": 375,
+    "debordements": []
+  },
+  {
+    "chemin": "/login",
+    "largeur": 375,
+    "urlFinale": "/login",
+    "defilementHorizontal": false,
+    "scrollWidth": 375,
+    "innerWidth": 375,
+    "debordements": []
+  },
+  {
+    "chemin": "/",
+    "largeur": 768,
+    "urlFinale": "/",
+    "defilementHorizontal": false,
+    "scrollWidth": 768,
+    "innerWidth": 768,
+    "debordements": [
+      "div."
+    ]
+  },
+  {
+    "chemin": "/dashboard",
+    "largeur": 768,
+    "urlFinale": "/login",
+    "defilementHorizontal": false,
+    "scrollWidth": 768,
+    "innerWidth": 768,
+    "debordements": []
+  },
+  {
+    "chemin": "/site-builder",
+    "largeur": 768,
+    "urlFinale": "/login",
+    "defilementHorizontal": false,
+    "scrollWidth": 768,
+    "innerWidth": 768,
+    "debordements": []
+  },
+  {
+    "chemin": "/produits-gagnants",
+    "largeur": 768,
+    "urlFinale": "/login",
+    "defilementHorizontal": false,
+    "scrollWidth": 768,
+    "innerWidth": 768,
+    "debordements": []
+  },
+  {
+    "chemin": "/formation",
+    "largeur": 768,
+    "urlFinale": "/formation",
+    "defilementHorizontal": false,
+    "scrollWidth": 768,
+    "innerWidth": 768,
+    "debordements": []
+  },
+  {
+    "chemin": "/abonnement",
+    "largeur": 768,
+    "urlFinale": "/login",
+    "defilementHorizontal": false,
+    "scrollWidth": 768,
+    "innerWidth": 768,
+    "debordements": []
+  },
+  {
+    "chemin": "/quota",
+    "largeur": 768,
+    "urlFinale": "/login",
+    "defilementHorizontal": false,
+    "scrollWidth": 768,
+    "innerWidth": 768,
+    "debordements": []
+  },
+  {
+    "chemin": "/faq",
+    "largeur": 768,
+    "urlFinale": "/faq",
+    "defilementHorizontal": false,
+    "scrollWidth": 768,
+    "innerWidth": 768,
+    "debordements": []
+  },
+  {
+    "chemin": "/expert",
+    "largeur": 768,
+    "urlFinale": "/expert",
+    "defilementHorizontal": false,
+    "scrollWidth": 768,
+    "innerWidth": 768,
+    "debordements": []
+  },
+  {
+    "chemin": "/login",
+    "largeur": 768,
+    "urlFinale": "/login",
+    "defilementHorizontal": false,
+    "scrollWidth": 768,
+    "innerWidth": 768,
+    "debordements": []
+  },
+  {
+    "chemin": "/",
+    "largeur": 1280,
+    "urlFinale": "/",
+    "defilementHorizontal": false,
+    "scrollWidth": 1280,
+    "innerWidth": 1280,
+    "debordements": [
+      "div."
+    ]
+  },
+  {
+    "chemin": "/dashboard",
+    "largeur": 1280,
+    "urlFinale": "/login",
+    "defilementHorizontal": false,
+    "scrollWidth": 1280,
+    "innerWidth": 1280,
+    "debordements": []
+  },
+  {
+    "chemin": "/site-builder",
+    "largeur": 1280,
+    "urlFinale": "/login",
+    "defilementHorizontal": false,
+    "scrollWidth": 1280,
+    "innerWidth": 1280,
+    "debordements": []
+  },
+  {
+    "chemin": "/produits-gagnants",
+    "largeur": 1280,
+    "urlFinale": "/login",
+    "defilementHorizontal": false,
+    "scrollWidth": 1280,
+    "innerWidth": 1280,
+    "debordements": []
+  },
+  {
+    "chemin": "/formation",
+    "largeur": 1280,
+    "urlFinale": "/formation",
+    "defilementHorizontal": false,
+    "scrollWidth": 1280,
+    "innerWidth": 1280,
+    "debordements": []
+  },
+  {
+    "chemin": "/abonnement",
+    "largeur": 1280,
+    "urlFinale": "/login",
+    "defilementHorizontal": false,
+    "scrollWidth": 1280,
+    "innerWidth": 1280,
+    "debordements": []
+  },
+  {
+    "chemin": "/quota",
+    "largeur": 1280,
+    "urlFinale": "/login",
+    "defilementHorizontal": false,
+    "scrollWidth": 1280,
+    "innerWidth": 1280,
+    "debordements": []
+  },
+  {
+    "chemin": "/faq",
+    "largeur": 1280,
+    "urlFinale": "/faq",
+    "defilementHorizontal": false,
+    "scrollWidth": 1280,
+    "innerWidth": 1280,
+    "debordements": []
+  },
+  {
+    "chemin": "/expert",
+    "largeur": 1280,
+    "urlFinale": "/expert",
+    "defilementHorizontal": false,
+    "scrollWidth": 1280,
+    "innerWidth": 1280,
+    "debordements": []
+  },
+  {
+    "chemin": "/login",
+    "largeur": 1280,
+    "urlFinale": "/login",
+    "defilementHorizontal": false,
+    "scrollWidth": 1280,
+    "innerWidth": 1280,
+    "debordements": []
+  },
+  {
+    "chemin": "/",
+    "largeur": 1440,
+    "urlFinale": "/",
+    "defilementHorizontal": false,
+    "scrollWidth": 1440,
+    "innerWidth": 1440,
+    "debordements": [
+      "div."
+    ]
+  },
+  {
+    "chemin": "/dashboard",
+    "largeur": 1440,
+    "urlFinale": "/login",
+    "defilementHorizontal": false,
+    "scrollWidth": 1440,
+    "innerWidth": 1440,
+    "debordements": []
+  },
+  {
+    "chemin": "/site-builder",
+    "largeur": 1440,
+    "urlFinale": "/login",
+    "defilementHorizontal": false,
+    "scrollWidth": 1440,
+    "innerWidth": 1440,
+    "debordements": []
+  },
+  {
+    "chemin": "/produits-gagnants",
+    "largeur": 1440,
+    "urlFinale": "/login",
+    "defilementHorizontal": false,
+    "scrollWidth": 1440,
+    "innerWidth": 1440,
+    "debordements": []
+  },
+  {
+    "chemin": "/formation",
+    "largeur": 1440,
+    "urlFinale": "/formation",
+    "defilementHorizontal": false,
+    "scrollWidth": 1440,
+    "innerWidth": 1440,
+    "debordements": []
+  },
+  {
+    "chemin": "/abonnement",
+    "largeur": 1440,
+    "urlFinale": "/login",
+    "defilementHorizontal": false,
+    "scrollWidth": 1440,
+    "innerWidth": 1440,
+    "debordements": []
+  },
+  {
+    "chemin": "/quota",
+    "largeur": 1440,
+    "urlFinale": "/login",
+    "defilementHorizontal": false,
+    "scrollWidth": 1440,
+    "innerWidth": 1440,
+    "debordements": []
+  },
+  {
+    "chemin": "/faq",
+    "largeur": 1440,
+    "urlFinale": "/faq",
+    "defilementHorizontal": false,
+    "scrollWidth": 1440,
+    "innerWidth": 1440,
+    "debordements": []
+  },
+  {
+    "chemin": "/expert",
+    "largeur": 1440,
+    "urlFinale": "/expert",
+    "defilementHorizontal": false,
+    "scrollWidth": 1440,
+    "innerWidth": 1440,
+    "debordements": []
+  },
+  {
+    "chemin": "/login",
+    "largeur": 1440,
+    "urlFinale": "/login",
+    "defilementHorizontal": false,
+    "scrollWidth": 1440,
+    "innerWidth": 1440,
+    "debordements": []
+  }
+]

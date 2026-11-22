@@ -298,18 +298,19 @@ const PLAN_CLS: Record<string, string> = {
 export default function Sidebar({
   collapsed: collapsedProp,
   onCollapse,
-  mobileOpen = false,
+  variante = "barre",
   onCloseMobile,
 }: {
   collapsed: boolean;
   onCollapse: () => void;
-  /** Tiroir mobile (< md) ouvert. */
-  mobileOpen?: boolean;
-  /** Ferme le tiroir mobile (appelé à chaque navigation depuis la barre). */
+  /** « barre » : colonne fixe du desktop (≥ 1024 px, largeur --largeur-barre).
+   *  « tiroir » : contenu du tiroir mobile (< 1024 px), toujours déplié. */
+  variante?: "barre" | "tiroir";
+  /** Ferme le tiroir mobile (appelé à chaque navigation depuis le tiroir). */
   onCloseMobile?: () => void;
 }) {
-  // Sur mobile, le tiroir est toujours déplié.
-  const collapsed = collapsedProp && !mobileOpen;
+  const tiroir = variante === "tiroir";
+  const collapsed = collapsedProp && !tiroir;
   const t        = useTranslations("dashboard.nav");
   const pathname = usePathname();
   const router   = useRouter();
@@ -404,9 +405,11 @@ export default function Sidebar({
   return (
     <>
       <aside
-        className={`fixed top-0 left-0 h-dvh w-[260px] max-w-[85vw] md:max-w-none bg-[var(--bg-sunken)] border-r border-[var(--border)] flex flex-col z-40 transition-[width,transform] duration-200 ease-in-out overflow-hidden ${
-          collapsed ? "md:w-16" : ""
-        } ${mobileOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}`}
+        className={
+          tiroir
+            ? "flex h-full w-full flex-col overflow-hidden bg-[var(--bg-sunken)]"
+            : "fixed top-0 left-0 z-40 hidden h-dvh w-[var(--largeur-barre)] flex-col overflow-hidden border-r border-[var(--border)] bg-[var(--bg-sunken)] transition-[width] duration-200 ease-in-out lg:flex"
+        }
       >
         {/* ── Logo ──────────────────────────────────────────────────────── */}
         <Link
@@ -532,7 +535,7 @@ export default function Sidebar({
         </div>
 
         {/* ── Collapse button ───────────────────────────────────────────── */}
-        <div className={`px-2 pb-1 shrink-0 max-md:hidden ${collapsed ? "flex justify-center" : ""}`}>
+        <div className={`px-2 pb-1 shrink-0 ${tiroir ? "hidden" : ""} ${collapsed ? "flex justify-center" : ""}`}>
           <button
             onClick={onCollapse}
             title={collapsed ? t("expandTooltip") : t("collapseTooltip")}
