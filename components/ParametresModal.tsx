@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import type { User } from "@supabase/supabase-js";
@@ -176,6 +177,7 @@ export default function ParametresModal({
   initialShopifyMessage?: { ok: boolean; text: string } | null;
 }) {
   const t = useTranslations("parametres");
+  const tRetractation = useTranslations("retractation");
   const locale = useLocale();
   const apiErrorMessage = useApiErrorMessage();
   const supabase = createSupabaseBrowserClient();
@@ -984,6 +986,9 @@ export default function ParametresModal({
         {plan === null ? t("plan.choose") : t("facturation.manage")}
       </button>
       {abonnementMsg ? <p className="text-[11px] text-[var(--danger)]">{abonnementMsg}</p> : null}
+      <div className="flex flex-wrap gap-x-5 gap-y-2 text-[12px]">
+        <Link href="/retractation" className="text-[var(--text-muted)] underline-offset-4 hover:underline">{tRetractation("lien")}</Link>
+      </div>
     </div>
   );
 

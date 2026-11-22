@@ -1545,7 +1545,8 @@
     "abonnement_requis": "Choisissez un abonnement pour accéder au catalogue.",
     "abonnement_requis_produits": "Choisissez un abonnement pour ajouter des produits.",
     "abonnement_requis_outil": "Choisissez un abonnement pour utiliser cet outil.",
-    "consentement_requis": "Cochez les deux cases pour continuer vers le paiement."
+    "consentement_requis": "Cochez les deux cases pour continuer vers le paiement.",
+    "retractation_invalide": "Vérifiez les champs du formulaire."
   },
   "siteBuilder": {
     "boutique": {
@@ -2877,5 +2878,38 @@
     "aide": "Les deux cases sont obligatoires pour continuer.",
     "cgv": "Conditions générales de vente",
     "confidentialite": "Politique de confidentialité"
+  },
+  "retractation": {
+    "lien": "Se rétracter du contrat",
+    "metaTitre": "Se rétracter d'un achat ou abonnement en ligne | Dropvio",
+    "metaDescription": "Exercez votre droit de rétractation en ligne : indiquez l'achat concerné, confirmez la demande et recevez aussitôt un accusé de réception avec sa référence.",
+    "titre": "Se rétracter du contrat",
+    "intro": "Vous disposez de 14 jours après votre achat pour exercer votre droit de rétractation. Remplissez ce formulaire : nous traitons chaque demande personnellement.",
+    "nom": "Nom et prénom",
+    "email": "E-mail du compte",
+    "achat": "Achat concerné",
+    "achatChoisir": "Choisissez l'achat",
+    "achatAutre": "Autre achat (à préciser)",
+    "achatLibre": "Décrivez l'achat concerné (offre, montant…)",
+    "dateAchat": "Date d'achat",
+    "continuer": "Continuer",
+    "recapTitre": "Vérifiez votre demande",
+    "modifier": "Modifier",
+    "confirmer": "Confirmer la rétractation",
+    "envoi": "Envoi…",
+    "accuseTitre": "Demande de rétractation reçue",
+    "accuseTexte": "Votre demande a bien été enregistrée le {date}. Conservez ce numéro de référence : il vous sera demandé pour tout échange à ce sujet.",
+    "reference": "Référence",
+    "accuseSuite": "Nous revenons vers vous à l'adresse {email}. Aucun remboursement n'est déclenché automatiquement : chaque demande est traitée personnellement.",
+    "champsInvalides": "Vérifiez les champs du formulaire.",
+    "types": {
+      "abonnement_pro": "Abonnement Pro",
+      "abonnement_agency": "Abonnement Agency",
+      "abonnement_expert": "Abonnement Expert",
+      "recharge_expert": "Recharge de crédits Expert",
+      "formation_courte": "Formation courte",
+      "formation_longue": "Formation longue",
+      "formation_bundle": "Les deux formations"
+    }
   }
 }

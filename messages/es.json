@@ -1545,7 +1545,8 @@
     "abonnement_requis": "Elige una suscripción para acceder al catálogo.",
     "abonnement_requis_produits": "Elige una suscripción para añadir productos.",
     "abonnement_requis_outil": "Elige una suscripción para usar esta herramienta.",
-    "consentement_requis": "Marca las dos casillas para continuar con el pago."
+    "consentement_requis": "Marca las dos casillas para continuar con el pago.",
+    "retractation_invalide": "Revisa los campos del formulario."
   },
   "siteBuilder": {
     "boutique": {
@@ -2877,5 +2878,38 @@
     "aide": "Las dos casillas son obligatorias para continuar.",
     "cgv": "Condiciones generales de venta",
     "confidentialite": "Política de privacidad"
+  },
+  "retractation": {
+    "lien": "Desistir del contrato",
+    "metaTitre": "Desistir de una compra o suscripción en línea | Dropvio",
+    "metaDescription": "Ejerce tu derecho de desistimiento en línea: indica la compra afectada, confirma la solicitud y recibe enseguida un acuse de recibo con su número de referencia.",
+    "titre": "Desistir del contrato",
+    "intro": "Dispones de 14 días tras tu compra para ejercer tu derecho de desistimiento. Rellena este formulario: tratamos cada solicitud personalmente.",
+    "nom": "Nombre y apellidos",
+    "email": "Correo electrónico de la cuenta",
+    "achat": "Compra afectada",
+    "achatChoisir": "Elige la compra",
+    "achatAutre": "Otra compra (especificar)",
+    "achatLibre": "Describe la compra afectada (oferta, importe…)",
+    "dateAchat": "Fecha de compra",
+    "continuer": "Continuar",
+    "recapTitre": "Revisa tu solicitud",
+    "modifier": "Modificar",
+    "confirmer": "Confirmar el desistimiento",
+    "envoi": "Enviando…",
+    "accuseTitre": "Solicitud de desistimiento recibida",
+    "accuseTexte": "Tu solicitud se registró el {date}. Guarda este número de referencia: se te pedirá en cualquier intercambio sobre este asunto.",
+    "reference": "Referencia",
+    "accuseSuite": "Te responderemos en {email}. No se activa ningún reembolso automático: cada solicitud se trata personalmente.",
+    "champsInvalides": "Revisa los campos del formulario.",
+    "types": {
+      "abonnement_pro": "Suscripción Pro",
+      "abonnement_agency": "Suscripción Agency",
+      "abonnement_expert": "Suscripción Expert",
+      "recharge_expert": "Recarga de créditos Expert",
+      "formation_courte": "Formación corta",
+      "formation_longue": "Formación larga",
+      "formation_bundle": "Las dos formaciones"
+    }
   }
 }

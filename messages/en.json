@@ -1545,7 +1545,8 @@
     "abonnement_requis": "Choose a subscription to access the catalog.",
     "abonnement_requis_produits": "Choose a subscription to add products.",
     "abonnement_requis_outil": "Choose a subscription to use this tool.",
-    "consentement_requis": "Tick both boxes to continue to payment."
+    "consentement_requis": "Tick both boxes to continue to payment.",
+    "retractation_invalide": "Please check the form fields."
   },
   "siteBuilder": {
     "boutique": {
@@ -2877,5 +2878,38 @@
     "aide": "Both boxes are required to continue.",
     "cgv": "Terms of sale",
     "confidentialite": "Privacy policy"
+  },
+  "retractation": {
+    "lien": "Withdraw from the contract",
+    "metaTitre": "Withdraw from a purchase or subscription online | Dropvio",
+    "metaDescription": "Exercise your right of withdrawal online: select the purchase concerned, confirm the request and instantly receive an acknowledgement with its reference number.",
+    "titre": "Withdraw from the contract",
+    "intro": "You have 14 days after your purchase to exercise your right of withdrawal. Fill in this form: we handle every request personally.",
+    "nom": "Full name",
+    "email": "Account e-mail",
+    "achat": "Purchase concerned",
+    "achatChoisir": "Choose the purchase",
+    "achatAutre": "Other purchase (specify)",
+    "achatLibre": "Describe the purchase concerned (offer, amount…)",
+    "dateAchat": "Purchase date",
+    "continuer": "Continue",
+    "recapTitre": "Check your request",
+    "modifier": "Edit",
+    "confirmer": "Confirm withdrawal",
+    "envoi": "Sending…",
+    "accuseTitre": "Withdrawal request received",
+    "accuseTexte": "Your request was recorded on {date}. Keep this reference number: you will be asked for it in any exchange about this request.",
+    "reference": "Reference",
+    "accuseSuite": "We will get back to you at {email}. No refund is triggered automatically: every request is handled personally.",
+    "champsInvalides": "Please check the form fields.",
+    "types": {
+      "abonnement_pro": "Pro subscription",
+      "abonnement_agency": "Agency subscription",
+      "abonnement_expert": "Expert subscription",
+      "recharge_expert": "Expert credit top-up",
+      "formation_courte": "Short course",
+      "formation_longue": "Long course",
+      "formation_bundle": "Both courses"
+    }
   }
 }

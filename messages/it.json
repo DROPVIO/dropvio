@@ -1545,7 +1545,8 @@
     "abonnement_requis": "Scegli un abbonamento per accedere al catalogo.",
     "abonnement_requis_produits": "Scegli un abbonamento per aggiungere prodotti.",
     "abonnement_requis_outil": "Scegli un abbonamento per usare questo strumento.",
-    "consentement_requis": "Seleziona le due caselle per procedere al pagamento."
+    "consentement_requis": "Seleziona le due caselle per procedere al pagamento.",
+    "retractation_invalide": "Verifica i campi del modulo."
   },
   "siteBuilder": {
     "boutique": {
@@ -2877,5 +2878,38 @@
     "aide": "Le due caselle sono obbligatorie per continuare.",
     "cgv": "Condizioni generali di vendita",
     "confidentialite": "Informativa sulla privacy"
+  },
+  "retractation": {
+    "lien": "Recedere dal contratto",
+    "metaTitre": "Recedere da un acquisto o abbonamento online | Dropvio",
+    "metaDescription": "Esercita online il tuo diritto di recesso: indica l'acquisto interessato, conferma la richiesta e ricevi subito una ricevuta con il suo numero di riferimento.",
+    "titre": "Recedere dal contratto",
+    "intro": "Hai 14 giorni dall'acquisto per esercitare il diritto di recesso. Compila questo modulo: gestiamo ogni richiesta personalmente.",
+    "nom": "Nome e cognome",
+    "email": "E-mail dell'account",
+    "achat": "Acquisto interessato",
+    "achatChoisir": "Scegli l'acquisto",
+    "achatAutre": "Altro acquisto (specificare)",
+    "achatLibre": "Descrivi l'acquisto interessato (offerta, importo…)",
+    "dateAchat": "Data di acquisto",
+    "continuer": "Continua",
+    "recapTitre": "Verifica la tua richiesta",
+    "modifier": "Modifica",
+    "confirmer": "Conferma il recesso",
+    "envoi": "Invio…",
+    "accuseTitre": "Richiesta di recesso ricevuta",
+    "accuseTexte": "La tua richiesta è stata registrata il {date}. Conserva questo numero di riferimento: ti verrà chiesto per qualsiasi comunicazione su questa richiesta.",
+    "reference": "Riferimento",
+    "accuseSuite": "Ti risponderemo all'indirizzo {email}. Nessun rimborso viene avviato automaticamente: ogni richiesta è gestita personalmente.",
+    "champsInvalides": "Verifica i campi del modulo.",
+    "types": {
+      "abonnement_pro": "Abbonamento Pro",
+      "abonnement_agency": "Abbonamento Agency",
+      "abonnement_expert": "Abbonamento Expert",
+      "recharge_expert": "Ricarica di crediti Expert",
+      "formation_courte": "Corso breve",
+      "formation_longue": "Corso lungo",
+      "formation_bundle": "Entrambi i corsi"
+    }
   }
 }

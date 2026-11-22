@@ -36,6 +36,7 @@ const ATTENTE_ESSAIS = 15;
 export default function AbonnementPage() {
   const t = useTranslations("abonnement");
   const tPrix = useTranslations("landing.pricing");
+  const tRetractation = useTranslations("retractation");
   const locale = useLocale();
   const [consentement, setConsentement] = useState<EtatConsentement>(CONSENTEMENT_VIDE);
   const router = useRouter();
@@ -276,6 +277,9 @@ export default function AbonnementPage() {
         </p>
 
         <div className="mt-8 flex items-center justify-center gap-6 text-sm">
+          <Link href="/retractation" className="text-[var(--text-faint)] hover:text-[var(--text-muted)] transition font-medium">
+            {tRetractation("lien")}
+          </Link>
           <a href="/formation" className="text-[var(--text-faint)] hover:text-[var(--text-muted)] transition font-medium">
             {t("lienFormation")}
           </a>
