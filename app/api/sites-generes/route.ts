@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerUserAndPlan } from "@/lib/supabase-server";
 import { estFormatExport } from "@/lib/format-export";
 import { pagesValides } from "@/lib/site-builder-pages";
+import { erreurServeur } from "@/lib/api-errors";
 
 // Code PostgreSQL « undefined_column », remonté tel quel par PostgREST tant qu'une migration
 // n'est pas appliquée — ici 039 (sites_generes.format_export).
@@ -25,7 +26,7 @@ export async function GET() {
     .order("created_at", { ascending: false });
 
   if (error) {
-    return NextResponse.json({ error: error.message, code: "server_error" }, { status: 500 });
+    return erreurServeur("api/sites-generes", error);
   }
 
   // Sites sur lesquels une correction IA a été appliquée et reste annulable
@@ -165,7 +166,7 @@ export async function POST(request: NextRequest) {
   }
 
   if (error || !data) {
-    return NextResponse.json({ error: error?.message ?? "Sauvegarde impossible.", code: "server_error" }, { status: 500 });
+    return erreurServeur("api/sites-generes", error);
   }
   return NextResponse.json({ id: data.id }, { status: 201 });
 }

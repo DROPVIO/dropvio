@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { apiError, reponseAbonnementRequis } from "@/lib/api-errors";
+import { apiError, reponseAbonnementRequis, erreurServeur } from "@/lib/api-errors";
 import { getServerUserPlanOnly } from "@/lib/supabase-server";
 import { PLAN_LIMITS, limitesDuPlan } from "@/lib/plan-limits";
 import { commandesMinEffectif } from "@/lib/catalogue-commandes";
@@ -102,7 +102,7 @@ export async function GET(request: NextRequest) {
 
     const error = pageRes.error ?? totalRes.error;
     if (error) {
-      return NextResponse.json({ error: error.message, code: "server_error" }, { status: 500 });
+      return erreurServeur("api/aliexpress/products", error);
     }
 
     const products = pageRes.data ?? [];
@@ -118,10 +118,6 @@ export async function GET(request: NextRequest) {
       planLimited: produitsMax !== null && realTotal > produitsMax,
     });
   } catch (err) {
-    console.error("Supabase query error:", err);
-    return NextResponse.json(
-      { error: "Erreur de connexion à Supabase", code: "server_error" },
-      { status: 500 }
-    );
+    return erreurServeur("api/aliexpress/products", err);
   }
 }

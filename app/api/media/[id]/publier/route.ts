@@ -4,7 +4,7 @@ import { getServerUserPlanOnly } from "@/lib/supabase-server";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
 import { BUCKET_MEDIATHEQUE, BUCKET_PUBLIC, extensionDe } from "@/lib/media/mediatheque";
 import type { MediaMime } from "@/lib/media/constantes";
-import { apiError } from "@/lib/api-errors";
+import { apiError, erreurServeur } from "@/lib/api-errors";
 
 // Copie publique d'une image, créée une seule fois quand elle sert sur une boutique : une URL
 // signée expirerait et casserait la boutique, Shopify et le référencement. Le nom de fichier
@@ -27,7 +27,7 @@ export async function POST(_request: Request, context: { params: Promise<{ id: s
   const admin = createSupabaseAdminClient();
   const { data: fichier, error: lectureError } = await admin.storage.from(BUCKET_MEDIATHEQUE).download(media.chemin);
   if (lectureError || !fichier) {
-    return apiError("server_error", 500, lectureError?.message ?? "Fichier illisible.");
+    return erreurServeur("api/media/[id]/publier", lectureError);
   }
 
   const cheminPublic = `mediatheque/${user.id}/${randomUUID()}.${extensionDe(media.mime as MediaMime)}`;
@@ -35,14 +35,14 @@ export async function POST(_request: Request, context: { params: Promise<{ id: s
     .from(BUCKET_PUBLIC)
     .upload(cheminPublic, await fichier.arrayBuffer(), { contentType: media.mime, upsert: false });
   if (envoiError) {
-    return apiError("server_error", 500, envoiError.message);
+    return erreurServeur("api/media/[id]/publier", envoiError);
   }
 
   const url = admin.storage.from(BUCKET_PUBLIC).getPublicUrl(cheminPublic).data.publicUrl;
   const { error } = await admin.from("medias").update({ url_publique: url, chemin_public: cheminPublic }).eq("id", id);
   if (error) {
     await admin.storage.from(BUCKET_PUBLIC).remove([cheminPublic]);
-    return apiError("server_error", 500, error.message);
+    return erreurServeur("api/media/[id]/publier", error);
   }
 
   return NextResponse.json({ url });

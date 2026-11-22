@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { getServerUserAndPlan } from "@/lib/supabase-server";
 import { checkRateLimit } from "@/lib/rate-limit";
-import { apiError } from "@/lib/api-errors";
+import { apiError, erreurServeur } from "@/lib/api-errors";
 import { slugify } from "@/lib/slugify";
 import { BudgetIaDepasse, reponseBudgetDepasse, SuiviBudgetIa, tokensEstimes } from "@/lib/ai-budget";
 
@@ -153,7 +153,7 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
     supabase.from("boutique_produits").select("id, nom, category_id").eq("boutique_id", boutiqueId).order("position"),
   ]);
   if (catErr || prodErr) {
-    return NextResponse.json({ error: (catErr ?? prodErr)!.message, code: "server_error" }, { status: 500 });
+    return erreurServeur("api/boutiques/[id]/trier-produits", catErr ?? prodErr);
   }
   const produits = (produitsData ?? []) as Produit[];
   if (produits.length === 0) {
@@ -221,7 +221,7 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
       .select("id")
       .single();
     if (error || !data) {
-      return NextResponse.json({ error: error?.message ?? "Erreur serveur", code: "server_error" }, { status: 500 });
+      return erreurServeur("api/boutiques/[id]/trier-produits", error);
     }
     c.id = data.id;
     creees.push(data.id);
@@ -253,7 +253,7 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
       .eq("boutique_id", boutiqueId)
       .in("id", ids);
     if (error) {
-      return NextResponse.json({ error: error.message, code: "server_error" }, { status: 500 });
+      return erreurServeur("api/boutiques/[id]/trier-produits", error);
     }
   }
 
@@ -298,7 +298,7 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
       .eq("boutique_id", boutiqueId)
       .in("id", ids);
     if (error) {
-      return NextResponse.json({ error: error.message, code: "server_error" }, { status: 500 });
+      return erreurServeur("api/boutiques/[id]/trier-produits", error);
     }
   }
 
@@ -316,7 +316,7 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
       .eq("boutique_id", boutiqueId)
       .in("id", creees as string[]);
     if (error) {
-      return NextResponse.json({ error: error.message, code: "server_error" }, { status: 500 });
+      return erreurServeur("api/boutiques/[id]/trier-produits", error);
     }
   }
 

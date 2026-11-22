@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
+import { erreurServeur } from "@/lib/api-errors";
 
 const MINUTES_AVANT_REMBOURSEMENT = 15;
 
@@ -18,7 +19,7 @@ export async function GET(request: NextRequest) {
     p_minutes: MINUTES_AVANT_REMBOURSEMENT,
   });
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return erreurServeur("api/cron/expert-reservations", error);
   }
 
   return NextResponse.json({ rembourses: data ?? 0 });

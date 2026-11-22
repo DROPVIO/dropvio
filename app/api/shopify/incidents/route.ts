@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getServerUserAndPlan } from "@/lib/supabase-server";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
+import { erreurServeur } from "@/lib/api-errors";
 
 const LOOKBACK_DAYS = 90;
 
@@ -26,7 +27,7 @@ export async function GET() {
     .order("created_at", { ascending: false });
 
   if (error) {
-    return NextResponse.json({ error: error.message, code: "server_error" }, { status: 500 });
+    return erreurServeur("api/shopify/incidents", error);
   }
 
   return NextResponse.json({ incidents: data ?? [], lookbackDays: LOOKBACK_DAYS });

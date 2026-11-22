@@ -1,6 +1,7 @@
 import { getServerUserAndPlan } from "@/lib/supabase-server";
 import { checkRateLimit } from "@/lib/rate-limit";
-import { isUrlAllowed, normalizeUrl, fetchUrlExterne } from "@/lib/ssrf-guard";
+import { isUrlAllowed, normalizeUrl } from "@/lib/ssrf-guard";
+import { fetchSur } from "@/lib/fetch-sur";
 
 export async function GET(request: Request) {
   const { user } = await getServerUserAndPlan();
@@ -31,7 +32,7 @@ export async function GET(request: Request) {
   let data: { products: Array<{ variants: Array<{ price: string }> }> };
 
   try {
-    const res = await fetchUrlExterne(`${storeUrl}/products.json?limit=250`, {
+    const res = await fetchSur(`${storeUrl}/products.json?limit=250`, {
       headers: { "User-Agent": "Mozilla/5.0" },
     });
 

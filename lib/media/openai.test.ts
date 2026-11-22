@@ -2,10 +2,12 @@
 import assert from "node:assert/strict";
 import { afterEach, describe, it } from "node:test";
 import { erreurGenerationPourApi } from "./index";
-import { classerErreurOpenAI, generateImageOpenAI } from "./openai";
+import { classerErreurOpenAI, generateImageOpenAI, telechargementReference } from "./openai";
 import { MediaProviderError, MediaProviderNotConfiguredError } from "./types";
 
 const fetchOrigine = globalThis.fetch;
+// Photo de référence : passe par le fetch simulé de chaque test (pas de réseau ni de DNS).
+telechargementReference.fetch = (url, init) => globalThis.fetch(url, init);
 afterEach(() => {
   globalThis.fetch = fetchOrigine;
   delete process.env.OPENAI_API_KEY;

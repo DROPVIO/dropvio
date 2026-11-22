@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerUserPlanOnly } from "@/lib/supabase-server";
 import { PLAN_LIMITS, planLabel, planSuperieurProduitsBoutique, limitesDuPlan } from "@/lib/plan-limits";
-import { apiError } from "@/lib/api-errors";
+import { apiError, erreurServeur } from "@/lib/api-errors";
 import { motifRecherche } from "@/lib/recherche";
 
 const DEFAULT_LIMIT = 20;
@@ -47,7 +47,7 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
     .range(from, to);
 
   if (error) {
-    return NextResponse.json({ error: error.message, code: "server_error" }, { status: 500 });
+    return erreurServeur("api/boutiques/[id]/produits", error);
   }
 
   const total = count ?? 0;
@@ -80,7 +80,7 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
     .eq("boutique_id", params.id);
 
   if (countError) {
-    return NextResponse.json({ error: countError.message, code: "server_error" }, { status: 500 });
+    return erreurServeur("api/boutiques/[id]/produits", countError);
   }
 
   if (plan === null) {
@@ -129,7 +129,7 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
     if (error.message.startsWith("limite_produits_boutique")) {
       return apiError("boutique_product_limit_max", 403, `Tu as atteint la limite maximale de ${max} produits par boutique.`, { values: { max: max ?? 0 } });
     }
-    return NextResponse.json({ error: error.message, code: "server_error" }, { status: 500 });
+    return erreurServeur("api/boutiques/[id]/produits", error);
   }
 
   return NextResponse.json({ id: data.id }, { status: 201 });

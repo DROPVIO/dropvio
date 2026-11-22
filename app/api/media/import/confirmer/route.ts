@@ -3,7 +3,7 @@ import { getServerUserPlanOnly } from "@/lib/supabase-server";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
 import { BUCKET_MEDIATHEQUE, detecterMime, extensionDe, stockageMedia } from "@/lib/media/mediatheque";
 import { MEDIA_MAX_OCTETS } from "@/lib/media/constantes";
-import { apiError, UNIQUE_VIOLATION } from "@/lib/api-errors";
+import { apiError, UNIQUE_VIOLATION, erreurServeur } from "@/lib/api-errors";
 
 const CHEMIN = /^([0-9a-f-]{36})\/([0-9a-f-]{36})\.(jpg|png|webp)$/;
 
@@ -57,7 +57,7 @@ export async function POST(request: Request) {
     chemin,
   });
   if (error && error.code !== UNIQUE_VIOLATION) {
-    return apiError("server_error", 500, error.message);
+    return erreurServeur("api/media/import/confirmer", error);
   }
 
   return NextResponse.json({ id: correspondance[2] });

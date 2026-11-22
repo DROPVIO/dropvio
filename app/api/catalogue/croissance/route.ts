@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerUserPlanOnly } from "@/lib/supabase-server";
-import { apiError, reponseAbonnementRequis } from "@/lib/api-errors";
+import { apiError, reponseAbonnementRequis, erreurServeur } from "@/lib/api-errors";
 
 // Au plus une page de Produits gagnants à la fois.
 const IDS_MAX = 100;
@@ -30,7 +30,7 @@ export async function GET(request: NextRequest) {
     .in("product_id", ids)
     .order("date", { ascending: true });
   if (error) {
-    return apiError("server_error", 500, error.message);
+    return erreurServeur("api/catalogue/croissance", error);
   }
 
   const parProduit: Record<string, number[]> = {};

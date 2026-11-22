@@ -5,6 +5,7 @@ import { checkRateLimit } from "@/lib/rate-limit";
 import { containsExcludedBrand } from "@/lib/brand-exclusions";
 import { nicheLabel } from "@/lib/niches";
 import { BudgetIaDepasse, reponseBudgetDepasse, SuiviBudgetIa, tokensEstimes } from "@/lib/ai-budget";
+import { erreurServeur } from "@/lib/api-errors";
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
@@ -61,7 +62,7 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
     .maybeSingle();
 
   if (boutiqueError) {
-    return NextResponse.json({ error: boutiqueError.message, code: "server_error" }, { status: 500 });
+    return erreurServeur("api/boutiques/[id]/generer-contenu", boutiqueError);
   }
   if (!boutique) {
     return NextResponse.json({ error: "Boutique introuvable.", code: "boutique_not_found" }, { status: 404 });

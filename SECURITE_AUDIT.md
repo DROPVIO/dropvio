@@ -15,7 +15,7 @@ revérifie chaque point sur le code et la base actuels.
 | Critique | 0 | 1 |
 | Élevé | 0 | 5 |
 | Moyen | 0 (2 corrigés, migrations 058 et 059 à appliquer) | 6 |
-| Faible | 6 (à décider) | 3 |
+| Faible | 0 (FO5 : réglage Supabase, sans code) | 8 |
 
 Aucun constat critique ou élevé n'est ouvert. Les constats moyens et faibles restants sont
 proposés en fin de fichier : dis-moi lesquels appliquer.
@@ -149,7 +149,7 @@ proposés en fin de fichier : dis-moi lesquels appliquer.
 
 ## Constats ouverts — à décider
 
-Les constats faibles ci-dessous ne sont pas appliqués : dis-moi lesquels faire. FO3 demande une migration.
+Mis à jour le 22 novembre : tous les constats sont traités.
 
 ### Moyen — corrigés le 21/11, en attente d'application des migrations
 
@@ -175,28 +175,27 @@ Les constats faibles ci-dessous ne sont pas appliqués : dis-moi lesquels faire.
   - la migration 058 applique la même règle au RLS du catalogue : un Expert expiré retombe sur
     la sélection Free.
 
-### Faible
+### Faible — traités le 22/11
 
-- **FO1 — Messages d'erreur techniques renvoyés au navigateur.** 55 réponses d'API renvoient le
-  message brut de la base (exemples : `app/api/media/route.ts:33`,
-  `app/api/sites-generes/[id]/route.ts:201`). Proposition : message générique côté client, détail
-  dans les logs.
-- **FO2 — `/api/sites-generes/[id]` sans session répond 404 au lieu de 401**
-  (`app/api/sites-generes/[id]/route.ts:28`). Aucune fuite (le RLS bloque). Proposition : vérifier
-  la session d'abord.
-- **FO3 — `handle_new_user` exécutable par `anon`.** C'est une fonction de trigger, que l'API ne
-  peut pas appeler directement. Proposition : retirer le droit d'exécution à `anon` et
-  `authenticated` (migration).
-- **FO4 — Changement d'adresse DNS entre la vérification et l'appel.** `isUrlAllowed` résout le nom,
-  puis `fetch` le résout à nouveau. Proposition : appeler l'adresse IP vérifiée, ou passer par un
-  proxy de sortie. Risque faible sur Vercel.
-- **FO5 — Limites de l'authentification.** La connexion et l'inscription passent directement par
-  Supabase Auth. Proposition : vérifier dans le tableau de bord Supabase les limites de débit et
-  activer un CAPTCHA sur l'inscription.
-- **FO6 — Hôtes de photos trop larges.** `lib/media/images-produits.ts:12` accepte toute adresse
-  `*.supabase.co`, donc le stockage public de n'importe quel projet Supabase. Une telle photo
-  n'est affichée qu'à l'utilisateur qui l'a choisie, mais peut servir d'image de référence envoyée
-  à OpenAI. Proposition : n'accepter que l'hôte du projet (`NEXT_PUBLIC_SUPABASE_URL`).
+| # | Constat | Statut | Fichiers | Test |
+|---|---|---|---|---|
+| FO1 | 89 réponses 500 renvoyaient le message brut de la base ou du fournisseur | Corrigé | `lib/api-errors.ts` (`erreurServeur`), toutes les routes de `app/api` concernées | `lib/api-errors.test.ts` : ni message SQL, ni pile, ni chemin dans la réponse ; référence identique dans les logs |
+| FO2 | `/api/sites-generes/[id]` sans session répondait 404 | Corrigé : 401 `auth_required` | `app/api/sites-generes/[id]/route.ts` | Appel HTTP sans session : 401 (serveur local) |
+| FO3 | `handle_new_user` exécutable par `anon` et `authenticated` | Corrigé (migration 060, appliquée) | `supabase/migrations/060_handle_new_user_non_executable.sql` | Lecture des droits en base : `postgres` et `service_role` seulement |
+| FO4 | DNS rebinding entre la vérification et l'appel | Corrigé | `lib/fetch-sur.ts` ; appelants : `app/api/spy/route.ts`, `app/api/audit-site/from-url/route.ts`, `lib/media/openai.ts` (photo de référence) | `lib/fetch-sur.test.ts` : 9 tests, sans réseau (127.0.0.1, localhost, 10.x, 169.254.169.254, ::1, ::ffff:127.0.0.1, domaine résolu vers une IP privée, une IP privée parmi plusieurs, redirection vers 127.0.0.1, trop de redirections refusés ; IP publique acceptée et connexion sur l'adresse validée). Vérifié aussi sur le réseau réel : https://example.com (200), redirection http vers https (200), 127.0.0.1 refusé |
+| FO5 | Limites de connexion et d'inscription | Sans code : à régler dans le tableau de bord Supabase (voir `RAPPORT_MODIFICATIONS.md`) | — | — |
+| FO6 | Photos acceptées depuis n'importe quel projet `*.supabase.co` | Corrigé : seul l'hôte exact de `NEXT_PUBLIC_SUPABASE_URL`, plus les hôtes AliExpress | `lib/media/images-produits.ts` | `lib/media/images-produits.test.ts` : hôte du projet accepté, `autre-projet.supabase.co` et `supabase.co` refusés |
+
+Fonctionnement de `fetchSur` (FO4) :
+- n'accepte que http et https ;
+- résout le nom une seule fois (toutes les adresses) et refuse si une seule est interdite ;
+- se connecte sur l'adresse validée (Agent undici passé en `dispatcher`, avec un `lookup` qui renvoie toujours cette adresse). Le nom d'hôte reste dans l'URL, donc dans l'en-tête Host, le SNI et la vérification TLS ;
+- suit les redirections à la main en revalidant chaque saut, 5 au maximum ;
+- 10 s au total, 5 Mo au plus.
+
+Non traité : les messages d'erreur Shopify (`err.message` des erreurs Shopify dans
+`app/api/sites-generes/[id]/shopify-push/route.ts`) restent tels quels, la logique Shopify étant
+hors périmètre de cette séance.
 
 Pas de route de partage dans l'application : le point « limites de débit sur le partage » est
 sans objet.

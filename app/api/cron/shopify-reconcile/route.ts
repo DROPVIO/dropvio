@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
 import { shopifyFetch, ShopifyApiError, buildCommandeAPreparerRow, ShopifyOrderForPreparation } from "@/lib/shopify";
 import { decryptSecret } from "@/lib/crypto";
+import { erreurServeur } from "@/lib/api-errors";
 
 // Rattrapage périodique : repasse sur les commandes récentes de chaque boutique connectée
 // pour combler un webhook manqué (les upserts sont idempotents via la contrainte unique
@@ -56,7 +57,7 @@ export async function GET(request: NextRequest) {
     .not("access_token_encrypted", "is", null);
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return erreurServeur("api/cron/shopify-reconcile", error);
   }
 
   const since = new Date(Date.now() - LOOKBACK_DAYS * 24 * 3600 * 1000).toISOString();

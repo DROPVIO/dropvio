@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { getServerUserAndPlan } from "@/lib/supabase-server";
 import { checkRateLimit } from "@/lib/rate-limit";
-import { apiError } from "@/lib/api-errors";
+import { apiError, erreurServeur } from "@/lib/api-errors";
 import { BudgetIaDepasse, reponseBudgetDepasse, SuiviBudgetIa, tokensEstimes } from "@/lib/ai-budget";
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
@@ -170,7 +170,7 @@ export async function POST(_request: NextRequest, context: { params: Promise<{ i
     .eq("boutique_id", boutiqueId)
     .order("position");
   if (error) {
-    return NextResponse.json({ error: error.message, code: "server_error" }, { status: 500 });
+    return erreurServeur("api/boutiques/[id]/ajuster-prix", error);
   }
   const produits = (data ?? []) as Produit[];
   if (produits.length === 0) {
@@ -239,7 +239,7 @@ export async function POST(_request: NextRequest, context: { params: Promise<{ i
 
   const erreur = await ecrire(supabase, boutiqueId, ecritures);
   if (erreur) {
-    return NextResponse.json({ error: erreur, code: "server_error" }, { status: 500 });
+    return erreurServeur("api/boutiques/[id]/ajuster-prix", erreur);
   }
 
   return NextResponse.json({ modifies: ecritures.length, auPrixFinder, ignores, anciens });
@@ -280,7 +280,7 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
     .eq("boutique_id", boutiqueId)
     .in("id", liste.map((a) => a.id));
   if (error) {
-    return NextResponse.json({ error: error.message, code: "server_error" }, { status: 500 });
+    return erreurServeur("api/boutiques/[id]/ajuster-prix", error);
   }
   const metas = new Map((data ?? []).map((r) => [r.id as string, (r.meta ?? {}) as Record<string, unknown>]));
 
@@ -295,7 +295,7 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
 
   const erreur = await ecrire(supabase, boutiqueId, ecritures);
   if (erreur) {
-    return NextResponse.json({ error: erreur, code: "server_error" }, { status: 500 });
+    return erreurServeur("api/boutiques/[id]/ajuster-prix", erreur);
   }
   return NextResponse.json({ success: true });
 }

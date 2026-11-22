@@ -4,6 +4,7 @@ import { createServerClient } from "@supabase/ssr";
 import sharp from "sharp";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
 import { checkRateLimit } from "@/lib/rate-limit";
+import { erreurServeur } from "@/lib/api-errors";
 
 const MAX_UPLOAD_BYTES = 8 * 1024 * 1024; // 8 Mo en entrée
 
@@ -75,7 +76,7 @@ export async function POST(request: NextRequest) {
 
     if (uploadError) {
       console.error("[upload-image] Erreur storage:", uploadError.message);
-      return NextResponse.json({ error: uploadError.message, code: "server_error" }, { status: 500 });
+      return erreurServeur("api/upload-image", uploadError);
     }
 
     const { data } = admin.storage.from("site-images").getPublicUrl(path);

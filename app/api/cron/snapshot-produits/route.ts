@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
+import { erreurServeur } from "@/lib/api-errors";
 
 const PAGE_SIZE = 1000;
 
@@ -33,7 +34,7 @@ export async function GET(request: NextRequest) {
 
       if (error) {
         console.error("Erreur lecture produits:", error.message);
-        return NextResponse.json({ error: error.message }, { status: 500 });
+        return erreurServeur("api/cron/snapshot-produits", error);
       }
       if (!produits || produits.length === 0) break;
 
@@ -50,7 +51,7 @@ export async function GET(request: NextRequest) {
 
       if (upsertError) {
         console.error("Erreur upsert snapshots:", upsertError.message);
-        return NextResponse.json({ error: upsertError.message }, { status: 500 });
+        return erreurServeur("api/cron/snapshot-produits", upsertError);
       }
 
       total += produits.length;

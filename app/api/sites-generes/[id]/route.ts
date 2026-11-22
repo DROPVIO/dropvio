@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseServerClient, getServerUserPlanOnly } from "@/lib/supabase-server";
 import { estFormatExport } from "@/lib/format-export";
 import { pagesValides } from "@/lib/site-builder-pages";
+import { apiError, erreurServeur } from "@/lib/api-errors";
 
 // Le select inclut les champs de pré-remplissage (description, lien_aliexpress, image_url,
 // prix_vente, prix_original, style_id, couleur_*, voir 032_sites_generes_regeneration_fields.sql)
@@ -14,7 +15,10 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
-  const { supabase, plan } = await getServerUserPlanOnly();
+  const { supabase, user, plan } = await getServerUserPlanOnly();
+  if (!user) {
+    return apiError("auth_required", 401, "Connectez-vous pour voir ce site.");
+  }
 
   const { data, error } = await supabase
     .from("sites_generes")
@@ -92,11 +96,8 @@ export async function PATCH(
       .maybeSingle();
 
     if (lectureErr) {
-      const status = lectureErr.code === UNDEFINED_COLUMN ? 501 : 500;
-      return NextResponse.json(
-        { error: lectureErr.code === UNDEFINED_COLUMN ? MIGRATION_035_MANQUANTE : lectureErr.message, code: lectureErr.code === UNDEFINED_COLUMN ? "migration_missing" : "server_error" },
-        { status }
-      );
+      if (lectureErr.code !== UNDEFINED_COLUMN) return erreurServeur("api/sites-generes/[id]", lectureErr);
+      return NextResponse.json({ error: MIGRATION_035_MANQUANTE, code: "migration_missing" }, { status: 501 });
     }
     // maybeSingle() + RLS : null couvre aussi bien « id inexistant » que « site d'un autre
     // utilisateur », les deux devant renvoyer 404 sans révéler lequel des deux c'est.
@@ -118,7 +119,7 @@ export async function PATCH(
       .maybeSingle();
 
     if (restaureErr) {
-      return NextResponse.json({ error: restaureErr.message, code: "server_error" }, { status: 500 });
+      return erreurServeur("api/sites-generes/[id]", restaureErr);
     }
     if (!restaure) {
       return NextResponse.json({ error: "Site introuvable.", code: "site_not_found" }, { status: 404 });
@@ -163,7 +164,7 @@ export async function PATCH(
       .maybeSingle();
 
     if (lectureErr) {
-      return NextResponse.json({ error: lectureErr.message, code: "server_error" }, { status: 500 });
+      return erreurServeur("api/sites-generes/[id]", lectureErr);
     }
     if (!actuel) {
       return NextResponse.json({ error: "Site introuvable.", code: "site_not_found" }, { status: 404 });
@@ -198,7 +199,7 @@ export async function PATCH(
     if (error.code === UNDEFINED_COLUMN && "format_export" in updates) {
       return NextResponse.json({ error: MIGRATION_039_MANQUANTE, code: "migration_missing" }, { status: 501 });
     }
-    return NextResponse.json({ error: error.message, code: "server_error" }, { status: 500 });
+    return erreurServeur("api/sites-generes/[id]", error);
   }
   if (!data) {
     return NextResponse.json({ error: "Site introuvable.", code: "site_not_found" }, { status: 404 });
@@ -224,7 +225,7 @@ export async function DELETE(
   const { error } = await supabase.from("sites_generes").delete().eq("id", id);
 
   if (error) {
-    return NextResponse.json({ error: error.message, code: "server_error" }, { status: 500 });
+    return erreurServeur("api/sites-generes/[id]", error);
   }
   return NextResponse.json({ success: true });
 }

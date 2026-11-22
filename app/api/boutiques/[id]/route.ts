@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerUserAndPlan } from "@/lib/supabase-server";
-import { apiError, UNIQUE_VIOLATION } from "@/lib/api-errors";
+import { apiError, UNIQUE_VIOLATION, erreurServeur } from "@/lib/api-errors";
 import { isValidSlug } from "@/lib/slugify";
 import { RESERVED_SUBDOMAINS } from "@/lib/boutique-subdomains";
 import { avecRepliLangue, langueBoutique, UNDEFINED_COLUMN } from "@/lib/boutique-langue";
@@ -27,7 +27,7 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
   const data = ligne ? { ...(ligne as unknown as Record<string, unknown>), langue: langueBoutique(ligne as { langue?: unknown }) } : null;
 
   if (error) {
-    return NextResponse.json({ error: error.message, code: "server_error" }, { status: 500 });
+    return erreurServeur("api/boutiques/[id]", error);
   }
   if (!data) {
     return NextResponse.json({ error: "Boutique introuvable.", code: "boutique_not_found" }, { status: 404 });
@@ -92,7 +92,7 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
     .eq("user_id", user.id)
     .maybeSingle();
   if (lectureErr) {
-    return NextResponse.json({ error: lectureErr.message, code: "server_error" }, { status: 500 });
+    return erreurServeur("api/boutiques/[id]", lectureErr);
   }
   if (!actuelle) {
     return apiError("boutique_not_found", 404, "Boutique introuvable.");
@@ -110,7 +110,7 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
       .select("id", { count: "exact", head: true })
       .eq("boutique_id", params.id);
     if (countErr) {
-      return NextResponse.json({ error: countErr.message, code: "server_error" }, { status: 500 });
+      return erreurServeur("api/boutiques/[id]", countErr);
     }
     if (!count) {
       return apiError("publish_requires_product", 400, "Ajoute au moins un produit avant de rendre la boutique publique.");
@@ -133,7 +133,7 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
     if (error.code === UNDEFINED_COLUMN && "langue" in updates) {
       return apiError("langue_migration_missing", 501, "Le choix de langue n'est pas encore activé : applique la migration 042_boutiques_langue.sql.");
     }
-    return NextResponse.json({ error: error.message, code: "server_error" }, { status: 500 });
+    return erreurServeur("api/boutiques/[id]", error);
   }
 
   return NextResponse.json({ id: data.id, boutique: data });
@@ -157,7 +157,7 @@ export async function DELETE(request: NextRequest, context: { params: Promise<{ 
     .select("id");
 
   if (error) {
-    return NextResponse.json({ error: error.message, code: "server_error" }, { status: 500 });
+    return erreurServeur("api/boutiques/[id]", error);
   }
   if (!data || data.length === 0) {
     return apiError("boutique_not_found", 404, "Boutique introuvable.");

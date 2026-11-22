@@ -1455,7 +1455,7 @@
     "inspiration_fiche_invalide": "The analysis didn't return a usable result. Please try again.",
     "inspiration_erreur": "Error while analyzing the screenshots.",
     "auth_required": "Please sign in to continue.",
-    "server_error": "Server error. Please try again in a moment.",
+    "server_error": "Something went wrong. Please try again in a moment. Reference: {reference}",
     "not_found": "Item not found.",
     "migration_missing": "This feature isn't enabled on the database yet.",
     "rate_limit": "Too many requests in a short time. Please try again in a few minutes.",

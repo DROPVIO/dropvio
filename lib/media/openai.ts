@@ -1,5 +1,6 @@
 import { OPENAI_IMAGE_EDIT_URL, OPENAI_IMAGE_MODEL, OPENAI_IMAGE_URL } from "./openai-constantes";
 import { MEDIA_MAX_OCTETS } from "./constantes";
+import { fetchSur } from "../fetch-sur";
 import {
   MediaProviderError,
   MediaProviderNotConfiguredError,
@@ -49,12 +50,18 @@ export function classerErreurOpenAI(status: number, erreur: OpenAIImageResponse[
   return "parametre";
 }
 
+/** Téléchargement de la photo de référence : URL fournie par l'utilisateur (fiche produit), donc
+ *  toujours par fetchSur (protection SSRF et DNS rebinding). Remplaçable par les tests. */
+export const telechargementReference = {
+  fetch: (url: string, init: RequestInit): Promise<Response> => fetchSur(url, init),
+};
+
 /** Télécharge la photo de référence. Une photo illisible n'est pas une panne du fournisseur :
  *  l'erreur est classée « reponse ». */
 async function photoReference(url: string): Promise<Blob> {
   let reponse: Response;
   try {
-    reponse = await fetch(url, { signal: AbortSignal.timeout(30_000), redirect: "error" });
+    reponse = await telechargementReference.fetch(url, { signal: AbortSignal.timeout(30_000) });
   } catch (error) {
     throw new MediaProviderError("reponse", { fournisseur: "OpenAI", message: `photo de référence illisible (${error instanceof Error ? error.message : "réseau"})` });
   }

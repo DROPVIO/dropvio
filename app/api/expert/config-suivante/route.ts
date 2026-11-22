@@ -5,6 +5,7 @@ import { createStripeClient, isStripeConfigured } from "@/lib/stripe";
 import { programmerConfigExpert } from "@/lib/expert-billing";
 import { expertPrice, isSelectionVendable, parseExpertSelection } from "@/lib/expert-pricing";
 import { isAbonnementManuel } from "@/lib/expert-quota";
+import { erreurServeur } from "@/lib/api-errors";
 
 // Programme la configuration du prochain renouvellement. La période en cours reste figée :
 // sans appel à cette route, la configuration actuelle est simplement reconduite.
@@ -60,7 +61,7 @@ export async function POST(request: Request) {
     updated_at: new Date().toISOString(),
   });
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return erreurServeur("api/expert/config-suivante", error);
   }
 
   return NextResponse.json({ prix: expertPrice(selection) });

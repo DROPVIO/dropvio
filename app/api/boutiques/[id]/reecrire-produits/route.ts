@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { getServerUserAndPlan } from "@/lib/supabase-server";
 import { checkRateLimit } from "@/lib/rate-limit";
-import { apiError } from "@/lib/api-errors";
+import { apiError, erreurServeur } from "@/lib/api-errors";
 import { containsExcludedBrand } from "@/lib/brand-exclusions";
 import { avecRepliLangue, langueBoutique } from "@/lib/boutique-langue";
 import type { AppLocale } from "@/lib/locale";
@@ -170,7 +170,7 @@ export async function POST(_request: NextRequest, context: { params: Promise<{ i
     .eq("boutique_id", boutiqueId)
     .order("position");
   if (error) {
-    return NextResponse.json({ error: error.message, code: "server_error" }, { status: 500 });
+    return erreurServeur("api/boutiques/[id]/reecrire-produits", error);
   }
   const produits = (data ?? []) as Produit[];
   if (produits.length === 0) {
@@ -206,7 +206,7 @@ export async function POST(_request: NextRequest, context: { params: Promise<{ i
 
   const erreur = await mettreAJour(supabase, boutiqueId, modifies);
   if (erreur) {
-    return NextResponse.json({ error: erreur, code: "server_error" }, { status: 500 });
+    return erreurServeur("api/boutiques/[id]/reecrire-produits", erreur);
   }
 
   const ids = new Set(modifies.map((m) => m.id));
@@ -243,7 +243,7 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
 
   const erreur = await mettreAJour(supabase, boutiqueId, anciens as Produit[]);
   if (erreur) {
-    return NextResponse.json({ error: erreur, code: "server_error" }, { status: 500 });
+    return erreurServeur("api/boutiques/[id]/reecrire-produits", erreur);
   }
   return NextResponse.json({ success: true });
 }

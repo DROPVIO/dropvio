@@ -1455,7 +1455,7 @@
     "inspiration_fiche_invalide": "L'analisi non ha dato un risultato utilizzabile. Riprova.",
     "inspiration_erreur": "Errore durante l'analisi degli screenshot.",
     "auth_required": "Accedi per continuare.",
-    "server_error": "Errore del server. Riprova tra un attimo.",
+    "server_error": "Si è verificato un errore. Riprova tra un momento. Riferimento: {reference}",
     "not_found": "Elemento non trovato.",
     "migration_missing": "Questa funzione non è ancora attiva nel database.",
     "rate_limit": "Troppe richieste in poco tempo. Riprova tra qualche minuto.",

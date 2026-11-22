@@ -3,7 +3,7 @@ import { getServerUserPlanOnly } from "@/lib/supabase-server";
 import { PLAN_LIMITS, limitesDuPlan } from "@/lib/plan-limits";
 import { lirePhotosPrincipales } from "@/lib/catalogue-photos";
 import { COMMANDES_MIN_DEFAUT } from "@/lib/catalogue-commandes";
-import { apiError, reponseAbonnementRequis } from "@/lib/api-errors";
+import { apiError, reponseAbonnementRequis, erreurServeur } from "@/lib/api-errors";
 
 const DEFAULT_LIMIT = 30;
 const MAX_LIMIT = 100;
@@ -52,7 +52,7 @@ export async function GET(request: NextRequest) {
 
   const { data, error, count } = await query;
   if (error) {
-    return apiError("server_error", 500, error.message);
+    return erreurServeur("api/catalogue", error);
   }
 
   const rows = data ?? [];
@@ -68,7 +68,7 @@ export async function GET(request: NextRequest) {
     lirePhotosPrincipales(supabase, user.id, ids),
   ]);
   if (boutiquesError) {
-    return apiError("server_error", 500, boutiquesError.message);
+    return erreurServeur("api/catalogue", boutiquesError);
   }
   const boutiqueNom = new Map((mesBoutiques ?? []).map((b) => [b.id as string, b.nom as string]));
   if (rows.length > 0 && boutiqueNom.size > 0) {
@@ -78,7 +78,7 @@ export async function GET(request: NextRequest) {
       .in("boutique_id", [...boutiqueNom.keys()])
       .in("source_produit_id", ids);
     if (copiesError) {
-      return apiError("server_error", 500, copiesError.message);
+      return erreurServeur("api/catalogue", copiesError);
     }
     for (const c of copies ?? []) {
       if (!c.source_produit_id) continue;

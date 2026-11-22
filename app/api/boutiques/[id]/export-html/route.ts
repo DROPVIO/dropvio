@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerUserPlanOnly } from "@/lib/supabase-server";
 import { getBaseUrl } from "@/lib/get-base-url";
 import { fetchBoutiqueApi } from "@/lib/boutique-internal-fetch";
+import { erreurServeur } from "@/lib/api-errors";
 
 // Capture le vrai rendu de /boutiques/[slug] (même fetch avec transfert de cookie que
 // l'aperçu propriétaire — nécessaire puisque la boutique est presque toujours privée,
@@ -39,7 +40,7 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
     .maybeSingle();
 
   if (error) {
-    return NextResponse.json({ error: error.message, code: "server_error" }, { status: 500 });
+    return erreurServeur("api/boutiques/[id]/export-html", error);
   }
   if (!boutique) {
     return NextResponse.json({ error: "Boutique introuvable.", code: "boutique_not_found" }, { status: 404 });

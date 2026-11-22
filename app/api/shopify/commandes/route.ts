@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerUserAndPlan } from "@/lib/supabase-server";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
 import { getShopifyConnection, createShopifyFulfillment, ShopifyApiError } from "@/lib/shopify";
+import { erreurServeur } from "@/lib/api-errors";
 
 const LOOKBACK_DAYS = 30;
 
@@ -37,7 +38,7 @@ export async function GET() {
     .order("created_at", { ascending: false });
 
   if (error) {
-    return NextResponse.json({ error: error.message, code: "server_error" }, { status: 500 });
+    return erreurServeur("api/shopify/commandes", error);
   }
 
   return NextResponse.json({ commandes: data ?? [], lookbackDays: LOOKBACK_DAYS });
@@ -85,7 +86,7 @@ export async function PATCH(request: NextRequest) {
     .eq("user_id", user.id);
 
   if (error) {
-    return NextResponse.json({ error: error.message, code: "server_error" }, { status: 500 });
+    return erreurServeur("api/shopify/commandes", error);
   }
 
   return NextResponse.json({ ok: true });
@@ -119,7 +120,7 @@ async function attachLien(admin: AdminClient, userId: string, id: string, ligneI
     .eq("user_id", userId);
 
   if (updateError) {
-    return NextResponse.json({ error: updateError.message, code: "server_error" }, { status: 500 });
+    return erreurServeur("api/shopify/commandes", updateError);
   }
 
   // Best-effort : propage vers le catalogue pour ne pas retomber sur le même trou aux
@@ -140,7 +141,7 @@ async function pushSuivi(admin: AdminClient, userId: string, id: string, numeroS
     .eq("user_id", userId);
 
   if (saveError) {
-    return NextResponse.json({ error: saveError.message, code: "server_error" }, { status: 500 });
+    return erreurServeur("api/shopify/commandes", saveError);
   }
 
   const { data: commande } = await admin

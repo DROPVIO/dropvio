@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getServerUserPlanOnly } from "@/lib/supabase-server";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
-import { apiError } from "@/lib/api-errors";
+import { apiError, erreurServeur } from "@/lib/api-errors";
 import { resumeLignes } from "@/lib/ventes";
 
 const DERNIERES = 10;
@@ -30,7 +30,7 @@ export async function GET() {
   }
   if (erreur) {
     console.error("[notifications]", erreur.message);
-    return apiError("server_error", 500, "Notifications illisibles.");
+    return erreurServeur("api/notifications", "Notifications illisibles.");
   }
 
   return NextResponse.json({

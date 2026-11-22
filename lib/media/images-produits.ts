@@ -9,7 +9,17 @@ export const FORMAT_DEFAUT_IMAGES_PRODUITS: MediaFormat = "carre";
 
 // Photos de référence acceptées : seuls ces hôtes sont téléchargés par le serveur, pour qu'une
 // URL saisie dans une fiche produit ne lui fasse pas appeler n'importe quelle adresse.
-const HOTES_PHOTO = ["aliexpress-media.com", "alicdn.com", "supabase.co"];
+// AliExpress : le domaine et ses sous-domaines (CDN). Supabase : uniquement l'hôte exact de CE
+// projet (NEXT_PUBLIC_SUPABASE_URL), jamais le stockage d'un autre projet *.supabase.co.
+const HOTES_ALIEXPRESS = ["aliexpress-media.com", "alicdn.com"];
+
+function hoteSupabaseDuProjet(): string | null {
+  try {
+    return new URL(process.env.NEXT_PUBLIC_SUPABASE_URL ?? "").hostname || null;
+  } catch {
+    return null;
+  }
+}
 
 export type ProduitStudio = {
   id: string;
@@ -29,7 +39,9 @@ export function photoProduit(produit: Pick<ProduitStudio, "image_urls">): string
 export function photoAutorisee(url: string): boolean {
   try {
     const { protocol, hostname } = new URL(url);
-    return protocol === "https:" && HOTES_PHOTO.some((hote) => hostname === hote || hostname.endsWith(`.${hote}`));
+    if (protocol !== "https:") return false;
+    if (HOTES_ALIEXPRESS.some((hote) => hostname === hote || hostname.endsWith(`.${hote}`))) return true;
+    return hostname === hoteSupabaseDuProjet();
   } catch {
     return false;
   }

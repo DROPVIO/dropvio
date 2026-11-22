@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
 import { canViewBoutique } from "@/lib/boutique-access";
 import { avecRepliLangue, langueBoutique } from "@/lib/boutique-langue";
+import { erreurServeur } from "@/lib/api-errors";
 
 export async function GET(request: NextRequest, context: { params: Promise<{ slug: string }> }) {
   const { slug } = await context.params;
@@ -29,7 +30,7 @@ export async function GET(request: NextRequest, context: { params: Promise<{ slu
   } | null;
 
   if (boutiqueError) {
-    return NextResponse.json({ error: boutiqueError.message, code: "server_error" }, { status: 500 });
+    return erreurServeur("api/boutiques/slug/[slug]", boutiqueError);
   }
 
   if (!boutiqueRow || !(await canViewBoutique(boutiqueRow.est_publique, boutiqueRow.user_id))) {
@@ -56,7 +57,7 @@ export async function GET(request: NextRequest, context: { params: Promise<{ slu
     .order("position", { ascending: true });
 
   if (categoriesError) {
-    return NextResponse.json({ error: categoriesError.message, code: "server_error" }, { status: 500 });
+    return erreurServeur("api/boutiques/slug/[slug]", categoriesError);
   }
 
   return NextResponse.json({ boutique, categories: categories ?? [] });

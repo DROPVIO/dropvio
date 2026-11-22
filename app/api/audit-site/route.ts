@@ -125,7 +125,7 @@ export async function POST(request: NextRequest) {
       console.error("[audit-site] full raw response:", raw);
       return NextResponse.json(
         {
-          error: `Réponse Claude non parseable : ${(extractErr as Error).message}. Réessaie.`, code: "ai_invalid_response",
+          error: "Réponse de l'IA illisible. Réessayez.", code: "ai_invalid_response",
         },
         { status: 500 }
       );
@@ -139,7 +139,7 @@ export async function POST(request: NextRequest) {
       console.error("[audit-site] jsonStr (first 800 chars):", jsonStr.slice(0, 800));
       return NextResponse.json(
         {
-          error: `JSON invalide : ${(parseErr as SyntaxError).message}. Réessaie.`, code: "ai_invalid_response",
+          error: "Réponse de l'IA illisible. Réessayez.", code: "ai_invalid_response",
         },
         { status: 500 }
       );

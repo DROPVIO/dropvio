@@ -4,6 +4,7 @@ import { createSupabaseAdminClient } from "@/lib/supabase-admin";
 import { createStripeClient, isStripeConfigured } from "@/lib/stripe";
 import { createExpertCheckoutSession, findSubscriptionEnCours } from "@/lib/expert-billing";
 import { isSelectionVendable, parseExpertSelection } from "@/lib/expert-pricing";
+import { erreurServeur } from "@/lib/api-errors";
 
 // Crée la Checkout Session du plan Expert. Le prix vient uniquement de la sélection recalculée
 // ici : aucun montant envoyé par le client n'est lu. Le profil ne passe en "expert" qu'à la
@@ -60,7 +61,7 @@ export async function POST(request: Request) {
     const admin = createSupabaseAdminClient();
     const { error } = await admin.from("profils").upsert({ id: user.id, stripe_customer_id: customerId });
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      return erreurServeur("api/expert/checkout", error);
     }
   }
 

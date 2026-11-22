@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getServerUserAndPlan } from "@/lib/supabase-server";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
+import { erreurServeur } from "@/lib/api-errors";
 
 // Compte léger pour le badge du dashboard — évite de faire porter le fetch de la liste
 // complète (avec PII) juste pour afficher un nombre.
@@ -18,7 +19,7 @@ export async function GET() {
     .eq("statut", "a_traiter");
 
   if (error) {
-    return NextResponse.json({ error: error.message, code: "server_error" }, { status: 500 });
+    return erreurServeur("api/shopify/commandes/count", error);
   }
 
   return NextResponse.json({ count: count ?? 0 });

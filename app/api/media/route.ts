@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerUserPlanOnly } from "@/lib/supabase-server";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
 import { BUCKET_MEDIATHEQUE, stockageMedia } from "@/lib/media/mediatheque";
-import { apiError } from "@/lib/api-errors";
+import { apiError, erreurServeur } from "@/lib/api-errors";
 
 const PAR_PAGE = 60;
 const DUREE_URL_SIGNEE_S = 3600;
@@ -30,7 +30,7 @@ export async function GET(request: Request) {
   if (origine) requete = requete.eq("origine", origine);
   const { data, error } = await requete;
   if (error) {
-    return apiError("server_error", 500, error.message);
+    return erreurServeur("api/media", error);
   }
 
   const admin = createSupabaseAdminClient();

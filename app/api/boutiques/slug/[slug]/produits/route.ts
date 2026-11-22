@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
 import { canViewBoutique } from "@/lib/boutique-access";
 import { motifRecherche } from "@/lib/recherche";
+import { erreurServeur } from "@/lib/api-errors";
 
 const DEFAULT_LIMIT = 20;
 
@@ -23,7 +24,7 @@ export async function GET(request: NextRequest, context: { params: Promise<{ slu
     .maybeSingle();
 
   if (boutiqueError) {
-    return NextResponse.json({ error: boutiqueError.message, code: "server_error" }, { status: 500 });
+    return erreurServeur("api/boutiques/slug/[slug]/produits", boutiqueError);
   }
 
   if (!boutique || !(await canViewBoutique(boutique.est_publique, boutique.user_id))) {
@@ -45,7 +46,7 @@ export async function GET(request: NextRequest, context: { params: Promise<{ slu
       .eq("boutique_id", boutique.id);
 
     if (rankedError) {
-      return NextResponse.json({ error: rankedError.message, code: "server_error" }, { status: 500 });
+      return erreurServeur("api/boutiques/slug/[slug]/produits", rankedError);
     }
 
     const ranked = (withSource ?? [])
@@ -76,7 +77,7 @@ export async function GET(request: NextRequest, context: { params: Promise<{ slu
   const { data, error, count } = await query.range(from, to);
 
   if (error) {
-    return NextResponse.json({ error: error.message, code: "server_error" }, { status: 500 });
+    return erreurServeur("api/boutiques/slug/[slug]/produits", error);
   }
 
   const total = count ?? (data?.length ?? 0);

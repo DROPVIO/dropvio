@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getServerUserPlanOnly } from "@/lib/supabase-server";
 import { PLAN_LIMITS, limitesDuPlan } from "@/lib/plan-limits";
-import { apiError, reponseAbonnementRequis } from "@/lib/api-errors";
+import { apiError, reponseAbonnementRequis, erreurServeur } from "@/lib/api-errors";
 
 // Nombre de produits du catalogue accessibles au compte connecté (carte du dashboard). Lu par le
 // serveur avec la session de l'utilisateur : le RLS de produits_dedup (migration 057) limite un
@@ -15,7 +15,7 @@ export async function GET() {
 
   const { count, error } = await supabase.from("produits_dedup").select("id", { count: "exact", head: true });
   if (error) {
-    return apiError("server_error", 500, error.message);
+    return erreurServeur("api/catalogue/compte", error);
   }
 
   const max = limitesDuPlan(plan).produitsMax;

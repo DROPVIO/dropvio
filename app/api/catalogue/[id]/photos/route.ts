@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerUserPlanOnly } from "@/lib/supabase-server";
 import { lirePhotos, photosValides, remplacerPhotos } from "@/lib/catalogue-photos";
-import { apiError, reponseAbonnementRequis } from "@/lib/api-errors";
+import { apiError, reponseAbonnementRequis, erreurServeur } from "@/lib/api-errors";
 
 // Photos d'un produit du catalogue POUR L'UTILISATEUR CONNECTÉ (table catalogue_photos, migration
 // 053). Le catalogue commun n'est jamais modifié. PUT remplace la liste ordonnée (la première
@@ -29,7 +29,7 @@ export async function PUT(request: NextRequest, context: { params: Promise<{ id:
   if (!(await produitExiste(supabase, id))) return apiError("not_found", 404, "Produit introuvable.");
 
   const resultat = await remplacerPhotos(supabase, user.id, id, photos);
-  if (!resultat.ok) return resultat.tableAbsente ? reponseTableAbsente() : apiError("server_error", 500, resultat.message);
+  if (!resultat.ok) return resultat.tableAbsente ? reponseTableAbsente() : erreurServeur("api/catalogue/[id]/photos", resultat);
   return NextResponse.json({ photos });
 }
 
@@ -50,10 +50,10 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
     if (!lecture.disponible) return reponseTableAbsente();
     actuelles = lecture.photos;
   } catch (error) {
-    return apiError("server_error", 500, error instanceof Error ? error.message : "Lecture impossible.");
+    return erreurServeur("api/catalogue/[id]/photos", error);
   }
   const photos = [...new Set([...actuelles, ...ajout])];
   const resultat = await remplacerPhotos(supabase, user.id, id, photos);
-  if (!resultat.ok) return resultat.tableAbsente ? reponseTableAbsente() : apiError("server_error", 500, resultat.message);
+  if (!resultat.ok) return resultat.tableAbsente ? reponseTableAbsente() : erreurServeur("api/catalogue/[id]/photos", resultat);
   return NextResponse.json({ photos });
 }

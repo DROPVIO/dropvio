@@ -1455,7 +1455,7 @@
     "inspiration_fiche_invalide": "L'analyse n'a pas donné de résultat exploitable. Réessaie.",
     "inspiration_erreur": "Erreur lors de l'analyse des captures.",
     "auth_required": "Connecte-toi pour continuer.",
-    "server_error": "Erreur du serveur. Réessaie dans un instant.",
+    "server_error": "Une erreur est survenue. Réessayez dans un instant. Référence : {reference}",
     "not_found": "Élément introuvable.",
     "migration_missing": "Cette fonctionnalité n'est pas encore activée sur la base de données.",
     "rate_limit": "Trop de demandes en peu de temps. Réessaie dans quelques minutes.",

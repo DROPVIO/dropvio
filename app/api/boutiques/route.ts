@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerUserAndPlan } from "@/lib/supabase-server";
-import { apiError, UNIQUE_VIOLATION } from "@/lib/api-errors";
+import { apiError, UNIQUE_VIOLATION, erreurServeur } from "@/lib/api-errors";
 import { isValidSlug } from "@/lib/slugify";
 import { RESERVED_SUBDOMAINS } from "@/lib/boutique-subdomains";
 
@@ -17,7 +17,7 @@ export async function GET() {
     .order("created_at", { ascending: false });
 
   if (error) {
-    return NextResponse.json({ error: error.message, code: "server_error" }, { status: 500 });
+    return erreurServeur("api/boutiques", error);
   }
 
   return NextResponse.json({ boutiques: data ?? [] });
@@ -50,7 +50,7 @@ export async function POST(request: NextRequest) {
     if (error.code === UNIQUE_VIOLATION) {
       return apiError("slug_taken", 409, "Ce slug est déjà utilisé par une autre boutique.");
     }
-    return NextResponse.json({ error: error.message, code: "server_error" }, { status: 500 });
+    return erreurServeur("api/boutiques", error);
   }
 
   return NextResponse.json({ id: data.id }, { status: 201 });

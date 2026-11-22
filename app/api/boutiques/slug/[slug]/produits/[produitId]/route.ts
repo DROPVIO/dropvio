@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
 import { canViewBoutique } from "@/lib/boutique-access";
+import { erreurServeur } from "@/lib/api-errors";
 
 export async function GET(request: NextRequest, context: { params: Promise<{ slug: string; produitId: string }> }) {
   const { slug, produitId } = await context.params;
@@ -13,7 +14,7 @@ export async function GET(request: NextRequest, context: { params: Promise<{ slu
     .maybeSingle();
 
   if (boutiqueError) {
-    return NextResponse.json({ error: boutiqueError.message, code: "server_error" }, { status: 500 });
+    return erreurServeur("api/boutiques/slug/[slug]/produits/[produitId]", boutiqueError);
   }
 
   if (!boutique || !(await canViewBoutique(boutique.est_publique, boutique.user_id))) {
@@ -28,7 +29,7 @@ export async function GET(request: NextRequest, context: { params: Promise<{ slu
     .maybeSingle();
 
   if (error) {
-    return NextResponse.json({ error: error.message, code: "server_error" }, { status: 500 });
+    return erreurServeur("api/boutiques/slug/[slug]/produits/[produitId]", error);
   }
 
   if (!produit) {

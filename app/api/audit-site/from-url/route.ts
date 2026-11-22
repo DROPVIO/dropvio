@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerUserAndPlan } from "@/lib/supabase-server";
 import { checkRateLimit } from "@/lib/rate-limit";
-import { isUrlAllowed, normalizeUrl, fetchUrlExterne } from "@/lib/ssrf-guard";
+import { isUrlAllowed, normalizeUrl } from "@/lib/ssrf-guard";
+import { fetchSur } from "@/lib/fetch-sur";
 
 // L'audit lit la page entière (plus de troncature, voir lib/audit-config.ts) : le plafond laisse
 // passer les pages autour de 2 000 000 de caractères avec de la marge, et n'existe que pour
@@ -41,7 +42,7 @@ export async function POST(request: NextRequest) {
 
   let res: Response;
   try {
-    res = await fetchUrlExterne(url, {
+    res = await fetchSur(url, {
       headers: { "User-Agent": "Mozilla/5.0" },
       signal: controller.signal,
     });

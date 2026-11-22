@@ -1455,7 +1455,7 @@
     "inspiration_fiche_invalide": "El análisis no ha dado un resultado utilizable. Inténtalo de nuevo.",
     "inspiration_erreur": "Error al analizar las capturas.",
     "auth_required": "Inicia sesión para continuar.",
-    "server_error": "Error del servidor. Inténtalo de nuevo en un momento.",
+    "server_error": "Se ha producido un error. Vuelve a intentarlo en un momento. Referencia: {reference}",
     "not_found": "Elemento no encontrado.",
     "migration_missing": "Esta función aún no está activada en la base de datos.",
     "rate_limit": "Demasiadas solicitudes en poco tiempo. Inténtalo de nuevo en unos minutos.",

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerUserPlanOnly } from "@/lib/supabase-server";
 import { lirePhotos } from "@/lib/catalogue-photos";
-import { apiError, reponseAbonnementRequis } from "@/lib/api-errors";
+import { apiError, reponseAbonnementRequis, erreurServeur } from "@/lib/api-errors";
 
 // Fiche d'un produit du catalogue (/produits-gagnants/catalogue/[id]) : le produit (seul endroit
 // du Catalogue où lienAliExpress est renvoyé), les photos choisies par l'utilisateur et ses
@@ -20,15 +20,15 @@ export async function GET(_request: NextRequest, context: { params: Promise<{ id
     .select("id, nom, image, prixVente, niche, lienAliExpress")
     .eq("id", id)
     .maybeSingle();
-  if (error) return apiError("server_error", 500, error.message);
+  if (error) return erreurServeur("api/catalogue/[id]", error);
   if (!produit) return apiError("not_found", 404, "Produit introuvable.");
 
   const [{ data: boutiques, error: boutiquesError }, photos] = await Promise.all([
     supabase.from("boutiques").select("id, nom").eq("user_id", user.id).order("created_at", { ascending: false }),
     lirePhotos(supabase, user.id, id).catch((e: Error) => e),
   ]);
-  if (boutiquesError) return apiError("server_error", 500, boutiquesError.message);
-  if (photos instanceof Error) return apiError("server_error", 500, photos.message);
+  if (boutiquesError) return erreurServeur("api/catalogue/[id]", boutiquesError);
+  if (photos instanceof Error) return erreurServeur("api/catalogue/[id]", photos);
 
   const boutiqueIds = (boutiques ?? []).map((b) => b.id);
   let copies: {
@@ -49,7 +49,7 @@ export async function GET(_request: NextRequest, context: { params: Promise<{ id
       .eq("source_produit_id", id)
       .in("boutique_id", boutiqueIds)
       .order("created_at", { ascending: true });
-    if (copiesError) return apiError("server_error", 500, copiesError.message);
+    if (copiesError) return erreurServeur("api/catalogue/[id]", copiesError);
     copies = (data ?? []) as unknown as typeof copies;
   }
 

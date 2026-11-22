@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerUserAndPlan } from "@/lib/supabase-server";
-import { apiError, UNIQUE_VIOLATION } from "@/lib/api-errors";
+import { apiError, UNIQUE_VIOLATION, erreurServeur } from "@/lib/api-errors";
 
 export async function PATCH(request: NextRequest, context: { params: Promise<{ id: string; categoryId: string }> }) {
   const params = await context.params;
@@ -28,7 +28,7 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
     if (error.code === UNIQUE_VIOLATION) {
       return apiError("category_slug_taken", 409, "Une autre catégorie de cette boutique utilise déjà ce slug.");
     }
-    return NextResponse.json({ error: error.message, code: "server_error" }, { status: 500 });
+    return erreurServeur("api/boutiques/[id]/categories/[categoryId]", error);
   }
   if (!data) {
     return apiError("category_not_found", 404, "Catégorie introuvable.");
@@ -52,7 +52,7 @@ export async function DELETE(request: NextRequest, context: { params: Promise<{ 
     .eq("boutique_id", params.id)
     .eq("category_id", params.categoryId);
   if (detachErr) {
-    return NextResponse.json({ error: detachErr.message, code: "server_error" }, { status: 500 });
+    return erreurServeur("api/boutiques/[id]/categories/[categoryId]", detachErr);
   }
 
   const { data, error } = await supabase
@@ -63,7 +63,7 @@ export async function DELETE(request: NextRequest, context: { params: Promise<{ 
     .select("id");
 
   if (error) {
-    return NextResponse.json({ error: error.message, code: "server_error" }, { status: 500 });
+    return erreurServeur("api/boutiques/[id]/categories/[categoryId]", error);
   }
   if (!data || data.length === 0) {
     return apiError("category_not_found", 404, "Catégorie introuvable.");

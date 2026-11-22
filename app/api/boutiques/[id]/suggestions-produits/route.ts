@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerUserAndPlan } from "@/lib/supabase-server";
 import { calculerCroissance } from "@/lib/croissance-produit";
+import { erreurServeur } from "@/lib/api-errors";
 
 const SUGGESTIONS_LIMIT = 6;
 const CANDIDATE_POOL = 40; // sur-fetch avant exclusion des produits déjà en boutique
@@ -22,14 +23,14 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
     .eq("id", id)
     .eq("user_id", user.id)
     .maybeSingle();
-  if (boutiqueError) return NextResponse.json({ error: boutiqueError.message, code: "server_error" }, { status: 500 });
+  if (boutiqueError) return erreurServeur("api/boutiques/[id]/suggestions-produits", boutiqueError);
   if (!boutique) return NextResponse.json({ error: "Boutique introuvable.", code: "boutique_not_found" }, { status: 404 });
 
   const { data: existants, error: existantsError } = await supabase
     .from("boutique_produits")
     .select("source_produit_id")
     .eq("boutique_id", id);
-  if (existantsError) return NextResponse.json({ error: existantsError.message, code: "server_error" }, { status: 500 });
+  if (existantsError) return erreurServeur("api/boutiques/[id]/suggestions-produits", existantsError);
 
   const sourceIds = Array.from(
     new Set((existants ?? []).map((p) => p.source_produit_id).filter((v): v is string => Boolean(v)))
@@ -58,7 +59,7 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
       .from("produits")
       .select("niche, prixVente")
       .in("id", sourceIds);
-    if (sourceError) return NextResponse.json({ error: sourceError.message, code: "server_error" }, { status: 500 });
+    if (sourceError) return erreurServeur("api/boutiques/[id]/suggestions-produits", sourceError);
 
     niches = Array.from(new Set((sourceProduits ?? []).map((p) => p.niche).filter(Boolean) as string[]));
     if (niches.length === 0) {
@@ -88,7 +89,7 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
   if (prixMax !== undefined) candidatsQuery = candidatsQuery.lte("prixVente", prixMax);
 
   const { data: candidatsRaw, error: candidatsError } = await candidatsQuery;
-  if (candidatsError) return NextResponse.json({ error: candidatsError.message, code: "server_error" }, { status: 500 });
+  if (candidatsError) return erreurServeur("api/boutiques/[id]/suggestions-produits", candidatsError);
 
   const sourceIdSet = new Set(sourceIds);
   const candidats = (candidatsRaw ?? []).filter((c) => !sourceIdSet.has(c.id));

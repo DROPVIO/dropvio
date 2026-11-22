@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerUserAndPlan } from "@/lib/supabase-server";
 import { getShopifyConnection, isShopifyConfigured, lireMetaShopify, retirerDeCollection } from "@/lib/shopify";
+import { erreurServeur } from "@/lib/api-errors";
 
 // Seuls les champs envoyés sont modifiés : meta porte aussi l'état de synchronisation Shopify
 // (voir lib/shopify.ts, pousserProduitBoutique) et ne doit pas être écrasé par une édition.
@@ -39,7 +40,7 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
     .maybeSingle();
 
   if (error) {
-    return NextResponse.json({ error: error.message, code: "server_error" }, { status: 500 });
+    return erreurServeur("api/boutiques/[id]/produits/[produitId]", error);
   }
   if (!data) {
     return NextResponse.json({ error: "Produit introuvable.", code: "product_not_found" }, { status: 404 });
@@ -66,7 +67,7 @@ export async function DELETE(request: NextRequest, context: { params: Promise<{ 
     .select("shopify_product_id, meta");
 
   if (error) {
-    return NextResponse.json({ error: error.message, code: "server_error" }, { status: 500 });
+    return erreurServeur("api/boutiques/[id]/produits/[produitId]", error);
   }
   if (!data || data.length === 0) {
     return NextResponse.json({ error: "Produit introuvable.", code: "product_not_found" }, { status: 404 });

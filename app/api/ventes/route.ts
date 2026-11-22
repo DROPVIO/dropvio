@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerUserPlanOnly } from "@/lib/supabase-server";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
-import { apiError } from "@/lib/api-errors";
+import { apiError, erreurServeur } from "@/lib/api-errors";
 import { STATUTS_VENTE, changementAutorise, lireFiltreStatut, nombrePages, plagePage, venteAffichee, type StatutVente } from "@/lib/ventes";
 
 // Page « Mes ventes » : 50 ventes par page, la plus récente d'abord. commandes_a_preparer porte
@@ -29,8 +29,7 @@ export async function GET(request: NextRequest) {
   let reponse = await requete(`${COLONNES}, ${COLONNE_CHANGEMENT}`);
   if (reponse.error?.code === COLONNE_ABSENTE) reponse = await requete(COLONNES);
   if (reponse.error) {
-    console.error("[ventes]", reponse.error.message);
-    return apiError("server_error", 500, "Ventes illisibles.");
+    return erreurServeur("api/ventes", reponse.error);
   }
 
   const total = reponse.count ?? 0;
@@ -69,7 +68,7 @@ export async function PATCH(request: NextRequest) {
   if (error?.code === COLONNE_ABSENTE) ({ error } = await maj(false));
   if (error) {
     console.error("[ventes] Changement de statut :", error.message);
-    return apiError("server_error", 500, "Changement de statut impossible.");
+    return erreurServeur("api/ventes", "Changement de statut impossible.");
   }
   return NextResponse.json({ ok: true, statut: body.statut, statutChangeLe: maintenant });
 }

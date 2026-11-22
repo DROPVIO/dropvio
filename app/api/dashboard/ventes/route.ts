@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getServerUserAndPlan } from "@/lib/supabase-server";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
+import { erreurServeur } from "@/lib/api-errors";
 
 // Ventes Shopify de l'utilisateur pour le tableau des ventes du dashboard
 // (components/dashboard/VentesDashboard.tsx). Source : commandes_a_preparer.raw_payload, la
@@ -47,7 +48,7 @@ export async function GET() {
     .limit(COMMANDES_MAX);
 
   if (error) {
-    return NextResponse.json({ error: error.message, code: "server_error" }, { status: 500 });
+    return erreurServeur("api/dashboard/ventes", error);
   }
 
   const devises = new Map<string, number>();

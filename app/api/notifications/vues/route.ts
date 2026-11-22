@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getServerUserPlanOnly } from "@/lib/supabase-server";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
-import { apiError } from "@/lib/api-errors";
+import { apiError, erreurServeur } from "@/lib/api-errors";
 
 // Ouverture de la cloche : toutes les notifications de l'utilisateur sont marquées vues.
 export async function POST() {
@@ -15,7 +15,7 @@ export async function POST() {
     .is("vue_le", null);
   if (error) {
     console.error("[notifications/vues]", error.message);
-    return apiError("server_error", 500, "Impossible de marquer les notifications.");
+    return erreurServeur("api/notifications/vues", "Impossible de marquer les notifications.");
   }
   return NextResponse.json({ ok: true });
 }

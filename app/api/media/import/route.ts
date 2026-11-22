@@ -4,7 +4,7 @@ import { getServerUserPlanOnly } from "@/lib/supabase-server";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
 import { BUCKET_MEDIATHEQUE, extensionDe, stockageMedia } from "@/lib/media/mediatheque";
 import { MEDIA_MAX_OCTETS, MEDIA_MIMES, type MediaMime } from "@/lib/media/constantes";
-import { apiError } from "@/lib/api-errors";
+import { apiError, erreurServeur } from "@/lib/api-errors";
 
 // Prépare un envoi direct du navigateur vers Supabase Storage : une route Vercel refuserait les
 // fichiers au-delà de 4,5 Mo environ. Le fichier réel est contrôlé par import/confirmer.
@@ -33,7 +33,7 @@ export async function POST(request: Request) {
   const chemin = `${user.id}/${randomUUID()}.${extensionDe(mime)}`;
   const { data, error } = await admin.storage.from(BUCKET_MEDIATHEQUE).createSignedUploadUrl(chemin);
   if (error || !data) {
-    return apiError("server_error", 500, error?.message ?? "Envoi impossible.");
+    return erreurServeur("api/media/import", error);
   }
 
   return NextResponse.json({ chemin, token: data.token });

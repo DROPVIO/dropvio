@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerUserAndPlan } from "@/lib/supabase-server";
-import { apiError } from "@/lib/api-errors";
+import { apiError, erreurServeur } from "@/lib/api-errors";
 import { PLAN_LIMITS, planLabel, limitesDuPlan } from "@/lib/plan-limits";
 
 // La sauvegarde passe par cette route (plutôt qu'un insert direct depuis le navigateur)
@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
       .eq("user_id", user.id);
 
     if (countError) {
-      return NextResponse.json({ error: countError.message, code: "server_error" }, { status: 500 });
+      return erreurServeur("api/simulations-marge", countError);
     }
     if ((count ?? 0) >= max) {
       return NextResponse.json(
@@ -47,7 +47,7 @@ export async function POST(request: NextRequest) {
     .single();
 
   if (error) {
-    return NextResponse.json({ error: error.message, code: "server_error" }, { status: 500 });
+    return erreurServeur("api/simulations-marge", error);
   }
   return NextResponse.json(data, { status: 201 });
 }

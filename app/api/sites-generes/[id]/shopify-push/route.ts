@@ -12,6 +12,7 @@ import {
 import { htmlToLiquidSection, slugifyForShopify } from "@/lib/html-to-liquid";
 import { CLE_ACCUEIL, fichierPage, pagesSiMultiples, titrePageConnue } from "@/lib/site-builder-pages";
 import { chargerTextesSite, langueDuHtml, type TextesSite } from "@/lib/site-textes";
+import { erreurServeur } from "@/lib/api-errors";
 
 type ShopifyPage = { id: number; handle: string };
 type ShopifyTheme = { id: number; role: string };
@@ -224,7 +225,7 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
   if (siteError?.code === UNDEFINED_COLUMN) {
     ({ data: siteBrut, error: siteError } = await lireSite(colonnes));
   }
-  if (siteError) return NextResponse.json({ error: siteError.message, code: "server_error" }, { status: 500 });
+  if (siteError) return erreurServeur("api/sites-generes/[id]/shopify-push", siteError);
   if (!siteBrut) return NextResponse.json({ error: "Site introuvable.", code: "site_not_found" }, { status: 404 });
   const site = siteBrut as unknown as {
     id: string;

@@ -18,6 +18,17 @@ describe("produit sans photo ou sans nom", () => {
     assert.equal(eligibiliteProduit(produit("Mug", ["http://ae-pic-a1.aliexpress-media.com/a.jpg"])).ok, false);
     assert.equal(photoAutorisee("https://aliexpress-media.com.attaquant.test/a.jpg"), false);
   });
+  it("Supabase : seul l'hôte exact du projet est accepté", () => {
+    const avant = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    process.env.NEXT_PUBLIC_SUPABASE_URL = "https://monprojet.supabase.co";
+    try {
+      assert.equal(photoAutorisee("https://monprojet.supabase.co/storage/v1/object/public/site-images/a.webp"), true);
+      assert.equal(photoAutorisee("https://autre-projet.supabase.co/storage/v1/object/public/x/a.webp"), false);
+      assert.equal(photoAutorisee("https://supabase.co/a.webp"), false);
+    } finally {
+      process.env.NEXT_PUBLIC_SUPABASE_URL = avant;
+    }
+  });
   it("nom et photo : accepté, première photo autorisée retenue", () => {
     assert.deepEqual(eligibiliteProduit(produit("Mug", ["https://exemple.test/a.jpg", PHOTO])), { ok: true, photo: PHOTO });
   });

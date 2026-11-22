@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerUserAndPlan } from "@/lib/supabase-server";
-import { apiError } from "@/lib/api-errors";
+import { apiError, erreurServeur } from "@/lib/api-errors";
 import {
   isShopifyConfigured,
   getShopifyConnection,
@@ -95,7 +95,7 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
     .eq("user_id", user.id)
     .maybeSingle();
   if (boutiqueError) {
-    return NextResponse.json({ error: boutiqueError.message, code: "server_error" }, { status: 500 });
+    return erreurServeur("api/boutiques/[id]/shopify-push", boutiqueError);
   }
   if (!boutique) {
     return apiError("boutique_not_found", 404, "Boutique introuvable.");
@@ -146,7 +146,7 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
       .limit(MAX_PAR_LOT);
     if (suivant.apres) query = query.gt("id", suivant.apres);
     const { data: categories, error } = await query;
-    if (error) return NextResponse.json({ error: error.message, code: "server_error" }, { status: 500 });
+    if (error) return erreurServeur("api/boutiques/[id]/shopify-push", error);
 
     let dernier = suivant.apres;
     let interrompu = false;
@@ -197,7 +197,7 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
       .from("boutique_categories")
       .select("id, shopify_collection_id")
       .eq("boutique_id", id);
-    if (catErr) return NextResponse.json({ error: catErr.message, code: "server_error" }, { status: 500 });
+    if (catErr) return erreurServeur("api/boutiques/[id]/shopify-push", catErr);
     const collectionParCategorie = new Map<string, number>();
     for (const c of categories ?? []) {
       if (c.shopify_collection_id) collectionParCategorie.set(c.id, c.shopify_collection_id);
@@ -211,7 +211,7 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
       .limit(MAX_PAR_LOT);
     if (suivant.apres) query = query.gt("id", suivant.apres);
     const { data: produits, error } = await query;
-    if (error) return NextResponse.json({ error: error.message, code: "server_error" }, { status: 500 });
+    if (error) return erreurServeur("api/boutiques/[id]/shopify-push", error);
 
     let dernier = suivant.apres;
     let interrompu = false;
