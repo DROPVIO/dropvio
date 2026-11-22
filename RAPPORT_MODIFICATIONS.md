@@ -1,4 +1,276 @@
-# Rapport de modifications — 21 novembre 2026
+# Rapport de modifications
+
+## Séance du 21 nov. au soir
+
+Branche : `fix/sans-plan-free-et-corrections` (créée depuis `fix/textes-securite-landing`). Aucun
+push. Un commit par étape, en français.
+
+### Étapes
+
+| Étape | Statut | Fichiers principaux | Commit |
+|---|---|---|---|
+| 0. Travail en cours antérieur isolé | Fait | 232 fichiers des sessions du 20-21 nov., aucun secret | `21b3f06` |
+| 1. Migrations alignées sur la base | Fait (rien exécuté) | `supabase/migrations/059` (rôle effectif), `060` à `063` | `d5955c2` |
+| 2. Suppression du plan Free | Fait | `lib/plan-limits.ts`, `lib/plan-effectif.ts`, `lib/supabase-server.ts`, routes `app/api/*`, `components/Sidebar.tsx`, `components/ParametresModal.tsx`, `app/dashboard/page.tsx`, `app/abonnement/page.tsx`, `lib/abonnement.ts`, `lib/expert-billing.ts`, `proxy.ts`, `messages/*.json` | `29ac3ff` |
+| 3. `middleware.ts` → `proxy.ts` | Fait | `proxy.ts`, références dans `next.config.ts`, `lib/locale.ts`, `i18n/request.ts`, `app/layout.tsx`, `docs/formation-export.md` | `80c617b` |
+| 4. Sécurité FO1 à FO6 | Fait (FO5 : réglage Supabase) | `lib/api-errors.ts`, `lib/fetch-sur.ts`, `lib/media/images-produits.ts`, `app/api/sites-generes/[id]/route.ts`, `SECURITE_AUDIT.md` | `adfe9ae` |
+| 5. Mise en page | Fait (pages publiques seulement capturées) | `components/AppShell.tsx`, `components/Sidebar.tsx`, `scripts/captures-mise-en-page.mjs`, `docs/captures/avant`, `docs/captures/apres` | `54aedaf` |
+| 6. Oublis | Fait | `app/abonnement/page.tsx`, `app/api/abonnement/route.ts`, `app/formation/page.tsx`, `components/formation/FormationContenu.tsx`, `components/studio/GenerateurMedia.tsx`, métadonnées des pages publiques | `2abe5da` |
+| 7. Vouvoiement | Fait | `messages/fr.json` (317 messages), `content/formation/courte` et `longue` (37 fichiers), 146 messages d'API | `f4a666b`, `d8bea67` |
+| 8. Landing | Vérifiée | `scripts/verifier-landing.mjs` | `af2936e` |
+| 9. Vérifications finales | Faites | — | — |
+| 10. Rapport | Fait | ce fichier | dernier commit |
+
+### Détail par étape
+
+**Étape 1.** Les fichiers 059 à 063 reproduisent exactement l'état de la base, vérifié en lecture
+seule avant écriture : contrainte de plan, colonne `plan` sans défaut, fonctions et policies.
+
+**Étape 2 — plus de plan Free.**
+- **Types et limites :** `type Plan = "pro" | "agency" | "expert"` et `PlanOuAucun = Plan | null`.
+  `limitesDuPlan`, `budgetIaEur`, `budgetImagesEur` et `stockageMaxOctets` renvoient 0 sans plan.
+- **Règle commune :** `planEffectif` (Expert sans période en cours → null, valeur inconnue →
+  null) sert au proxy, à `resolvePlan` et aux tests (5 cas).
+- **Routes :** sans plan, le catalogue répond 403 `abonnement_requis`, l'ajout de produits
+  `abonnement_requis_produits` et les autres outils `abonnement_requis_outil`. Messages traduits
+  dans les 4 langues.
+- **Interface :** la barre latérale et la carte « Plan actuel » du dashboard lisent le plan
+  réellement en vigueur (`/api/plan`). Sans plan, elles affichent « Aucun abonnement » et un lien
+  « Choisir un abonnement ».
+- **Stripe** (seules les lignes qui écrivaient `free`) : `lib/abonnement.ts` et
+  `lib/expert-billing.ts` écrivent maintenant `plan = null`.
+- **Essai gratuit :** il est géré par Stripe (statut `trialing`). Aucun libellé « Free » de
+  l'interface ne s'y rapportait : il n'y avait rien à renommer en « Essai ».
+- **Tarifs :** il n'y avait aucune carte Free sur la landing, `/abonnement` ou `/expert`, ni de
+  question sur un plan gratuit dans la FAQ.
+- **Résultat de la recherche demandée** (`grep -rniE "['\"]free['\"]|plan.?free|catalogue_free|PlanFree|planFree" app components lib proxy.ts messages`) :
+  aucune ligne. Les anciennes migrations gardent le mot, elles n'ont pas été modifiées.
+
+**Étape 3.** Le codemod a créé `proxy.ts` avec la fonction `proxy` et le même `matcher`, et il
+n'existe plus de `middleware.ts`. L'avertissement « The "middleware" file convention is
+deprecated » n'apparaît plus. Test de fumée : `/` → 200 ; `/dashboard`, `/produits-gagnants`,
+`/quota` et `/abonnement` sans session → 307 vers `/login`.
+
+**Étape 4.** Détail dans `SECURITE_AUDIT.md` (tableau FO1 à FO6). En bref :
+- **FO1 :** 89 réponses 500 passent par `erreurServeur`, qui renvoie un message générique avec une
+  référence, et écrit le détail dans les logs ;
+- **FO2 :** 401 sans session ;
+- **FO3 :** migration 060 ;
+- **FO4 :** `fetchSur` (undici 8.7.0, la même version que le `fetch` de Node, `dispatcher` +
+  `lookup` fixé), utilisé par Spy, l'audit depuis une URL et la photo de référence envoyée à
+  OpenAI ;
+- **FO6 :** seul l'hôte exact du projet Supabase est accepté.
+
+**Étape 5 — mise en page.**
+- **Desktop (≥ 1024 px) :** la barre latérale est une colonne fixe. Le contenu est décalé de
+  `var(--largeur-barre)`, soit 260 px étendue ou 64 px repliée ; il n'y a plus de 260 px en dur.
+  L'état replié est mémorisé (localStorage dans un try/catch).
+- **Mobile (< 1024 px) :** le tiroir est un `<dialog>` ouvert par `showModal()`, avec le libellé
+  « Navigation ». Échap, un clic sur le fond ou sur un lien le ferment. Le focus revient au bouton
+  et la page derrière ne défile pas. Le bouton est en haut à gauche sur toutes les pages de
+  l'outil, `/formation` comprise pour un compte connecté.
+- **Référence 5dc350d :** mêmes largeurs (260 et 64 px) et même hauteur d'en-tête (57 px) que la
+  version actuelle. Rien à reprendre côté alignement. Les seules différences depuis sont les
+  couleurs du thème sombre, conservées.
+- **Captures :** 10 pages × 4 largeurs (375, 768, 1280, 1440), dans `docs/captures/avant` et
+  `docs/captures/apres`, avec un fichier `mesures.json` par dossier. Aucun défilement horizontal
+  dans les 40 cas.
+  - Il n'y a pas de compte de test local : les pages de l'outil redirigent vers `/login`, et la
+    barre latérale n'a donc pas pu être capturée.
+  - Les captures « après » sont prises en mode « mouvement réduit », sinon les sections animées de
+    la landing apparaissent vides.
+
+**Étape 6.**
+- **Carte « Reprendre Expert » sur `/abonnement` :** affichée quand `plan = expert` en base sans
+  période en cours. Elle mène à `/expert` ; aucun nouvel endpoint de paiement.
+- **`/formation` :** a maintenant son titre et sa description (page serveur autour du contenu
+  client).
+- **Pages publiques :** titres et descriptions dans les bornes demandées, sauf le titre français
+  de la formation (voir les décisions).
+- **Lien « Quota » du Studio :** traduit.
+- **Lint :** 0 avertissement. Les 3 avertissements d'origine sont corrigés :
+  - `orders` inutilisé : retiré ;
+  - `handleConfirmerContenu` : code mort, supprimé ;
+  - `fetchBoutiques` : passé en `useCallback`.
+
+**Étape 7 — vouvoiement.**
+- **`messages/fr.json` :** 317 messages réécrits. Mêmes variables et balises vérifiées
+  automatiquement pour chacun.
+- **Formation française :** 37 fichiers, avec une conjugaison explicite de chaque verbe.
+- **Code :** 146 messages d'API passés au vouvoiement.
+- **Titre de la landing :** conservé tel quel.
+- **Espagnol et italien :** déjà cohérents au tutoiement (aucun « usted » ni « Lei »).
+- **Comparaison des clés :** 2 397 clés dans chacune des 4 langues, aucune manquante. La seule
+  différence de variables (`studio.produits.lancer`) est un faux positif : une forme de pluriel
+  `=0`.
+- **Cas de tutoiement conservés volontairement :**
+  - `messages/fr.json`, section `legal.confidentialite` : page confidentialité, hors périmètre ;
+  - « ton » au sens du ton d'une marque : `siteBuilder.builder.composer.placeholder`
+    (« textes, ton, ambiance »), `content/formation/longue/07b`, `10-scaler`, `12-glossaire`, et
+    « Ton et vocabulaire… » dans `app/api/generate-site/route.ts` ;
+  - consignes envoyées à l'IA (« Tu es un développeur… », « Base-toi… »), jamais affichées :
+    `app/api/generate-site`, `generer-contenu`, `reecrire-produits`, `ajuster-prix`,
+    `trier-produits`, `audit-site/html`, `generer-texte-produit`, `inspiration`, `modifier-site`,
+    `avis-capture`, `lib/cadre-createur-site.ts`, `lib/pages-produit.ts`, `lib/avis-produit.ts`,
+    `lib/audit-site-prompt.ts` ;
+  - citation d'un slogan publicitaire « deviens riche en dropshipping » dans
+    `content/formation/longue/01-fondations-realite-du-marche.md` ;
+  - « Supprime définitivement la boutique… » : description à la 3e personne de ce que fait
+    l'action, pas une adresse à l'utilisateur.
+- **Longueur des textes :** pas de débordement visible sur les captures des pages publiques. Les
+  pages de l'outil n'ont pas pu être capturées (pas de compte de test) : à vérifier lors de tes
+  tests.
+
+**Étape 8.**
+- Aucune carte Free à retirer ; landing au vouvoiement.
+- 10 liens internes testés, aucun mort ; un seul h1 ; aucune image sans `alt`.
+- Prix de la section tarifs : 29 € (Pro), 59 € (Agency), « à partir de 59 € » (Expert). Ce sont
+  deux offres différentes, pas un prix affiché deux fois. Aucun prix modifié.
+
+### Vérifications finales (étape 9)
+
+- `npx tsc --noEmit` : 0 erreur.
+- `npm run lint` : 0 erreur, 0 avertissement.
+- `npm test` : 190 tests, 189 réussis, 0 échec, 1 ignoré (test déjà marqué « à confirmer » sur
+  `TOKENS_PAR_SITE_FABLE`).
+- `npm run build` : réussi (97 pages générées). Un seul avertissement, qui existait déjà : Next
+  déduit la racine du projet car il trouve un `package-lock.json` vide (84 octets) dans
+  `/Users/lenny`, hors du projet. Il ne casse rien. Pour le faire disparaître, supprimez ce
+  fichier : je n'y ai pas touché, c'est un fichier hors du projet.
+- Test de fumée (serveur de dev) :
+
+| Chemin | Statut |
+|---|---|
+| `/`, `/formation`, `/faq`, `/expert`, `/boutiques`, `/login` | 200 |
+| `/abonnement`, `/dashboard`, `/produits-gagnants`, `/site-builder`, `/quota`, `/studio`, `/mes-sites` sans session | 307 → `/login` |
+| `/api/sites-generes/[id]` sans session | 401 |
+| `/api/catalogue` sans session | 401 |
+| `/api/webhooks/stripe` sans signature | 400 |
+
+| Page | Titre (caractères) | Description (caractères) |
+|---|---|---|
+| `/` | 60 | 155 |
+| `/formation` | 62 | 154 |
+| `/faq` | 54 | 160 |
+| `/expert` | 54 | 158 |
+| `/boutiques` | 57 | 157 |
+
+### Décisions prises seul
+
+1. **Branche :** créée depuis `fix/textes-securite-landing`, la branche de travail en cours, plutôt
+   que depuis `main`.
+2. **Plan pas encore chargé et absence de plan :** dans le Studio et la page boutique du Site
+   Builder, `null` voulait dire « plan pas encore chargé ». J'ai ajouté un indicateur « plan
+   chargé » séparé, pour qu'un compte sans plan ne reste pas bloqué sur « Chargement ».
+3. **Plan affiché :** la barre latérale et le dashboard lisent le plan en vigueur via `/api/plan`
+   (une requête de plus), pour qu'un Expert expiré n'apparaisse plus comme « Expert ».
+4. **Le titre français de la formation fait 62 caractères :** tu l'as imposé mot pour mot, donc je
+   l'ai gardé malgré la limite de 60. Les titres des autres langues respectent la limite.
+5. **undici :** ajouté en version 8.7.0, la même que celle embarquée par Node, et utilisé avec son
+   propre `fetch`, pour éviter une incompatibilité entre `dispatcher` et `fetch`.
+6. **Photo de référence OpenAI :** elle suit maintenant les redirections, chacune revalidée par
+   `fetchSur`, au lieu de les refuser ; la liste d'hôtes autorisés reste appliquée avant. Le
+   téléchargement passe par un point d'injection, ce qui garde les tests hors réseau.
+7. **Playwright :** ajouté en devDependency (1.62.1), la version du navigateur déjà en cache.
+8. **FO2 :** testé par un appel HTTP sur le serveur, et non par un test unitaire. La route dépend
+   des cookies de Next, difficiles à simuler hors requête.
+9. **Erreurs Shopify** (`err.message` dans `shopify-push`) : laissées telles quelles, la logique
+   Shopify étant hors périmètre.
+10. **Code mort supprimé :** `handleConfirmerContenu` (page boutique), qui n'était appelé nulle
+    part, pour supprimer l'avertissement de lint.
+11. **Captures :** prises en mode « mouvement réduit », pour que les sections animées soient
+    visibles.
+12. **E-mails :** l'application n'envoie elle-même aucun e-mail. Ceux d'authentification sont
+    configurés dans Supabase : leur texte n'est pas dans le dépôt.
+
+### Migrations nouvelles à appliquer
+
+Aucune. Les fichiers 059 à 063 décrivent l'état déjà appliqué en base.
+
+### À faire dans le dashboard Supabase (FO5)
+
+- **Authentication > Rate Limits :** garder les limites par défaut, ou les baisser.
+- **SMTP personnalisé :** à brancher avant le lancement. La limite d'envoi d'e-mails par défaut de
+  Supabase est très basse, et des inscriptions resteraient sans e-mail de confirmation.
+- **CAPTCHA (Turnstile) :** envisageable plus tard sur l'inscription et la connexion.
+
+### Reste hors périmètre
+
+Stripe (sauf les lignes qui écrivaient « free »), Shopify, Vercel, mentions légales, CGU, CGV,
+politique de confidentialité.
+
+### Nouveautés depuis le 26 octobre (conservées)
+
+Expliquées simplement : ce que c'est, où c'est, à quoi ça sert, ce qui a changé.
+
+- **Menu de navigation sur téléphone.**
+  - Où : en haut à gauche de toutes les pages de l'outil, sur téléphone et tablette.
+  - À quoi ça sert : le menu s'ouvre en panneau par-dessus la page.
+  - Ce qui a changé : avant, la barre de gauche écrasait le contenu sur petit écran. Elle se ferme
+    d'un clic à côté, avec la touche Échap ou en choisissant une page.
+- **Barre de gauche repliable qui se souvient de votre choix.**
+  - Où : bouton « Réduire » en bas de la barre, sur ordinateur.
+  - À quoi ça sert : gagner de la place ; votre choix est gardé d'une visite à l'autre.
+  - Ce qui a changé : le contenu se cale exactement sur la largeur de la barre, qu'elle soit
+    ouverte ou réduite.
+- **Sous-menus dans la barre de gauche.**
+  - Où : « Produits gagnants » et « Site Builder » s'ouvrent pour montrer leurs pages (par exemple
+    « Mes sites »).
+  - À quoi ça sert : retrouver vite une page liée sans encombrer la barre.
+- **Cloche des ventes.**
+  - Où : en haut à droite des pages de l'outil.
+  - À quoi ça sert : un compteur signale les nouvelles ventes Shopify ; un clic ouvre la liste.
+- **Page « Mes ventes ».**
+  - Où : menu « Ventes ».
+  - À quoi ça sert : les commandes reçues sur votre boutique, 50 par page, à passer chez le
+    fournisseur puis à marquer « commandée ».
+- **Bandeau de paiement à régulariser.**
+  - Où : en haut des pages de l'outil, seulement quand c'est nécessaire.
+  - À quoi ça sert : prévient si le renouvellement Expert attend une validation bancaire ou si la
+    carte est refusée.
+- **Studio IA et médiathèque.**
+  - Où : menu « Studio ».
+  - À quoi ça sert : créer des images de produits avec l'IA et retrouver toutes vos images (créées
+    ou importées) au même endroit.
+  - Un indicateur montre les crédits restants et l'heure de reprise si une pause s'applique.
+- **Catalogue et photos des produits.**
+  - Où : « Produits gagnants » → « Catalogue ».
+  - À quoi ça sert : choisir la photo principale et la galerie d'un produit, depuis votre
+    médiathèque ou votre ordinateur, avant de l'envoyer en boutique.
+- **Choix des photos du site.**
+  - Où : Site Builder, sous la barre de saisie.
+  - À quoi ça sert : choisir la source des photos (photos du produit, médiathèque, liens ou
+    génération par l'IA) et leur nombre.
+  - Ce qui a changé : la génération par IA n'est plus qu'une option parmi d'autres.
+- **Aperçu téléphone du site généré.**
+  - Où : étape « Résultat » du Site Builder.
+  - À quoi ça sert : un cadre de téléphone montre le site à la vraie taille d'un iPhone.
+- **Budget IA du mois dans le Site Builder.**
+  - Où : sous la génération de landing page.
+  - À quoi ça sert : montre ce qu'il reste du budget IA du mois et le nombre de sites créés.
+- **Galerie photo sur les fiches produit des boutiques publiques.**
+  - Où : fiche produit d'une boutique en ligne.
+  - À quoi ça sert : une grande image et des miniatures pour passer d'une photo à l'autre.
+- **Courbes « période actuelle contre période précédente ».**
+  - Où : dashboard.
+  - À quoi ça sert : comparer l'activité avec la période précédente de même durée, avec la
+    variation en pourcentage.
+- **Pages « Plan Expert » et « Quota ».**
+  - Où : `/expert` (publique) et menu « Quota » (abonnés Expert).
+  - À quoi ça sert : composer son mois Expert avec le prix calculé en direct, suivre sa
+    consommation et racheter des crédits.
+- **Page de choix d'abonnement.**
+  - Où : `/abonnement`.
+  - À quoi ça sert : choisir Pro ou Agency avec l'essai de 3 jours.
+  - Ce qui a changé : nouvelle carte « Reprendre Expert » pour un abonnement Expert terminé.
+- **Thème sombre plus clair.**
+  - Où : partout dans l'outil en mode sombre.
+  - À quoi ça sert : des fonds légèrement plus clairs et des textes secondaires plus contrastés,
+    pour une meilleure lisibilité.
+
+---
+
+## Séances précédentes — 20 et 21 novembre 2026
 
 Branche : `fix/textes-securite-landing`. Ce rapport couvre les 10 tâches et l'audit de sécurité
 (détaillé dans `SECURITE_AUDIT.md`).
