@@ -47,7 +47,7 @@ Export établi le 2026-11-16 à partir du code de la copie `Documents/dropvio` (
 | Bloc Expert de la tarification (landing) | `components/landing/TarifsSection.tsx` + `landing.pricing.expert.features[4]` | « Toutes les formations incluses » (texte, **pas un lien**) | — |
 | Dashboard | — | non trouvé dans le code | — |
 | `robots.txt` | `app/robots.ts` | `/formation` dans `disallow` | — |
-| Middleware | `middleware.ts` | `/formation` hors des chemins protégés (commentaire : « page de vente publique ») | — |
+| Middleware | `proxy.ts` | `/formation` hors des chemins protégés (commentaire : « page de vente publique ») | — |
 
 ---
 

@@ -1,4 +1,4 @@
-// Constantes de résolution de langue partagées entre middleware.ts (Edge), i18n/request.ts
+// Constantes de résolution de langue partagées entre proxy.ts (Edge), i18n/request.ts
 // (RSC) et les composants client qui déclenchent un changement de langue (ParametresModal) —
 // une seule source de vérité plutôt que des littéraux dupliqués comme THEME_STORAGE_KEY
 // (voir lib/theme.ts, dupliqué là uniquement parce qu'un script inline ne peut pas importer).

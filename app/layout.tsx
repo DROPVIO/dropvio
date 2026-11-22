@@ -42,7 +42,7 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  // Résolus par i18n/request.ts à partir de l'en-tête posé par middleware.ts (cookie
+  // Résolus par i18n/request.ts à partir de l'en-tête posé par proxy.ts (cookie
   // NEXT_LOCALE > Accept-Language > profils.langue si connecté) — voir lib/locale.ts.
   const locale = await getLocale();
   const messages = await getMessages();

@@ -2,7 +2,7 @@ import type { NextConfig } from "next";
 import createNextIntlPlugin from "next-intl/plugin";
 
 // Pas de routing par [locale]/ — createNextIntlPlugin() cherche par défaut ./i18n/request.ts,
-// qui résout la langue via l'en-tête posé par middleware.ts (voir lib/locale.ts).
+// qui résout la langue via l'en-tête posé par proxy.ts (voir lib/locale.ts).
 const withNextIntl = createNextIntlPlugin();
 
 // Type dérivé de NextConfig plutôt qu'importé de next/dist/shared/lib/image-config :

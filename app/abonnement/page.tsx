@@ -29,7 +29,7 @@ const ATTENTE_INTERVALLE_MS = 2000;
 const ATTENTE_ESSAIS = 15;
 
 /** Choix du plan. Passage obligé de tout compte sans abonnement actif ni essai en cours :
- *  le middleware y renvoie depuis les outils (voir middleware.ts). */
+ *  le middleware y renvoie depuis les outils (voir proxy.ts). */
 export default function AbonnementPage() {
   const t = useTranslations("abonnement");
   const tPrix = useTranslations("landing.pricing");

@@ -59,7 +59,7 @@ async function readProfil(supabase: SupabaseClient, user: User | null) {
   return profil ? { ...profil, plan: planEffectif(profil.plan, false) } : null;
 }
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // sitemap.xml et robots.txt sont générés à la racine (app/sitemap.ts, app/robots.ts) et
