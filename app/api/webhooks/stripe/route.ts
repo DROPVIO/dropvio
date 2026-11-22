@@ -1,18 +1,15 @@
 import { NextResponse } from "next/server";
-import type Stripe from "stripe";
 import { createStripeClient } from "@/lib/stripe";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
-import { grantFormationAccess, type FormationOffre } from "@/lib/formation";
-import { synchroniserAbonnement } from "@/lib/abonnement";
-import { enregistrerPeriodeExpert, enregistrerRechargeExpert, isRechargeExpert, terminerAbonnementExpert } from "@/lib/expert-billing";
+import { noterEvenement, oublierEvenement, traiterEvenementStripe, verifierEvenement } from "@/lib/stripe-webhook";
 
 // Comme pour le webhook Shopify (voir app/api/webhooks/shopify/route.ts) : le body doit
 // être lu en texte brut AVANT tout parsing JSON — stripe.webhooks.constructEvent() vérifie
 // la signature sur ces octets exacts. Cette route n'appelle jamais request.json().
 //
-// Événements à activer sur l'endpoint dans le dashboard Stripe : checkout.session.completed
-// (formation + abonnement), customer.subscription.created, customer.subscription.updated et
-// customer.subscription.deleted (abonnements), invoice.paid (périodes du plan Expert).
+// Événements à activer sur l'endpoint dans le dashboard Stripe : voir EVENEMENTS_STRIPE dans
+// lib/stripe-webhook.ts (checkout.session.completed, customer.subscription.created / updated /
+// deleted, invoice.paid, invoice.payment_failed).
 export async function POST(request: Request) {
   const rawBody = await request.text();
   const signature = request.headers.get("stripe-signature");
@@ -29,66 +26,34 @@ export async function POST(request: Request) {
   }
 
   const stripe = createStripeClient();
-  let event: Stripe.Event;
-  try {
-    event = stripe.webhooks.constructEvent(rawBody, signature, secretWebhook);
-  } catch {
+  const event = verifierEvenement(stripe, rawBody, signature, secretWebhook);
+  if (!event) {
     return NextResponse.json({ error: "Signature invalide" }, { status: 401 });
   }
 
   const admin = createSupabaseAdminClient();
 
+  // Idempotence : un même event.id n'est appliqué qu'une fois.
+  let note: Awaited<ReturnType<typeof noterEvenement>>;
   try {
-    if (event.type === "checkout.session.completed") {
-      const session = event.data.object as Stripe.Checkout.Session;
-
-      if (isRechargeExpert(session)) {
-        await enregistrerRechargeExpert(admin, session);
-      } else if (session.mode === "subscription") {
-        // L'événement customer.subscription.created fait déjà la synchro ; la refaire ici
-        // couvre le cas où il arriverait après le retour de l'utilisateur sur /dashboard.
-        const subscriptionId = typeof session.subscription === "string" ? session.subscription : session.subscription?.id;
-        if (subscriptionId) {
-          await synchroniserAbonnement(admin, await stripe.subscriptions.retrieve(subscriptionId));
-        }
-      } else {
-        const userId = session.metadata?.user_id;
-        const offre = session.metadata?.offre as FormationOffre | undefined;
-
-        // payment_status "paid" exclut les paiements différés (ex: virement encore en
-        // attente) — on n'octroie l'accès que sur un paiement effectivement encaissé.
-        if (session.payment_status === "paid" && userId && offre) {
-          await grantFormationAccess(admin, userId, offre, {
-            via: offre === "bundle" ? "bundle" : "unitaire",
-            prixPayeCentimes: session.amount_total ?? 0,
-            stripeCheckoutSessionId: session.id,
-            stripePaymentIntentId:
-              typeof session.payment_intent === "string" ? session.payment_intent : session.payment_intent?.id,
-          });
-        }
-      }
-    }
-
-    if (
-      event.type === "customer.subscription.created" ||
-      event.type === "customer.subscription.updated" ||
-      event.type === "customer.subscription.deleted"
-    ) {
-      // Stripe ne garantit pas l'ordre de livraison : on relit l'abonnement plutôt que de
-      // recopier un état intermédiaire arrivé après un état plus récent.
-      const { id } = event.data.object as Stripe.Subscription;
-      await synchroniserAbonnement(admin, await stripe.subscriptions.retrieve(id));
-    }
-
-    if (event.type === "invoice.paid") {
-      await enregistrerPeriodeExpert(admin, event.data.object);
-    }
-    if (event.type === "customer.subscription.deleted") {
-      await terminerAbonnementExpert(admin, event.data.object);
-    }
+    note = await noterEvenement(admin, event);
   } catch (err) {
-    console.error("[webhook stripe]", event.type, err);
-    // 500 : Stripe renverra l'événement, plutôt que de le considérer comme traité.
+    console.error("[webhook stripe] Idempotence indisponible", event.id, err);
+    return NextResponse.json({ error: "Traitement impossible" }, { status: 500 });
+  }
+  if (note === "deja_traite") {
+    return NextResponse.json({ ok: true, dejaTraite: true });
+  }
+
+  try {
+    await traiterEvenementStripe(event, {
+      admin,
+      lireAbonnement: (id) => stripe.subscriptions.retrieve(id),
+    });
+  } catch (err) {
+    console.error("[webhook stripe]", event.type, event.id, err);
+    // 500 : Stripe renverra l'événement ; la note est retirée pour que ce nouvel envoi soit traité.
+    if (note === "nouveau") await oublierEvenement(admin, event.id);
     return NextResponse.json({ error: "Traitement impossible" }, { status: 500 });
   }
 

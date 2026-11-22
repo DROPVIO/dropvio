@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 import type Stripe from "stripe";
 import { getServerUserPlanOnly } from "@/lib/supabase-server";
 import { createStripeClient, isStripeConfigured } from "@/lib/stripe";
-import { parseExpertMetadata } from "@/lib/expert-billing";
 import { aPeriodeManuelleActive } from "@/lib/expert-quota";
 
 // Lien Stripe de la facture à régler, ou null. Lu en direct plutôt que stocké : le bandeau
@@ -31,7 +30,8 @@ export async function GET() {
 
     const subscription = data[0];
     const invoice = subscription?.latest_invoice as Stripe.Invoice | null | undefined;
-    const url = parseExpertMetadata(subscription?.metadata) && invoice?.status === "open" ? invoice.hosted_invoice_url : null;
+    // Tout abonnement en retard de paiement (Pro, Agency ou Expert) : la facture à régler.
+    const url = subscription && invoice?.status === "open" ? invoice.hosted_invoice_url : null;
     return NextResponse.json({ url: url ?? null });
   } catch (error) {
     console.error("[expert/paiement-action]", error);

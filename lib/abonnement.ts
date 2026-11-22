@@ -9,6 +9,9 @@ import { refusSouscriptionPlanPayant } from "./abonnement-regles";
 // pas de période de grâce, le compte et ses données restent intacts.
 const STATUTS_AVEC_ACCES = new Set<Stripe.Subscription.Status>(["trialing", "active"]);
 
+// Code PostgreSQL « undefined_column » (colonne pas encore créée par sa migration).
+const COLONNE_ABSENTE = "42703";
+
 function versIso(timestamp: number | null | undefined): string | null {
   return timestamp ? new Date(timestamp * 1000).toISOString() : null;
 }
@@ -65,12 +68,22 @@ export async function synchroniserAbonnement(admin: SupabaseClient, subscription
     periode_fin: versIso(item?.current_period_end),
   };
   if (subscription.trial_end) valeurs.essai_utilise = true;
+  // Résiliation programmée (fin de période) : affichée sur /abonnement et /parametres.
+  valeurs.annulation_fin_periode = Boolean(subscription.cancel_at_period_end);
 
   const userId = subscription.metadata?.user_id;
-  const requete = admin.from("profils").update(valeurs);
-  const { error } = userId
-    ? await requete.eq("id", userId)
-    : await requete.eq("stripe_customer_id", customerId);
+  const ecrire = (v: Record<string, unknown>) => {
+    const requete = admin.from("profils").update(v);
+    return userId ? requete.eq("id", userId) : requete.eq("stripe_customer_id", customerId);
+  };
+  let { error } = await ecrire(valeurs);
+  // Migration 065 pas encore appliquée (colonne absente) : on écrit le reste plutôt que de
+  // bloquer la synchronisation de l'abonnement.
+  if (error?.code === COLONNE_ABSENTE) {
+    const { annulation_fin_periode: _ignore, ...sansAnnulation } = valeurs;
+    void _ignore;
+    ({ error } = await ecrire(sansAnnulation));
+  }
 
   if (error) {
     // Remonté au webhook, qui répond 500 : Stripe renverra l'événement plus tard plutôt que de
