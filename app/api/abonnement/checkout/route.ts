@@ -5,6 +5,7 @@ import { ESSAI_JOURS, createStripeClient, getAbonnementPriceId, isPlanPayant, is
 import { findSubscriptionEnCours } from "@/lib/expert-billing";
 import { getPeriodeExpert } from "@/lib/expert-quota";
 import { refusSouscriptionPlanPayant } from "@/lib/abonnement-regles";
+import { exigerConsentement } from "@/lib/consentements-serveur";
 
 // Crée une Checkout Session Stripe en mode "subscription" pour Pro ou Agency. La carte est
 // demandée dans tous les cas (payment_method_collection "always"), y compris pendant l'essai :
@@ -30,6 +31,9 @@ export async function POST(request: Request) {
   if (!isPlanPayant(plan)) {
     return NextResponse.json({ error: "Plan invalide.", code: "plan_invalid" }, { status: 400 });
   }
+  // Droit de rétractation : les deux cases cochées, et la preuve enregistrée, avant Stripe.
+  const refusConsentement = await exigerConsentement(request, body, user.id, plan === "pro" ? "abonnement_pro" : "abonnement_agency");
+  if (refusConsentement) return refusConsentement;
 
   const { data: profil } = await supabase
     .from("profils")

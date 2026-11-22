@@ -8,6 +8,7 @@ import { useLibelleModele } from "@/components/expert/useLibelleModele";
 import { UsageMeter } from "@/components/UsageMeter";
 import { expertRechargePrice, type ExpertModel, type ExpertSelection } from "@/lib/expert-pricing";
 import { toIntlTag, type AppLocale } from "@/lib/locale";
+import ConsentementAchat, { CONSENTEMENT_VIDE, consentementDonne, corpsConsentement, type EtatConsentement } from "@/components/ConsentementAchat";
 
 type QuotaData = {
   abonnementOffert: boolean;
@@ -39,7 +40,7 @@ function QuotaContenu() {
   const [chargement, setChargement] = useState(true);
   const [erreur, setErreur] = useState<string | null>(null);
   const [selection, setSelection] = useState<ExpertSelection>({ model: "opus-5-5", sites: 0, images: 0 });
-  const [consentement, setConsentement] = useState(false);
+  const [consentement, setConsentement] = useState<EtatConsentement>(CONSENTEMENT_VIDE);
   const [redirection, setRedirection] = useState(false);
 
   useEffect(() => {
@@ -149,14 +150,11 @@ function QuotaContenu() {
                 <p className="mt-2 text-xs text-[var(--text-faint)]">{t("rechargeNote")}</p>
               </div>
               <ExpertSelecteur selection={selection} onChange={setSelection} />
-              <label className="flex items-start gap-2 text-xs text-[var(--text-muted)]">
-                <input type="checkbox" checked={consentement} onChange={(event) => setConsentement(event.target.checked)} className="mt-0.5" />
-                <span>{t("consent")}</span>
-              </label>
+              <ConsentementAchat famille="service" valeur={consentement} onChange={setConsentement} />
               <button
                 type="button"
-                disabled={redirection || !consentement || total <= 0}
-                onClick={() => versStripe("/api/expert/recharge", { ...selection, executionImmediate: true }, t("rechargeError"))}
+                disabled={redirection || !consentementDonne(consentement) || total <= 0}
+                onClick={() => versStripe("/api/expert/recharge", { ...selection, consentements: corpsConsentement(consentement, locale) }, t("rechargeError"))}
                 className="self-start rounded-lg bg-[var(--accent)] px-4 py-2.5 text-sm font-semibold text-white transition hover:opacity-90 disabled:opacity-50"
               >
                 {redirection ? t("redirecting") : t("buy")}

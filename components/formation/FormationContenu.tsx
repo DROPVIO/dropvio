@@ -8,6 +8,7 @@ import { useApiErrorMessage } from "@/lib/use-api-error";
 
 import { FORMATION_PRIX, type FormationOffre } from "@/lib/formation";
 import { CadreApp } from "@/components/AppShell";
+import ConsentementAchat, { CONSENTEMENT_VIDE, consentementDonne, corpsConsentement, type EtatConsentement } from "@/components/ConsentementAchat";
 
 type FormationCollection = "courte" | "longue";
 
@@ -48,6 +49,7 @@ function useIsLightTheme(): boolean {
 export default function FormationContenu() {
   const t = useTranslations("dashboard.formation");
   const locale = useLocale();
+  const [consentement, setConsentement] = useState<EtatConsentement>(CONSENTEMENT_VIDE);
   const apiErrorMessage = useApiErrorMessage();
   const tCommon = useTranslations("dashboard.common");
   const [state, setState] = useState<FormationState>({ status: "loading" });
@@ -129,7 +131,7 @@ export default function FormationContenu() {
       const res = await fetch("/api/formation/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ offre }),
+        body: JSON.stringify({ offre, consentements: corpsConsentement(consentement, locale) }),
       });
       if (res.status === 401) {
         window.location.assign(`/login?redirect=${encodeURIComponent("/formation")}`);
@@ -194,6 +196,12 @@ export default function FormationContenu() {
           </div>
         )}
 
+        {state.status === "ok" && !(state.owned.courte && state.owned.longue) && (
+          <div className="mb-6">
+            <ConsentementAchat famille="formation" valeur={consentement} onChange={setConsentement} />
+          </div>
+        )}
+
         {state.status === "ok" && (
           <div className="flex flex-col gap-10">
             {/* ── Cartes de vente pour les collections non possédées ──────────── */}
@@ -225,7 +233,7 @@ export default function FormationContenu() {
                         </ul>
                         <button
                           onClick={() => acheter(collection)}
-                          disabled={buying !== null}
+                          disabled={buying !== null || !consentementDonne(consentement)}
                           className="mt-5 w-full rounded-xl bg-gradient-to-br from-violet-600 to-violet-500 hover:from-violet-500 hover:to-violet-400 disabled:opacity-50 text-white font-semibold text-sm py-2.5 transition-all"
                         >
                           {buying === collection
@@ -257,7 +265,7 @@ export default function FormationContenu() {
                     </div>
                     <button
                       onClick={() => acheter("bundle")}
-                      disabled={buying !== null}
+                      disabled={buying !== null || !consentementDonne(consentement)}
                       className="mt-5 w-full rounded-xl bg-violet-500 hover:bg-violet-400 disabled:opacity-50 text-white font-semibold text-sm py-2.5 transition-all"
                     >
                       {buying === "bundle"

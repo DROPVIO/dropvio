@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerUserAndPlan } from "@/lib/supabase-server";
 import { createStripeClient, getFormationPriceId, isStripeConfigured } from "@/lib/stripe";
 import { collectionsDeOffre, type FormationOffre } from "@/lib/formation";
+import { exigerConsentement } from "@/lib/consentements-serveur";
 
 // Crée une Checkout Session Stripe en mode "payment" (achat unique, jamais "subscription")
 // pour une offre formation (courte / longue / bundle). L'utilisateur doit être connecté :
@@ -31,6 +32,9 @@ export async function POST(request: Request) {
   if (collectionsVisees.every((c) => formationOwned[c])) {
     return NextResponse.json({ error: "Vous possédez déjà cette formation.", code: "formation_already_owned" }, { status: 400 });
   }
+  // Contenu numérique : accès immédiat demandé et renonciation reconnue, preuve enregistrée.
+  const refusConsentement = await exigerConsentement(request, body, user.id, `formation_${offre}`);
+  if (refusConsentement) return refusConsentement;
 
   const origin = new URL(request.url).origin;
   const stripe = createStripeClient();

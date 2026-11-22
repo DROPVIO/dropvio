@@ -8,6 +8,7 @@ import { PRIX_PLAN_EUR, formatEuros } from "@/lib/prix";
 import Logo from "@/components/Logo";
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
 import { useApiErrorMessage } from "@/lib/use-api-error";
+import ConsentementAchat, { CONSENTEMENT_VIDE, consentementDonne, corpsConsentement, type EtatConsentement } from "@/components/ConsentementAchat";
 
 type PlanPayant = "pro" | "agency";
 
@@ -36,6 +37,7 @@ export default function AbonnementPage() {
   const t = useTranslations("abonnement");
   const tPrix = useTranslations("landing.pricing");
   const locale = useLocale();
+  const [consentement, setConsentement] = useState<EtatConsentement>(CONSENTEMENT_VIDE);
   const router = useRouter();
   const apiErrorMessage = useApiErrorMessage();
 
@@ -98,7 +100,7 @@ export default function AbonnementPage() {
       const res = await fetch("/api/abonnement/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ plan }),
+        body: JSON.stringify({ plan, consentements: corpsConsentement(consentement, locale) }),
       });
       const json = await res.json().catch(() => null);
       if (!res.ok || !json?.url) {
@@ -227,6 +229,10 @@ export default function AbonnementPage() {
           </div>
         ) : null}
 
+        <div className="mb-5">
+          <ConsentementAchat famille="service" valeur={consentement} onChange={setConsentement} />
+        </div>
+
         <div className="grid gap-4 sm:grid-cols-2">
           {PLANS.map((plan) => {
             const misEnAvant = plan === "pro";
@@ -255,7 +261,7 @@ export default function AbonnementPage() {
                 </ul>
                 <button
                   onClick={() => souscrire(plan)}
-                  disabled={enCours !== null || aRegulariser}
+                  disabled={enCours !== null || aRegulariser || !consentementDonne(consentement)}
                   className="mt-6 w-full py-3 rounded-xl bg-gradient-to-r from-violet-600 to-blue-600 text-white text-sm font-semibold hover:from-violet-500 hover:to-blue-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {enCours === plan ? t("redirection") : etat?.essaiUtilise ? t("ctaSansEssai") : t("ctaEssai")}

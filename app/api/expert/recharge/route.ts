@@ -4,6 +4,7 @@ import { createStripeClient, isStripeConfigured } from "@/lib/stripe";
 import { createExpertRechargeSession } from "@/lib/expert-billing";
 import { expertRechargePrice, isSelectionVendable, parseExpertSelection } from "@/lib/expert-pricing";
 import { getPeriodeExpert } from "@/lib/expert-quota";
+import { exigerConsentement } from "@/lib/consentements-serveur";
 
 // Paiement unique d'une recharge de crédits. Le montant vient uniquement de la sélection
 // recalculée ici, et les crédits ne sont ajoutés que par le webhook, après paiement confirmé.
@@ -31,12 +32,9 @@ export async function POST(request: Request) {
   if (selection && !isSelectionVendable(selection)) {
     return NextResponse.json({ error: "Les crédits images ne sont pas encore en vente." }, { status: 400 });
   }
-  if (body?.executionImmediate !== true) {
-    return NextResponse.json(
-      { error: "Vous devez demander l'exécution immédiate du service pour continuer." },
-      { status: 400 }
-    );
-  }
+  // Droit de rétractation : les deux cases cochées, et la preuve enregistrée, avant Stripe.
+  const refusConsentement = await exigerConsentement(request, body, user.id, "recharge_expert");
+  if (refusConsentement) return refusConsentement;
 
   const periode = await getPeriodeExpert(supabase, user.id);
   if (!periode) {

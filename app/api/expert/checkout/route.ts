@@ -5,6 +5,7 @@ import { createStripeClient, isStripeConfigured } from "@/lib/stripe";
 import { createExpertCheckoutSession, findSubscriptionEnCours } from "@/lib/expert-billing";
 import { isSelectionVendable, parseExpertSelection } from "@/lib/expert-pricing";
 import { erreurServeur } from "@/lib/api-errors";
+import { exigerConsentement } from "@/lib/consentements-serveur";
 
 // Crée la Checkout Session du plan Expert. Le prix vient uniquement de la sélection recalculée
 // ici : aucun montant envoyé par le client n'est lu. Le profil ne passe en "expert" qu'à la
@@ -36,12 +37,9 @@ export async function POST(request: Request) {
   if (selection && !isSelectionVendable(selection)) {
     return NextResponse.json({ error: "Les crédits images ne sont pas encore en vente." }, { status: 400 });
   }
-  if (body?.executionImmediate !== true) {
-    return NextResponse.json(
-      { error: "Vous devez demander l'exécution immédiate du service pour continuer." },
-      { status: 400 }
-    );
-  }
+  // Droit de rétractation : les deux cases cochées, et la preuve enregistrée, avant Stripe.
+  const refusConsentement = await exigerConsentement(request, body, user.id, "abonnement_expert");
+  if (refusConsentement) return refusConsentement;
 
   const stripe = createStripeClient();
   const { data: profil } = await supabase.from("profils").select("stripe_customer_id").eq("id", user.id).maybeSingle();

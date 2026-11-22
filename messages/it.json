@@ -122,7 +122,6 @@
     "rechargeTitle": "Acquista crediti",
     "rechargeNote": "Pagamento unico. I crediti non usati vengono riportati finché l'abbonamento è attivo.",
     "total": "Totale",
-    "consent": "Chiedo l'esecuzione immediata del servizio e riconosco di perdere il diritto di recesso.",
     "buy": "Paga",
     "redirecting": "Reindirizzamento…",
     "manage": "Gestisci abbonamento / disdici",
@@ -1545,7 +1544,8 @@
     "budget_ia_insuffisant": "Budget IA insufficiente per questa generazione: ti restano {restant, number, ::currency/EUR} questo mese.",
     "abonnement_requis": "Scegli un abbonamento per accedere al catalogo.",
     "abonnement_requis_produits": "Scegli un abbonamento per aggiungere prodotti.",
-    "abonnement_requis_outil": "Scegli un abbonamento per usare questo strumento."
+    "abonnement_requis_outil": "Scegli un abbonamento per usare questo strumento.",
+    "consentement_requis": "Seleziona le due caselle per procedere al pagamento."
   },
   "siteBuilder": {
     "boutique": {
@@ -2871,5 +2871,11 @@
   "expertModeles": {
     "fable-5": "Qualità avanzata",
     "opus-5-5": "Qualità standard"
+  },
+  "consentement": {
+    "titre": "Prima del pagamento",
+    "aide": "Le due caselle sono obbligatorie per continuare.",
+    "cgv": "Condizioni generali di vendita",
+    "confidentialite": "Informativa sulla privacy"
   }
 }

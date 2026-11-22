@@ -122,7 +122,6 @@
     "rechargeTitle": "Buy credits",
     "rechargeNote": "One-time payment. Unused credits carry over while your subscription is active.",
     "total": "Total",
-    "consent": "I request immediate performance of the service and acknowledge that I lose my right of withdrawal.",
     "buy": "Pay",
     "redirecting": "Redirecting…",
     "manage": "Manage my subscription / cancel",
@@ -1545,7 +1544,8 @@
     "budget_ia_insuffisant": "Not enough AI budget for this generation: you have {restant, number, ::currency/EUR} left this month.",
     "abonnement_requis": "Choose a subscription to access the catalog.",
     "abonnement_requis_produits": "Choose a subscription to add products.",
-    "abonnement_requis_outil": "Choose a subscription to use this tool."
+    "abonnement_requis_outil": "Choose a subscription to use this tool.",
+    "consentement_requis": "Tick both boxes to continue to payment."
   },
   "siteBuilder": {
     "boutique": {
@@ -2871,5 +2871,11 @@
   "expertModeles": {
     "fable-5": "Advanced quality",
     "opus-5-5": "Standard quality"
+  },
+  "consentement": {
+    "titre": "Before payment",
+    "aide": "Both boxes are required to continue.",
+    "cgv": "Terms of sale",
+    "confidentialite": "Privacy policy"
   }
 }

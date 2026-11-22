@@ -122,7 +122,6 @@
     "rechargeTitle": "Racheter des crédits",
     "rechargeNote": "Paiement unique. Les crédits non utilisés sont reportés tant que votre abonnement est actif.",
     "total": "Total",
-    "consent": "Je demande l'exécution immédiate du service et je reconnais perdre mon droit de rétractation.",
     "buy": "Payer",
     "redirecting": "Redirection…",
     "manage": "Gérer mon abonnement / résilier",
@@ -1545,7 +1544,8 @@
     "budget_ia_insuffisant": "Budget IA insuffisant pour cette génération : il vous reste {restant, number, ::currency/EUR} ce mois-ci.",
     "abonnement_requis": "Choisissez un abonnement pour accéder au catalogue.",
     "abonnement_requis_produits": "Choisissez un abonnement pour ajouter des produits.",
-    "abonnement_requis_outil": "Choisissez un abonnement pour utiliser cet outil."
+    "abonnement_requis_outil": "Choisissez un abonnement pour utiliser cet outil.",
+    "consentement_requis": "Cochez les deux cases pour continuer vers le paiement."
   },
   "siteBuilder": {
     "boutique": {
@@ -2871,5 +2871,11 @@
   "expertModeles": {
     "fable-5": "Qualité avancée",
     "opus-5-5": "Qualité standard"
+  },
+  "consentement": {
+    "titre": "Avant le paiement",
+    "aide": "Les deux cases sont obligatoires pour continuer.",
+    "cgv": "Conditions générales de vente",
+    "confidentialite": "Politique de confidentialité"
   }
 }
