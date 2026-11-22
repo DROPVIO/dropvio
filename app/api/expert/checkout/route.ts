@@ -17,7 +17,7 @@ export async function POST(request: Request) {
   }
 
   if (plan === "expert") {
-    return NextResponse.json({ error: "Ton plan Expert est déjà actif." }, { status: 409 });
+    return NextResponse.json({ error: "Votre plan Expert est déjà actif." }, { status: 409 });
   }
 
   if (!isStripeConfigured()) {
@@ -38,7 +38,7 @@ export async function POST(request: Request) {
   }
   if (body?.executionImmediate !== true) {
     return NextResponse.json(
-      { error: "Tu dois demander l'exécution immédiate du service pour continuer." },
+      { error: "Vous devez demander l'exécution immédiate du service pour continuer." },
       { status: 400 }
     );
   }

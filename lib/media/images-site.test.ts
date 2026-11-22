@@ -11,7 +11,7 @@ import {
   type ResultatImage,
 } from "./images-site";
 
-const EMPLACEMENT = '<div data-placeholder="image" style="min-height:280px">Ajoute ici une photo de ton produit</div>';
+const EMPLACEMENT = '<div data-placeholder="image" style="min-height:280px">Ajoutez ici une photo de votre produit</div>';
 
 describe("case désactivée selon le plan", () => {
   it("sans abonnement : désactivée, raison « plan »", () => {

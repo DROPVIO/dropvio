@@ -34,7 +34,7 @@ export const MODELE_PAR_FONCTION: Record<UsageFeature, ModeleIa | null> = {
 const FONCTIONS_MIGRATION_043: UsageFeature[] = ["inspiration_ia", "boutique_ia", "textes_ia"];
 const FONCTION_DE_REPLI: UsageFeature = "audit_ia";
 
-export const MESSAGE_BUDGET_DEPASSE = "Ton budget IA du mois est épuisé. Il sera remis à zéro le 1er du mois prochain.";
+export const MESSAGE_BUDGET_DEPASSE = "Votre budget IA du mois est épuisé. Il sera remis à zéro le 1er du mois prochain.";
 export const MESSAGE_BUDGET_INSUFFISANT = "Budget IA du mois insuffisant pour cette demande.";
 
 // En dessous d'un centime restant, le budget est considéré comme épuisé (message dédié).

@@ -81,7 +81,7 @@ describe("refus quand le budget est insuffisant", () => {
     assert.equal(insuffisant.values.restant, 0.1);
     const epuise = await reponseBudgetDepasse(new BudgetIaDepasse(6, 6, 0.2)).json();
     assert.equal(epuise.code, "budget_ia_depasse");
-    assert.equal(epuise.error, "Ton budget IA du mois est épuisé. Il sera remis à zéro le 1er du mois prochain.");
+    assert.equal(epuise.error, "Votre budget IA du mois est épuisé. Il sera remis à zéro le 1er du mois prochain.");
   });
 });
 
@@ -181,12 +181,12 @@ describe("budget images séparé du budget IA", () => {
   it("deux messages distincts selon le budget épuisé", async () => {
     const ia = await reponseBudgetDepasse(new BudgetIaDepasse(6, 6, 0.2)).json();
     assert.equal(ia.code, "budget_ia_depasse");
-    assert.ok(ia.error.startsWith("Ton budget IA du mois est épuisé."));
+    assert.ok(ia.error.startsWith("Votre budget IA du mois est épuisé."));
     const route = readFileSync(new URL("../app/api/media/generer/route.ts", import.meta.url), "utf-8");
     assert.ok(route.includes(`apiError("images_quota_epuise"`));
     const messages = JSON.parse(readFileSync(new URL("../messages/fr.json", import.meta.url), "utf-8"));
-    assert.ok(messages.apiErrors.images_quota_epuise.startsWith("Ton budget d'images du mois est épuisé."));
-    assert.ok(messages.apiErrors.budget_ia_depasse.startsWith("Ton budget IA du mois est épuisé."));
+    assert.ok(messages.apiErrors.images_quota_epuise.startsWith("Votre budget d'images du mois est épuisé."));
+    assert.ok(messages.apiErrors.budget_ia_depasse.startsWith("Votre budget IA du mois est épuisé."));
   });
 
   it("une image ne s'écrit pas dans le journal des limites glissantes du budget IA", () => {

@@ -29,7 +29,7 @@ export async function POST(request: Request) {
 
   const collectionsVisees = collectionsDeOffre(offre);
   if (collectionsVisees.every((c) => formationOwned[c])) {
-    return NextResponse.json({ error: "Tu possèdes déjà cette formation.", code: "formation_already_owned" }, { status: 400 });
+    return NextResponse.json({ error: "Vous possédez déjà cette formation.", code: "formation_already_owned" }, { status: 400 });
   }
 
   const origin = new URL(request.url).origin;

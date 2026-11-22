@@ -441,7 +441,7 @@ function injectProductGrid(
 // décoratif (dégradé, SVG) — un fond uni, une bordure en pointillés et un libellé explicite,
 // pour que l'utilisateur voie immédiatement où ajouter sa photo. Jamais utilisé quand imageUrl
 // est fourni : les blocs image ci-dessous gardent alors leur <img>.
-const EMPLACEMENT_IMAGE_VIDE = `un emplacement image neutre, exactement : <div data-placeholder="image" style="background:var(--site-surface);border:2px dashed var(--site-border);border-radius:12px;display:flex;align-items:center;justify-content:center;text-align:center;color:var(--site-text-muted);width:100%;max-width:420px;min-height:280px;padding:24px;box-sizing:border-box">Ajoute ici une photo de ton produit</div> — fond uni, aucun dégradé, aucune icône ni illustration décorative`;
+const EMPLACEMENT_IMAGE_VIDE = `un emplacement image neutre, exactement : <div data-placeholder="image" style="background:var(--site-surface);border:2px dashed var(--site-border);border-radius:12px;display:flex;align-items:center;justify-content:center;text-align:center;color:var(--site-text-muted);width:100%;max-width:420px;min-height:280px;padding:24px;box-sizing:border-box">Ajoutez ici une photo de votre produit</div> — fond uni, aucun dégradé, aucune icône ni illustration décorative`;
 
 // Fiche de style issue des captures d'inspiration (app/api/inspiration/route.ts), renvoyée
 // par le client : revalidée ici avant d'entrer dans le prompt. Absente → chaîne vide, pour que
