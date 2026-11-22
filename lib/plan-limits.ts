@@ -20,10 +20,20 @@ export type UsageFeature =
 // Budget IA mensuel en euros par plan : plafonne le coût de toutes les fonctions IA réunies
 // (calculé depuis usage_mensuel.tokens_entree / tokens_sortie, voir lib/ai-budget.ts). Les
 // quotas par fonction ci-dessous (sites, audits) restent en place ; le budget s'ajoute à eux.
+// Budget Claude du plan Pro : seule valeur saisie à la main. Agency et Expert en découlent.
+const AI_BUDGET_PRO_EUR = 6;
+
+// Agency et Expert ont 2,6 fois le budget Claude du plan Pro (6 € × 2,6 = 15,60 €). Ce budget
+// ne couvre que les appels Claude (MODELE_PAR_FONCTION, lib/ai-budget.ts) : les images ont leur
+// propre budget (IMAGE_BUDGET_EUR_PAR_PLAN) et les sites Expert, payés à l'unité, en sont exclus.
+export const MULTIPLICATEUR_BUDGET_CLAUDE_AGENCY_EXPERT = 2.6;
+
+const arrondiCentime = (euros: number) => Math.round(euros * 100) / 100;
+
 export const AI_BUDGET_EUR_PAR_PLAN: Record<Plan, number> = {
-  pro: 6,
-  agency: 28,
-  expert: 28,
+  pro: AI_BUDGET_PRO_EUR,
+  agency: arrondiCentime(AI_BUDGET_PRO_EUR * MULTIPLICATEUR_BUDGET_CLAUDE_AGENCY_EXPERT),
+  expert: arrondiCentime(AI_BUDGET_PRO_EUR * MULTIPLICATEUR_BUDGET_CLAUDE_AGENCY_EXPERT),
 };
 
 // Limites glissantes, à la manière de Claude : part du budget mensuel utilisable sur les

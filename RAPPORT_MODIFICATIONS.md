@@ -1,5 +1,48 @@
 # Rapport de modifications
 
+## Séance du 22 novembre (suite) — budget Claude Agency et Expert : 2,6 × Pro
+
+Budget Claude mensuel d'Agency et d'Expert : **15,60 €** (6 € × 2,6) au lieu de 28 €. Seul le
+budget Claude change ; budget Pro (6 €), budgets images (1,50 € / 3,50 € / 0 €) et prix des
+sites Expert inchangés.
+
+### Fichiers modifiés
+
+- `lib/plan-limits.ts` : `AI_BUDGET_PRO_EUR = 6` (seule valeur saisie),
+  `MULTIPLICATEUR_BUDGET_CLAUDE_AGENCY_EXPERT = 2.6` (commentée), Agency et Expert = Pro × 2,6
+  arrondi au centime.
+- `lib/ai-budget.test.ts` : valeurs attendues 15,60 € (au lieu de 28 €), seuil du test « budget
+  images épuisé » passé de 27,99 € à 15,59 €, et nouveau test : Agency = Expert = Pro × 2,6,
+  budgets images inchangés, affichage « 15,60 € ».
+- Aucun texte à réécrire : la FAQ, la landing et les tarifs affichent le montant à partir de la
+  constante (`lib/prix.ts`, format français « 15,60 € »). Aucune autre trace de 28 € liée au
+  budget dans `lib/`, `app/`, `components/`, `messages/`, `content/`.
+
+### Points signalés
+
+- **Uniquement des appels Claude** : `MODELE_PAR_FONCTION` (`lib/ai-budget.ts`) ne contient que
+  des modèles Claude (Sonnet 5.5, Sonnet 4.6, Opus 5.5, Haiku 4.5, Opus 4.8 en relais) ; les
+  images (OpenAI) sont à `null`, hors budget. Rien à exclure.
+- **Expert** : les sites Expert sont générés hors budget (`horsBudget`, payés à l'unité) ;
+  `lib/expert-pricing.ts` et `lib/expert-quota.ts` ne dépendent pas du budget Claude. Rien changé.
+- **Quotas Agency / Expert (non modifiés) qui ne tiennent plus au maximum dans 15,60 €.** Coût
+  plafond par appel (sortie `max_tokens` entièrement consommée, entrée estimée par moi) :
+  - site (Sonnet 5.5, 1,80 € / 9 € par million) : 24 000 × 9 € / M = 0,216 € + ~10 000 tokens
+    d'entrée × 1,80 € / M = 0,018 € → **≈ 0,23 €** ; 50 sites ≈ **11,70 €** ;
+  - audit (Sonnet 4.6, 2,70 € / 13,50 € par million) : 8 192 × 13,50 € / M = 0,111 € +
+    ~20 000 tokens d'entrée × 2,70 € / M = 0,054 € → **≈ 0,165 €** ; 100 audits ≈ **16,50 €** ;
+  - total des deux quotas ≈ **28 €** : ils semblent calibrés sur l'ancien budget. Avec 15,60 €,
+    les 100 audits seuls peuvent dépasser le budget, et 50 sites + 100 audits ne sont plus
+    atteignables au plafond. Le coût réel est souvent inférieur au plafond (le budget compte les
+    tokens réellement consommés), mais un compte Agency très actif sera arrêté par le budget
+    avant ses quotas. Les limites glissantes suivent aussi : 15 % par jour = 2,34 €, 30 % par
+    7 jours = 4,68 €.
+
+### Vérifications
+
+`npx tsc --noEmit`, `npm run lint`, `npm test` (229 tests, 228 réussis, 1 ignoré, 0 échec),
+`npm run build` sans avertissement. La FAQ affiche « 15,60 € de budget IA » pour Agency.
+
 ## Séance du 22 novembre (suite) — e-mails d'accusé (Resend)
 
 1. **Migrations 066 et 068** alignées sur la base : policies en `(select auth.uid()) = user_id`.

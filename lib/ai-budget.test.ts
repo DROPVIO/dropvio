@@ -5,7 +5,8 @@ import { describe, it } from "node:test";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { BudgetIaDepasse, SuiviBudgetIa, coutImagesEuros, decisionBudget, getBudgetParFonction, getBudgetUsedEuros, getImagesUsedEuros, reponseBudgetDepasse, tokensSortieEquivalents } from "./ai-budget";
 import { coutEuros, PRIX_EUR_PAR_MILLION } from "./ai-pricing";
-import { AI_BUDGET_EUR_PAR_PLAN, IMAGE_BUDGET_EUR_PAR_PLAN, budgetImagesEur } from "./plan-limits";
+import { AI_BUDGET_EUR_PAR_PLAN, IMAGE_BUDGET_EUR_PAR_PLAN, MULTIPLICATEUR_BUDGET_CLAUDE_AGENCY_EXPERT, budgetImagesEur } from "./plan-limits";
+import { formatEuros } from "./prix";
 import { IMAGE_PRICE_EUR } from "./expert-pricing";
 import { lireQuotaImages } from "./media/quota-images-serveur";
 
@@ -129,12 +130,22 @@ describe("aucun blocage lié au nombre de sites", () => {
 });
 
 describe("budget images séparé du budget IA", () => {
-  it("valeurs : 1,50 € (Pro) et 3,50 € (Agency) pour les images ; budget IA inchangé (6 € et 28 €)", () => {
+  it("valeurs : 1,50 € (Pro) et 3,50 € (Agency) pour les images ; budget Claude 6 € (Pro) et 15,60 € (Agency)", () => {
     assert.equal(IMAGE_BUDGET_EUR_PAR_PLAN.pro, 1.5);
     assert.equal(IMAGE_BUDGET_EUR_PAR_PLAN.agency, 3.5);
     assert.equal(budgetImagesEur(null), 0);
     assert.equal(AI_BUDGET_EUR_PAR_PLAN.pro, 6);
-    assert.equal(AI_BUDGET_EUR_PAR_PLAN.agency, 28);
+    assert.equal(AI_BUDGET_EUR_PAR_PLAN.agency, 15.6);
+  });
+
+  it("budget Claude Agency = Expert = Pro × 2,6 ; budgets images inchangés", () => {
+    const attendu = Math.round(AI_BUDGET_EUR_PAR_PLAN.pro * MULTIPLICATEUR_BUDGET_CLAUDE_AGENCY_EXPERT * 100) / 100;
+    assert.equal(MULTIPLICATEUR_BUDGET_CLAUDE_AGENCY_EXPERT, 2.6);
+    assert.equal(AI_BUDGET_EUR_PAR_PLAN.agency, attendu);
+    assert.equal(AI_BUDGET_EUR_PAR_PLAN.expert, attendu);
+    assert.equal(attendu, 15.6);
+    assert.deepEqual(IMAGE_BUDGET_EUR_PAR_PLAN, { pro: 1.5, agency: 3.5, expert: 0 });
+    assert.equal(formatEuros(AI_BUDGET_EUR_PAR_PLAN.agency, "fr"), "15,60\u00a0€");
   });
 
   it("les images ne sont jamais comptées dans le budget IA", async () => {
@@ -175,7 +186,7 @@ describe("budget images séparé du budget IA", () => {
     const { client } = fauxSupabase([{ feature: "images_ia", compteur: 35, tokens_entree: 0, tokens_sortie: 0 }]);
     assert.equal((await lireQuotaImages(client, "u1", "agency"))?.imagesRestantes, 0);
     const suivi = new SuiviBudgetIa(client, "u1", "agency", "site_builder", { ecriture: client });
-    await suivi.verifier(27.99);
+    await suivi.verifier(15.59); // juste sous le budget Claude Agency (15,60 €)
   });
 
   it("deux messages distincts selon le budget épuisé", async () => {
