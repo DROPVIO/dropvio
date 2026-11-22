@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerUserAndPlan } from "@/lib/supabase-server";
-import { PLAN_LIMITS, planLabel, getMonthlyUsage, incrementMonthlyUsage, limitesDuPlan } from "@/lib/plan-limits";
+import { planLabel, getMonthlyUsage, incrementMonthlyUsage, limitesDuPlan } from "@/lib/plan-limits";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { getProductDetail, queryProducts, type AliExpressProduct } from "@/lib/aliexpress";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";

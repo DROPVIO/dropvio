@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
 import { toIntlTag, type AppLocale } from "@/lib/locale";
-import { PLAN_LIMITS, type Plan, limitesDuPlan } from "@/lib/plan-limits";
+import { type Plan, limitesDuPlan } from "@/lib/plan-limits";
 
 type BoutiqueRow = {
   id: string;

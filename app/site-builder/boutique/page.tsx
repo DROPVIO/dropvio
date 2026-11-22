@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { isValidSlug, slugify } from "@/lib/slugify";
@@ -28,11 +28,7 @@ export default function BoutiqueBuilderListPage() {
   const [description, setDescription] = useState("");
   const [creating, setCreating] = useState(false);
 
-  useEffect(() => {
-    void fetchBoutiques();
-  }, []);
-
-  async function fetchBoutiques() {
+  const fetchBoutiques = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
@@ -48,7 +44,12 @@ export default function BoutiqueBuilderListPage() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [apiErrorMessage, t]);
+
+  useEffect(() => {
+    // Différé hors du corps synchrone de l'effet (react-hooks/set-state-in-effect).
+    void Promise.resolve().then(fetchBoutiques);
+  }, [fetchBoutiques]);
 
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault();

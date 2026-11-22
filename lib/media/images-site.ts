@@ -1,7 +1,7 @@
 // Images générées avec le site (case « Générer des images avec OpenAI » du Site Builder).
 // Logique sans dépendance serveur ni React, testée par lib/media/images-site.test.ts. Chaque
 // image passe par /api/media/generer : même fournisseur, même réservation du quota Expert.
-import type { Plan, PlanOuAucun } from "@/lib/plan-limits";
+import type { PlanOuAucun } from "@/lib/plan-limits";
 import { generationDisponible } from "./config";
 import type { MediaFormat } from "./constantes";
 

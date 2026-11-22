@@ -1,7 +1,7 @@
 // Pauses par outil, côté serveur : lecture de l'état (crédits restants, fin de pause) et
 // réservation atomique des crédits (fonction SQL outils_credits_reserver, migration 054).
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { Plan, PlanOuAucun } from "@/lib/plan-limits";
+import type { PlanOuAucun } from "@/lib/plan-limits";
 import { configOutil, planAvecPauses, type OutilIa } from "./pauses-outils";
 import { etatOutil, type EtatOutil, type UsageOutil } from "./pauses-outils-regles";
 

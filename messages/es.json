@@ -742,7 +742,9 @@
       "read": "Leer →",
       "readerBack": "← Volver a la formación",
       "readerLoading": "Maquetando el documento…",
-      "readerError": "No se pudo generar la vista paginada. Prueba a recargar la página."
+      "readerError": "No se pudo generar la vista paginada. Prueba a recargar la página.",
+      "metaTitre": "Curso de dropshipping: de cero a la primera venta | Dropvio",
+      "metaDescription": "Dos cursos de dropshipping, corto o completo: elección del producto, cálculo del margen, tienda, proveedores y marco legal. Pago único y acceso de por vida."
     },
     "produits": {
       "title": "🏆 Productos Ganadores",
@@ -1190,7 +1192,7 @@
   },
   "landing": {
     "metaTitre": "Productos ganadores, margen neto y tienda Shopify | Dropvio",
-    "metaDescription": "Encuentra productos ganadores en AliExpress, calcula tu margen neto tras comisiones, envío e impuestos, y genera una tienda lista para vender.",
+    "metaDescription": "Encuentra productos ganadores en AliExpress, calcula tu margen neto real tras comisiones, envío e impuestos y genera una tienda Shopify lista para vender.",
     "nav": {
       "pricing": "Precios",
       "login": "Iniciar sesión",
@@ -1412,8 +1414,8 @@
       "contact": "Contacto"
     },
     "expertPage": {
-      "metaTitre": "Plan Expert: configura tu mes | Dropvio",
-      "metaDescription": "Elige el modelo de IA que diseña tus sitios, ajusta tu volumen del mes y ve el precio en directo. Recarga de créditos posible durante el mes.",
+      "metaTitre": "Plan Expert: configura tu mes a medida con IA | Dropvio",
+      "metaDescription": "Elige el modelo de IA que diseña tus sitios, ajusta tu volumen mensual de sitios e imágenes y ve el precio en directo. Recarga créditos cuando quieras.",
       "eyebrow": "Plan Expert",
       "titre": "El plan Expert, ajustado a tu mes",
       "texte": "Todo el plan Agency, el diseño de sitios generado por IA y un volumen de sitios adaptado al modelo que elijas. El precio se actualiza con cada ajuste.",
@@ -2350,8 +2352,8 @@
       "vide": "Esta tienda todavía no ha indicado su aviso legal."
     },
     "annuaire": {
-      "metaTitre": "Tiendas públicas | Dropvio",
-      "metaDescription": "Las tiendas creadas por la comunidad Dropvio.",
+      "metaTitre": "Directorio de tiendas creadas por la comunidad | Dropvio",
+      "metaDescription": "Descubre las tiendas online creadas y publicadas por la comunidad Dropvio: nichos variados, fichas de producto cuidadas e ideas para lanzar tu propia tienda.",
       "surtitre": "Directorio",
       "titre": "Tiendas públicas",
       "intro": "Descubre las tiendas creadas por la comunidad Dropvio.",
@@ -2552,8 +2554,8 @@
     }
   },
   "faq": {
-    "metaTitre": "Preguntas frecuentes | Dropvio",
-    "metaDescription": "Todo lo que necesitas saber sobre Dropvio: cuenta, facturación, funciones, datos.",
+    "metaTitre": "Preguntas frecuentes: suscripciones y herramientas | Dropvio",
+    "metaDescription": "Todas las respuestas sobre Dropvio: suscripciones Pro, Agency y Expert, prueba gratuita, presupuesto de IA, creación de sitios, auditorías y facturación.",
     "nav": {
       "fonctionnalites": "Funciones",
       "faq": "FAQ",
@@ -2720,7 +2722,12 @@
     "activationLongueTexte": "Tu pago se ha registrado. Vuelve a intentarlo en un momento; si el acceso sigue sin estar activo, escríbenos.",
     "activationRecharger": "Ir al panel",
     "lienFormation": "Ver la formación",
-    "deconnexion": "Cerrar sesión"
+    "deconnexion": "Cerrar sesión",
+    "reprendreExpert": {
+      "titre": "Retomar Expert",
+      "texte": "Tu periodo Expert ha terminado. Configura tu próximo mes para recuperar tus herramientas y tus créditos.",
+      "cta": "Retomar Expert"
+    }
   },
   "ventes": {
     "titre": "Mis ventas",

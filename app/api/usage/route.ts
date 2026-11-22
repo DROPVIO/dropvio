@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getServerUserAndPlan } from "@/lib/supabase-server";
 import { getPeriodeExpert, limiteSitesExpert } from "@/lib/expert-quota";
-import { AI_BUDGET_EUR_PAR_PLAN, IMAGE_BUDGET_EUR_PAR_PLAN, PLAN_LIMITS, currentMonthKey, getMonthlyUsage, limitesDuPlan, budgetIaEur, budgetImagesEur } from "@/lib/plan-limits";
+import { currentMonthKey, getMonthlyUsage, limitesDuPlan, budgetIaEur, budgetImagesEur } from "@/lib/plan-limits";
 import { MODELE_PAR_FONCTION, arrondiCentime, etatFenetres, getBudgetParFonction, getImagesUsedEuros, tokensSortieEquivalents, type EtatFenetre } from "@/lib/ai-budget";
 import { IMAGE_PRICE_EUR } from "@/lib/expert-pricing";
 import { imagesPossiblesBudget } from "@/lib/media/quota-images-regles";

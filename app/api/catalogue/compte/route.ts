@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getServerUserPlanOnly } from "@/lib/supabase-server";
-import { PLAN_LIMITS, limitesDuPlan } from "@/lib/plan-limits";
+import { limitesDuPlan } from "@/lib/plan-limits";
 import { apiError, reponseAbonnementRequis, erreurServeur } from "@/lib/api-errors";
 
 // Nombre de produits du catalogue accessibles au compte connecté (carte du dashboard). Lu par le

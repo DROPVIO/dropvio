@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerUserPlanOnly } from "@/lib/supabase-server";
-import { PLAN_LIMITS, limitesDuPlan } from "@/lib/plan-limits";
+import { limitesDuPlan } from "@/lib/plan-limits";
 import { lirePhotosPrincipales } from "@/lib/catalogue-photos";
 import { COMMANDES_MIN_DEFAUT } from "@/lib/catalogue-commandes";
 import { apiError, reponseAbonnementRequis, erreurServeur } from "@/lib/api-errors";

@@ -4,7 +4,7 @@ import { blocAvisPrompt, validerAvis } from "@/lib/avis-produit";
 import Anthropic from "@anthropic-ai/sdk";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { getServerUserAndPlan } from "@/lib/supabase-server";
-import { PLAN_LIMITS, planLabel, type Plan, type PlanOuAucun, limitesDuPlan } from "@/lib/plan-limits";
+import { planLabel, type PlanOuAucun, limitesDuPlan } from "@/lib/plan-limits";
 import { reponseLimiteIa, SuiviBudgetIa, tokensEstimes } from "@/lib/ai-budget";
 import { EXPERT_MODELS } from "@/lib/expert-pricing";
 import { finaliserSiteExpert, reserverSiteExpert, type ReservationSite } from "@/lib/expert-generation";
@@ -523,7 +523,7 @@ export async function POST(request: NextRequest) {
     return handleGenerateBoutique(body, supabase, user.id, plan);
   }
 
-  const { productName, description, colorPrimary, colorSecondary, colorAccent, style, imageUrl, rating, orders, salePrice, originalPrice, corrections } = body;
+  const { productName, description, colorPrimary, colorSecondary, colorAccent, style, imageUrl, rating, salePrice, originalPrice, corrections } = body;
   const langue = langueSite(body.langue);
   const ctx = await contexteSite(langue);
   // Prix tels qu'affichés dans la langue du site (« 29,99 € », « €29.99 »).

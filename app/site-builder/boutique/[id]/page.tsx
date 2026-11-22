@@ -11,7 +11,7 @@ import PaletteEditor, { type Palette } from "@/app/components/PaletteEditor";
 import { writeBoutiqueDraft, type ProduitBoutiqueDraft } from "@/lib/site-builder-handoff";
 import Image from "next/image";
 import MediathequeModal from "@/components/studio/MediathequeModal";
-import { PLAN_LIMITS, type Plan, limitesDuPlan } from "@/lib/plan-limits";
+import { type Plan, limitesDuPlan } from "@/lib/plan-limits";
 import BoutiqueReglages, { BoutiqueSuppression } from "@/components/site-builder/BoutiqueReglages";
 import BoutiqueShopifyPush from "@/components/site-builder/BoutiqueShopifyPush";
 import TriCollectionsIA from "@/components/site-builder/TriCollectionsIA";
@@ -555,63 +555,6 @@ export default function BoutiqueBuilderDetailPage() {
       p.set("colorSecondary", palette.secondary);
       p.set("colorAccent", palette.accent);
       router.push(`/site-builder?${p.toString()}`);
-    } catch {
-      setContenuError(apiErrorMessage({ code: "network" }));
-    } finally {
-      setConfirmingContenu(false);
-    }
-  }
-
-  // Applique la description/palette revues par l'utilisateur, puis ouvre l'aperçu
-  // propriétaire (getBoutiquePublicUrl) — jamais rendu public automatiquement, la
-  // boutique reste régie par est_publique comme partout ailleurs.
-  async function handleConfirmerContenu() {
-    if (typeof params?.id !== "string" || !reviewPalette || !boutique) return;
-    setConfirmingContenu(true);
-    setContenuError(null);
-    try {
-      if (!(await enregistrerContenuBoutique(reviewDescription, reviewPalette))) return;
-      setReviewDescription(null);
-      setReviewPalette(null);
-
-      // Capture le vrai rendu de la boutique (déjà à jour avec la description/palette
-      // qu'on vient d'enregistrer) et le sauvegarde comme un vrai site dans "Mes sites" —
-      // via /api/sites-generes (pas un insert à part) pour que sitesParMoisMax soit
-      // décompté normalement, puisque c'est cette fois un vrai fichier généré. Un échec
-      // ici (export ou quota atteint) n'annule pas la sauvegarde de la boutique déjà
-      // réussie — juste un avertissement, pas une erreur bloquante.
-      // Sans abonnement : l'export HTML (et donc son ajout à "Mes sites") est réservé à Pro/Agency
-      // côté serveur (/api/boutiques/[id]/export-html) — on évite l'appel inutile et on
-      // l'explique directement plutôt que de laisser passer un 403 générique.
-      if (!canExport) {
-        setContenuError(t("erreurs.exportReservePro"));
-      } else {
-        try {
-          const exportRes = await fetch(`/api/boutiques/${params.id}/export-html`, { method: "POST" });
-          const exportJson = await exportRes.json();
-          if (exportRes.ok) {
-            const saveRes = await fetch("/api/sites-generes", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                nom_produit: exportJson.nom ?? boutique.nom,
-                html_content: exportJson.html,
-                boutique_id: params.id,
-              }),
-            });
-            if (!saveRes.ok) {
-              const saveJson = await saveRes.json().catch(() => ({}));
-              setContenuError(apiErrorMessage(saveJson, t("erreurs.exportSauvegarde")));
-            }
-          } else {
-            setContenuError(apiErrorMessage(exportJson, t("erreurs.exportEchec")));
-          }
-        } catch {
-          setContenuError(t("erreurs.exportReseau"));
-        }
-      }
-
-      window.open(getBoutiquePublicUrl(boutique.slug), "_blank", "noopener,noreferrer");
     } catch {
       setContenuError(apiErrorMessage({ code: "network" }));
     } finally {

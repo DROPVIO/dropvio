@@ -1,4 +1,4 @@
-import type { Plan, PlanOuAucun } from "@/lib/plan-limits";
+import type { PlanOuAucun } from "@/lib/plan-limits";
 import { reglageMedia, type FournisseurId } from "./config";
 import { generateImageOpenAI } from "./openai";
 import { MediaProviderError, MediaProviderNotConfiguredError, type GenerateImageOptions, type GeneratedImage } from "./types";

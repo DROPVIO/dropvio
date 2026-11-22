@@ -65,7 +65,7 @@ export default function DashboardPage() {
   const t = useTranslations("dashboard.home");
   const tNav = useTranslations("dashboard.nav");
   const [planEnVigueur, setPlanEnVigueur] = useState<Plan | null>(null);
-  const [profile,       setProfile]       = useState<Profile | null>(null);
+  const [,              setProfile]       = useState<Profile | null>(null);
   const [loading,       setLoading]       = useState(true);
   const [shopifyStatus, setShopifyStatus] = useState<ShopifyStatus | null>(null);
 

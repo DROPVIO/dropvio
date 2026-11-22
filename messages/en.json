@@ -742,7 +742,9 @@
       "read": "Read →",
       "readerBack": "← Back to the training",
       "readerLoading": "Laying out the document…",
-      "readerError": "Could not generate the paginated view. Try reloading the page."
+      "readerError": "Could not generate the paginated view. Try reloading the page.",
+      "metaTitre": "Dropshipping course: from zero to your first sale | Dropvio",
+      "metaDescription": "Two dropshipping courses, short or complete: choosing a product, margin maths, your store, suppliers and legal basics. One-time purchase, lifetime access."
     },
     "produits": {
       "title": "🏆 Winning Products",
@@ -1189,8 +1191,8 @@
     }
   },
   "landing": {
-    "metaTitre": "Winning products, real net margin and Shopify store | Dropvio",
-    "metaDescription": "Find winning products on AliExpress, calculate your net margin after fees, shipping and taxes, and generate a store that is ready to sell.",
+    "metaTitre": "Winning products, net margin and Shopify store | Dropvio",
+    "metaDescription": "Find winning products on AliExpress, work out your real net margin after fees, shipping and taxes, then generate a Shopify store that is ready to sell.",
     "nav": {
       "pricing": "Pricing",
       "login": "Log in",
@@ -1412,8 +1414,8 @@
       "contact": "Contact"
     },
     "expertPage": {
-      "metaTitre": "Expert plan: configure your month | Dropvio",
-      "metaDescription": "Choose the AI model that designs your sites, set your volume for the month and see the price live. Credit top-ups available during the month.",
+      "metaTitre": "Expert plan: build a tailor-made month of AI | Dropvio",
+      "metaDescription": "Choose the AI model that designs your sites, set your monthly volume of sites and images and see the price update live. Top up your credits at any time.",
       "eyebrow": "Expert plan",
       "titre": "The Expert plan, tuned to your month",
       "texte": "Everything in Agency, AI-generated site design and a site volume adapted to the model you choose. The price updates with every setting.",
@@ -2350,8 +2352,8 @@
       "vide": "No legal notice has been provided for this store yet."
     },
     "annuaire": {
-      "metaTitre": "Public stores | Dropvio",
-      "metaDescription": "Stores created by the Dropvio community.",
+      "metaTitre": "Directory of stores built by the community | Dropvio",
+      "metaDescription": "Browse the online stores built and published by the Dropvio community: a wide range of niches, polished product pages and ideas for launching your own store.",
       "surtitre": "Directory",
       "titre": "Public stores",
       "intro": "Discover the stores created by the Dropvio community.",
@@ -2552,8 +2554,8 @@
     }
   },
   "faq": {
-    "metaTitre": "Frequently asked questions | Dropvio",
-    "metaDescription": "Everything you need to know about Dropvio: account, billing, features, data.",
+    "metaTitre": "FAQ: subscriptions, tools and your account | Dropvio",
+    "metaDescription": "Every answer about Dropvio: Pro, Agency and Expert subscriptions, the free trial, AI budget, site generation, audits, billing and how your data is handled.",
     "nav": {
       "fonctionnalites": "Features",
       "faq": "FAQ",
@@ -2720,7 +2722,12 @@
     "activationLongueTexte": "Your payment has been recorded. Try again in a moment; if access still isn't active, write to us.",
     "activationRecharger": "Go to the dashboard",
     "lienFormation": "View the course",
-    "deconnexion": "Sign out"
+    "deconnexion": "Sign out",
+    "reprendreExpert": {
+      "titre": "Resume Expert",
+      "texte": "Your Expert period has ended. Build your next month to get your tools and credits back.",
+      "cta": "Resume Expert"
+    }
   },
   "ventes": {
     "titre": "My sales",

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerUserAndPlan } from "@/lib/supabase-server";
 import { apiError, erreurServeur } from "@/lib/api-errors";
-import { PLAN_LIMITS, planLabel, limitesDuPlan } from "@/lib/plan-limits";
+import { planLabel, limitesDuPlan } from "@/lib/plan-limits";
 
 // La sauvegarde passe par cette route (plutôt qu'un insert direct depuis le navigateur)
 // pour que la limite du plan soit appliquée côté serveur, jamais contournable.

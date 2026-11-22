@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 import { PRIX_PLAN_EUR, formatEuros } from "@/lib/prix";
@@ -18,6 +19,7 @@ type EtatAbonnement = {
   essaiFin: string | null;
   periodeFin: string | null;
   portailDisponible: boolean;
+  expertExpire?: boolean;
 };
 
 const PLANS: PlanPayant[] = ["pro", "agency"];
@@ -207,6 +209,21 @@ export default function AbonnementPage() {
         {erreur ? (
           <div className="mb-5 rounded-xl bg-[var(--danger)]/10 border border-[var(--danger)]/20 px-4 py-3 text-[var(--danger)] text-sm">
             {erreur}
+          </div>
+        ) : null}
+
+        {etat?.expertExpire ? (
+          <div className="mb-5 flex flex-col gap-3 rounded-2xl border border-emerald-400/40 bg-emerald-400/[0.05] p-6 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h2 className="m-0 text-lg font-semibold text-[var(--text-primary)]">{t("reprendreExpert.titre")}</h2>
+              <p className="m-0 mt-1 text-sm text-[var(--text-muted)]">{t("reprendreExpert.texte")}</p>
+            </div>
+            <Link
+              href="/expert"
+              className="shrink-0 rounded-xl bg-emerald-400 px-5 py-3 text-center text-sm font-semibold text-black no-underline hover:bg-emerald-300"
+            >
+              {t("reprendreExpert.cta")}
+            </Link>
           </div>
         ) : null}
 

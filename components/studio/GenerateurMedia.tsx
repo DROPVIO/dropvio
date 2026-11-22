@@ -14,7 +14,8 @@ import { BOUTON_FORMAT, BOUTON_PRIMAIRE, BOUTON_SECONDAIRE } from "./styles";
 
 /** Lien d'action quand le quota du mois est épuisé : crédits pour Expert, plans sinon. */
 export function LienQuotaEpuise({ code }: { code: unknown }) {
-  if (code === "expert_quota_images") return <Link href="/quota" className="ml-1 underline">Quota</Link>;
+  const tNav = useTranslations("dashboard.nav");
+  if (code === "expert_quota_images") return <Link href="/quota" className="ml-1 underline">{tNav("itemQuota")}</Link>;
   return null;
 }
 

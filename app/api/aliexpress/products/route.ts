@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { apiError, reponseAbonnementRequis, erreurServeur } from "@/lib/api-errors";
 import { getServerUserPlanOnly } from "@/lib/supabase-server";
-import { PLAN_LIMITS, limitesDuPlan } from "@/lib/plan-limits";
+import { limitesDuPlan } from "@/lib/plan-limits";
 import { commandesMinEffectif } from "@/lib/catalogue-commandes";
 
 const DEFAULT_LIMIT = 20;

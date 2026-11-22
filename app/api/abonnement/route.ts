@@ -8,12 +8,12 @@ export async function GET() {
   const { supabase, user, plan } = await getServerUserPlanOnly();
 
   if (!user) {
-    return NextResponse.json({ error: "Connecte-toi pour voir ton abonnement.", code: "auth_required" }, { status: 401 });
+    return NextResponse.json({ error: "Connectez-vous pour voir votre abonnement.", code: "auth_required" }, { status: 401 });
   }
 
   const { data: profil } = await supabase
     .from("profils")
-    .select("abonnement_statut, essai_utilise, essai_fin, periode_fin, stripe_customer_id")
+    .select("plan, abonnement_statut, essai_utilise, essai_fin, periode_fin, stripe_customer_id")
     .eq("id", user.id)
     .maybeSingle();
 
@@ -24,5 +24,7 @@ export async function GET() {
     essaiFin: profil?.essai_fin ?? null,
     periodeFin: profil?.periode_fin ?? null,
     portailDisponible: Boolean(profil?.stripe_customer_id),
+    // Expert en base mais aucune période en cours : la page propose de reprendre Expert.
+    expertExpire: profil?.plan === "expert" && plan === null,
   });
 }

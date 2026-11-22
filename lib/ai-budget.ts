@@ -10,17 +10,7 @@
 // Anthropic, ajouter(...) après chaque réponse, et enregistrer() dans un finally pour que les
 // tokens consommés soient comptés même si la suite de la route échoue.
 import type { SupabaseClient } from "@supabase/supabase-js";
-import {
-  AI_BUDGET_EUR_PAR_PLAN,
-  AI_BUDGET_PART_JOUR,
-  AI_BUDGET_PART_SEMAINE,
-  budgetIaEur,
-  currentMonthKey,
-  logTokensUsage,
-  type Plan,
-  type PlanOuAucun,
-  type UsageFeature,
-} from "@/lib/plan-limits";
+import { AI_BUDGET_PART_JOUR, AI_BUDGET_PART_SEMAINE, budgetIaEur, currentMonthKey, logTokensUsage, type PlanOuAucun, type UsageFeature } from "@/lib/plan-limits";
 import { coutEuros, prixEuros, type ModeleIa } from "@/lib/ai-pricing";
 import { IMAGE_PRICE_EUR } from "@/lib/expert-pricing";
 import { apiError } from "@/lib/api-errors";
