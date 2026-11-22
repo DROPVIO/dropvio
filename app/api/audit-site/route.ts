@@ -13,7 +13,7 @@ const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
 // Une page de 2 000 000 de caractères (~600 000 tokens) prend plusieurs dizaines de secondes
 // rien qu'en lecture côté modèle.
-export const maxDuration = 300;
+export const maxDuration = 800;
 
 function extraireNomSite(html: string): string {
   const match = html.match(/<title[^>]*>([^<]*)<\/title>/i);

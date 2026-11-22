@@ -16,7 +16,7 @@ import {
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
-export const maxDuration = 300;
+export const maxDuration = 800;
 
 // Modification d'un site généré, sur toutes ses pages ou une seule (Site Builder, étape
 // résultat : components/site-builder/ModifierSiteIA.tsx). Sans état : le client envoie les

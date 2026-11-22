@@ -30,7 +30,7 @@ const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
 // Inférieur aux 15 minutes de expert_rembourser_expirees : une génération encore en cours ne
 // peut pas être remboursée par le cron.
-export const maxDuration = 600;
+export const maxDuration = 800;
 
 // Couleurs de fond/texte du mode IA — fixes, indépendantes du style choisi (voir le prompt
 // produit existant plus bas : "Fond global : #0a0a0f" n'a jamais varié). La grille de

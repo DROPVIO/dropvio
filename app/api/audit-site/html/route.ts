@@ -9,7 +9,7 @@ import { createSupabaseAdminClient } from "@/lib/supabase-admin";
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
-export const maxDuration = 300;
+export const maxDuration = 800;
 
 type Category = {
   nom: string;

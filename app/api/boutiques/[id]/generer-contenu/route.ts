@@ -7,6 +7,9 @@ import { nicheLabel } from "@/lib/niches";
 import { BudgetIaDepasse, reponseBudgetDepasse, SuiviBudgetIa, tokensEstimes } from "@/lib/ai-budget";
 import { erreurServeur } from "@/lib/api-errors";
 
+// Génération longue (appel Claude) : durée maximale de la fonction.
+export const maxDuration = 800;
+
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
 // En dessous de ce seuil, la description existante est considérée comme un placeholder

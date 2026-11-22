@@ -17,7 +17,7 @@ import { apiError } from "@/lib/api-errors";
 
 // Inférieur aux 15 minutes de expert_rembourser_expirees : une génération encore en cours ne
 // peut pas être remboursée par le cron.
-export const maxDuration = 300;
+export const maxDuration = 800;
 
 const PROMPT_MIN = 3;
 // Consigne ajoutée par l'utilisateur au prompt construit depuis la fiche produit.
