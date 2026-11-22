@@ -28,7 +28,7 @@ export default function FormulaireRetractation() {
   const [dateAchat, setDateAchat] = useState("");
   const [envoi, setEnvoi] = useState(false);
   const [erreur, setErreur] = useState<string | null>(null);
-  const [accuse, setAccuse] = useState<{ reference: string; recueLe: string } | null>(null);
+  const [accuse, setAccuse] = useState<{ reference: string; recueLe: string; emailEnvoye: boolean } | null>(null);
 
   useEffect(() => {
     fetch("/api/retractation/achats")
@@ -63,7 +63,7 @@ export default function FormulaireRetractation() {
         setErreur(apiErrorMessage(json));
         return;
       }
-      setAccuse({ reference: json.reference, recueLe: json.recueLe });
+      setAccuse({ reference: json.reference, recueLe: json.recueLe, emailEnvoye: json.emailEnvoye === true });
       setEtape("accuse");
     } catch {
       setErreur(apiErrorMessage({ code: "network" }));
@@ -82,7 +82,13 @@ export default function FormulaireRetractation() {
         <p className="m-0 text-sm text-[var(--text-primary)]">
           {t("reference")} : <strong className="font-mono text-base">{accuse.reference}</strong>
         </p>
-        <p className="m-0 text-sm text-[var(--text-muted)]">{t("accuseSuite", { email: email.trim() })}</p>
+        {accuse.emailEnvoye ? (
+          <p className="m-0 text-sm text-[var(--text-muted)]">{t("emailEnvoye", { email: email.trim() })}</p>
+        ) : (
+          <p className="m-0 text-sm text-[var(--text-muted)]">
+            {t("accuseSuite", { email: email.trim() })} {t("conservez")}
+          </p>
+        )}
       </div>
     );
   }

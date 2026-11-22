@@ -2843,7 +2843,9 @@
       "formation_courte": "Formation courte",
       "formation_longue": "Formation longue",
       "formation_bundle": "Les deux formations"
-    }
+    },
+    "emailEnvoye": "Un e-mail de confirmation vous a été envoyé à {email}.",
+    "conservez": "Conservez cette référence."
   },
   "resiliation": {
     "lien": "Résilier votre contrat",
@@ -2872,7 +2874,9 @@
       "agency": "Agency",
       "expert": "Expert",
       "inconnu": "Abonnement"
-    }
+    },
+    "emailEnvoye": "Un e-mail de confirmation vous a été envoyé à {email}.",
+    "conservez": "Conservez cette référence."
   },
   "piedDePage": {
     "titre": "Liens juridiques",

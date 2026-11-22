@@ -2843,7 +2843,9 @@
       "formation_courte": "Corso breve",
       "formation_longue": "Corso lungo",
       "formation_bundle": "Entrambi i corsi"
-    }
+    },
+    "emailEnvoye": "Ti abbiamo inviato un'e-mail di conferma a {email}.",
+    "conservez": "Conserva questo riferimento."
   },
   "resiliation": {
     "lien": "Disdire il contratto",
@@ -2872,7 +2874,9 @@
       "agency": "Agency",
       "expert": "Expert",
       "inconnu": "Abbonamento"
-    }
+    },
+    "emailEnvoye": "Ti abbiamo inviato un'e-mail di conferma a {email}.",
+    "conservez": "Conserva questo riferimento."
   },
   "piedDePage": {
     "titre": "Link legali",

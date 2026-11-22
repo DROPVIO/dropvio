@@ -6,7 +6,7 @@ import { useFormatter, useTranslations } from "next-intl";
 import { useApiErrorMessage } from "@/lib/use-api-error";
 
 type Recap = { plan: string | null; statut: string; finAcces: string | null; dejaResilie: boolean };
-type Accuse = { reference: string; finAcces: string | null; plan: string | null; enregistreLe: string };
+type Accuse = { reference: string; finAcces: string | null; plan: string | null; enregistreLe: string; emailEnvoye?: boolean; email?: string | null };
 
 const CADRE = "flex flex-col gap-4 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-6";
 const BOUTON = "self-start rounded-xl bg-[var(--danger)] px-5 py-3 text-sm font-semibold text-white transition hover:opacity-90 disabled:opacity-50";
@@ -66,7 +66,13 @@ export default function ParcoursResiliation() {
         <p className="m-0 text-sm text-[var(--text-muted)]">
           {t("enregistreLe", { date: format.dateTime(new Date(accuse.enregistreLe), { dateStyle: "long", timeStyle: "short" }) })}
         </p>
-        <p className="m-0 text-sm text-[var(--text-muted)]">{t("accuseSuite")}</p>
+        {accuse.emailEnvoye && accuse.email ? (
+          <p className="m-0 text-sm text-[var(--text-muted)]">{t("emailEnvoye", { email: accuse.email })}</p>
+        ) : (
+          <p className="m-0 text-sm text-[var(--text-muted)]">
+            {t("accuseSuite")} {t("conservez")}
+          </p>
+        )}
         <Link href="/abonnement" className="text-sm text-[var(--text-primary)] underline underline-offset-4">{t("retour")}</Link>
       </div>
     );

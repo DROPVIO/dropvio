@@ -2843,7 +2843,9 @@
       "formation_courte": "Short course",
       "formation_longue": "Long course",
       "formation_bundle": "Both courses"
-    }
+    },
+    "emailEnvoye": "A confirmation e-mail has been sent to {email}.",
+    "conservez": "Keep this reference."
   },
   "resiliation": {
     "lien": "Cancel your contract",
@@ -2872,7 +2874,9 @@
       "agency": "Agency",
       "expert": "Expert",
       "inconnu": "Subscription"
-    }
+    },
+    "emailEnvoye": "A confirmation e-mail has been sent to {email}.",
+    "conservez": "Keep this reference."
   },
   "piedDePage": {
     "titre": "Legal links",

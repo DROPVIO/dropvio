@@ -11,13 +11,15 @@ import { checkRateLimit } from "@/lib/rate-limit";
 import { adresseIp } from "@/lib/consentements-serveur";
 import { abonnementAResilier, finAcces, referenceResiliation } from "@/lib/resiliation";
 import type { Plan } from "@/lib/plan-limits";
+import { envoyerEmail } from "@/lib/email";
+import { emailConfirmationResiliation } from "@/lib/emails/confirmation-resiliation";
 
 // Résiliation en ligne (parcours /resiliation) : récapitulatif (GET) puis confirmation (POST),
 // qui programme la fin de l'abonnement à la fin de la période en cours (cancel_at_period_end).
 // Aucun remboursement, aucun changement de l'essai : l'accès reste ouvert jusqu'à la date annoncée.
 
 type Contexte =
-  | { ok: true; userId: string; subscription: Stripe.Subscription; plan: Plan | null }
+  | { ok: true; userId: string; email: string | null; subscription: Stripe.Subscription; plan: Plan | null }
   | { ok: false; reponse: NextResponse };
 
 async function contexte(): Promise<Contexte> {
@@ -55,7 +57,7 @@ async function contexte(): Promise<Contexte> {
     return { ok: false, reponse: apiError("no_subscription", 400, "Aucun abonnement à résilier pour ce compte.") };
   }
   const plan = etat.abonnement.plan ?? planDepuisPriceId(subscription.items.data[0]?.price.id);
-  return { ok: true, userId: user.id, subscription, plan };
+  return { ok: true, userId: user.id, email: user.email ?? null, subscription, plan };
 }
 
 export async function GET() {
@@ -108,7 +110,19 @@ export async function POST(request: Request) {
     // base échoue (migration 068 pas encore appliquée), l'erreur est journalisée.
     if (error) console.error(`[resiliation] accusé ${reference} non enregistré :`, error.message);
 
-    return NextResponse.json({ reference, finAcces: fin, plan: c.plan, enregistreLe: new Date().toISOString() });
+    // Confirmation à l'e-mail du compte ; un envoi manqué ne remet pas en cause la résiliation.
+    const { envoye } = c.email
+      ? await envoyerEmail(emailConfirmationResiliation({ a: c.email, reference, plan: c.plan, finAcces: fin }))
+      : { envoye: false };
+
+    return NextResponse.json({
+      reference,
+      finAcces: fin,
+      plan: c.plan,
+      enregistreLe: new Date().toISOString(),
+      emailEnvoye: envoye,
+      email: envoye ? c.email : null,
+    });
   } catch (err) {
     return erreurServeur("api/resiliation POST", err);
   }

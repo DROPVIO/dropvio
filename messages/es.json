@@ -2843,7 +2843,9 @@
       "formation_courte": "Formación corta",
       "formation_longue": "Formación larga",
       "formation_bundle": "Las dos formaciones"
-    }
+    },
+    "emailEnvoye": "Te hemos enviado un correo de confirmación a {email}.",
+    "conservez": "Guarda esta referencia."
   },
   "resiliation": {
     "lien": "Cancelar tu contrato",
@@ -2872,7 +2874,9 @@
       "agency": "Agency",
       "expert": "Expert",
       "inconnu": "Suscripción"
-    }
+    },
+    "emailEnvoye": "Te hemos enviado un correo de confirmación a {email}.",
+    "conservez": "Guarda esta referencia."
   },
   "piedDePage": {
     "titre": "Enlaces legales",

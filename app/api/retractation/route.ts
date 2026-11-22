@@ -6,6 +6,8 @@ import { apiError, erreurServeur } from "@/lib/api-errors";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { adresseIp } from "@/lib/consentements-serveur";
 import { referenceRetractation, validerDemande } from "@/lib/retractation";
+import { envoyerEmail } from "@/lib/email";
+import { emailAccuseRetractation } from "@/lib/emails/accuse-retractation";
 
 // Demande de rétractation déposée en ligne. Accessible sans connexion (droit de rétractation
 // exerçable pendant tout le délai) ; rattachée au compte si la personne est connectée.
@@ -42,6 +44,10 @@ export async function POST(request: Request) {
     .single();
   if (error || !data) return erreurServeur("api/retractation", error ?? "Insertion sans résultat");
 
-  // L'application n'envoie pas encore d'e-mail : l'accusé est affiché avec sa référence.
-  return NextResponse.json({ reference: data.reference, recueLe: data.created_at });
+  // Accusé par e-mail à l'adresse saisie. Un envoi manqué (clé absente, Resend en erreur) ne
+  // fait pas échouer la demande, déjà enregistrée : l'écran affiche alors la référence seule.
+  const { envoye } = await envoyerEmail(
+    emailAccuseRetractation({ a: demande.email, nom: demande.nom, reference: data.reference, recueLe: data.created_at, achat: demande.achat })
+  );
+  return NextResponse.json({ reference: data.reference, recueLe: data.created_at, emailEnvoye: envoye });
 }
