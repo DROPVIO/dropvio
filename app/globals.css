@@ -672,3 +672,16 @@ footer.lp-cta p { color: var(--text-2); margin-bottom: 32px; }
   .dv-hero-h1 { font-size: clamp(36px, min(5.4vw, 7vh), 72px); }
   .dv-hero-sub { font-size: clamp(16px, min(1.35vw, 2.3vh), 22px); }
 }
+
+/* Pages juridiques rendues depuis content/legal/*.md (components/LegalPageLayout.tsx). */
+.document-legal { font-size: 0.875rem; line-height: 1.75rem; color: var(--text-muted); }
+.document-legal h1 { margin: 0 0 1.5rem; font-size: 1.875rem; line-height: 2.25rem; font-weight: 700; color: var(--text-primary); }
+.document-legal h2 { margin: 2rem 0 0.5rem; font-size: 1.125rem; font-weight: 600; color: var(--text-primary); }
+.document-legal h3 { margin: 1.5rem 0 0.5rem; font-size: 1rem; font-weight: 600; color: var(--text-primary); }
+.document-legal p { margin: 0 0 0.75rem; }
+.document-legal ul, .document-legal ol { margin: 0 0 0.75rem; padding-left: 1.25rem; display: flex; flex-direction: column; gap: 0.375rem; }
+.document-legal ul { list-style: disc; }
+.document-legal ol { list-style: decimal; }
+.document-legal strong { color: var(--text-primary); }
+.document-legal a { color: var(--accent); }
+.document-legal a:hover { opacity: 0.8; }

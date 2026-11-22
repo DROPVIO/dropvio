@@ -134,15 +134,6 @@ export default function LandingContenu() {
             <Link href="/faq" className="text-[#444] no-underline">
               {t("footer.faq")}
             </Link>
-            <Link href="/cgv" className="text-[#444] no-underline">
-              {t("footer.terms")}
-            </Link>
-            <Link href="/confidentialite" className="text-[#444] no-underline">
-              {t("footer.privacy")}
-            </Link>
-            <Link href="/mentions-legales" className="text-[#444] no-underline">
-              {t("footer.legal")}
-            </Link>
             <a href={`mailto:${SUPPORT_EMAIL}`} className="text-[#444] no-underline">
               {t("footer.contact")}
             </a>

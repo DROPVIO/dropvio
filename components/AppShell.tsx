@@ -50,7 +50,7 @@ const PROTECTED_PATHS = ["/studio", "/quota", "/produits-gagnants", "/site-build
  *  - Mobile (< 1024 px) : tiroir <dialog> ouvert avec showModal() par le bouton en haut à gauche.
  *    Échap, un clic sur le fond ou sur un lien le ferment ; le focus revient au bouton ; la page
  *    derrière ne défile pas. */
-export function CadreApp({ children }: { children: React.ReactNode }) {
+export function CadreApp({ children, pied }: { children: React.ReactNode; pied?: React.ReactNode }) {
   const collapsed = useSyncExternalStore(subscribeCollapsed, readCollapsed, () => false);
   const t = useTranslations("dashboard.nav");
   const tiroirRef = useRef<HTMLDialogElement>(null);
@@ -128,6 +128,7 @@ export function CadreApp({ children }: { children: React.ReactNode }) {
             </span>
           </div>
           {children}
+          {pied}
         </main>
       </div>
       <OnboardingTour />
@@ -135,16 +136,23 @@ export function CadreApp({ children }: { children: React.ReactNode }) {
   );
 }
 
-export default function AppShell({ children }: { children: React.ReactNode }) {
+/** pied : pied de page juridique (components/PiedDePageLegal.tsx), placé dans la colonne de
+ *  contenu des pages de l'outil pour ne pas passer sous la barre latérale. */
+export default function AppShell({ children, pied }: { children: React.ReactNode; pied?: React.ReactNode }) {
   const pathname = usePathname();
   const showSidebar = PROTECTED_PATHS.some((p) => pathname.startsWith(p));
 
   if (!showSidebar) {
-    return <>{children}</>;
+    return (
+      <>
+        {children}
+        {pied}
+      </>
+    );
   }
 
   return (
-    <CadreApp>
+    <CadreApp pied={pied}>
       <ClocheVentes />
       <PaiementActionBanner />
       {children}

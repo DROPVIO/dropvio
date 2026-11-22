@@ -3,7 +3,10 @@ import { Geist, Geist_Mono, Inter, Plus_Jakarta_Sans } from "next/font/google";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages, getTranslations } from "next-intl/server";
 import "./globals.css";
+import { cookies, headers } from "next/headers";
 import AppShell from "@/components/AppShell";
+import PiedDePageLegal from "@/components/PiedDePageLegal";
+import { resolveBoutiqueSlugFromHost } from "@/lib/boutique-subdomains";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -46,6 +49,10 @@ export default async function RootLayout({
   // NEXT_LOCALE > Accept-Language > profils.langue si connecté) — voir lib/locale.ts.
   const locale = await getLocale();
   const messages = await getMessages();
+  // Pied de page juridique : absent des vitrines servies sur le sous-domaine d'une boutique ;
+  // lien de résiliation pour une session présente (cookie Supabase, sans appel réseau).
+  const vitrine = resolveBoutiqueSlugFromHost((await headers()).get("host"), process.env.NEXT_PUBLIC_ROOT_DOMAIN) !== null;
+  const connecte = (await cookies()).getAll().some((c) => c.name.startsWith("sb-") && c.name.includes("-auth-token"));
 
   return (
     <html
@@ -73,7 +80,7 @@ export default async function RootLayout({
       </head>
       <body className="min-h-full bg-[var(--bg)]">
         <NextIntlClientProvider locale={locale} messages={messages}>
-          <AppShell>{children}</AppShell>
+          <AppShell pied={<PiedDePageLegal connecte={connecte} vitrine={vitrine} />}>{children}</AppShell>
         </NextIntlClientProvider>
       </body>
     </html>
