@@ -1,5 +1,38 @@
 # Rapport de modifications
 
+## Séance du 22 novembre (suite) — e-mails d'accusé (Resend)
+
+1. **Migrations 066 et 068** alignées sur la base : policies en `(select auth.uid()) = user_id`.
+   Rien d'autre de modifié.
+2. **Accusés par e-mail** : paquet officiel `resend`, `lib/email.ts` (`envoyerEmail`), gabarits
+   `lib/emails/accuse-retractation.ts` et `lib/emails/confirmation-resiliation.ts` (HTML simple
+   sans image externe + version texte, champs saisis échappés), un test chacun plus
+   `lib/email.test.ts`. L'écran d'accusé affiche « Un e-mail de confirmation vous a été envoyé
+   à … » seulement si l'envoi a réussi ; sinon le texte actuel suivi de « Conservez cette
+   référence. ». `RESEND_API_KEY` et `EMAIL_EXPEDITEUR` ajoutés à `.env.example` sans valeur.
+3. **Vérifications** : tsc, lint, 227 tests réussis (1 ignoré, 0 échec), build sans
+   avertissement. Sans clé Resend, `POST /api/retractation` valide → 200 avec
+   `emailEnvoye: false`, accusé affiché, seulement un avertissement en console.
+
+### Décisions prises seul
+
+- **Écran de résiliation sans e-mail** : la consigne demande d'ajouter « Conservez cette
+  référence. » au texte actuel, qui disait déjà « Conservez ce numéro de référence… ». J'ai
+  appliqué la consigne à la lettre ; les deux phrases se suivent (à alléger si vous le souhaitez).
+- **E-mails en français uniquement**, quelle que soit la langue de l'interface, comme demandé.
+- **Résiliation** : l'e-mail part à l'adresse du compte Supabase ; sans adresse, rien n'est envoyé.
+- **Demande de test en base** : le test sans clé a créé une vraie demande
+  `RET-20261122-VBQPU3` (Test Smoke, test-smoke@example.com). Je ne l'ai pas supprimée ; pour
+  la clore : `npx tsx scripts/demandes-retractation.ts --traiter RET-20261122-VBQPU3`.
+- L'avertissement `npm warn allow-scripts` affiché par `npm install` existait déjà (esbuild,
+  fsevents, @swc/core…) : il ne vient pas de `resend`.
+
+### Ce qui reste pour vous
+
+- Renseigner `RESEND_API_KEY` et `EMAIL_EXPEDITEUR` (domaine vérifié dans Resend) en local et
+  sur Vercel.
+- Aucune nouvelle migration.
+
 ## Séance du 22 novembre — paiement, rétractation, résiliation, pages juridiques
 
 Branche : `fix/sans-plan-free-et-corrections`. Un commit par étape (message commençant par son
