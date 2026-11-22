@@ -229,7 +229,7 @@ export default function TemplateEditor({
     if (saving) return;
     const nom = isBoutiqueMode ? boutiqueDraft?.nomBoutique || t("nomParDefautBoutique") : contenu.titre || t("nomParDefautLanding");
 
-    // Plan free : la sauvegarde dans "Mes sites" reste inconditionnelle (le travail n'est
+    // Sans abonnement : la sauvegarde dans "Mes sites" reste inconditionnelle (le travail n'est
     // jamais perdu, juste pas téléchargeable) — voir diagnostic "restriction export Site
     // Builder". Le fichier n'est produit que pour Pro/Agency.
     if (canExport) {

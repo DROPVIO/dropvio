@@ -18,8 +18,8 @@ describe("générateur d'images et inclusion par plan", () => {
       assert.deepEqual(reglageMedia(plan), { generateur: "openai", inclus: null }, plan);
       assert.equal(generationDisponible(plan), true, plan);
     }
-    assert.deepEqual(reglageMedia("free"), { generateur: null, inclus: null });
-    assert.equal(generationDisponible("free"), false);
+    assert.deepEqual(reglageMedia(null), { generateur: null, inclus: null });
+    assert.equal(generationDisponible(null), false);
   });
 
   it("inclusion non décidée : null partout, donc aucune mention « inclus » ni « facturé »", () => {

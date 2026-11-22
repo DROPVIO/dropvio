@@ -1,12 +1,12 @@
 // Règles du quota d'images, sans dépendance serveur (importables côté client, testées par
 // lib/media/quota-images-regles.test.ts).
-import type { Plan } from "@/lib/plan-limits";
+import type { Plan, PlanOuAucun } from "@/lib/plan-limits";
 import { generationDisponible } from "./config";
 
 export type SourceQuotaImages = "expert" | "budget";
 
 /** Expert : quota d'images du plan. Pro et Agency : budget images du mois. Sans plan payant : null. */
-export function sourceQuotaImages(plan: Plan): SourceQuotaImages | null {
+export function sourceQuotaImages(plan: PlanOuAucun): SourceQuotaImages | null {
   if (!generationDisponible(plan)) return null;
   return plan === "expert" ? "expert" : "budget";
 }

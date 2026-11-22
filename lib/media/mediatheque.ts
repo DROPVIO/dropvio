@@ -1,5 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { MEDIA_STOCKAGE_MAX_OCTETS, type Plan } from "@/lib/plan-limits";
+import { stockageMaxOctets, type PlanOuAucun } from "@/lib/plan-limits";
 import type { MediaMime } from "./constantes";
 
 export const BUCKET_MEDIATHEQUE = "mediatheque";
@@ -22,8 +22,8 @@ export function detecterMime(octets: Uint8Array): MediaMime | null {
   return null;
 }
 
-export async function stockageMedia(admin: SupabaseClient, userId: string, plan: Plan): Promise<{ utilise: number; max: number }> {
+export async function stockageMedia(admin: SupabaseClient, userId: string, plan: PlanOuAucun): Promise<{ utilise: number; max: number }> {
   const { data, error } = await admin.rpc("medias_octets_utilises", { p_user_id: userId });
   if (error) throw new Error(error.message);
-  return { utilise: Number(data ?? 0), max: MEDIA_STOCKAGE_MAX_OCTETS[plan] };
+  return { utilise: Number(data ?? 0), max: stockageMaxOctets(plan) };
 }

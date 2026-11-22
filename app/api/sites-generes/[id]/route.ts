@@ -28,12 +28,12 @@ export async function GET(
     return NextResponse.json({ error: "Site introuvable", code: "site_not_found" }, { status: 404 });
   }
 
-  // Restriction plan free : l'aperçu/la régénération restent disponibles (le pré-remplissage
+  // Restriction sans abonnement : l'aperçu/la régénération restent disponibles (le pré-remplissage
   // ?regenerate=<id> côté site-builder n'exploite jamais html_content, seulement les autres
   // champs ci-dessus), mais le code source brut ne doit pas transiter par cette route — c'est
   // justement ce que /api/sites-generes/[id]/shopify-push et le bouton "Télécharger" de
   // app/mes-sites/page.tsx consomment. Voir aussi le blocage symétrique sur shopify-push.
-  if (plan === "free") {
+  if (plan === null) {
     const { nom_produit, description, lien_aliexpress, image_url, prix_vente, prix_original, style_id, couleur_primary, couleur_secondary, couleur_accent } = data;
     return NextResponse.json({
       nom_produit, description, lien_aliexpress, image_url, prix_vente, prix_original, style_id, couleur_primary, couleur_secondary, couleur_accent,
@@ -152,7 +152,7 @@ export async function PATCH(
   // de l'écraser, pour rendre l'application d'un HTML corrigé annulable. La lecture se fait
   // ici et non côté client — deux appels réseau séparés laisseraient la sauvegarde à moitié
   // faite si le second échouait, et le client n'a de toute façon pas accès au html_content
-  // d'un site en plan free. Reste deux requêtes SQL (PostgREST ne sait pas exprimer
+  // d'un site sans abonnement. Reste deux requêtes SQL (PostgREST ne sait pas exprimer
   // « set a = b » dans un update), mais un seul aller-retour HTTP et un seul point d'échec
   // côté appelant.
   if (body.sauvegarder_precedent === true && typeof updates.html_content === "string") {

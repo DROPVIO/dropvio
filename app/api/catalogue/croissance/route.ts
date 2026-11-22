@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerUserPlanOnly } from "@/lib/supabase-server";
-import { apiError } from "@/lib/api-errors";
+import { apiError, reponseAbonnementRequis } from "@/lib/api-errors";
 
 // Au plus une page de Produits gagnants à la fois.
 const IDS_MAX = 100;
@@ -9,10 +9,11 @@ const IDS_MAX = 100;
 // produit (snapshots_produits). Lu par le serveur avec la session de l'utilisateur : le RLS
 // (migration 057) ne renvoie que l'historique des produits accessibles à son plan.
 export async function GET(request: NextRequest) {
-  const { supabase, user } = await getServerUserPlanOnly();
+  const { supabase, user, plan } = await getServerUserPlanOnly();
   if (!user) {
     return apiError("auth_required", 401, "Connecte-toi pour voir le catalogue.");
   }
+  if (plan === null) return reponseAbonnementRequis();
 
   const ids = (new URL(request.url).searchParams.get("ids") ?? "")
     .split(",")

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerUserPlanOnly } from "@/lib/supabase-server";
 import { lirePhotos, photosValides, remplacerPhotos } from "@/lib/catalogue-photos";
-import { apiError } from "@/lib/api-errors";
+import { apiError, reponseAbonnementRequis } from "@/lib/api-errors";
 
 // Photos d'un produit du catalogue POUR L'UTILISATEUR CONNECTÉ (table catalogue_photos, migration
 // 053). Le catalogue commun n'est jamais modifié. PUT remplace la liste ordonnée (la première
@@ -19,8 +19,10 @@ function reponseTableAbsente() {
 
 export async function PUT(request: NextRequest, context: { params: Promise<{ id: string }> }) {
   const { id } = await context.params;
-  const { supabase, user } = await getServerUserPlanOnly();
+  const { supabase, user, plan } = await getServerUserPlanOnly();
   if (!user) return apiError("auth_required", 401, "Connecte-toi pour modifier les photos.");
+
+  if (plan === null) return reponseAbonnementRequis();
   const body = await request.json().catch(() => null);
   const photos = photosValides(body?.photos);
   if (!photos) return apiError("invalid_request", 400, "Photos invalides.");
@@ -33,8 +35,10 @@ export async function PUT(request: NextRequest, context: { params: Promise<{ id:
 
 export async function POST(request: NextRequest, context: { params: Promise<{ id: string }> }) {
   const { id } = await context.params;
-  const { supabase, user } = await getServerUserPlanOnly();
+  const { supabase, user, plan } = await getServerUserPlanOnly();
   if (!user) return apiError("auth_required", 401, "Connecte-toi pour modifier les photos.");
+
+  if (plan === null) return reponseAbonnementRequis();
   const body = await request.json().catch(() => null);
   const ajout = photosValides(body?.ajouter);
   if (!ajout || ajout.length === 0) return apiError("invalid_request", 400, "Photos invalides.");

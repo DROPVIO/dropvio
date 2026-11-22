@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerUserPlanOnly } from "@/lib/supabase-server";
-import { PLAN_LIMITS, planLabel, planSuperieurProduitsBoutique } from "@/lib/plan-limits";
+import { PLAN_LIMITS, planLabel, planSuperieurProduitsBoutique, limitesDuPlan } from "@/lib/plan-limits";
 import { apiError } from "@/lib/api-errors";
 import { motifRecherche } from "@/lib/recherche";
 
@@ -83,7 +83,10 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
     return NextResponse.json({ error: countError.message, code: "server_error" }, { status: 500 });
   }
 
-  const max = PLAN_LIMITS[plan].produitsBoutiqueMax;
+  if (plan === null) {
+    return apiError("abonnement_requis_produits", 403, "Choisissez un abonnement pour ajouter des produits.");
+  }
+  const max = limitesDuPlan(plan).produitsBoutiqueMax;
   if (max !== null && (count ?? 0) >= max) {
     const superieur = planSuperieurProduitsBoutique(plan);
     if (superieur) {

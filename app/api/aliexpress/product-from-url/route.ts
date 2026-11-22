@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerUserPlanOnly } from "@/lib/supabase-server";
-import { apiError } from "@/lib/api-errors";
+import { apiError, reponseAbonnementRequis } from "@/lib/api-errors";
 
 function extractProductId(url: string): string | null {
   const match = url.match(/\/item\/(\d+)/);
@@ -9,12 +9,13 @@ function extractProductId(url: string): string | null {
 
 // Pré-remplissage du Site Builder depuis le catalogue des produits gagnants : réservé aux
 // comptes connectés. Lecture avec la session de l'utilisateur, donc soumise au RLS de produits
-// (migration 057) : un compte Free ne trouve que les produits de sa sélection (CATALOGUE_FREE).
+// (migrations 057 et 062) : seuls les comptes abonnés lisent le catalogue.
 export async function POST(request: NextRequest) {
-  const { supabase, user } = await getServerUserPlanOnly();
+  const { supabase, user, plan } = await getServerUserPlanOnly();
   if (!user) {
     return apiError("auth_required", 401, "Connecte-toi pour utiliser le catalogue.");
   }
+  if (plan === null) return reponseAbonnementRequis();
 
   const body = await request.json().catch(() => null);
   const url = body?.url;

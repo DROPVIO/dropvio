@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
-import { CATALOGUE_FREE } from "@/lib/plan-limits";
 
 const PAGE_SIZE = 1000;
 
@@ -59,15 +58,7 @@ export async function GET(request: NextRequest) {
       from += PAGE_SIZE;
     }
 
-    // Sélection du catalogue Free (migration 057) recalculée sur le catalogue du jour, avec les
-    // réglages de lib/plan-limits.ts. Best-effort : un échec n'annule pas les relevés.
-    const { data: catalogueFree, error: freeError } = await supabase.rpc("catalogue_free_rafraichir", {
-      p_niches: CATALOGUE_FREE.niches,
-      p_par_niche: CATALOGUE_FREE.produitsParNiche,
-    });
-    if (freeError) console.error("Erreur sélection catalogue Free (migration 057 appliquée ?) :", freeError.message);
-
-    return NextResponse.json({ ok: true, date: today, snapshots: total, catalogueFree: freeError ? null : catalogueFree });
+    return NextResponse.json({ ok: true, date: today, snapshots: total });
   } catch (err) {
     console.error("Erreur cron snapshot-produits:", err);
     return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });

@@ -209,9 +209,9 @@
       "current": "ACTUEL",
       "choose": "Choisir",
       "meta": {
-        "free": {
+        "aucun": {
           "label": "Aucun abonnement",
-          "desc": "Choisis un plan pour accéder aux outils Dropvio."
+          "desc": "Choisissez un abonnement pour accéder aux outils Dropvio."
         },
         "pro": {
           "label": "Pro",
@@ -430,7 +430,10 @@
       "collapseTooltip": "Réduire la sidebar",
       "userTooltip": "{name} · Paramètres",
       "planLabel": "Plan {plan}",
-      "shopifyConnected": "Boutique Shopify connectée avec succès."
+      "shopifyConnected": "Boutique Shopify connectée avec succès.",
+      "aucunAbonnement": "Aucun abonnement",
+      "choisirAbonnement": "Choisir un abonnement",
+      "abonnementRequis": "Cet outil nécessite un abonnement."
     },
     "onboarding": {
       "ariaLabel": "Tutoriel de bienvenue Dropvio",
@@ -1475,10 +1478,10 @@
     "simulations_limit": "Tu as atteint la limite de {max} simulations sur le plan {plan}.",
     "audit_limit": "Tu as atteint la limite de {max} audits ce mois-ci sur le plan {plan}.",
     "alternatives_limit": "Tu as atteint la limite de {max} recherches d'alternatives ce mois-ci sur le plan {plan}.",
-    "audit_plan": "L'audit IA n'est pas disponible sur le plan Free. Le plan Pro inclut 30 audits par mois.",
+    "audit_plan": "L'audit IA nécessite un abonnement. Le plan Pro inclut 30 audits par mois.",
     "audit_failed": "Erreur lors de l'analyse. Réessaie dans un instant.",
     "audit_html_failed": "Erreur lors de la génération du HTML corrigé.",
-    "alternatives_plan": "Les alternatives fiables ne sont pas disponibles sur le plan Free.",
+    "alternatives_plan": "Les alternatives fiables nécessitent un abonnement.",
     "export_plan": "L'export HTML de la boutique est réservé aux plans Pro et Agency.",
     "export_render_failed": "Impossible de récupérer le rendu de la boutique.",
     "aliexpress_url_invalid": "URL AliExpress invalide. Format attendu : aliexpress.com/item/XXXXXXXXXX.html",
@@ -1536,7 +1539,10 @@
     "outil_en_pause": "Limite atteinte pour cet outil. Réessaie à {reprise, time, short}.",
     "outil_reglages_a_definir": "Réglages à définir pour cet outil : la génération est désactivée en attendant.",
     "outil_migration_requise": "Cet outil n'est pas encore activé sur ton plan.",
-    "budget_ia_insuffisant": "Budget IA insuffisant pour cette génération : il te reste {restant, number, ::currency/EUR} ce mois-ci."
+    "budget_ia_insuffisant": "Budget IA insuffisant pour cette génération : il te reste {restant, number, ::currency/EUR} ce mois-ci.",
+    "abonnement_requis": "Choisissez un abonnement pour accéder au catalogue.",
+    "abonnement_requis_produits": "Choisissez un abonnement pour ajouter des produits.",
+    "abonnement_requis_outil": "Choisissez un abonnement pour utiliser cet outil."
   },
   "siteBuilder": {
     "boutique": {
@@ -2138,7 +2144,7 @@
         "sauvegardeReseau": "Cette page n'a pas pu être sauvegardée dans « Mes sites » (serveur injoignable).",
         "sauvegardeEnCours": "La sauvegarde initiale du site n'est pas encore terminée : réessaie dans un instant.",
         "couleurs": "Impossible d'enregistrer ces couleurs.",
-        "modifierPlan": "Ce site ne peut pas être ouvert pour modification sur le plan Free : passe Pro pour modifier tes sites enregistrés."
+        "modifierPlan": "Ce site ne peut pas être ouvert pour modification sans abonnement : choisissez un abonnement pour modifier vos sites enregistrés."
       },
       "siteCompletTelecharge": "Site complet enregistré dans tes Téléchargements : {fichier}. Toutes les pages sont dans ce fichier : ouvre-le, les boutons de navigation fonctionnent.",
       "composer": {

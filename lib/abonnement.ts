@@ -5,7 +5,7 @@ import { planDepuisPriceId } from "./stripe";
 import { refusSouscriptionPlanPayant } from "./abonnement-regles";
 
 // Seuls ces statuts donnent accès aux outils. past_due (paiement échoué, Stripe relance),
-// unpaid, canceled, incomplete… repassent le compte en 'free', c'est-à-dire sans accès :
+// unpaid, canceled, incomplete… repassent le compte sans plan (null), c'est-à-dire sans accès :
 // pas de période de grâce, le compte et ses données restent intacts.
 const STATUTS_AVEC_ACCES = new Set<Stripe.Subscription.Status>(["trialing", "active"]);
 
@@ -57,7 +57,7 @@ export async function synchroniserAbonnement(admin: SupabaseClient, subscription
   }
 
   const valeurs: Record<string, unknown> = {
-    plan: acces ? planPayant : "free",
+    plan: acces ? planPayant : null,
     stripe_customer_id: customerId,
     stripe_subscription_id: subscription.id,
     abonnement_statut: subscription.status,

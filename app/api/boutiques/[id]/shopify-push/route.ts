@@ -66,10 +66,10 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
     return NextResponse.json({ error: "Connecte-toi pour publier cette boutique sur Shopify.", code: "auth_required" }, { status: 401 });
   }
 
-  // Restriction plan free — même règle que sites-generes/[id]/shopify-push : publier une
+  // Restriction sans abonnement — même règle que sites-generes/[id]/shopify-push : publier une
   // boutique entière sur Shopify est un export réel, réservé aux plans Pro/Agency. Vérifié
   // ici même si l'UI masque déjà l'action, pour ne jamais dépendre uniquement du frontend.
-  if (plan === "free") {
+  if (plan === null) {
     return apiError(
       "shopify_push_plan",
       403,

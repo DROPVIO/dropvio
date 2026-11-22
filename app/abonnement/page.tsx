@@ -11,7 +11,8 @@ import { useApiErrorMessage } from "@/lib/use-api-error";
 type PlanPayant = "pro" | "agency";
 
 type EtatAbonnement = {
-  plan: "free" | PlanPayant;
+  // null : aucun abonnement (ou Expert sans période en cours).
+  plan: PlanPayant | "expert" | null;
   statut: string | null;
   essaiUtilise: boolean;
   essaiFin: string | null;
@@ -69,7 +70,7 @@ export default function AbonnementPage() {
     const verifier = async () => {
       const courant = await lireEtat();
       if (arrete) return;
-      if (courant && courant.plan !== "free") {
+      if (courant && courant.plan !== null) {
         router.replace("/dashboard");
         return;
       }

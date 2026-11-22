@@ -28,26 +28,30 @@ export default function StudioPage() {
 
 function Studio() {
   const t = useTranslations("studio");
+  const tNav = useTranslations("dashboard.nav");
   // Arrivée depuis le Catalogue (« Envoyer dans le Studio IA ») : onglet Images produits, avec
   // le produit du catalogue ajouté à la liste.
   const params = useSearchParams();
   const produitCatalogue = params.get("catalogue");
 
   const [plan, setPlan] = useState<Plan | null>(null);
+  const [planCharge, setPlanCharge] = useState(false);
   const [modeImage, setModeImage] = useState<ModeImage>(params.get("mode") === "produits" || produitCatalogue ? "produits" : "libre");
   const [actualisation, setActualisation] = useState(0);
 
   useEffect(() => {
     fetch("/api/plan")
       .then((res) => res.json())
-      .then((json) => setPlan(json.plan ?? "free"))
-      .catch(() => setPlan("free"));
+      .then((json) => setPlan(json.plan ?? null))
+      .catch(() => setPlan(null))
+      .finally(() => setPlanCharge(true));
   }, []);
 
   const actualiser = () => setActualisation((valeur) => valeur + 1);
 
   function reglages() {
-    if (plan === null) return <p className="py-6 text-center text-sm text-[var(--text-faint)]">{t("chargement")}</p>;
+    if (!planCharge) return <p className="py-6 text-center text-sm text-[var(--text-faint)]">{t("chargement")}</p>;
+    if (plan === null) return <p className="py-6 text-center text-sm text-[var(--text-faint)]">{tNav("abonnementRequis")} <Link href="/abonnement" className="underline">{tNav("choisirAbonnement")}</Link></p>;
     // Fonctions du Studio réservées aux plans payants (Pro, Agency, Expert) : sans plan payant,
     // une seule invitation, pour les deux onglets.
     if (!generationDisponible(plan)) {

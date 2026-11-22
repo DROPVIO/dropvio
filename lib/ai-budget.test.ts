@@ -5,7 +5,7 @@ import { describe, it } from "node:test";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { BudgetIaDepasse, SuiviBudgetIa, coutImagesEuros, decisionBudget, getBudgetParFonction, getBudgetUsedEuros, getImagesUsedEuros, reponseBudgetDepasse, tokensSortieEquivalents } from "./ai-budget";
 import { coutEuros, PRIX_EUR_PAR_MILLION } from "./ai-pricing";
-import { AI_BUDGET_EUR_PAR_PLAN, IMAGE_BUDGET_EUR_PAR_PLAN } from "./plan-limits";
+import { AI_BUDGET_EUR_PAR_PLAN, IMAGE_BUDGET_EUR_PAR_PLAN, budgetImagesEur } from "./plan-limits";
 import { IMAGE_PRICE_EUR } from "./expert-pricing";
 import { lireQuotaImages } from "./media/quota-images-serveur";
 
@@ -132,7 +132,7 @@ describe("budget images séparé du budget IA", () => {
   it("valeurs : 1,50 € (Pro) et 3,50 € (Agency) pour les images ; budget IA inchangé (6 € et 28 €)", () => {
     assert.equal(IMAGE_BUDGET_EUR_PAR_PLAN.pro, 1.5);
     assert.equal(IMAGE_BUDGET_EUR_PAR_PLAN.agency, 3.5);
-    assert.equal(IMAGE_BUDGET_EUR_PAR_PLAN.free, 0);
+    assert.equal(budgetImagesEur(null), 0);
     assert.equal(AI_BUDGET_EUR_PAR_PLAN.pro, 6);
     assert.equal(AI_BUDGET_EUR_PAR_PLAN.agency, 28);
   });

@@ -8,7 +8,7 @@ describe("source du quota par plan", () => {
     assert.equal(sourceQuotaImages("expert"), "expert");
     assert.equal(sourceQuotaImages("pro"), "budget");
     assert.equal(sourceQuotaImages("agency"), "budget");
-    assert.equal(sourceQuotaImages("free"), null);
+    assert.equal(sourceQuotaImages(null), null);
   });
 });
 

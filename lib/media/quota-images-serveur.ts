@@ -6,7 +6,7 @@
 //   images_ia, migration 052) et ne décomptent jamais le budget IA (textes, sites, audits).
 // Aucun plan n'a de génération illimitée.
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { IMAGE_BUDGET_EUR_PAR_PLAN, currentMonthKey, type Plan } from "@/lib/plan-limits";
+import { budgetImagesEur, currentMonthKey, type PlanOuAucun } from "@/lib/plan-limits";
 import { IMAGE_PRICE_EUR } from "@/lib/expert-pricing";
 import { getImagesUsedEuros } from "@/lib/ai-budget";
 import { getCreditsExpert, getPeriodeExpert } from "@/lib/expert-quota";
@@ -21,7 +21,7 @@ const CHECK_VIOLATION = "23514";
 const UNIQUE_VIOLATION = "23505";
 
 /** Images encore disponibles ce mois-ci, ou null si le plan n'a pas de génération d'images. */
-export async function lireQuotaImages(supabase: SupabaseClient, userId: string, plan: Plan): Promise<QuotaImages | null> {
+export async function lireQuotaImages(supabase: SupabaseClient, userId: string, plan: PlanOuAucun): Promise<QuotaImages | null> {
   const source = sourceQuotaImages(plan);
   if (!source) return null;
   if (source === "expert") {
@@ -31,7 +31,7 @@ export async function lireQuotaImages(supabase: SupabaseClient, userId: string, 
     return { source, imagesRestantes: Math.max(0, periodeImages + creditsImages), coutImageEur: IMAGE_PRICE_EUR };
   }
   const utilise = await getImagesUsedEuros(supabase, userId);
-  return { source, imagesRestantes: imagesPossiblesBudget(IMAGE_BUDGET_EUR_PAR_PLAN[plan], utilise, IMAGE_PRICE_EUR), coutImageEur: IMAGE_PRICE_EUR };
+  return { source, imagesRestantes: imagesPossiblesBudget(budgetImagesEur(plan), utilise, IMAGE_PRICE_EUR), coutImageEur: IMAGE_PRICE_EUR };
 }
 
 export type ReservationBudget = { ok: true } | { ok: false; raison: "quota" | "migration" | "erreur" };
@@ -39,7 +39,7 @@ export type ReservationBudget = { ok: true } | { ok: false; raison: "quota" | "m
 /** Réserve une image sur le budget images du mois (Pro, Agency) AVANT l'appel au fournisseur.
  *  Incrément par comparaison-échange sur le compteur : deux générations simultanées ne peuvent
  *  pas réserver la même dernière image, et le budget restant est relu à chaque essai. */
-export async function reserverImageBudget(admin: SupabaseClient, userId: string, plan: Plan): Promise<ReservationBudget> {
+export async function reserverImageBudget(admin: SupabaseClient, userId: string, plan: PlanOuAucun): Promise<ReservationBudget> {
   const mois = currentMonthKey();
   for (let essai = 0; essai < ESSAIS_MAX; essai++) {
     let utilise: number;
@@ -48,7 +48,7 @@ export async function reserverImageBudget(admin: SupabaseClient, userId: string,
     } catch {
       return { ok: false, raison: "erreur" };
     }
-    if (imagesPossiblesBudget(IMAGE_BUDGET_EUR_PAR_PLAN[plan], utilise, IMAGE_PRICE_EUR) < 1) return { ok: false, raison: "quota" };
+    if (imagesPossiblesBudget(budgetImagesEur(plan), utilise, IMAGE_PRICE_EUR) < 1) return { ok: false, raison: "quota" };
 
     const { data: ligne, error } = await admin
       .from("usage_mensuel")

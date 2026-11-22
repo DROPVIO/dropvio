@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { apiError } from "@/lib/api-errors";
+import { apiError, reponseAbonnementRequis } from "@/lib/api-errors";
 import { getServerUserPlanOnly } from "@/lib/supabase-server";
-import { PLAN_LIMITS } from "@/lib/plan-limits";
+import { PLAN_LIMITS, limitesDuPlan } from "@/lib/plan-limits";
 import { commandesMinEffectif } from "@/lib/catalogue-commandes";
 
 const DEFAULT_LIMIT = 20;
@@ -18,7 +18,7 @@ function dateParis(): string {
   }).format(new Date());
 }
 
-/** ?seed= sert uniquement aux tests : ignoré en production, sinon un compte Free pourrait
+/** ?seed= sert uniquement aux tests : ignoré en production, sinon un compte sans abonnement pourrait
  *  changer de seed pour faire défiler tout le catalogue malgré le plafond produitsMax. */
 function seedRotation(seedParam: string | null): string {
   if (seedParam && process.env.NODE_ENV !== "production") return seedParam.slice(0, 64);
@@ -46,14 +46,15 @@ export async function GET(request: NextRequest) {
 
   try {
     // Session de l'utilisateur, jamais le client anonyme : le RLS du catalogue (migration 057)
-    // limite un compte Free à sa sélection, et aucun visiteur sans compte n'y a accès.
+    // réserve le catalogue aux comptes abonnés, et aucun visiteur sans compte n'y a accès.
     const { supabase, user, plan } = await getServerUserPlanOnly();
     if (!user) {
       return apiError("auth_required", 401, "Connecte-toi pour voir le catalogue.");
     }
-    const produitsMax = PLAN_LIMITS[plan].produitsMax; // null = illimité (Pro/Agency)
+    if (plan === null) return reponseAbonnementRequis();
+    const produitsMax = limitesDuPlan(plan).produitsMax; // null = illimité (Pro/Agency)
 
-    // Plan Free : le catalogue accessible est plafonné à produitsMax, quels que soient
+    // Sans abonnement : le catalogue accessible est plafonné à produitsMax, quels que soient
     // les filtres. Au-delà, on ne requête même pas — la pagination s'arrête au plafond.
     if (produitsMax !== null && from >= produitsMax) {
       return NextResponse.json({
@@ -77,7 +78,7 @@ export async function GET(request: NextRequest) {
     // Lue ici via deux RPC (migration 047) : PostgREST ne sait
     // pas trier par md5(id || '|' || seed), ordre de rotation quotidienne du catalogue.
     // Mêmes filtres qu'avant, appliqués avant le tri : l'ensemble est inchangé, seul l'ordre
-    // tourne. Le plafond Free ci-dessus s'applique après le tri, donc sur l'ordre du jour.
+    // tourne. Le plafond du plan ci-dessus s'applique après le tri, donc sur l'ordre du jour.
     const filtres = {
       p_niche:         niche || null,
       p_prix_min:      priceMin     ? nombreOuNull(parseFloat(priceMin)) : null,

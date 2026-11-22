@@ -5,7 +5,7 @@
 //
 // Configuration dans le code, comme les autres limites par plan (PLAN_LIMITS,
 // AI_BUDGET_EUR_PAR_PLAN, MEDIA_PAR_PLAN) : seul l'usage est en base (migration 054, proposée).
-import type { Plan } from "@/lib/plan-limits";
+import type { Plan, PlanOuAucun } from "@/lib/plan-limits";
 
 // Identifiants stables : ils sont enregistrés en base (outils_usage.outil) et envoyés par le
 // navigateur à /api/media/generer.
@@ -52,8 +52,8 @@ export type ReglagePause = {
 export const PLANS_AVEC_PAUSES = ["pro", "agency"] as const satisfies readonly Plan[];
 export type PlanAvecPauses = (typeof PLANS_AVEC_PAUSES)[number];
 
-export function planAvecPauses(plan: Plan): plan is PlanAvecPauses {
-  return (PLANS_AVEC_PAUSES as readonly Plan[]).includes(plan);
+export function planAvecPauses(plan: PlanOuAucun): plan is PlanAvecPauses {
+  return plan !== null && (PLANS_AVEC_PAUSES as readonly Plan[]).includes(plan);
 }
 
 // Réglages validés. Chaque outil a son propre compteur ; le budget images du mois

@@ -7,7 +7,7 @@ import { decisionPortail, refusSouscriptionPlanPayant, type EtatExpert } from ".
 const LANGUES = ["fr", "en", "es", "it"] as const;
 const lireMessages = (langue: string) => JSON.parse(readFileSync(new URL(`../messages/${langue}.json`, import.meta.url), "utf8"));
 
-const SANS_EXPERT: EtatExpert = { planProfil: "free", periodeExpertActive: false, abonnementExpertEnCours: false };
+const SANS_EXPERT: EtatExpert = { planProfil: null, periodeExpertActive: false, abonnementExpertEnCours: false };
 
 describe("souscription Pro / Agency", () => {
   it("acceptée pour un compte sans Expert", () => {
@@ -20,7 +20,7 @@ describe("souscription Pro / Agency", () => {
     assert.equal(refusSouscriptionPlanPayant({ ...SANS_EXPERT, planProfil: "expert" }), "expert_actif");
   });
 
-  it("refusée si une période Expert couvre la date du jour, même avec plan = free", () => {
+  it("refusée si une période Expert couvre la date du jour, même sans plan", () => {
     assert.equal(refusSouscriptionPlanPayant({ ...SANS_EXPERT, periodeExpertActive: true }), "expert_actif");
   });
 

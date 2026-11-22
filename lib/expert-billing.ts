@@ -300,6 +300,6 @@ export async function enregistrerPeriodeExpert(admin: SupabaseClient, invoice: S
 export async function terminerAbonnementExpert(admin: SupabaseClient, subscription: Stripe.Subscription): Promise<void> {
   const config = parseExpertMetadata(subscription.metadata);
   if (!config || (await aPeriodeManuelleActive(admin, config.userId))) return;
-  const { error } = await admin.from("profils").update({ plan: "free" }).eq("id", config.userId).eq("plan", "expert");
+  const { error } = await admin.from("profils").update({ plan: null }).eq("id", config.userId).eq("plan", "expert");
   if (error) throw new Error(error.message);
 }

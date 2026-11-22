@@ -284,7 +284,7 @@ function SiteBuilderContent() {
           setError(apiErrorMessage(json, t("erreurs.chargementSite")));
           return;
         }
-        // Plan Free : la route ne renvoie pas le HTML enregistré (voir sites-generes/[id]).
+        // Sans abonnement : la route ne renvoie pas le HTML enregistré (voir sites-generes/[id]).
         if (typeof json.html_content !== "string" || !json.html_content) {
           setError(t("erreurs.modifierPlan"));
           return;
@@ -335,7 +335,7 @@ function SiteBuilderContent() {
       .catch(() => setShopifyConnected(false));
   }, []);
 
-  // Restriction plan free — voir diagnostic "restriction export Site Builder" : l'aperçu reste
+  // Restriction sans abonnement — voir diagnostic "restriction export Site Builder" : l'aperçu reste
   // fonctionnel pour tous, mais téléchargement/export Liquid/publication Shopify sont réservés
   // à Pro/Agency. canExport démarre à false (état le plus restrictif) tant que /api/plan n'a
   // pas répondu, pour ne jamais afficher un bouton actif qui deviendrait grisé juste après.
@@ -358,12 +358,12 @@ function SiteBuilderContent() {
     fetch("/api/plan")
       .then((res) => res.json())
       .then((json) => {
-        const lu: Plan = json.plan ?? "free";
+        const lu: Plan | null = json.plan ?? null;
         setPlan(lu);
         // Quota d'images lu d'avance : la source « Générer avec l'IA » en dépend.
         if (generationDisponible(lu)) void lireImagesRestantes().then(setImagesRestantes);
       })
-      .catch(() => setPlan("free"));
+      .catch(() => setPlan(null));
   }, []);
   const canExport = plan === "pro" || plan === "agency" || plan === "expert";
   const [quotaEpuise, setQuotaEpuise] = useState(false);

@@ -23,9 +23,9 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
     return NextResponse.json({ error: "Connecte-toi pour exporter cette boutique.", code: "auth_required" }, { status: 401 });
   }
 
-  // Restriction plan free — cet endpoint renvoie le HTML complet (CSS inliné) prêt à être
+  // Restriction sans abonnement — cet endpoint renvoie le HTML complet (CSS inliné) prêt à être
   // exporté, exactement ce que la restriction Site Builder réserve à Pro/Agency ailleurs.
-  if (plan === "free") {
+  if (plan === null) {
     return NextResponse.json(
       { error: "L'export HTML de la boutique est réservé aux plans Pro et Agency.", code: "export_plan" },
       { status: 403 }

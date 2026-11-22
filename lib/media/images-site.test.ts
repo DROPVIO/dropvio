@@ -14,8 +14,8 @@ import {
 const EMPLACEMENT = '<div data-placeholder="image" style="min-height:280px">Ajoute ici une photo de ton produit</div>';
 
 describe("case désactivée selon le plan", () => {
-  it("sans plan payant : désactivée, raison « plan »", () => {
-    assert.deepEqual(etatCaseImages("free", 50), { active: false, raison: "plan" });
+  it("sans abonnement : désactivée, raison « plan »", () => {
+    assert.deepEqual(etatCaseImages(null, 50), { active: false, raison: "plan" });
   });
   it("plans payants (Pro, Agency, Expert) avec assez de quota : active", () => {
     for (const plan of ["pro", "agency", "expert"] as const) {

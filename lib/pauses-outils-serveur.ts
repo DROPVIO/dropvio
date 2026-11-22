@@ -1,7 +1,7 @@
 // Pauses par outil, côté serveur : lecture de l'état (crédits restants, fin de pause) et
 // réservation atomique des crédits (fonction SQL outils_credits_reserver, migration 054).
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { Plan } from "@/lib/plan-limits";
+import type { Plan, PlanOuAucun } from "@/lib/plan-limits";
 import { configOutil, planAvecPauses, type OutilIa } from "./pauses-outils";
 import { etatOutil, type EtatOutil, type UsageOutil } from "./pauses-outils-regles";
 
@@ -11,7 +11,7 @@ const OBJET_ABSENT = new Set(["42P01", "PGRST205", "42883", "PGRST202"]);
 export type EtatOutilServeur = EtatOutil | { statut: "migration" };
 
 /** État de l'outil pour l'utilisateur, ou null si le plan n'a pas de pause (Expert). */
-export async function lireEtatOutil(supabase: SupabaseClient, userId: string, plan: Plan, outil: OutilIa): Promise<EtatOutilServeur | null> {
+export async function lireEtatOutil(supabase: SupabaseClient, userId: string, plan: PlanOuAucun, outil: OutilIa): Promise<EtatOutilServeur | null> {
   if (!planAvecPauses(plan)) return null;
   const config = configOutil(plan, outil);
   if (!config) return { statut: "a_definir" };
@@ -46,7 +46,7 @@ export type ReservationOutil =
 
 /** Réserve les crédits d'une image pour cet outil AVANT la génération. Plan sans pause (Expert) :
  *  rien à réserver (reservationId null). */
-export async function reserverCreditsOutil(admin: SupabaseClient, userId: string, plan: Plan, outil: OutilIa): Promise<ReservationOutil> {
+export async function reserverCreditsOutil(admin: SupabaseClient, userId: string, plan: PlanOuAucun, outil: OutilIa): Promise<ReservationOutil> {
   if (!planAvecPauses(plan)) return { ok: true, reservationId: null };
   const config = configOutil(plan, outil);
   if (!config) return { ok: false, raison: "a_definir" };

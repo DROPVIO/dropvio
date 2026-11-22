@@ -189,11 +189,11 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
     return NextResponse.json({ error: "Connecte-toi pour publier ce site sur Shopify.", code: "auth_required" }, { status: 401 });
   }
 
-  // Restriction plan free — voir diagnostic "restriction export Site Builder" : la publication
+  // Restriction sans abonnement — voir diagnostic "restriction export Site Builder" : la publication
   // Shopify est un export réel (page/section vivante sur la boutique du marchand), réservée aux
   // plans Pro/Agency. Vérifié ici même si l'UI masque déjà l'action, pour ne jamais dépendre
   // uniquement du frontend (appel direct à l'API sinon possible).
-  if (plan === "free") {
+  if (plan === null) {
     return NextResponse.json(
       { error: "La publication sur Shopify est réservée aux plans Pro et Agency. Passe au plan Pro pour publier ce site.", code: "shopify_push_plan" },
       { status: 403 }

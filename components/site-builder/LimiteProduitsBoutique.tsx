@@ -2,20 +2,20 @@
 
 import Link from "next/link";
 import { useTranslations } from "next-intl";
-import { PLAN_LIMITS, planLabel, planSuperieurProduitsBoutique, type Plan } from "@/lib/plan-limits";
+import { PLAN_LIMITS, planLabel, planSuperieurProduitsBoutique, type Plan, limitesDuPlan } from "@/lib/plan-limits";
 import { LIEN_CHANGER_DE_PLAN } from "@/lib/plan-links";
 
 // Limite de produits par boutique du plan (lib/plan-limits.ts), la même que celle appliquée
 // par POST /api/boutiques/[id]/produits. Le serveur reste la référence ; ceci n'en est que
 // l'affichage.
 export function limiteProduitsAtteinte(plan: Plan, count: number): boolean {
-  const max = PLAN_LIMITS[plan].produitsBoutiqueMax;
+  const max = limitesDuPlan(plan).produitsBoutiqueMax;
   return max !== null && count >= max;
 }
 
 export function CompteurProduits({ plan, count }: { plan: Plan; count: number }) {
   const t = useTranslations("siteBuilder.boutique.limite");
-  const max = PLAN_LIMITS[plan].produitsBoutiqueMax;
+  const max = limitesDuPlan(plan).produitsBoutiqueMax;
   const atteinte = limiteProduitsAtteinte(plan, count);
   return (
     <span
@@ -34,7 +34,7 @@ export function CompteurProduits({ plan, count }: { plan: Plan; count: number })
 // la limite après un passage à un plan inférieur (aucun produit supprimé, ajouts bloqués).
 export function AlerteLimiteProduits({ plan, count }: { plan: Plan; count: number }) {
   const t = useTranslations("siteBuilder.boutique.limite");
-  const max = PLAN_LIMITS[plan].produitsBoutiqueMax;
+  const max = limitesDuPlan(plan).produitsBoutiqueMax;
   if (max === null || count < max) return null;
 
   const superieur = planSuperieurProduitsBoutique(plan);
@@ -63,7 +63,7 @@ export function AlerteLimiteProduits({ plan, count }: { plan: Plan; count: numbe
 // (passage à un plan inférieur) : rien n'est supprimé, seuls les ajouts sont bloqués.
 export function BandeauDepassementProduits({ plan, count }: { plan: Plan; count: number }) {
   const t = useTranslations("siteBuilder.boutique.limite");
-  const max = PLAN_LIMITS[plan].produitsBoutiqueMax;
+  const max = limitesDuPlan(plan).produitsBoutiqueMax;
   if (max === null || count <= max) return null;
   const superieur = planSuperieurProduitsBoutique(plan);
   return (

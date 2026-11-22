@@ -194,7 +194,7 @@ export default function AuditPage() {
   // Arrivée depuis /mes-sites : ?site=<id> charge le HTML du site et lance l'audit. Chaque
   // cas d'échec produit un message explicite dans la zone d'erreur habituelle — jamais un
   // écran vide, l'utilisateur doit toujours pouvoir enchaîner en collant son HTML à la main.
-  // Le HTML n'est pas exposé aux plans free par la route GET (voir app/api/sites-generes/[id]),
+  // Le HTML n'est pas exposé aux comptes sans abonnement par la route GET (voir app/api/sites-generes/[id]),
   // ce qui se traduit ici par un message d'upgrade plutôt que par un audit qui échoue plus loin.
   useEffect(() => {
     const siteId = new URLSearchParams(window.location.search).get("site");

@@ -209,9 +209,9 @@
       "current": "ATTUALE",
       "choose": "Scegli",
       "meta": {
-        "free": {
+        "aucun": {
           "label": "Nessun abbonamento",
-          "desc": "Scegli un piano per accedere agli strumenti di Dropvio."
+          "desc": "Scegli un abbonamento per accedere agli strumenti di Dropvio."
         },
         "pro": {
           "label": "Pro",
@@ -430,7 +430,10 @@
       "collapseTooltip": "Riduci la barra laterale",
       "userTooltip": "{name} · Impostazioni",
       "planLabel": "Piano {plan}",
-      "shopifyConnected": "Negozio Shopify collegato con successo."
+      "shopifyConnected": "Negozio Shopify collegato con successo.",
+      "aucunAbonnement": "Nessun abbonamento",
+      "choisirAbonnement": "Scegli un abbonamento",
+      "abonnementRequis": "Questo strumento richiede un abbonamento."
     },
     "onboarding": {
       "ariaLabel": "Tutorial di benvenuto Dropvio",
@@ -1475,10 +1478,10 @@
     "simulations_limit": "Hai raggiunto il limite di {max} simulazioni con il piano {plan}.",
     "audit_limit": "Hai raggiunto il limite di {max} audit questo mese con il piano {plan}.",
     "alternatives_limit": "Hai raggiunto il limite di {max} ricerche di alternative questo mese con il piano {plan}.",
-    "audit_plan": "L'audit IA non è disponibile con il piano Free. Il piano Pro include 30 audit al mese.",
+    "audit_plan": "L'audit IA richiede un abbonamento. Il piano Pro include 30 audit al mese.",
     "audit_failed": "Errore durante l'analisi. Riprova tra un attimo.",
     "audit_html_failed": "Errore durante la generazione dell'HTML corretto.",
-    "alternatives_plan": "Le alternative affidabili non sono disponibili con il piano Free.",
+    "alternatives_plan": "Le alternative affidabili richiedono un abbonamento.",
     "export_plan": "L'esportazione HTML del negozio è riservata ai piani Pro e Agency.",
     "export_render_failed": "Impossibile recuperare la resa del negozio.",
     "aliexpress_url_invalid": "URL AliExpress non valido. Formato atteso: aliexpress.com/item/XXXXXXXXXX.html",
@@ -1536,7 +1539,10 @@
     "outil_en_pause": "Limite raggiunto per questo strumento. Riprova alle {reprise, time, short}.",
     "outil_reglages_a_definir": "Impostazioni da definire per questo strumento: la generazione è disattivata nel frattempo.",
     "outil_migration_requise": "Questo strumento non è ancora attivo sul tuo piano.",
-    "budget_ia_insuffisant": "Budget IA insufficiente per questa generazione: ti restano {restant, number, ::currency/EUR} questo mese."
+    "budget_ia_insuffisant": "Budget IA insufficiente per questa generazione: ti restano {restant, number, ::currency/EUR} questo mese.",
+    "abonnement_requis": "Scegli un abbonamento per accedere al catalogo.",
+    "abonnement_requis_produits": "Scegli un abbonamento per aggiungere prodotti.",
+    "abonnement_requis_outil": "Scegli un abbonamento per usare questo strumento."
   },
   "siteBuilder": {
     "boutique": {
@@ -2138,7 +2144,7 @@
         "sauvegardeReseau": "Questa pagina non è stata salvata in «I miei siti» (server non raggiungibile).",
         "sauvegardeEnCours": "Il salvataggio iniziale del sito non è ancora terminato: riprova tra un attimo.",
         "couleurs": "Impossibile salvare questi colori.",
-        "modifierPlan": "Questo sito non può essere aperto per la modifica con il piano Free: passa a Pro per modificare i siti salvati."
+        "modifierPlan": "Questo sito non può essere aperto per la modifica senza abbonamento: scegli un abbonamento per modificare i siti salvati."
       },
       "siteCompletTelecharge": "Sito completo salvato nei tuoi Download: {fichier}. Tutte le pagine sono in questo file: aprilo e i pulsanti di navigazione funzionano.",
       "composer": {

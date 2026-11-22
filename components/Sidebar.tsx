@@ -287,7 +287,7 @@ function NavGroupe({
 }
 
 const PLAN_CLS: Record<string, string> = {
-  free:   "text-[var(--text-faint)]",
+  aucun:  "text-[var(--text-faint)]",
   pro:    "text-[var(--accent)]",
   agency: "text-[var(--warning)]",
   expert: "text-[var(--success)]",
@@ -316,6 +316,7 @@ export default function Sidebar({
 
   const [user,       setUser]       = useState<User | null>(null);
   const [profile,    setProfile]    = useState<Profile | null>(null);
+  const [planEnVigueur, setPlanEnVigueur] = useState<string | null>(null);
   const [modalOpen,  setModalOpen]  = useState(false);
   const [modalShopifyMsg, setModalShopifyMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const [modalOpenIntegrations, setModalOpenIntegrations] = useState(false);
@@ -377,6 +378,12 @@ export default function Sidebar({
           .eq("id", data.user.id)
           .maybeSingle()
           .then(({ data: p }) => { if (p) setProfile(p as Profile); });
+        // Plan réellement en vigueur (un Expert sans période en cours n'en a aucun) : résolu par le
+        // serveur, comme partout ailleurs, plutôt que lu tel quel dans profils.plan.
+        fetch("/api/plan")
+          .then((res) => res.json())
+          .then((json) => setPlanEnVigueur(typeof json?.plan === "string" ? json.plan : null))
+          .catch(() => setPlanEnVigueur(null));
       }
     });
 
@@ -388,8 +395,10 @@ export default function Sidebar({
   }, []);
 
   const initials  = (profile?.nom_complet || user?.email || "?").slice(0, 2).toUpperCase();
-  const planKey   = profile?.plan ?? "free";
-  const planLabel = t("planLabel", { plan: planKey.charAt(0).toUpperCase() + planKey.slice(1) });
+  const planKey   = planEnVigueur ?? "aucun";
+  const planLabel = planEnVigueur
+    ? t("planLabel", { plan: planEnVigueur.charAt(0).toUpperCase() + planEnVigueur.slice(1) })
+    : t("aucunAbonnement");
   const displayName = profile?.nom_complet || user?.email || "";
 
   return (
@@ -436,7 +445,7 @@ export default function Sidebar({
           <div className="h-px bg-[var(--border)] my-1.5 shrink-0" />
 
           {/* Links */}
-          {NAV_ITEMS.filter((item) => !item.expertOnly || planKey === "expert").map((item) => {
+          {NAV_ITEMS.filter((item) => !item.expertOnly || planEnVigueur === "expert").map((item) => {
             const { href, labelKey, icon, soon, onboardingTarget, groupe } = item;
             const label = t(labelKey);
             if (groupe) {
@@ -561,7 +570,7 @@ export default function Sidebar({
                     <p className="text-[12px] font-medium text-[var(--text-primary)] truncate leading-snug">
                       {displayName}
                     </p>
-                    <p className={`text-[10px] leading-snug ${PLAN_CLS[planKey] ?? PLAN_CLS.free}`}>
+                    <p className={`text-[11px] leading-snug ${PLAN_CLS[planKey] ?? PLAN_CLS.aucun}`}>
                       {planLabel}
                     </p>
                   </div>
@@ -572,6 +581,15 @@ export default function Sidebar({
               )}
             </button>
           )}
+          {user && !planEnVigueur && !collapsed ? (
+            <Link
+              href="/abonnement"
+              onClick={onCloseMobile}
+              className="mt-1 block rounded-lg px-2 py-1.5 text-[12px] font-semibold text-[var(--accent)] hover:bg-[var(--surface-2)]"
+            >
+              {t("choisirAbonnement")}
+            </Link>
+          ) : null}
         </div>
       </aside>
 

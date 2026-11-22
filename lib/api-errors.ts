@@ -14,3 +14,9 @@ export function apiError(
 
 // Code PostgreSQL « unique_violation ».
 export const UNIQUE_VIOLATION = "23505";
+
+// Compte connecté sans abonnement (plan null, ou Expert sans période en cours) : le catalogue
+// des produits gagnants lui est fermé.
+export function reponseAbonnementRequis(): NextResponse {
+  return apiError("abonnement_requis", 403, "Choisissez un abonnement pour accéder au catalogue.");
+}

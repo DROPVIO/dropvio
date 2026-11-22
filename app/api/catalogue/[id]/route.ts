@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerUserPlanOnly } from "@/lib/supabase-server";
 import { lirePhotos } from "@/lib/catalogue-photos";
-import { apiError } from "@/lib/api-errors";
+import { apiError, reponseAbonnementRequis } from "@/lib/api-errors";
 
 // Fiche d'un produit du catalogue (/produits-gagnants/catalogue/[id]) : le produit (seul endroit
 // du Catalogue où lienAliExpress est renvoyé), les photos choisies par l'utilisateur et ses
@@ -9,10 +9,11 @@ import { apiError } from "@/lib/api-errors";
 // ce niveau). Le lien AliExpress n'est jamais copié dans boutique_produits.
 export async function GET(_request: NextRequest, context: { params: Promise<{ id: string }> }) {
   const { id } = await context.params;
-  const { supabase, user } = await getServerUserPlanOnly();
+  const { supabase, user, plan } = await getServerUserPlanOnly();
   if (!user) {
     return apiError("auth_required", 401, "Connecte-toi pour voir ce produit.");
   }
+  if (plan === null) return reponseAbonnementRequis();
 
   const { data: produit, error } = await supabase
     .from("produits")

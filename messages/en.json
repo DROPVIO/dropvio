@@ -209,9 +209,9 @@
       "current": "CURRENT",
       "choose": "Choose",
       "meta": {
-        "free": {
+        "aucun": {
           "label": "No subscription",
-          "desc": "Choose a plan to access the Dropvio tools."
+          "desc": "Choose a subscription to access the Dropvio tools."
         },
         "pro": {
           "label": "Pro",
@@ -430,7 +430,10 @@
       "collapseTooltip": "Collapse the sidebar",
       "userTooltip": "{name} · Settings",
       "planLabel": "{plan} plan",
-      "shopifyConnected": "Shopify store connected successfully."
+      "shopifyConnected": "Shopify store connected successfully.",
+      "aucunAbonnement": "No subscription",
+      "choisirAbonnement": "Choose a subscription",
+      "abonnementRequis": "This tool requires a subscription."
     },
     "onboarding": {
       "ariaLabel": "Dropvio welcome tour",
@@ -1475,10 +1478,10 @@
     "simulations_limit": "You've reached the limit of {max} simulations on the {plan} plan.",
     "audit_limit": "You've reached the limit of {max} audits this month on the {plan} plan.",
     "alternatives_limit": "You've reached the limit of {max} alternative searches this month on the {plan} plan.",
-    "audit_plan": "The AI audit isn't available on the Free plan. The Pro plan includes 30 audits per month.",
+    "audit_plan": "The AI audit requires a subscription. The Pro plan includes 30 audits per month.",
     "audit_failed": "Error during the analysis. Please try again in a moment.",
     "audit_html_failed": "Error while generating the fixed HTML.",
-    "alternatives_plan": "Reliable alternatives aren't available on the Free plan.",
+    "alternatives_plan": "Reliable alternatives require a subscription.",
     "export_plan": "Store HTML export is available on the Pro and Agency plans.",
     "export_render_failed": "Unable to fetch the store's rendering.",
     "aliexpress_url_invalid": "Invalid AliExpress URL. Expected format: aliexpress.com/item/XXXXXXXXXX.html",
@@ -1536,7 +1539,10 @@
     "outil_en_pause": "Limit reached for this tool. Try again at {reprise, time, short}.",
     "outil_reglages_a_definir": "Settings to be defined for this tool: generation is disabled until then.",
     "outil_migration_requise": "This tool isn't enabled on your plan yet.",
-    "budget_ia_insuffisant": "Not enough AI budget for this generation: you have {restant, number, ::currency/EUR} left this month."
+    "budget_ia_insuffisant": "Not enough AI budget for this generation: you have {restant, number, ::currency/EUR} left this month.",
+    "abonnement_requis": "Choose a subscription to access the catalog.",
+    "abonnement_requis_produits": "Choose a subscription to add products.",
+    "abonnement_requis_outil": "Choose a subscription to use this tool."
   },
   "siteBuilder": {
     "boutique": {
@@ -2138,7 +2144,7 @@
         "sauvegardeReseau": "This page couldn't be saved to “My sites” (server unreachable).",
         "sauvegardeEnCours": "The site's initial save isn't finished yet: try again in a moment.",
         "couleurs": "Unable to save these colors.",
-        "modifierPlan": "This site can't be opened for editing on the Free plan: upgrade to Pro to edit your saved sites."
+        "modifierPlan": "This site can't be opened for editing without a subscription: choose a subscription to edit your saved sites."
       },
       "siteCompletTelecharge": "Full site saved to your Downloads: {fichier}. Every page is in this file: open it and the navigation buttons work.",
       "composer": {

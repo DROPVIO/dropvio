@@ -46,7 +46,7 @@ async function readProfil(supabase: SupabaseClient, user: User | null) {
   const { data } = await supabase.from("profils").select("langue, plan").eq("id", user.id).maybeSingle();
   const profil = data as { langue: string | null; plan: string | null } | null;
   // Même règle que resolvePlan (lib/supabase-server.ts) et que la fonction SQL a_un_plan_payant :
-  // « expert » sans période payée en cours ne donne aucun droit, le compte est traité comme Free.
+  // « expert » sans période payée en cours ne donne aucun droit, le compte n'a alors aucun plan.
   if (profil?.plan === "expert") {
     const { data: periodes } = await supabase
       .from("expert_periodes")
@@ -56,7 +56,7 @@ async function readProfil(supabase: SupabaseClient, user: User | null) {
       .limit(1);
     return { ...profil, plan: planEffectif(profil.plan, Boolean(periodes?.length)) };
   }
-  return profil;
+  return profil ? { ...profil, plan: planEffectif(profil.plan, false) } : null;
 }
 
 export async function middleware(request: NextRequest) {
@@ -127,10 +127,11 @@ export async function middleware(request: NextRequest) {
 
   const profil = await readProfil(supabase, user);
 
-  // Les outils (PROTECTED_PATHS) demandent un abonnement actif ou en essai : un compte resté en
-  // plan "free" (jamais abonné, essai terminé sans paiement, abonnement résilié ou impayé) est
-  // renvoyé vers /abonnement. Profil absent = ligne pas encore créée (022) : même traitement.
-  if (user && isProtected && (profil?.plan ?? "free") === "free") {
+  // Les outils (PROTECTED_PATHS) demandent un abonnement actif ou en essai : un compte connecté
+  // sans plan (jamais abonné, essai terminé sans paiement, abonnement résilié ou impayé, Expert
+  // sans période en cours) est renvoyé vers /abonnement, pas vers /login. Profil absent = ligne
+  // pas encore créée (022) : même traitement.
+  if (user && isProtected && !profil?.plan) {
     const abonnementUrl = new URL(ABONNEMENT_PATH, request.url);
     const redirection = NextResponse.redirect(abonnementUrl);
     cookiesToApply.forEach(({ name, value, options }) => redirection.cookies.set(name, value, options));

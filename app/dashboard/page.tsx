@@ -5,7 +5,7 @@ import Link from "next/link";
 import dynamic from "next/dynamic";
 import { useTranslations } from "next-intl";
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
-import { PLAN_LIMITS, getMonthlyUsage, type Plan } from "@/lib/plan-limits";
+import { getMonthlyUsage, type Plan, limitesDuPlan, estPlan } from "@/lib/plan-limits";
 import type { DashboardChartData } from "@/components/DashboardActiviteChart";
 
 // recharts (~390 KB) ne doit jamais faire partie du bundle initial du dashboard — chargé à
@@ -51,7 +51,6 @@ type CardConfig = { id: string; href: string; icon: string; title: string; stats
 // opacité (l'ancien style) n'a de contraste correct que sur un fond sombre ; ces valeurs
 // reprennent celles, déjà éprouvées dans les deux thèmes, de ParametresModal.tsx.
 const PLAN_META: Record<string, { label: string; badge: string; border: string }> = {
-  free:   { label: "Free",   badge: "bg-zinc-700 text-zinc-200",  border: "border-white/10" },
   pro:    { label: "Pro",    badge: "bg-violet-600 text-white",   border: "border-violet-500/30" },
   agency: { label: "Agency", badge: "bg-amber-400 text-black",    border: "border-amber-500/30" },
   expert: { label: "Expert", badge: "bg-emerald-400 text-black",  border: "border-emerald-500/30" },
@@ -64,6 +63,8 @@ function fmt(n: number): string {
 
 export default function DashboardPage() {
   const t = useTranslations("dashboard.home");
+  const tNav = useTranslations("dashboard.nav");
+  const [planEnVigueur, setPlanEnVigueur] = useState<Plan | null>(null);
   const [profile,       setProfile]       = useState<Profile | null>(null);
   const [loading,       setLoading]       = useState(true);
   const [shopifyStatus, setShopifyStatus] = useState<ShopifyStatus | null>(null);
@@ -126,7 +127,7 @@ export default function DashboardPage() {
           // des générations et ne décomptent rien.
           supabase.from("sites_generes").select("id, created_at, is_trace").eq("user_id", user.id).limit(1000),
           // Catalogue tel que l'utilisateur le voit dans produits-gagnants (dédupliqué, limité à
-          // la sélection Free pour un compte Free) : compté par le serveur (/api/catalogue/compte),
+          // fermé à un compte sans abonnement) : compté par le serveur (/api/catalogue/compte),
           // jamais lu directement depuis le navigateur.
           fetch("/api/catalogue/compte")
             .then((res) => (res.ok ? res.json() : { count: null }))
@@ -141,6 +142,10 @@ export default function DashboardPage() {
         ]);
 
         if (p) setProfile(p as Profile);
+        fetch("/api/plan")
+          .then((res) => res.json())
+          .then((json) => setPlanEnVigueur(estPlan(json?.plan) ? json.plan : null))
+          .catch(() => setPlanEnVigueur(null));
 
         const siteRows = sitesRows ?? [];
         setSitesTotal(siteRows.length);
@@ -195,9 +200,11 @@ export default function DashboardPage() {
     load();
   }, []);
 
-  const planKey  = (profile?.plan ?? "free") as Plan;
-  const planMeta = PLAN_META[planKey] ?? PLAN_META.free;
-  const planLimits = PLAN_LIMITS[planKey];
+  // Plan réellement en vigueur (/api/plan) : un Expert sans période en cours n'en a aucun.
+  const planMeta = planEnVigueur && PLAN_META[planEnVigueur]
+    ? PLAN_META[planEnVigueur]
+    : { label: tNav("aucunAbonnement"), badge: "bg-zinc-700 text-zinc-200", border: "border-white/10" };
+  const planLimits = limitesDuPlan(planEnVigueur);
 
   const METRICS = [
     {
@@ -352,6 +359,11 @@ export default function DashboardPage() {
                   {m.sub && (
                     <p className="text-[11px] text-[var(--text-faint)] leading-relaxed">{m.sub}</p>
                   )}
+                  {m.id === "plan" && !planEnVigueur ? (
+                    <Link href="/abonnement" className="self-start text-[12px] font-semibold text-[var(--accent)] underline-offset-4 hover:underline">
+                      {tNav("choisirAbonnement")}
+                    </Link>
+                  ) : null}
                 </div>
               ))}
             </div>

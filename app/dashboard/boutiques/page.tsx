@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
 import { toIntlTag, type AppLocale } from "@/lib/locale";
-import { PLAN_LIMITS, type Plan } from "@/lib/plan-limits";
+import { PLAN_LIMITS, type Plan, limitesDuPlan } from "@/lib/plan-limits";
 
 type BoutiqueRow = {
   id: string;
@@ -27,10 +27,10 @@ export default function BoutiquesDetailPage() {
   useEffect(() => {
     fetch("/api/plan")
       .then((res) => res.json())
-      .then((json) => setPlan(json.plan ?? "free"))
+      .then((json) => setPlan(json.plan ?? null))
       .catch(() => setPlan(null));
   }, []);
-  const maxProduits = plan ? PLAN_LIMITS[plan].produitsBoutiqueMax : null;
+  const maxProduits = plan ? limitesDuPlan(plan).produitsBoutiqueMax : null;
 
   useEffect(() => {
     const supabase = createSupabaseBrowserClient();

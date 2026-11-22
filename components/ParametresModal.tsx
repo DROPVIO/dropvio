@@ -20,7 +20,7 @@ const LEGAL_EMAIL = "legal@dropvio.com";
 
 type Profile = {
   nom_complet: string | null;
-  plan: string;
+  plan: string | null;
   langue?: string | null;
   notif_email?: boolean | null;
   notif_push?: boolean | null;
@@ -41,7 +41,7 @@ const USAGE_METRIC_KEYS: Record<string, string> = {
 };
 
 const PLAN_STYLE: Record<string, { badge: string; border: string; bg: string; glow: string }> = {
-  free:   { badge: "bg-zinc-700 text-zinc-200",  border: "border-[var(--border-strong)]", bg: "bg-[var(--surface)]",  glow: "" },
+  aucun:  { badge: "bg-zinc-700 text-zinc-200",  border: "border-[var(--border-strong)]", bg: "bg-[var(--surface)]",  glow: "" },
   pro:    { badge: "bg-violet-600 text-white",   border: "border-violet-500/40",   bg: "bg-violet-500/[0.06]",  glow: "shadow-[0_0_28px_rgba(124,58,237,0.14)]" },
   agency: { badge: "bg-amber-400 text-black",   border: "border-amber-400/40",    bg: "bg-amber-400/[0.05]",   glow: "shadow-[0_0_28px_rgba(251,191,36,0.11)]" },
   expert: { badge: "bg-emerald-400 text-black", border: "border-emerald-400/40",  bg: "bg-emerald-400/[0.05]", glow: "shadow-[0_0_28px_rgba(52,211,153,0.11)]" },
@@ -279,7 +279,7 @@ export default function ParametresModal({
   const [abonnementMsg, setAbonnementMsg] = useState<string | null>(null);
   const ouvrirAbonnement = async () => {
     setAbonnementMsg(null);
-    if ((profile?.plan ?? "free") === "free") {
+    if (!profile?.plan || !(profile.plan in PLAN_STYLE) || profile.plan === "aucun") {
       router.push("/abonnement");
       return;
     }
@@ -386,7 +386,7 @@ export default function ParametresModal({
           supabase
             .from("profils")
             .upsert({ id: user.id, nom_complet: null })
-            .then(() => setProfile({ nom_complet: null, plan: "free" }));
+            .then(() => setProfile({ nom_complet: null, plan: null }));
         }
       });
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -465,10 +465,10 @@ export default function ParametresModal({
     }
   }
 
-  const plan = profile?.plan ?? "free";
-  // Repli sur "free" pour la clé de traduction si plan contient une valeur inattendue (même
-  // garde que PLAN_STYLE ci-dessous) — évite un throw next-intl sur une clé manquante.
-  const planKey = plan in PLAN_STYLE ? plan : "free";
+  // Sans abonnement (plan null) ou valeur inattendue : « aucun », pour la clé de traduction et
+  // le style — évite un throw next-intl sur une clé manquante.
+  const planKey = profile?.plan && profile.plan in PLAN_STYLE && profile.plan !== "aucun" ? profile.plan : "aucun";
+  const plan = planKey === "aucun" ? null : planKey;
   const planStyle = PLAN_STYLE[planKey];
   const planLabel = t(`plan.meta.${planKey}.label`);
   const planDesc = t(`plan.meta.${planKey}.desc`);
@@ -500,7 +500,7 @@ export default function ParametresModal({
             <p className="text-[11px] text-[var(--text-faint)] mt-1">{planDesc}</p>
           </div>
           <button className={BTN_G} onClick={ouvrirAbonnement} disabled={portailEnCours}>
-            {plan === "free" ? t("plan.choose") : t("plan.changePlan")}
+            {plan === null ? t("plan.choose") : t("plan.changePlan")}
           </button>
         </div>
         {abonnementMsg ? <p className="mt-2 text-[11px] text-[var(--danger)]">{abonnementMsg}</p> : null}
@@ -964,11 +964,11 @@ export default function ParametresModal({
         <div className={DIVIDER} />
         <div className={ROW}>
           <p className="text-sm text-[var(--text-muted)]">{t("facturation.nextPayment")}</p>
-          <p className="text-sm text-[var(--text-faint)]">{plan === "free" ? "—" : t("facturation.dansPortail")}</p>
+          <p className="text-sm text-[var(--text-faint)]">{plan === null ? "—" : t("facturation.dansPortail")}</p>
         </div>
         <div className={ROW}>
           <p className="text-sm text-[var(--text-muted)]">{t("facturation.paymentMethod")}</p>
-          <p className="text-sm text-[var(--text-faint)]">{plan === "free" ? "—" : t("facturation.dansPortail")}</p>
+          <p className="text-sm text-[var(--text-faint)]">{plan === null ? "—" : t("facturation.dansPortail")}</p>
         </div>
       </div>
 
@@ -981,7 +981,7 @@ export default function ParametresModal({
       </div>
 
       <button className={`${BTN_G} self-start`} onClick={ouvrirAbonnement} disabled={portailEnCours}>
-        {plan === "free" ? t("plan.choose") : t("facturation.manage")}
+        {plan === null ? t("plan.choose") : t("facturation.manage")}
       </button>
       {abonnementMsg ? <p className="text-[11px] text-[var(--danger)]">{abonnementMsg}</p> : null}
     </div>

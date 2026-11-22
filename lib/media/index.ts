@@ -1,4 +1,4 @@
-import type { Plan } from "@/lib/plan-limits";
+import type { Plan, PlanOuAucun } from "@/lib/plan-limits";
 import { reglageMedia, type FournisseurId } from "./config";
 import { generateImageOpenAI } from "./openai";
 import { MediaProviderError, MediaProviderNotConfiguredError, type GenerateImageOptions, type GeneratedImage } from "./types";
@@ -13,7 +13,7 @@ export const GENERATEURS_IMAGE: Record<FournisseurId, (prompt: string, options?:
 
 // Point d'entrée commun : les routes n'appellent jamais un fournisseur directement. Le
 // fournisseur est celui de la table de configuration pour ce plan, le même que la mention affiche.
-export function generateImage(plan: Plan, prompt: string, options?: GenerateImageOptions): Promise<GeneratedImage> {
+export function generateImage(plan: PlanOuAucun, prompt: string, options?: GenerateImageOptions): Promise<GeneratedImage> {
   const { generateur } = reglageMedia(plan);
   if (!generateur) throw new MediaProviderNotConfiguredError(`image (plan ${plan})`);
   return GENERATEURS_IMAGE[generateur](prompt, options);
@@ -32,7 +32,7 @@ export function erreurGenerationPourApi(error: unknown): { code: string; status:
 /** Diagnostic de bout en bout sans interface : prompt court, format carré, qualité basse.
  *  Appelle réellement le fournisseur (facturé) et vérifie que l'image reçue est un PNG lisible.
  *  Utilisé par scripts/tester-generation-image.ts. */
-export async function testerGenerationImage(plan: Plan = "expert"): Promise<
+export async function testerGenerationImage(plan: PlanOuAucun = "expert"): Promise<
   | { ok: true; fournisseur: string; modele: string; octets: number; dureeMs: number }
   | { ok: false; code: string; cause: string; dureeMs: number }
 > {

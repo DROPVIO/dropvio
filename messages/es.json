@@ -209,9 +209,9 @@
       "current": "ACTUAL",
       "choose": "Elegir",
       "meta": {
-        "free": {
+        "aucun": {
           "label": "Sin suscripción",
-          "desc": "Elige un plan para acceder a las herramientas de Dropvio."
+          "desc": "Elige una suscripción para acceder a las herramientas de Dropvio."
         },
         "pro": {
           "label": "Pro",
@@ -430,7 +430,10 @@
       "collapseTooltip": "Contraer la barra lateral",
       "userTooltip": "{name} · Ajustes",
       "planLabel": "Plan {plan}",
-      "shopifyConnected": "Tienda Shopify conectada correctamente."
+      "shopifyConnected": "Tienda Shopify conectada correctamente.",
+      "aucunAbonnement": "Sin suscripción",
+      "choisirAbonnement": "Elegir una suscripción",
+      "abonnementRequis": "Esta herramienta requiere una suscripción."
     },
     "onboarding": {
       "ariaLabel": "Tutorial de bienvenida de Dropvio",
@@ -1475,10 +1478,10 @@
     "simulations_limit": "Has alcanzado el límite de {max} simulaciones en el plan {plan}.",
     "audit_limit": "Has alcanzado el límite de {max} auditorías este mes en el plan {plan}.",
     "alternatives_limit": "Has alcanzado el límite de {max} búsquedas de alternativas este mes en el plan {plan}.",
-    "audit_plan": "La auditoría IA no está disponible en el plan Free. El plan Pro incluye 30 auditorías al mes.",
+    "audit_plan": "La auditoría IA requiere una suscripción. El plan Pro incluye 30 auditorías al mes.",
     "audit_failed": "Error durante el análisis. Inténtalo de nuevo en un momento.",
     "audit_html_failed": "Error al generar el HTML corregido.",
-    "alternatives_plan": "Las alternativas fiables no están disponibles en el plan Free.",
+    "alternatives_plan": "Las alternativas fiables requieren una suscripción.",
     "export_plan": "La exportación HTML de la tienda está reservada a los planes Pro y Agency.",
     "export_render_failed": "No se puede obtener la vista de la tienda.",
     "aliexpress_url_invalid": "URL de AliExpress no válida. Formato esperado: aliexpress.com/item/XXXXXXXXXX.html",
@@ -1536,7 +1539,10 @@
     "outil_en_pause": "Límite alcanzado para esta herramienta. Vuelve a intentarlo a las {reprise, time, short}.",
     "outil_reglages_a_definir": "Ajustes por definir para esta herramienta: la generación está desactivada mientras tanto.",
     "outil_migration_requise": "Esta herramienta aún no está activada en tu plan.",
-    "budget_ia_insuffisant": "Presupuesto de IA insuficiente para esta generación: te quedan {restant, number, ::currency/EUR} este mes."
+    "budget_ia_insuffisant": "Presupuesto de IA insuficiente para esta generación: te quedan {restant, number, ::currency/EUR} este mes.",
+    "abonnement_requis": "Elige una suscripción para acceder al catálogo.",
+    "abonnement_requis_produits": "Elige una suscripción para añadir productos.",
+    "abonnement_requis_outil": "Elige una suscripción para usar esta herramienta."
   },
   "siteBuilder": {
     "boutique": {
@@ -2138,7 +2144,7 @@
         "sauvegardeReseau": "Esta página no se ha podido guardar en «Mis sitios» (servidor inaccesible).",
         "sauvegardeEnCours": "El guardado inicial del sitio aún no ha terminado: vuelve a intentarlo en un momento.",
         "couleurs": "No se pueden guardar estos colores.",
-        "modifierPlan": "Este sitio no se puede abrir para modificarlo con el plan Free: pásate a Pro para modificar tus sitios guardados."
+        "modifierPlan": "Este sitio no se puede abrir para modificarlo sin suscripción: elige una suscripción para modificar tus sitios guardados."
       },
       "siteCompletTelecharge": "Sitio completo guardado en tus Descargas: {fichier}. Todas las páginas están en este archivo: ábrelo y los botones de navegación funcionan.",
       "composer": {

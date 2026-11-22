@@ -1,7 +1,8 @@
 import { cookies } from "next/headers";
 import { createServerClient } from "@supabase/ssr";
 import type { SupabaseClient, User } from "@supabase/supabase-js";
-import type { Plan } from "./plan-limits";
+import type { PlanOuAucun } from "./plan-limits";
+import { planEffectif } from "./plan-effectif";
 import type { FormationOwnership } from "./formation";
 
 // Client Supabase lié aux cookies de session de la requête en cours (Route Handler).
@@ -22,11 +23,11 @@ export async function createSupabaseServerClient() {
 
 const NO_FORMATION_OWNED: FormationOwnership = { courte: false, longue: false };
 
-// Sans période payée en cours, profils.plan = "expert" ne donne aucun droit : le plan n'existe
-// qu'à travers une configuration choisie et payée (ou offerte).
-async function resolvePlan(supabase: SupabaseClient, userId: string, profilPlan: unknown): Promise<Plan> {
-  const plan = (profilPlan as Plan | undefined) ?? "free";
-  if (plan !== "expert") return plan;
+// Plan qui donne des droits (lib/plan-effectif.ts) : sans abonnement, null. Sans période payée
+// en cours, profils.plan = "expert" ne donne aucun droit : le plan n'existe qu'à travers une
+// configuration choisie et payée (ou offerte).
+async function resolvePlan(supabase: SupabaseClient, userId: string, profilPlan: unknown): Promise<PlanOuAucun> {
+  if (profilPlan !== "expert") return planEffectif(typeof profilPlan === "string" ? profilPlan : null, false);
 
   const { data } = await supabase
     .from("expert_periodes")
@@ -34,25 +35,25 @@ async function resolvePlan(supabase: SupabaseClient, userId: string, profilPlan:
     .eq("user_id", userId)
     .gt("periode_fin", new Date().toISOString())
     .limit(1);
-  return data?.length ? "expert" : "free";
+  return planEffectif("expert", Boolean(data?.length));
 }
 
 // Utilisateur + plan résolus côté serveur, à partir de la session (jamais d'un champ
-// envoyé par le client). Pas de session ou pas de ligne profils -> "free" par défaut, le
+// envoyé par le client). Pas de session, pas de ligne profils ou pas d'abonnement -> null, le
 // choix le plus restrictif. formationOwned suit le même principe (jamais de confiance dans
 // une valeur côté client) — achat à vie par collection, indépendant du plan, voir
 // lib/formation.ts et supabase/migrations/020_formation_achats.sql.
 export async function getServerUserAndPlan(): Promise<{
   supabase: SupabaseClient;
   user: User | null;
-  plan: Plan;
+  plan: PlanOuAucun;
   formationOwned: FormationOwnership;
 }> {
   const supabase = await createSupabaseServerClient();
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) {
-    return { supabase, user: null, plan: "free", formationOwned: NO_FORMATION_OWNED };
+    return { supabase, user: null, plan: null, formationOwned: NO_FORMATION_OWNED };
   }
 
   const [{ data: profil }, { data: achats }] = await Promise.all([
@@ -78,13 +79,13 @@ export async function getServerUserAndPlan(): Promise<{
 export async function getServerUserPlanOnly(): Promise<{
   supabase: SupabaseClient;
   user: User | null;
-  plan: Plan;
+  plan: PlanOuAucun;
 }> {
   const supabase = await createSupabaseServerClient();
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) {
-    return { supabase, user: null, plan: "free" };
+    return { supabase, user: null, plan: null };
   }
 
   const { data: profil } = await supabase.from("profils").select("plan").eq("id", user.id).maybeSingle();

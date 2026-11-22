@@ -4,7 +4,7 @@ import { blocAvisPrompt, validerAvis } from "@/lib/avis-produit";
 import Anthropic from "@anthropic-ai/sdk";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { getServerUserAndPlan } from "@/lib/supabase-server";
-import { PLAN_LIMITS, planLabel, type Plan } from "@/lib/plan-limits";
+import { PLAN_LIMITS, planLabel, type Plan, type PlanOuAucun, limitesDuPlan } from "@/lib/plan-limits";
 import { reponseLimiteIa, SuiviBudgetIa, tokensEstimes } from "@/lib/ai-budget";
 import { EXPERT_MODELS } from "@/lib/expert-pricing";
 import { finaliserSiteExpert, reserverSiteExpert, type ReservationSite } from "@/lib/expert-generation";
@@ -775,7 +775,7 @@ async function handleGenerateBoutique(
   // comptée sur le même compteur que celle du mode produit unique.
   supabase: SupabaseClient,
   userId: string,
-  plan: Plan
+  plan: PlanOuAucun
 ): Promise<NextResponse> {
   const { nomBoutique, descriptionBoutique, produits, colorPrimary, colorSecondary, colorAccent, style } = body;
   const promptUtilisateur = promptUtilisateurDe(body);
@@ -791,7 +791,10 @@ async function handleGenerateBoutique(
 
   // Même plafond que la limite de produits par boutique du plan (POST /api/boutiques/[id]/produits),
   // déjà appliqué par le builder (BoutiqueDraft.limiteProduits) : le serveur ne s'y fie pas.
-  const maxProduits = PLAN_LIMITS[plan].produitsBoutiqueMax;
+  if (plan === null) {
+    return apiError("abonnement_requis_outil", 403, "Choisissez un abonnement pour utiliser cet outil.");
+  }
+  const maxProduits = limitesDuPlan(plan).produitsBoutiqueMax;
   if (maxProduits !== null && produits.length > maxProduits) {
     return apiError(
       "generation_too_many_products",

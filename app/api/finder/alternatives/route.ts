@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerUserAndPlan } from "@/lib/supabase-server";
-import { PLAN_LIMITS, planLabel, getMonthlyUsage, incrementMonthlyUsage } from "@/lib/plan-limits";
+import { PLAN_LIMITS, planLabel, getMonthlyUsage, incrementMonthlyUsage, limitesDuPlan } from "@/lib/plan-limits";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { getProductDetail, queryProducts, type AliExpressProduct } from "@/lib/aliexpress";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
@@ -77,11 +77,11 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const maxParMois = PLAN_LIMITS[plan].alternativesParMoisMax;
+  const maxParMois = limitesDuPlan(plan).alternativesParMoisMax;
 
-  if (maxParMois === 0) {
+  if (plan === null || maxParMois === 0) {
     return NextResponse.json(
-      { error: "Les alternatives fiables ne sont pas disponibles sur le plan Free.", code: "alternatives_plan" },
+      { error: "Les alternatives fiables nécessitent un abonnement.", code: "alternatives_plan" },
       { status: 403 }
     );
   }

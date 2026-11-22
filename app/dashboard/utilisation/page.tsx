@@ -10,7 +10,7 @@ import { useApiErrorMessage } from "@/lib/use-api-error";
 type UsageMetric = { key: string; label: string; used: number; max: number | null; informatif?: boolean };
 type BoutiqueUsage = { id: string; nom: string; used: number; max: number | null };
 type UsageData = {
-  plan: string;
+  plan: string | null;
   monthly: UsageMetric[];
   total: UsageMetric[];
   catalogue: { max: number | null };
@@ -21,7 +21,7 @@ type UsageData = {
   budgetImages?: { utilise: number; max: number; restant: number; imagesRestantes: number } | null;
 };
 
-const PLAN_LABEL: Record<string, string> = { free: "Free", pro: "Pro", agency: "Agency", expert: "Expert" };
+const PLAN_LABEL: Record<string, string> = { pro: "Pro", agency: "Agency", expert: "Expert" };
 
 // /api/usage renvoie un libellé en dur (français) à côté de chaque `key` — on ignore ce
 // libellé et on traduit à partir de la clé stable, pour ne pas dépendre de la langue du
@@ -66,7 +66,7 @@ export default function UtilisationDetailPage() {
           </Link>
           <h1 className="text-2xl font-bold text-[var(--text-primary)] mt-3">{t("utilisation.title")}</h1>
           <p className="text-[var(--text-faint)] text-sm mt-1.5">
-            {t("utilisation.subtitle", { plan: usage ? PLAN_LABEL[usage.plan] ?? usage.plan : "…" })}
+            {t("utilisation.subtitle", { plan: usage ? (usage.plan ? PLAN_LABEL[usage.plan] ?? usage.plan : t("nav.aucunAbonnement")) : "…" })}
           </p>
         </div>
 

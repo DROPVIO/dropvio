@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerUserAndPlan } from "@/lib/supabase-server";
-import { PLAN_LIMITS, planLabel } from "@/lib/plan-limits";
+import { apiError } from "@/lib/api-errors";
+import { PLAN_LIMITS, planLabel, limitesDuPlan } from "@/lib/plan-limits";
 
 // La sauvegarde passe par cette route (plutôt qu'un insert direct depuis le navigateur)
-// pour que la limite du plan Free soit appliquée côté serveur, jamais contournable.
+// pour que la limite du plan soit appliquée côté serveur, jamais contournable.
 export async function POST(request: NextRequest) {
   const { supabase, user, plan } = await getServerUserAndPlan();
 
@@ -16,7 +17,10 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "nom, inputs et resultats sont requis", code: "invalid_request" }, { status: 400 });
   }
 
-  const max = PLAN_LIMITS[plan].simulationsMax;
+  if (plan === null) {
+    return apiError("abonnement_requis_outil", 403, "Choisissez un abonnement pour utiliser cet outil.");
+  }
+  const max = limitesDuPlan(plan).simulationsMax;
   if (max !== null) {
     const { count, error: countError } = await supabase
       .from("simulations_marge")

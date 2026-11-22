@@ -34,10 +34,9 @@ export function getFormationPriceId(offre: FormationOffre): string {
   return priceId;
 }
 
-// Abonnements : un Price Stripe récurrent mensuel par plan payant. Free n'en a pas — ce n'est
-// plus une offre, seulement l'état d'un compte sans abonnement actif (voir 045_abonnements.sql).
+// Abonnements : un Price Stripe récurrent mensuel par plan (un compte sans abonnement a plan = null).
 // Expert n'en a pas non plus : son prix dépend de la configuration de chaque abonné.
-export type PlanPayant = Exclude<Plan, "free" | "expert">;
+export type PlanPayant = Exclude<Plan, "expert">;
 
 export const ESSAI_JOURS = 3;
 

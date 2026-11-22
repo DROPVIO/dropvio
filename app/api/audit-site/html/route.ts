@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { getServerUserAndPlan } from "@/lib/supabase-server";
-import { PLAN_LIMITS, planLabel, getMonthlyUsage, incrementMonthlyUsage } from "@/lib/plan-limits";
+import { PLAN_LIMITS, planLabel, getMonthlyUsage, incrementMonthlyUsage, limitesDuPlan } from "@/lib/plan-limits";
 import { SuiviBudgetIa } from "@/lib/ai-budget";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { AUDIT_MODELE, compacterHtml, restaurerHtml, verifierBudgetAudit } from "@/lib/audit-config";
@@ -88,11 +88,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const maxParMois = PLAN_LIMITS[plan].auditsParMoisMax;
+    const maxParMois = limitesDuPlan(plan).auditsParMoisMax;
 
-    if (maxParMois === 0) {
+    if (plan === null || maxParMois === 0) {
       return NextResponse.json(
-        { error: "L'audit IA n'est pas disponible sur le plan Free. Passe Pro pour débloquer 30 audits par mois.", code: "audit_plan" },
+        { error: "L'audit IA nécessite un abonnement. Le plan Pro inclut 30 audits par mois.", code: "audit_plan" },
         { status: 403 }
       );
     }

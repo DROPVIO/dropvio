@@ -50,7 +50,7 @@ export default function MesSitesPage() {
   const [pushingId, setPushingId] = useState<string | null>(null);
   const [pushErrors, setPushErrors] = useState<Record<string, string>>({});
   const [pushResults, setPushResults] = useState<Record<string, { url: string; admin_url: string }>>({});
-  // Plan free : téléchargement et publication Shopify réservés à Pro/Agency (voir diagnostic
+  // Sans abonnement : téléchargement et publication Shopify réservés à Pro/Agency (voir diagnostic
   // "restriction export Site Builder") — démarre à false (état le plus restrictif) tant que
   // /api/plan n'a pas répondu.
   const [plan, setPlan] = useState<Plan | null>(null);
@@ -90,8 +90,8 @@ export default function MesSitesPage() {
 
     fetch("/api/plan")
       .then((r) => r.json())
-      .then((json) => setPlan(json.plan ?? "free"))
-      .catch(() => setPlan("free"));
+      .then((json) => setPlan(json.plan ?? null))
+      .catch(() => setPlan(null));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -409,7 +409,7 @@ export default function MesSitesPage() {
                     )}
                   </div>
                   {/* Format d'export — affiché seulement aux plans qui peuvent exporter : pour
-                      un plan free, le choix n'aurait aucun effet observable. Le HTML stocké
+                      un compte sans abonnement, le choix n'aurait aucun effet observable. Le HTML stocké
                       est le même dans les deux cas, la conversion a lieu au téléchargement. */}
                   {canExport && (
                     <div className="flex items-center justify-between gap-2">
@@ -432,8 +432,8 @@ export default function MesSitesPage() {
                       </div>
                     </div>
                   )}
-                  {/* Audit IA : réservé aux plans Pro/Agency côté serveur (quota free = 0
-                      audit, voir lib/plan-limits.ts) — un free est donc renvoyé vers les
+                  {/* Audit IA : réservé aux plans Pro/Agency côté serveur (quota sans abonnement = 0
+                      audit, voir lib/plan-limits.ts) — un compte sans abonnement est donc renvoyé vers les
                       tarifs plutôt que vers un audit qui échouerait en 403. */}
                   {canExport ? (
                     <Link

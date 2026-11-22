@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerUserPlanOnly } from "@/lib/supabase-server";
-import { PLAN_LIMITS } from "@/lib/plan-limits";
+import { PLAN_LIMITS, limitesDuPlan } from "@/lib/plan-limits";
 import { lirePhotosPrincipales } from "@/lib/catalogue-photos";
 import { COMMANDES_MIN_DEFAUT } from "@/lib/catalogue-commandes";
-import { apiError } from "@/lib/api-errors";
+import { apiError, reponseAbonnementRequis } from "@/lib/api-errors";
 
 const DEFAULT_LIMIT = 30;
 const MAX_LIMIT = 100;
@@ -22,6 +22,7 @@ export async function GET(request: NextRequest) {
   if (!user) {
     return apiError("auth_required", 401, "Connecte-toi pour voir le catalogue.");
   }
+  if (plan === null) return reponseAbonnementRequis();
 
   const { searchParams } = new URL(request.url);
   const search = searchParams.get("search")?.trim() ?? "";
@@ -31,7 +32,7 @@ export async function GET(request: NextRequest) {
   const from = (page - 1) * limit;
   const to = from + limit - 1;
 
-  const produitsMax = PLAN_LIMITS[plan].produitsMax; // null = illimité
+  const produitsMax = limitesDuPlan(plan).produitsMax; // null = illimité
   if (produitsMax !== null && from >= produitsMax) {
     return NextResponse.json({ products: [], total: produitsMax, page, limit, totalPages: Math.max(1, Math.ceil(produitsMax / limit)), planLimited: true });
   }

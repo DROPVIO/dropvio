@@ -11,7 +11,7 @@ import PaletteEditor, { type Palette } from "@/app/components/PaletteEditor";
 import { writeBoutiqueDraft, type ProduitBoutiqueDraft } from "@/lib/site-builder-handoff";
 import Image from "next/image";
 import MediathequeModal from "@/components/studio/MediathequeModal";
-import { PLAN_LIMITS, type Plan } from "@/lib/plan-limits";
+import { PLAN_LIMITS, type Plan, limitesDuPlan } from "@/lib/plan-limits";
 import BoutiqueReglages, { BoutiqueSuppression } from "@/components/site-builder/BoutiqueReglages";
 import BoutiqueShopifyPush from "@/components/site-builder/BoutiqueShopifyPush";
 import TriCollectionsIA from "@/components/site-builder/TriCollectionsIA";
@@ -257,25 +257,25 @@ export default function BoutiqueBuilderDetailPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [params?.id]);
 
-  // Restriction plan free — export HTML boutique et publication Shopify réservés à
-  // Pro/Agency (voir diagnostic "restriction export Site Builder", même règle que
-  // app/site-builder/page.tsx). plan démarre à null tant que /api/plan n'a pas répondu.
+  // Export HTML boutique et publication Shopify réservés aux abonnés (même règle que
+  // app/site-builder/page.tsx). plan vaut null sans abonnement ; planCharge passe à true dès que
+  // /api/plan a répondu (succès ou erreur).
   const [plan, setPlan] = useState<Plan | null>(null);
+  const [planCharge, setPlanCharge] = useState(false);
   useEffect(() => {
     fetch("/api/plan")
       .then((res) => res.json())
-      .then((json) => setPlan(json.plan ?? "free"))
-      .catch(() => setPlan("free"));
+      .then((json) => setPlan(json.plan ?? null))
+      .catch(() => setPlan(null))
+      .finally(() => setPlanCharge(true));
   }, []);
   const canExport = plan === "pro" || plan === "agency" || plan === "expert";
-  // plan vaut null tant que /api/plan n'a pas répondu (succès ou erreur, l'erreur donnant
-  // "free") — « Créer mon site » attend cette réponse pour ne jamais transmettre au builder
-  // la limite Free par défaut à un compte Pro/Agency.
-  const planCharge = plan !== null;
+  // « Créer mon site » attend la réponse de /api/plan pour ne jamais transmettre au builder une
+  // limite à 0 par défaut à un compte Pro/Agency.
   // Limite d'ajout de produits dans le brouillon du builder (null = illimité) — même plan
   // (profils.plan via /api/plan) et même valeur que le plafond serveur de
-  // POST /api/boutiques/[id]/produits. Plan pas encore connu : "free", comme le repli ci-dessus.
-  const limiteProduitsPlan = PLAN_LIMITS[plan ?? "free"].produitsBoutiqueMax;
+  // POST /api/boutiques/[id]/produits. Sans abonnement (ou plan pas encore connu) : 0.
+  const limiteProduitsPlan = limitesDuPlan(plan).produitsBoutiqueMax;
   // Ajout bloqué à la limite du plan (ou au-delà après un passage à un plan inférieur) ;
   // l'édition des produits existants reste possible.
   const ajoutBloque = plan !== null && limiteProduitsAtteinte(plan, produitsCount);
@@ -580,7 +580,7 @@ export default function BoutiqueBuilderDetailPage() {
       // décompté normalement, puisque c'est cette fois un vrai fichier généré. Un échec
       // ici (export ou quota atteint) n'annule pas la sauvegarde de la boutique déjà
       // réussie — juste un avertissement, pas une erreur bloquante.
-      // Plan free : l'export HTML (et donc son ajout à "Mes sites") est réservé à Pro/Agency
+      // Sans abonnement : l'export HTML (et donc son ajout à "Mes sites") est réservé à Pro/Agency
       // côté serveur (/api/boutiques/[id]/export-html) — on évite l'appel inutile et on
       // l'explique directement plutôt que de laisser passer un 403 générique.
       if (!canExport) {

@@ -14,9 +14,11 @@ import {
   AI_BUDGET_EUR_PAR_PLAN,
   AI_BUDGET_PART_JOUR,
   AI_BUDGET_PART_SEMAINE,
+  budgetIaEur,
   currentMonthKey,
   logTokensUsage,
   type Plan,
+  type PlanOuAucun,
   type UsageFeature,
 } from "@/lib/plan-limits";
 import { coutEuros, prixEuros, type ModeleIa } from "@/lib/ai-pricing";
@@ -166,11 +168,11 @@ export async function getBudgetParFonction(supabase: SupabaseClient, userId: str
 export async function assertBudgetDisponible(
   supabase: SupabaseClient,
   userId: string,
-  plan: Plan,
+  plan: PlanOuAucun,
   coutEstimeEuros: number,
   dejaEngageEuros = 0
 ): Promise<void> {
-  const budget = AI_BUDGET_EUR_PAR_PLAN[plan];
+  const budget = budgetIaEur(plan);
   const dejaUtilise = await getBudgetUsedEuros(supabase, userId);
   if (!decisionBudget(budget, dejaUtilise, dejaEngageEuros, coutEstimeEuros).ok) {
     throw new BudgetIaDepasse(dejaUtilise + dejaEngageEuros, budget, coutEstimeEuros);
@@ -191,8 +193,8 @@ const DUREE_FENETRE_MS: Record<FenetreIa, number> = {
   semaine: 7 * 24 * 3_600_000,
 };
 
-export function plafondFenetre(plan: Plan, fenetre: FenetreIa): number {
-  return AI_BUDGET_EUR_PAR_PLAN[plan] * (fenetre === "jour" ? AI_BUDGET_PART_JOUR : AI_BUDGET_PART_SEMAINE);
+export function plafondFenetre(plan: PlanOuAucun, fenetre: FenetreIa): number {
+  return budgetIaEur(plan) * (fenetre === "jour" ? AI_BUDGET_PART_JOUR : AI_BUDGET_PART_SEMAINE);
 }
 
 export type EtatFenetre = {
@@ -240,7 +242,7 @@ async function lireJournal(supabase: SupabaseClient, userId: string): Promise<{ 
   }));
 }
 
-function etatDepuisJournal(journal: { cout: number; date: number }[], plan: Plan, fenetre: FenetreIa, maintenant: number): EtatFenetre {
+function etatDepuisJournal(journal: { cout: number; date: number }[], plan: PlanOuAucun, fenetre: FenetreIa, maintenant: number): EtatFenetre {
   const duree = DUREE_FENETRE_MS[fenetre];
   const dans = journal.filter((l) => l.date > maintenant - duree);
   const max = plafondFenetre(plan, fenetre);
@@ -262,7 +264,7 @@ function etatDepuisJournal(journal: { cout: number; date: number }[], plan: Plan
 }
 
 /** État des deux limites glissantes, ou null si le journal est indisponible. */
-export async function etatFenetres(supabase: SupabaseClient, userId: string, plan: Plan): Promise<Record<FenetreIa, EtatFenetre> | null> {
+export async function etatFenetres(supabase: SupabaseClient, userId: string, plan: PlanOuAucun): Promise<Record<FenetreIa, EtatFenetre> | null> {
   const journal = await lireJournal(supabase, userId);
   if (!journal) return null;
   const maintenant = Date.now();
@@ -273,7 +275,7 @@ export async function etatFenetres(supabase: SupabaseClient, userId: string, pla
 }
 
 /** Lève LimiteIaFenetre si la limite des 24 heures ou des 7 jours est déjà atteinte. */
-export async function assertFenetresDisponibles(supabase: SupabaseClient, userId: string, plan: Plan, dejaEngageEuros = 0): Promise<void> {
+export async function assertFenetresDisponibles(supabase: SupabaseClient, userId: string, plan: PlanOuAucun, dejaEngageEuros = 0): Promise<void> {
   const etat = await etatFenetres(supabase, userId, plan);
   if (!etat) return;
   for (const fenetre of ["semaine", "jour"] as const) {
@@ -327,7 +329,7 @@ export class SuiviBudgetIa {
   constructor(
     private readonly supabase: SupabaseClient,
     private readonly userId: string,
-    private readonly plan: Plan,
+    private readonly plan: PlanOuAucun,
     readonly fonction: UsageFeature,
     private readonly options: { fenetres?: boolean; horsBudget?: boolean; ecriture?: SupabaseClient } = {}
   ) {

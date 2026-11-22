@@ -1,6 +1,9 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
-export type Plan = "free" | "pro" | "agency" | "expert";
+// Seuls trois plans existent. Un compte sans abonnement (plan null en base, ou Expert sans
+// période payée en cours) n'a accès à aucun outil : toutes ses limites valent 0.
+export type Plan = "pro" | "agency" | "expert";
+export type PlanOuAucun = Plan | null;
 // inspiration_ia, boutique_ia et textes_ia : migration 043 (contrainte usage_mensuel_feature_check).
 export type UsageFeature =
   | "audit_ia"
@@ -18,7 +21,6 @@ export type UsageFeature =
 // (calculé depuis usage_mensuel.tokens_entree / tokens_sortie, voir lib/ai-budget.ts). Les
 // quotas par fonction ci-dessous (sites, audits) restent en place ; le budget s'ajoute à eux.
 export const AI_BUDGET_EUR_PAR_PLAN: Record<Plan, number> = {
-  free: 0,
   pro: 6,
   agency: 28,
   expert: 28,
@@ -32,9 +34,8 @@ export const AI_BUDGET_EUR_PAR_PLAN: Record<Plan, number> = {
 // démarre tant que la limite n'est pas encore atteinte, même s'il la dépasse un peu.
 // Budget mensuel propre aux images générées (plans Pro et Agency), séparé du budget IA total
 // ci-dessus : une image ne décompte que ce budget, un texte, un site ou un audit que le budget IA.
-// Expert : quota d'images du plan (expert_periodes), hors de ce budget. Sans plan payant : 0.
+// Expert : quota d'images du plan (expert_periodes), hors de ce budget. Sans plan : 0.
 export const IMAGE_BUDGET_EUR_PAR_PLAN: Record<Plan, number> = {
-  free: 0,
   pro: 1.5,
   agency: 3.5,
   expert: 0,
@@ -50,51 +51,75 @@ export const PRO_PRICE_EUR = 29;
 export const AGENCY_PRICE_EUR = 59;
 
 // null = illimité. expert reprend la base Agency, sauf pour les sites : sa limite réelle vient
-// de sa configuration du mois (lib/expert-quota.ts). "free" n'est plus une offre : c'est un compte sans abonnement actif ni
-// essai en cours (045_abonnements.sql). Tout est à 0 — le middleware redirige déjà ces comptes
-// vers /abonnement, ces zéros bloquent aussi les appels directs aux routes API.
-// Catalogue des produits gagnants d'un compte Free : 40 produits par niche sur 10 niches. La
-// sélection est faite par la base (table catalogue_free, migration 057) et appliquée par le RLS
-// de produits / snapshots_produits / produits_dedup à toute lecture avec la session de
-// l'utilisateur. produitsMax (Free) n'en est que le total, pour la pagination.
-export const CATALOGUE_FREE = { niches: 10, produitsParNiche: 40 } as const;
-
-// produitsBoutiqueMax est aussi appliqué par la base (trigger de la migration 059) : toute
+// de sa configuration du mois (lib/expert-quota.ts).
+// produitsBoutiqueMax est aussi appliqué par la base (trigger des migrations 059/063) : toute
 // modification de ces limites doit y être reportée.
-export const PLAN_LIMITS: Record<Plan, {
+export type LimitesPlan = {
   produitsMax: number | null;
   produitsBoutiqueMax: number | null;
   simulationsMax: number | null;
   sitesParMoisMax: number | null;
   auditsParMoisMax: number | null;
   alternativesParMoisMax: number | null;
-}> = {
-  free:   { produitsMax: CATALOGUE_FREE.niches * CATALOGUE_FREE.produitsParNiche, produitsBoutiqueMax: 0, simulationsMax: 0, sitesParMoisMax: 0, auditsParMoisMax: 0, alternativesParMoisMax: 0 },
+};
+
+export const PLAN_LIMITS: Record<Plan, LimitesPlan> = {
   pro:    { produitsMax: null, produitsBoutiqueMax: 200, simulationsMax: null, sitesParMoisMax: 20, auditsParMoisMax: 30, alternativesParMoisMax: null },
   agency: { produitsMax: null, produitsBoutiqueMax: 200, simulationsMax: null, sitesParMoisMax: 50, auditsParMoisMax: 100, alternativesParMoisMax: null },
   // Expert : aucun plafond de produits par boutique, seul le quota d'images limite la génération.
   expert: { produitsMax: null, produitsBoutiqueMax: null, simulationsMax: null, sitesParMoisMax: 0, auditsParMoisMax: 100, alternativesParMoisMax: null },
 };
 
-// Espace de la médiathèque du Studio IA, copies publiques non comprises. Free n'a pas accès aux outils.
+// Sans plan : aucun outil, donc toutes les limites à 0 (le proxy redirige déjà ces comptes vers
+// /abonnement ; ces zéros bloquent aussi les appels directs aux routes API).
+const LIMITES_SANS_PLAN: LimitesPlan = {
+  produitsMax: 0,
+  produitsBoutiqueMax: 0,
+  simulationsMax: 0,
+  sitesParMoisMax: 0,
+  auditsParMoisMax: 0,
+  alternativesParMoisMax: 0,
+};
+
+export function limitesDuPlan(plan: PlanOuAucun): LimitesPlan {
+  return plan ? PLAN_LIMITS[plan] : LIMITES_SANS_PLAN;
+}
+
+export function budgetIaEur(plan: PlanOuAucun): number {
+  return plan ? AI_BUDGET_EUR_PAR_PLAN[plan] : 0;
+}
+
+export function budgetImagesEur(plan: PlanOuAucun): number {
+  return plan ? IMAGE_BUDGET_EUR_PAR_PLAN[plan] : 0;
+}
+
+// Espace de la médiathèque du Studio IA, copies publiques non comprises. Sans plan : 0.
 const MO = 1024 * 1024;
 export const MEDIA_STOCKAGE_MAX_OCTETS: Record<Plan, number> = {
-  free: 0,
   pro: 500 * MO,
   agency: 2048 * MO,
   expert: 10240 * MO,
 };
 
-const PLAN_LABEL: Record<Plan, string> = { free: "Free", pro: "Pro", agency: "Agency", expert: "Expert" };
+export function stockageMaxOctets(plan: PlanOuAucun): number {
+  return plan ? MEDIA_STOCKAGE_MAX_OCTETS[plan] : 0;
+}
+
+const PLAN_LABEL: Record<Plan, string> = { pro: "Pro", agency: "Agency", expert: "Expert" };
 
 export function planLabel(plan: Plan): string {
   return PLAN_LABEL[plan];
 }
 
-const PLANS_ORDONNES: Plan[] = ["free", "pro", "agency", "expert"];
+export function estPlan(valeur: unknown): valeur is Plan {
+  return valeur === "pro" || valeur === "agency" || valeur === "expert";
+}
+
+const PLANS_ORDONNES: Plan[] = ["pro", "agency", "expert"];
 
 // Premier plan au-dessus de `plan` qui autorise plus de produits par boutique, ou null si
 // aucun plan ne va plus loin (le message de limite ne propose alors pas de changer de plan).
+// Sans plan, l'appelant affiche « Choisissez un abonnement pour ajouter des produits. ».
 export function planSuperieurProduitsBoutique(plan: Plan): Plan | null {
   const max = PLAN_LIMITS[plan].produitsBoutiqueMax;
   if (max === null) return null;

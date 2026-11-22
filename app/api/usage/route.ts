@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getServerUserAndPlan } from "@/lib/supabase-server";
 import { getPeriodeExpert, limiteSitesExpert } from "@/lib/expert-quota";
-import { AI_BUDGET_EUR_PAR_PLAN, IMAGE_BUDGET_EUR_PAR_PLAN, PLAN_LIMITS, currentMonthKey, getMonthlyUsage } from "@/lib/plan-limits";
+import { AI_BUDGET_EUR_PAR_PLAN, IMAGE_BUDGET_EUR_PAR_PLAN, PLAN_LIMITS, currentMonthKey, getMonthlyUsage, limitesDuPlan, budgetIaEur, budgetImagesEur } from "@/lib/plan-limits";
 import { MODELE_PAR_FONCTION, arrondiCentime, etatFenetres, getBudgetParFonction, getImagesUsedEuros, tokensSortieEquivalents, type EtatFenetre } from "@/lib/ai-budget";
 import { IMAGE_PRICE_EUR } from "@/lib/expert-pricing";
 import { imagesPossiblesBudget } from "@/lib/media/quota-images-regles";
@@ -18,7 +18,7 @@ export async function GET() {
     return NextResponse.json({ error: "Connecte-toi pour voir ton utilisation.", code: "auth_required" }, { status: 401 });
   }
 
-  const limits = PLAN_LIMITS[plan];
+  const limits = limitesDuPlan(plan);
   // Sites : quota d'unités payées pour Expert ; pour les autres plans, nombre informatif (la
   // limite de création est le budget IA du mois, en tokens réellement consommés).
   const maxSites = plan === "expert" ? await limiteSitesExpert(supabase, user.id) : null;
@@ -39,9 +39,9 @@ export async function GET() {
   ]);
   const budgetUtilise = Object.values(budgetParFonction).reduce((total, euros) => total + euros, 0);
   // Budget images (Pro, Agency), séparé du budget IA. Expert : quota d'images du plan (page Quota).
-  const budgetImagesMax = IMAGE_BUDGET_EUR_PAR_PLAN[plan];
+  const budgetImagesMax = budgetImagesEur(plan);
   const imagesUtilise = budgetImagesMax > 0 ? await getImagesUsedEuros(supabase, user.id).catch(() => null) : null;
-  const budgetRestant = Math.max(0, AI_BUDGET_EUR_PAR_PLAN[plan] - budgetUtilise);
+  const budgetRestant = Math.max(0, budgetIaEur(plan) - budgetUtilise);
   const fenetre = (e: EtatFenetre) => ({ utilise: arrondiCentime(e.utilise), max: arrondiCentime(e.max), reprise: e.reprise });
 
   const boutiqueRows = boutiques.data ?? [];
@@ -71,7 +71,7 @@ export async function GET() {
     // jour / semaine : limites glissantes sur 24 heures et 7 jours (null sans la migration 044).
     budgetIa: {
       utilise: arrondiCentime(budgetUtilise),
-      max: AI_BUDGET_EUR_PAR_PLAN[plan],
+      max: budgetIaEur(plan),
       restant: arrondiCentime(budgetRestant),
       // Indication : tokens de sortie du modèle de génération de site que couvre le reste.
       tokensSortieRestants: tokensSortieEquivalents(budgetRestant, MODELE_PAR_FONCTION.site_builder!),
