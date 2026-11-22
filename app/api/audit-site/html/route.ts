@@ -105,7 +105,7 @@ export async function POST(request: NextRequest) {
         return NextResponse.json(
           {
             error: `Vous avez atteint la limite de ${maxParMois} audits ce mois-ci sur le plan ${planLabel(plan)}. ${
-              plan === "pro" ? "Passe Agency pour 100 audits par mois." : "La limite se réinitialise le mois prochain."
+              plan === "pro" ? "Passez à Agency pour 50 audits par mois." : "La limite se réinitialise le mois prochain."
             }`, code: "audit_limit", values: { max: maxParMois, plan: planLabel(plan) },
           },
           { status: 403 }

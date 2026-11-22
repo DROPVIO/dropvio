@@ -3,10 +3,11 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { expertLignes, parseExpertMetadata } from "./expert-billing";
-import { AGENCY_PRICE_EUR, PLAN_LIMITS } from "./plan-limits";
+import { AGENCY_PRICE_EUR } from "./plan-limits";
 import { CLAUDE_MODELS } from "./claude-models";
 import {
   ENVELOPPE_TOKENS_MOIS,
+  SITES_ENVELOPPE_EXPERT,
   EXPERT_BASE_EUR,
   EXPERT_MODELE_DEFAUT,
   EXPERT_MEDIAS_EN_VENTE,
@@ -37,13 +38,14 @@ const MODELES = Object.keys(EXPERT_MODELS) as ExpertModel[];
 const sel = (model: ExpertModel, sites: number, images = 0): ExpertSelection => ({ model, sites, images });
 
 describe("enveloppe de tokens et plafond de sites", () => {
-  it("enveloppe = sites par mois du plan Agency × tokens par site Opus", () => {
-    assert.equal(ENVELOPPE_TOKENS_MOIS, (PLAN_LIMITS.agency.sitesParMoisMax ?? Number.NaN) * TOKENS_PAR_SITE_OPUS);
+  it("enveloppe = 50 sites Opus (figée, indépendante du quota Agency)", () => {
+    assert.equal(SITES_ENVELOPPE_EXPERT, 50);
+    assert.equal(ENVELOPPE_TOKENS_MOIS, SITES_ENVELOPPE_EXPERT * TOKENS_PAR_SITE_OPUS);
   });
 
-  it("plafond Opus = floor(enveloppe / tokens par site Opus), soit le quota Agency", () => {
+  it("plafond Opus = floor(enveloppe / tokens par site Opus), soit 50 sites", () => {
     assert.equal(plafondSites("opus-5-5"), Math.floor(ENVELOPPE_TOKENS_MOIS / TOKENS_PAR_SITE_OPUS));
-    assert.equal(plafondSites("opus-5-5"), PLAN_LIMITS.agency.sitesParMoisMax);
+    assert.equal(plafondSites("opus-5-5"), SITES_ENVELOPPE_EXPERT);
   });
 
   it("plafond Fable = floor(enveloppe / tokens par site Fable)", () => {

@@ -5,7 +5,7 @@ import { describe, it } from "node:test";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { BudgetIaDepasse, SuiviBudgetIa, coutImagesEuros, decisionBudget, getBudgetParFonction, getBudgetUsedEuros, getImagesUsedEuros, reponseBudgetDepasse, tokensSortieEquivalents } from "./ai-budget";
 import { coutEuros, PRIX_EUR_PAR_MILLION } from "./ai-pricing";
-import { AI_BUDGET_EUR_PAR_PLAN, IMAGE_BUDGET_EUR_PAR_PLAN, MULTIPLICATEUR_BUDGET_CLAUDE_AGENCY_EXPERT, budgetImagesEur } from "./plan-limits";
+import { AI_BUDGET_EUR_PAR_PLAN, IMAGE_BUDGET_EUR_PAR_PLAN, PLAN_LIMITS, MULTIPLICATEUR_BUDGET_CLAUDE_AGENCY_EXPERT, budgetImagesEur } from "./plan-limits";
 import { formatEuros } from "./prix";
 import { IMAGE_PRICE_EUR } from "./expert-pricing";
 import { lireQuotaImages } from "./media/quota-images-serveur";
@@ -203,5 +203,16 @@ describe("budget images séparé du budget IA", () => {
   it("une image ne s'écrit pas dans le journal des limites glissantes du budget IA", () => {
     const route = readFileSync(new URL("../app/api/media/generer/route.ts", import.meta.url), "utf-8");
     assert.ok(!route.includes("journaliserImageBudget"));
+  });
+});
+
+describe("quotas Agency dans le budget Claude", () => {
+  it("30 sites et 50 audits par mois tiennent dans 15,60 € au coût maximal par appel", () => {
+    assert.equal(PLAN_LIMITS.agency.sitesParMoisMax, 30);
+    assert.equal(PLAN_LIMITS.agency.auditsParMoisMax, 50);
+    // Coût plafond : sortie max_tokens entièrement consommée, entrée estimée (10 000 / 20 000 tokens).
+    const site = coutEuros("claude-sonnet-5-5", 10_000, 24_000);
+    const audit = coutEuros("claude-sonnet-4-6", 20_000, 8_192);
+    assert.ok(30 * site + 50 * audit <= AI_BUDGET_EUR_PAR_PLAN.agency);
   });
 });

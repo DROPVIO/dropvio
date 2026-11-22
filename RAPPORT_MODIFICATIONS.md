@@ -1,5 +1,36 @@
 # Rapport de modifications
 
+## Séance du 22 novembre (suite) — quotas Agency ramenés dans le budget Claude
+
+Choix retenu : baisser les quotas Agency pour qu'ils tiennent dans 15,60 € au coût maximal par
+appel. **Agency : 30 sites et 50 audits par mois** (au lieu de 50 et 100), soit
+30 × 0,23 € + 50 × 0,165 € ≈ 15,15 €.
+
+### Fichiers modifiés
+
+- `lib/plan-limits.ts` : quotas Agency 30 sites / 50 audits, avec le calcul en commentaire.
+- `lib/expert-pricing.ts` : l'enveloppe de tokens Expert reprenait le quota de sites Agency.
+  Pour ne pas modifier le plan Expert, elle est figée à `SITES_ENVELOPPE_EXPERT = 50` sites Opus
+  (prix, plafonds de sites Expert inchangés).
+- `app/api/audit-site/route.ts`, `app/api/audit-site/html/route.ts` : « Passez à Agency pour
+  50 audits par mois. » (au lieu de « Passe Agency pour 100 audits », au tutoiement).
+- `messages/{fr,en,es,it}.json` : tarifs de la landing, page Abonnement et FAQ (30 sites, 50 audits).
+- Tests : `lib/expert-pricing.test.ts` (enveloppe figée à 50) et nouveau test dans
+  `lib/ai-budget.test.ts` (30 sites + 50 audits ≤ 15,60 € au coût plafond).
+
+### Points signalés
+
+- **Expert : 100 audits par mois, non modifié** (vous n'avez parlé que d'Agency). Au coût
+  plafond, 100 × 0,165 € ≈ 16,50 € dépasse son budget Claude de 15,60 €. À baisser à 90 ou
+  moins si vous voulez la même garantie.
+- Les comptes Agency déjà au-delà de 30 sites ou 50 audits ce mois-ci sont bloqués jusqu'au
+  1er du mois prochain (leurs sites et audits existants restent intacts).
+- Un commentaire historique de la migration 037a mentionne encore « 50 sites » : laissé tel quel.
+
+### Vérifications
+
+tsc, lint, `npm test` (230 tests, 229 réussis, 1 ignoré, 0 échec), build sans avertissement.
+
 ## Séance du 22 novembre (suite) — budget Claude Agency et Expert : 2,6 × Pro
 
 Budget Claude mensuel d'Agency et d'Expert : **15,60 €** (6 € × 2,6) au lieu de 28 €. Seul le

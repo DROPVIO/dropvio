@@ -1,5 +1,5 @@
 import { CLAUDE_MODELS } from "./claude-models";
-import { AGENCY_PRICE_EUR, PLAN_LIMITS } from "./plan-limits";
+import { AGENCY_PRICE_EUR } from "./plan-limits";
 
 // Logique de prix du plan Expert, utilisable côté client (simulateur) ET côté serveur (Checkout).
 // Le prix affiché n'est qu'un aperçu : le serveur le recalcule toujours ici à partir de la
@@ -70,11 +70,11 @@ export function tokensParSite(model: ExpertModel): number {
   return model === "opus-5-5" ? TOKENS_PAR_SITE_OPUS : TOKENS_PAR_SITE_FABLE;
 }
 
-// Enveloppe mensuelle de tokens du plan Expert : autant de sites Opus que le quota mensuel du
-// plan Agency (lib/plan-limits.ts).
-const SITES_MOIS_AGENCY = PLAN_LIMITS.agency.sitesParMoisMax;
-if (SITES_MOIS_AGENCY === null) throw new Error("expert-pricing : l'enveloppe Expert suppose un quota de sites Agency fini.");
-export const ENVELOPPE_TOKENS_MOIS = SITES_MOIS_AGENCY * TOKENS_PAR_SITE_OPUS;
+// Enveloppe mensuelle de tokens du plan Expert : 50 sites Opus. Valeur figée : elle reprenait
+// le quota de sites Agency, passé à 30 quand le budget Claude Agency est descendu à 15,60 € ;
+// les sites Expert, payés à l'unité, ne dépendent pas de ce budget et restent inchangés.
+export const SITES_ENVELOPPE_EXPERT = 50;
+export const ENVELOPPE_TOKENS_MOIS = SITES_ENVELOPPE_EXPERT * TOKENS_PAR_SITE_OPUS;
 
 // Sites créables dans l'enveloppe avec ce modèle : plus un site lui coûte de tokens, moins il
 // en tient. Pas de plafond fixe par modèle.

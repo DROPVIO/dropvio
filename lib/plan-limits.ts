@@ -75,7 +75,9 @@ export type LimitesPlan = {
 
 export const PLAN_LIMITS: Record<Plan, LimitesPlan> = {
   pro:    { produitsMax: null, produitsBoutiqueMax: 200, simulationsMax: null, sitesParMoisMax: 20, auditsParMoisMax: 30, alternativesParMoisMax: null },
-  agency: { produitsMax: null, produitsBoutiqueMax: 200, simulationsMax: null, sitesParMoisMax: 50, auditsParMoisMax: 100, alternativesParMoisMax: null },
+  // Agency : 30 sites et 50 audits, pour tenir dans le budget Claude de 15,60 € au coût maximal
+  // par appel (≈ 0,23 € par site, ≈ 0,165 € par audit : 6,90 € + 8,25 € ≈ 15,15 €).
+  agency: { produitsMax: null, produitsBoutiqueMax: 200, simulationsMax: null, sitesParMoisMax: 30, auditsParMoisMax: 50, alternativesParMoisMax: null },
   // Expert : aucun plafond de produits par boutique, seul le quota d'images limite la génération.
   expert: { produitsMax: null, produitsBoutiqueMax: null, simulationsMax: null, sitesParMoisMax: 0, auditsParMoisMax: 100, alternativesParMoisMax: null },
 };
