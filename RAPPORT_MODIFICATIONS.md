@@ -4,6 +4,7 @@
 
 Branche : `fix/sans-plan-free-et-corrections`. Un commit par étape (message commençant par son
 numéro). Après chaque étape : `npx tsc --noEmit` et `npm test` réussis.
+Poussée sur GitHub : https://github.com/DROPVIO/dropvio/tree/fix/sans-plan-free-et-corrections
 
 ### Ce qui a été fait
 
