@@ -1,5 +1,258 @@
 # Rapport de modifications
 
+## Séance du 22 novembre — paiement, rétractation, résiliation, pages juridiques
+
+Branche : `fix/sans-plan-free-et-corrections`. Un commit par étape (message commençant par son
+numéro). Après chaque étape : `npx tsc --noEmit` et `npm test` réussis.
+
+### Ce qui a été fait
+
+1. **Ménage** : `~/package-lock.json` (84 octets, sans `package.json` ni `node_modules` à côté)
+   supprimé ; plus d'avertissement de lockfile au build. Migration 064 : `search_path` figé sur
+   les deux fonctions de trigger signalées par Supabase.
+2. **Webhook Stripe** (`app/api/webhooks/stripe/route.ts`, `lib/stripe-webhook.ts`) :
+   idempotence (table `stripe_evenements`), plan déduit du prix (`STRIPE_PRICE_PRO` /
+   `STRIPE_PRICE_AGENCY`), passage Pro ↔ Agency, past_due / unpaid → sans accès, résiliation
+   programmée (`annulation_fin_periode`), suppression → plan nul, `invoice.paid` (fin de
+   période), `invoice.payment_failed` (statut + bandeau). 15 tests avec signature simulée.
+   Liste des événements à cocher dans Stripe : commentaire de `.env.example`.
+3. **Durée maximale 800 s** sur les routes longues :
+   - `app/api/generate-site/route.ts`
+   - `app/api/modifier-site/route.ts`
+   - `app/api/boutiques/[id]/generer-contenu/route.ts`
+   - `app/api/audit-site/route.ts`
+   - `app/api/audit-site/html/route.ts`
+   - `app/api/media/generer/route.ts`
+4. **Consentement avant paiement** : deux cases non cochées et obligatoires (textes exacts
+   fournis) sur /abonnement, /formation et /quota, avec liens /cgv et /confidentialite. Preuve
+   enregistrée côté serveur (table `consentements_achat` : compte, type d'achat, textes exacts,
+   date, IP). Les quatre routes de paiement renvoient 400 `consentement_requis` sans les deux cases.
+5. **Rétractation** : page publique /retractation (« Se rétracter du contrat »), sans connexion.
+   Formulaire → récapitulatif → « Confirmer la rétractation » → accusé avec référence
+   `RET-AAAAMMJJ-XXXXXX`. Compte connecté : liste de ses achats des 14 derniers jours. Table
+   `demandes_retractation` (statut `recue` / `traitee`), lisible seulement côté serveur. Aucun
+   remboursement automatique. Suivi : `npx tsx scripts/demandes-retractation.ts` (`--toutes`,
+   `--traiter RET-…`).
+6. **Résiliation en trois clics** : lien « Résilier votre contrat » → /resiliation
+   (récapitulatif : offre, date de fin) → « Confirmer la résiliation » (API Stripe,
+   `cancel_at_period_end = true`) → écran final avec date de fin et référence `RES-…`. Accusés
+   dans la table `resiliations`. Liens dans les paramètres, /abonnement, /quota et le pied de
+   page. Le portail Stripe reste pour le changement d'offre et de carte.
+7. **Pages juridiques** : /mentions-legales, /cgv et /confidentialite affichent
+   `content/legal/<page>.md`. Pied de page commun à toutes les pages (publiques et outil),
+   hors vitrines des marchands.
+8. **Vérifications** : voir ci-dessous.
+
+### Décisions prises seul
+
+- **Accusé de rétractation sans e-mail** : l'application n'envoie aucun e-mail aujourd'hui (seuls
+  les e-mails d'authentification Supabase existent). L'accusé s'affiche à l'écran avec sa
+  référence et la date. **L'envoi par e-mail reste à brancher** (Resend ou autre), dans
+  `app/api/retractation/route.ts` et `app/api/resiliation/route.ts`.
+- **Paiement bloqué tant que la migration 066 n'est pas appliquée** : si la preuve de
+  consentement ne peut pas être enregistrée, le paiement est refusé (erreur 500 avec référence).
+  Sans preuve, pas de paiement.
+- **Résiliation enregistrée chez Stripe même si la table `resiliations` manque** (migration 068
+  pas appliquée) : l'accusé est quand même affiché, l'erreur est écrite dans les logs.
+- **Essai de 3 jours non modifié** : une résiliation pendant l'essai programme simplement la fin
+  à la date de fin d'essai (`cancel_at_period_end`) ; la durée et le fonctionnement de l'essai
+  ne changent pas. Le récapitulatif affiche « Fin de l'essai ».
+- **Expert** : son abonnement Stripe est résiliable par le même parcours ; un accès ouvert à la
+  main (sans abonnement Stripe) renvoie un message dédié.
+- **/resiliation demande une connexion** (sans exiger d'offre active) ; /retractation n'en
+  demande pas. Le lien « Résilier votre contrat » du pied de page n'apparaît qu'avec une session.
+- **Textes juridiques retirés de `messages/`** :
+  - la politique de confidentialité existante (FR) a été **déplacée telle quelle** dans
+    `content/legal/confidentialite.md`, sans relecture. Elle est au tutoiement et ne mentionne
+    pas OpenAI (la ligne était masquée sur le site) : à revoir par vous ;
+  - mentions légales et CGV : le fichier ne contient que les titres de section existants, avec
+    « [À COMPLÉTER PAR LENNY] » ;
+  - les anciens textes des trois pages, **dans les quatre langues**, sont conservés dans
+    `content/legal/archives/textes-messages-2026-11.md` (non publié) : rien n'est perdu ;
+  - les pages juridiques n'existent plus qu'en une version (celle du fichier), quelle que soit
+    la langue de l'interface.
+- **Liens juridiques en double retirés** des pieds de page de la landing et de la page Expert
+  (le pied de page commun les affiche juste en dessous). FAQ et contact restent.
+- **Textes qui renvoyaient vers le portail pour résilier** corrigés : bouton de /quota
+  (« Gérer mon abonnement ») et réponse FAQ « changer de plan » (4 langues).
+
+### Vérifications (étape 8)
+
+- `npx tsc --noEmit`, `npm run lint`, `npm test` (221 tests, 220 réussis, 1 ignoré, 0 échec)
+  et `npm run build` : tous réussis, sans avertissement de lockfile.
+- Sans session : /retractation, /mentions-legales, /cgv, /confidentialite → 200.
+- Paiement sans consentement → 400 : couvert par le test « paiement sans les deux
+  consentements : 400 consentement_requis » (`lib/consentements.test.ts`). En appel HTTP sans
+  session, les quatre routes de paiement répondent d'abord 401 (connexion exigée avant tout).
+- /resiliation sans session → redirection vers /login ; `POST /api/retractation` vide → 400.
+
+### Migrations à appliquer (dans l'ordre)
+
+#### 064_search_path_fonctions.sql
+
+```sql
+-- 064 — search_path fixé sur deux fonctions de trigger (avertissement de sécurité Supabase
+-- « function_search_path_mutable »). Déjà appliquée en base.
+alter function public.proteger_colonnes_facturation() set search_path = public;
+alter function public.figer_config_expert() set search_path = public;
+```
+
+#### 065_webhook_stripe.sql
+
+```sql
+-- 065 — Webhook Stripe : idempotence et résiliation programmée.
+--
+-- 1. stripe_evenements : un même event.id reçu deux fois n'est appliqué qu'une fois
+--    (lib/stripe-webhook.ts). Écrite uniquement par le serveur (service role).
+-- 2. profils.annulation_fin_periode : abonnement résilié à la fin de la période en cours
+--    (cancel_at_period_end côté Stripe), affiché sur /abonnement, /parametres et /resiliation.
+-- 3. proteger_colonnes_facturation protège aussi cette nouvelle colonne contre une
+--    modification par l'utilisateur.
+
+create table if not exists stripe_evenements (
+  id text primary key,
+  type text not null,
+  traite_le timestamptz not null default now()
+);
+
+alter table stripe_evenements enable row level security;
+-- Aucune policy : table réservée au service role.
+
+alter table profils add column if not exists annulation_fin_periode boolean not null default false;
+
+create or replace function public.proteger_colonnes_facturation()
+returns trigger
+language plpgsql
+set search_path = public
+as $function$
+begin
+  if current_user in ('anon', 'authenticated') then
+    if tg_op = 'INSERT' then
+      new.plan := null;
+      new.stripe_customer_id := null;
+      new.stripe_subscription_id := null;
+      new.abonnement_statut := null;
+      new.essai_fin := null;
+      new.periode_fin := null;
+      new.essai_utilise := false;
+      new.annulation_fin_periode := false;
+    else
+      new.plan := old.plan;
+      new.stripe_customer_id := old.stripe_customer_id;
+      new.stripe_subscription_id := old.stripe_subscription_id;
+      new.abonnement_statut := old.abonnement_statut;
+      new.essai_fin := old.essai_fin;
+      new.periode_fin := old.periode_fin;
+      new.essai_utilise := old.essai_utilise;
+      new.annulation_fin_periode := old.annulation_fin_periode;
+    end if;
+  end if;
+  return new;
+end;
+$function$;
+```
+
+#### 066_consentements_achat.sql
+
+```sql
+-- 066 — Preuve du consentement avant paiement (droit de rétractation).
+-- Écrite uniquement par le serveur (service role, lib/consentements-serveur.ts) ; chaque
+-- utilisateur peut lire les siennes. Aucune modification ni suppression par l'utilisateur.
+
+create table if not exists consentements_achat (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references auth.users(id) on delete cascade,
+  type_achat text not null check (type_achat in (
+    'abonnement_pro', 'abonnement_agency', 'abonnement_expert', 'recharge_expert',
+    'formation_courte', 'formation_longue', 'formation_bundle'
+  )),
+  texte_case_1 text not null,
+  texte_case_2 text not null,
+  langue text not null default 'fr',
+  adresse_ip text,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists consentements_achat_user_idx on consentements_achat (user_id, created_at desc);
+
+alter table consentements_achat enable row level security;
+
+drop policy if exists "select_own" on consentements_achat;
+create policy "select_own" on consentements_achat
+  for select to authenticated
+  using (auth.uid() = user_id);
+-- Aucune policy d'écriture : seul le service role écrit.
+```
+
+#### 067_demandes_retractation.sql
+
+```sql
+-- 067 — Demandes de rétractation déposées en ligne (/retractation).
+-- Formulaire accessible sans connexion : user_id est renseigné seulement si la personne était
+-- connectée. Écrite et lue uniquement par le serveur (service role) : aucune policy. Le
+-- remboursement éventuel est traité à la main dans Stripe, puis statut passe à 'traitee'.
+
+create table if not exists demandes_retractation (
+  id uuid primary key default gen_random_uuid(),
+  reference text not null unique,
+  user_id uuid references auth.users(id) on delete set null,
+  nom text not null,
+  email text not null,
+  achat text not null,
+  achat_ref text,
+  date_achat date not null,
+  statut text not null default 'recue' check (statut in ('recue', 'traitee')),
+  adresse_ip text,
+  created_at timestamptz not null default now(),
+  traitee_le timestamptz
+);
+
+create index if not exists demandes_retractation_statut_idx on demandes_retractation (statut, created_at desc);
+
+alter table demandes_retractation enable row level security;
+-- Aucune policy : table réservée au service role (liste : scripts/demandes-retractation.ts).
+```
+
+#### 068_resiliations.sql
+
+```sql
+-- Accusés de résiliation (parcours /resiliation) : preuve de la demande de résiliation
+-- d'un abonnement, avec sa référence et la date de fin d'accès annoncée.
+-- Écriture réservée au serveur (service role) ; chaque compte lit ses propres accusés.
+create table if not exists public.resiliations (
+  id                      uuid primary key default gen_random_uuid(),
+  reference               text not null unique,
+  user_id                 uuid not null references auth.users (id) on delete cascade,
+  plan                    text not null check (plan in ('pro', 'agency', 'expert')),
+  stripe_subscription_id  text not null,
+  fin_acces               timestamptz,
+  adresse_ip              text,
+  created_at              timestamptz not null default now()
+);
+
+create index if not exists resiliations_user_idx on public.resiliations (user_id, created_at desc);
+
+alter table public.resiliations enable row level security;
+
+drop policy if exists resiliations_select_own on public.resiliations;
+create policy resiliations_select_own on public.resiliations
+  for select to authenticated
+  using (auth.uid() = user_id);
+```
+
+### Ce qui reste pour vous
+
+- Appliquer les migrations 064 à 068 (SQL ci-dessus), puis me confirmer.
+- Rédiger les textes de `content/legal/mentions-legales.md`, `cgv.md` et revoir
+  `confidentialite.md`.
+- Dans Stripe (je n'y ai pas touché) : cocher les événements du webhook listés dans
+  `.env.example`. Si vous voulez que la résiliation passe uniquement par /resiliation, désactiver
+  l'option « Annuler l'abonnement » dans la configuration du portail client.
+- Choisir et brancher l'envoi d'e-mails pour les accusés de rétractation et de résiliation.
+- Votre décision sur l'essai de 3 jours (non modifié).
+- Tester dans le navigateur : cases de consentement (/abonnement, /formation, /quota), parcours
+  /retractation et /resiliation, pied de page.
+
 ## Séance du 21 nov. au soir
 
 Branche : `fix/sans-plan-free-et-corrections` (créée depuis `fix/textes-securite-landing`). Aucun
