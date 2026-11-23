@@ -902,7 +902,7 @@
       "margeExcellente": "Excelente",
       "margeCorrecte": "Correcto",
       "margeTropFaible": "Demasiado bajo",
-      "noteUs1": "Este cálculo no incluye los aranceles aduaneros específicos de la categoría de tu producto — la exención de minimis se suprimió en 2025 y los tipos varían según la clasificación aduanera (HTS) y el país de origen. Comprueba el tipo real en cbp.gov antes de fijar tu precio. El tipo de sales tax mostrado es indicativo: tu obligación real de recaudarlo depende del umbral de nexo económico del estado en cuestión, no solo de la venta en sí.",
+      "noteUs1": "Los aranceles no se calculan automáticamente: introduce tú mismo el importe estimado por pedido en el campo previsto y se descontará del margen. La exención de minimis se suprimió en 2025 y los tipos varían según la clasificación aduanera (HTS) y el país de origen: comprueba el tipo real en cbp.gov antes de fijar tu precio. El tipo de sales tax mostrado es indicativo: tu obligación real de recaudarlo depende del umbral de nexo económico del estado en cuestión, no solo de la venta en sí.",
       "noteUs2": "Prevé reservar una provisión para el impuesto federal y estatal sobre tu beneficio anual — se calcula una vez al año, no por venta. Consulta a un contable estadounidense para conocer tu tipo real según tu estructura (LLC, sole proprietor, etc.).",
       "noteBe": "Cotizaciones calculadas sobre una base provisional, regularizadas 2-3 años después según tu ingreso anual real declarado (INASTI) — este cálculo es una estimación a fecha de hoy.",
       "noteCh1": "Tipo del 10,0% aplicable por encima de CHF {seuil} de ingreso anual neto; escala decreciente por debajo, no modelada aquí — comprueba con tu caja de compensación AVS si tu ingreso anual es menor.",
@@ -1027,7 +1027,14 @@
         "WV": "Virginia Occidental",
         "WI": "Wisconsin",
         "WY": "Wyoming"
-      }
+      },
+      "optCarteInternationaleUk": "Tarjeta emitida fuera del Reino Unido (+1,5 % de comisiones de Stripe)",
+      "optCarteInternationaleUs": "Tarjeta emitida fuera de Estados Unidos (+1,5 % de comisiones de Stripe)",
+      "optConversionDevise": "El cliente paga en una moneda distinta a la de la tienda (+1 % de conversión)",
+      "fieldDouaneUs": "Aranceles por pedido ($) — introducción manual",
+      "bdCarteInternationale": "Recargo por tarjeta internacional",
+      "bdConversionDevise": "Conversión de moneda",
+      "bdDouaneUs": "Aranceles (introducidos a mano)"
     },
     "produitsSuggeres": {
       "kicker": "Sugerencias",

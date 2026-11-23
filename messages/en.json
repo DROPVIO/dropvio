@@ -902,7 +902,7 @@
       "margeExcellente": "Excellent",
       "margeCorrecte": "Acceptable",
       "margeTropFaible": "Too low",
-      "noteUs1": "This calculation does not include customs duties specific to your product category — the de minimis exemption was removed in 2025 and rates vary by customs classification (HTS) and country of origin. Check the real rate on cbp.gov before setting your price. The sales tax rate shown is indicative: your actual obligation to collect it depends on the economic nexus threshold of the state concerned, not only on the sale itself.",
+      "noteUs1": "Customs duties are not calculated automatically: enter the estimated amount per order in the dedicated field and it is deducted from the margin. The de minimis exemption was removed in 2025 and rates vary by customs classification (HTS) and country of origin: check the real rate on cbp.gov before setting your price. The sales tax rate shown is indicative: your actual obligation to collect it depends on the economic nexus threshold of the state concerned, not only on the sale itself.",
       "noteUs2": "Plan to set aside a reserve for federal and state income tax on your annual profit — calculated once a year, not per sale. Consult a US accountant for your real rate depending on your structure (LLC, sole proprietor, etc.).",
       "noteBe": "Contributions are calculated on a provisional basis and adjusted 2-3 years later based on your actual declared annual income (INASTI) — this calculation is an estimate at a point in time.",
       "noteCh1": "The 10.0% rate applies above CHF {seuil} of net annual income; a decreasing scale applies below, not modelled here — check with your AVS compensation fund if your annual income is lower.",
@@ -1027,7 +1027,14 @@
         "WV": "West Virginia",
         "WI": "Wisconsin",
         "WY": "Wyoming"
-      }
+      },
+      "optCarteInternationaleUk": "Card issued outside the UK (+1.5% Stripe fees)",
+      "optCarteInternationaleUs": "Card issued outside the US (+1.5% Stripe fees)",
+      "optConversionDevise": "The customer pays in a currency other than the store's (+1% conversion)",
+      "fieldDouaneUs": "Customs duties per order ($) — manual entry",
+      "bdCarteInternationale": "International card surcharge",
+      "bdConversionDevise": "Currency conversion",
+      "bdDouaneUs": "Customs duties (entered manually)"
     },
     "produitsSuggeres": {
       "kicker": "Suggestions",

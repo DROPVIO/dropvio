@@ -902,7 +902,7 @@
       "margeExcellente": "Eccellente",
       "margeCorrecte": "Corretto",
       "margeTropFaible": "Troppo basso",
-      "noteUs1": "Questo calcolo non include i dazi doganali specifici della categoria del tuo prodotto — l'esenzione de minimis è stata soppressa nel 2025 e le aliquote variano per classificazione doganale (HTS) e per paese di origine. Verifica l'aliquota reale su cbp.gov prima di fissare il prezzo. L'aliquota di sales tax mostrata è indicativa: il tuo obbligo reale di riscuoterla dipende dalla soglia di nexus economico dello stato interessato, non solo dalla vendita in sé.",
+      "noteUs1": "I dazi doganali non vengono calcolati automaticamente: inserisci tu l'importo stimato per ordine nel campo previsto e verrà detratto dal margine. L'esenzione de minimis è stata soppressa nel 2025 e le aliquote variano per classificazione doganale (HTS) e per paese di origine: verifica l'aliquota reale su cbp.gov prima di fissare il prezzo. L'aliquota di sales tax mostrata è indicativa: il tuo obbligo reale di riscuoterla dipende dalla soglia di nexus economico dello stato interessato, non solo dalla vendita in sé.",
       "noteUs2": "Prevedi di accantonare una riserva per l'imposta federale e statale sul tuo profitto annuo — calcolata una volta all'anno, non per vendita. Consulta un commercialista statunitense per la tua aliquota reale in base alla tua struttura (LLC, sole proprietor, ecc.).",
       "noteBe": "Contributi calcolati su base provvisoria, regolarizzati 2-3 anni dopo in base al tuo reddito annuo reale dichiarato (INASTI) — questo calcolo è una stima alla data odierna.",
       "noteCh1": "Aliquota del 10,0% applicabile sopra CHF {seuil} di reddito annuo netto; scala decrescente al di sotto, non modellata qui — verifica con la tua cassa di compensazione AVS se il tuo reddito annuo è più basso.",
@@ -1027,7 +1027,14 @@
         "WV": "Virginia Occidentale",
         "WI": "Wisconsin",
         "WY": "Wyoming"
-      }
+      },
+      "optCarteInternationaleUk": "Carta emessa fuori dal Regno Unito (+1,5% di commissioni Stripe)",
+      "optCarteInternationaleUs": "Carta emessa fuori dagli Stati Uniti (+1,5% di commissioni Stripe)",
+      "optConversionDevise": "Il cliente paga in una valuta diversa da quella del negozio (+1% di conversione)",
+      "fieldDouaneUs": "Dazi doganali per ordine ($) — inserimento manuale",
+      "bdCarteInternationale": "Supplemento carta internazionale",
+      "bdConversionDevise": "Conversione di valuta",
+      "bdDouaneUs": "Dazi doganali (inseriti a mano)"
     },
     "produitsSuggeres": {
       "kicker": "Suggerimenti",

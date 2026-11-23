@@ -1,5 +1,7 @@
 # Rapport de modifications
 
+## 23 novembre — Calculateur UK/US : cases « carte émise hors du pays » (+1,5 % Stripe) et « paiement dans une autre devise » (+1 % de conversion), décochées par défaut, donc résultats inchangés sans elles ; la douane US devient un montant manuel en $ par commande, déduit de la marge (anciennes simulations : l'ancien % informatif n'est pas relu) ; case nexus, taux d'État et affichage en £/$ conservés. Choix validés par vous avant l'implémentation. Au passage : `usStateTaxUnknown` (FR) passé au vouvoiement.
+
 ## 22 novembre — Expert : 90 audits par mois (au lieu de 100), soit ≈ 0,165 € × 90 ≈ 14,85 € ≤ 15,60 € ; sites, réserve de 50 sites Opus et prix inchangés. Aucun texte n'affichait « 100 audits » : la ligne « Audit IA quasi illimité » des tarifs Expert devient « 90 audits IA par mois » (4 langues). Constat non corrigé : `dashboard.calculateur.margeCibleInatteignable` est encore au tutoiement (« Réduis… »).
 
 ## Séance du 22 novembre (suite) — quotas Agency ramenés dans le budget Claude

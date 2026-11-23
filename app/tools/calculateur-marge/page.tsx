@@ -73,11 +73,17 @@ type SimulationInputs = {
   stripeRateUK: string;
   tauxRetourUK: string;
   profitAnnuelUK: string;
+  carteInternationaleUK?: boolean;
+  conversionDeviseUK?: boolean;
   usState: string;
   stripeRateUS: string;
   tauxRetourUS: string;
   salesTaxNexusUS: boolean;
-  droitDouaneUS: string;
+  // Anciennes simulations : droitDouaneUS était un % informatif, jamais relu depuis que la
+  // douane US est un montant en $ déduit du calcul (douaneParCommandeUS).
+  douaneParCommandeUS?: string;
+  carteInternationaleUS?: boolean;
+  conversionDeviseUS?: boolean;
   stripeRateBE: string;
   tauxRetourBE: string;
   caAnnuelCumuleBE: string;
@@ -195,6 +201,9 @@ function CalculateurMargeInner() {
   // Curseur "profit annuel estimé" — indicatif, séparé du calcul de marge par vente
   // (Income Tax + Class 4 NIC se calculent sur le profit annuel cumulé, jamais par transaction).
   const [profitAnnuelUK, setProfitAnnuelUK] = useState("30000");
+  // Suppléments Stripe (carte internationale, conversion de devise) — décochés par défaut.
+  const [carteInternationaleUK, setCarteInternationaleUK] = useState(false);
+  const [conversionDeviseUK, setConversionDeviseUK] = useState(false);
 
   // Mode US auto
   const [usState, setUsState] = useState("");
@@ -202,9 +211,11 @@ function CalculateurMargeInner() {
   const [tauxRetourUS, setTauxRetourUS] = useState("");
   // Sans confirmation explicite du nexus, aucune sales tax n'est déduite (voir getCharges).
   const [salesTaxNexusUS, setSalesTaxNexusUS] = useState(false);
-  // Champ purement informatif — jamais inclus dans le calcul de marge (voir avertissement
-  // fixe affiché sous le résultat), juste capturé pour mémo dans la simulation sauvegardée.
-  const [droitDouaneUS, setDroitDouaneUS] = useState("");
+  // Droits de douane saisis à la main, en $ par commande, déduits comme un coût fixe.
+  const [douaneParCommandeUS, setDouaneParCommandeUS] = useState("");
+  // Suppléments Stripe (carte internationale, conversion de devise) — décochés par défaut.
+  const [carteInternationaleUS, setCarteInternationaleUS] = useState(false);
+  const [conversionDeviseUS, setConversionDeviseUS] = useState(false);
 
   // Mode Belgique auto
   const [stripeRateBE, setStripeRateBE] = useState(STRIPE_RATE_BE_DEFAULT);
@@ -220,7 +231,7 @@ function CalculateurMargeInner() {
   const [stripeRateCA, setStripeRateCA] = useState(STRIPE_RATE_CA_DEFAULT);
   const [tauxRetourCA, setTauxRetourCA] = useState("");
   const [caAnnuelCumuleCA, setCaAnnuelCumuleCA] = useState("");
-  // Purement informatif, jamais inclus dans le calcul — même traitement que droitDouaneUS.
+  // Purement informatif, jamais inclus dans le calcul.
   const [droitDouaneCA, setDroitDouaneCA] = useState("");
 
   // Mode Luxembourg auto
@@ -256,8 +267,8 @@ function CalculateurMargeInner() {
   const [margeCible, setMargeCible] = useState("");
 
   const charges = getCharges(mode, {
-    extraUE, tauxCharge, tauxTaxe, stripeRateUK, tauxRetourUK,
-    stripeRateUS, tauxRetourUS, usState, salesTaxNexusUS,
+    extraUE, tauxCharge, tauxTaxe, stripeRateUK, tauxRetourUK, carteInternationaleUK, conversionDeviseUK,
+    stripeRateUS, tauxRetourUS, usState, salesTaxNexusUS, carteInternationaleUS, conversionDeviseUS, douaneParCommandeUS,
     stripeRateBE, tauxRetourBE, stripeRateCH, tauxRetourCH,
     stripeRateCA, tauxRetourCA, stripeRateLU, tauxRetourLU,
     stripeRateDE, tauxRetourDE,
@@ -304,6 +315,7 @@ function CalculateurMargeInner() {
   }, [
     prixFournisseur, fraisLivraison, prixVente, budgetPub, mode, extraUE, tauxCharge, tauxTaxe,
     stripeRateUK, tauxRetourUK, stripeRateUS, tauxRetourUS, usState, salesTaxNexusUS,
+    carteInternationaleUK, conversionDeviseUK, carteInternationaleUS, conversionDeviseUS, douaneParCommandeUS,
     stripeRateBE, tauxRetourBE, stripeRateCH, tauxRetourCH, stripeRateCA, tauxRetourCA, stripeRateLU, tauxRetourLU,
     stripeRateDE, tauxRetourDE,
     stripeRateIT, tauxRetourIT, regimeImpostaIT, stripeRateES, tauxRetourES,
@@ -381,8 +393,8 @@ function CalculateurMargeInner() {
 
     const inputs: SimulationInputs = {
       mode, prixFournisseur, fraisLivraison, prixVente, budgetPub,
-      extraUE, caAnnuelCumule, stripeRateUK, tauxRetourUK, profitAnnuelUK,
-      usState, stripeRateUS, tauxRetourUS, salesTaxNexusUS, droitDouaneUS,
+      extraUE, caAnnuelCumule, stripeRateUK, tauxRetourUK, profitAnnuelUK, carteInternationaleUK, conversionDeviseUK,
+      usState, stripeRateUS, tauxRetourUS, salesTaxNexusUS, douaneParCommandeUS, carteInternationaleUS, conversionDeviseUS,
       stripeRateBE, tauxRetourBE, caAnnuelCumuleBE,
       stripeRateCH, tauxRetourCH, caAnnuelCumuleCH,
       stripeRateCA, tauxRetourCA, caAnnuelCumuleCA, droitDouaneCA,
@@ -442,7 +454,11 @@ function CalculateurMargeInner() {
     if (i.stripeRateUS !== undefined) setStripeRateUS(i.stripeRateUS);
     if (i.tauxRetourUS !== undefined) setTauxRetourUS(i.tauxRetourUS);
     if (i.salesTaxNexusUS !== undefined) setSalesTaxNexusUS(i.salesTaxNexusUS);
-    if (i.droitDouaneUS !== undefined) setDroitDouaneUS(i.droitDouaneUS);
+    setDouaneParCommandeUS(i.douaneParCommandeUS ?? "");
+    setCarteInternationaleUS(i.carteInternationaleUS ?? false);
+    setConversionDeviseUS(i.conversionDeviseUS ?? false);
+    setCarteInternationaleUK(i.carteInternationaleUK ?? false);
+    setConversionDeviseUK(i.conversionDeviseUK ?? false);
     if (i.stripeRateBE !== undefined) setStripeRateBE(i.stripeRateBE);
     if (i.tauxRetourBE !== undefined) setTauxRetourBE(i.tauxRetourBE);
     if (i.caAnnuelCumuleBE !== undefined) setCaAnnuelCumuleBE(i.caAnnuelCumuleBE);
@@ -616,6 +632,15 @@ function CalculateurMargeInner() {
                   />
                 </div>
 
+                <OptionsSupplementsStripe
+                  carteInternationale={carteInternationaleUK}
+                  onCarteInternationale={setCarteInternationaleUK}
+                  conversionDevise={conversionDeviseUK}
+                  onConversionDevise={setConversionDeviseUK}
+                  libelleCarte={t("optCarteInternationaleUk")}
+                  libelleConversion={t("optConversionDevise")}
+                />
+
                 <div className="text-xs text-[var(--text-faint)] leading-relaxed">
                   {t("ukCharges", {
                     vat: (VAT_RATE_UK * 100).toFixed(0),
@@ -700,11 +725,20 @@ function CalculateurMargeInner() {
                   />
                 </div>
 
+                <OptionsSupplementsStripe
+                  carteInternationale={carteInternationaleUS}
+                  onCarteInternationale={setCarteInternationaleUS}
+                  conversionDevise={conversionDeviseUS}
+                  onConversionDevise={setConversionDeviseUS}
+                  libelleCarte={t("optCarteInternationaleUs")}
+                  libelleConversion={t("optConversionDevise")}
+                />
+
                 <InputField
-                  label={t("fieldDouaneInfo")}
+                  label={t("fieldDouaneUs")}
                   placeholder="0"
-                  value={droitDouaneUS}
-                  onChange={setDroitDouaneUS}
+                  value={douaneParCommandeUS}
+                  onChange={setDouaneParCommandeUS}
                 />
 
                 <div className="text-xs text-[var(--text-faint)] leading-relaxed">
@@ -1270,6 +1304,46 @@ function SeuilTracker({
         </div>
         <div className="text-[10.5px] text-[var(--text-faint)] mt-1.5">{caption}</div>
       </div>
+    </div>
+  );
+}
+
+/** Cases des suppléments Stripe UK/US : carte internationale et conversion de devise. */
+function OptionsSupplementsStripe({
+  carteInternationale,
+  onCarteInternationale,
+  conversionDevise,
+  onConversionDevise,
+  libelleCarte,
+  libelleConversion,
+}: {
+  carteInternationale: boolean;
+  onCarteInternationale: (v: boolean) => void;
+  conversionDevise: boolean;
+  onConversionDevise: (v: boolean) => void;
+  libelleCarte: string;
+  libelleConversion: string;
+}) {
+  return (
+    <div className="grid gap-2.5">
+      <label className="flex items-start gap-2.5 text-[13.5px] text-[var(--text-muted)] cursor-pointer">
+        <input
+          type="checkbox"
+          checked={carteInternationale}
+          onChange={(e) => onCarteInternationale(e.target.checked)}
+          className="w-4 h-4 mt-0.5 shrink-0 accent-violet-600"
+        />
+        {libelleCarte}
+      </label>
+      <label className="flex items-start gap-2.5 text-[13.5px] text-[var(--text-muted)] cursor-pointer">
+        <input
+          type="checkbox"
+          checked={conversionDevise}
+          onChange={(e) => onConversionDevise(e.target.checked)}
+          className="w-4 h-4 mt-0.5 shrink-0 accent-violet-600"
+        />
+        {libelleConversion}
+      </label>
     </div>
   );
 }

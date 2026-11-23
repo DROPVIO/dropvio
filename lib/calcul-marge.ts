@@ -111,6 +111,26 @@ export const US_STATE_SALES_TAX: { code: string; taux: number }[] = [
   { code: "WY", taux: 0.04 },
 ];
 
+// ─── Suppléments Stripe communs UK / US ────────────────────────────────────────
+// Ajoutés au taux Stripe de base, seulement si l'utilisateur coche l'option correspondante
+// (décochées par défaut : sans elles, le calcul UK/US reste celui d'avant).
+export const STRIPE_SURCHARGE_CARTE_INTERNATIONALE = 0.015; // carte émise hors du pays de la boutique
+export const STRIPE_SURCHARGE_CONVERSION = 0.01;            // devise de paiement ≠ devise de la boutique
+
+function supplementsStripe(carteInternationale?: boolean, conversionDevise?: boolean): { rate: number; lignes: ChargeLine[] } {
+  const lignes: ChargeLine[] = [];
+  let rate = 0;
+  if (carteInternationale) {
+    rate += STRIPE_SURCHARGE_CARTE_INTERNATIONALE;
+    lignes.push({ labelKey: "bdCarteInternationale", detail: `+${(STRIPE_SURCHARGE_CARTE_INTERNATIONALE * 100).toFixed(1)}%` });
+  }
+  if (conversionDevise) {
+    rate += STRIPE_SURCHARGE_CONVERSION;
+    lignes.push({ labelKey: "bdConversionDevise", detail: `+${(STRIPE_SURCHARGE_CONVERSION * 100).toFixed(1)}%` });
+  }
+  return { rate, lignes };
+}
+
 export function getUsStateTax(code: string): number {
   return US_STATE_SALES_TAX.find((s) => s.code === code)?.taux ?? 0;
 }
@@ -233,8 +253,8 @@ export function getCharges(
   mode: Mode,
   {
     extraUE, tauxCharge, tauxTaxe,
-    stripeRateUK, tauxRetourUK,
-    stripeRateUS, tauxRetourUS, usState, salesTaxNexusUS,
+    stripeRateUK, tauxRetourUK, carteInternationaleUK, conversionDeviseUK,
+    stripeRateUS, tauxRetourUS, usState, salesTaxNexusUS, carteInternationaleUS, conversionDeviseUS, douaneParCommandeUS,
     stripeRateBE, tauxRetourBE,
     stripeRateCH, tauxRetourCH,
     stripeRateCA, tauxRetourCA,
@@ -248,10 +268,16 @@ export function getCharges(
     tauxTaxe: string;
     stripeRateUK?: string;
     tauxRetourUK?: string;
+    carteInternationaleUK?: boolean;
+    conversionDeviseUK?: boolean;
     stripeRateUS?: string;
     tauxRetourUS?: string;
     usState?: string;
     salesTaxNexusUS?: boolean;
+    carteInternationaleUS?: boolean;
+    conversionDeviseUS?: boolean;
+    /** Droits de douane saisis à la main, en $ par commande (aucun calcul par catégorie). */
+    douaneParCommandeUS?: string;
     stripeRateBE?: string;
     tauxRetourBE?: string;
     stripeRateCH?: string;
@@ -399,11 +425,13 @@ export function getCharges(
   if (mode === "uk") {
     const stripeRate = (parseFloat(stripeRateUK ?? "") || 0) / 100;
     const tauxRetour = (parseFloat(tauxRetourUK ?? "") || 0) / 100;
+    const supplements = supplementsStripe(carteInternationaleUK, conversionDeviseUK);
     return {
-      rate: stripeRate + VAT_RATE_UK + tauxRetour,
+      rate: stripeRate + supplements.rate + VAT_RATE_UK + tauxRetour,
       fixed: STRIPE_FIXED_UK,
       breakdown: [
         { labelKey: "bdStripeUk", detail: `${(stripeRate * 100).toFixed(2)}% + £${STRIPE_FIXED_UK.toFixed(2)}` },
+        ...supplements.lignes,
         { labelKey: "bdVat", detail: `${(VAT_RATE_UK * 100).toFixed(0)}%` },
         { labelKey: "bdRetour", detail: `${(tauxRetour * 100).toFixed(1)}%` },
       ],
@@ -417,11 +445,17 @@ export function getCharges(
     // l'État du client — sans cette confirmation explicite, aucune obligation de collecte
     // n'est supposée, donc 0% par défaut plutôt qu'un taux appliqué à tort.
     const salesTaxRate = salesTaxNexusUS ? getUsStateTax(usState ?? "") : 0;
+    const supplements = supplementsStripe(carteInternationaleUS, conversionDeviseUS);
+    // Droits de douane : montant manuel par commande, déduit comme un coût fixe (pas de
+    // barème par catégorie HTS). Valeur négative ou vide → 0.
+    const douane = Math.max(0, parseFloat(douaneParCommandeUS ?? "") || 0);
     return {
-      rate: stripeRate + tauxRetour + salesTaxRate,
-      fixed: STRIPE_FIXED_US,
+      rate: stripeRate + supplements.rate + tauxRetour + salesTaxRate,
+      fixed: STRIPE_FIXED_US + douane,
       breakdown: [
         { labelKey: "bdStripeUs", detail: `${(stripeRate * 100).toFixed(2)}% + $${STRIPE_FIXED_US.toFixed(2)}` },
+        ...supplements.lignes,
+        ...(douane > 0 ? [{ labelKey: "bdDouaneUs", detail: `$${douane.toFixed(2)}` }] : []),
         { labelKey: "bdRetour", detail: `${(tauxRetour * 100).toFixed(1)}%` },
         salesTaxNexusUS
           ? {

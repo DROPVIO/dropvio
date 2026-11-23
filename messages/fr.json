@@ -868,7 +868,7 @@
       "usStateLabel": "État du client",
       "usStatePlaceholder": "Sélectionnez l'état du client…",
       "usStateTaxKnown": "Sales tax de base indicative : {taux}% — taux d'État uniquement, hors surtaxes locales comté/ville qui peuvent s'ajouter selon la localité exacte du client.",
-      "usStateTaxUnknown": "Sales tax de base indicative : sélectionne un état — taux d'État uniquement, hors surtaxes locales comté/ville.",
+      "usStateTaxUnknown": "Sales tax de base indicative : sélectionnez un état — taux d'État uniquement, hors surtaxes locales comté/ville.",
       "usNexus": "J'ai un nexus économique dans cet État",
       "usCharges": "Charges appliquées automatiquement : frais Stripe {stripe}% + ${fixe} (carte domestique){salesTax}.",
       "usChargesSalesTax": " · Sales tax {taux}% ({etat})",
@@ -902,7 +902,7 @@
       "margeExcellente": "Excellente",
       "margeCorrecte": "Correcte",
       "margeTropFaible": "Trop faible",
-      "noteUs1": "Ce calcul n'inclut pas les droits de douane spécifiques à la catégorie de votre produit — l'exemption de minimis a été supprimée en 2025 et les taux varient par classification douanière (HTS) et par pays d'origine. Vérifiez le taux réel sur cbp.gov avant de fixer votre prix. Le taux de sales tax affiché est indicatif : votre obligation réelle de le collecter dépend du seuil de nexus économique de l'État concerné, pas uniquement de la vente elle-même.",
+      "noteUs1": "Les droits de douane ne sont pas calculés automatiquement : saisissez vous-même le montant estimé par commande dans le champ prévu, il est alors déduit de la marge. L'exemption de minimis a été supprimée en 2025 et les taux varient par classification douanière (HTS) et par pays d'origine : vérifiez le taux réel sur cbp.gov avant de fixer votre prix. Le taux de sales tax affiché est indicatif : votre obligation réelle de le collecter dépend du seuil de nexus économique de l'État concerné, pas uniquement de la vente elle-même.",
       "noteUs2": "Prévoyez de mettre de côté une réserve pour l'impôt fédéral et l'impôt d'État sur votre profit annuel — calculé une fois par an, pas par vente. Consultez un comptable américain pour votre taux réel selon votre structure (LLC, sole proprietor, etc.).",
       "noteBe": "Cotisations calculées sur base provisoire, régularisées 2 à 3 ans plus tard selon votre revenu annuel réel déclaré (INASTI) — ce calcul est une estimation à date.",
       "noteCh1": "Taux de 10,0% applicable au-dessus de CHF {seuil} de revenu annuel net ; barème dégressif en dessous, non modélisé ici — vérifiez auprès de votre caisse de compensation AVS si votre revenu annuel est plus bas.",
@@ -1027,7 +1027,14 @@
         "WV": "Virginie-Occidentale",
         "WI": "Wisconsin",
         "WY": "Wyoming"
-      }
+      },
+      "optCarteInternationaleUk": "Carte émise hors du Royaume-Uni (+1,5 % de frais Stripe)",
+      "optCarteInternationaleUs": "Carte émise hors des États-Unis (+1,5 % de frais Stripe)",
+      "optConversionDevise": "Le client paie dans une autre devise que celle de la boutique (+1 % de conversion)",
+      "fieldDouaneUs": "Droits de douane par commande ($) — saisie manuelle",
+      "bdCarteInternationale": "Supplément carte internationale",
+      "bdConversionDevise": "Conversion de devise",
+      "bdDouaneUs": "Droits de douane (saisis à la main)"
     },
     "produitsSuggeres": {
       "kicker": "Suggestions",
