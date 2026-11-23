@@ -1,5 +1,7 @@
 "use client";
 
+import MentionIa from "@/components/MentionIa";
+
 import { useState, useRef, useCallback, useEffect } from "react";
 import { nomFichierAudit, tailleLisible, telechargerTexte } from "@/lib/audit-download";
 import { ToastHost, useToast } from "@/components/Toast";
@@ -681,6 +683,7 @@ export default function AuditPage() {
               </div>
             </div>
 
+            <MentionIa />
           </div>
         )}
 

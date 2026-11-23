@@ -1,5 +1,7 @@
 "use client";
 
+import MentionIa from "@/components/MentionIa";
+
 import { useState, useEffect, useRef, Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
@@ -124,6 +126,8 @@ function SiteBuilderContent() {
   const [reformulatingNom, setReformulatingNom] = useState(false);
   const [generatingDescription, setGeneratingDescription] = useState(false);
   const [texteIaError, setTexteIaError] = useState<string | null>(null);
+  // Nom ou description rempli par l'IA : mention « Contenu généré par IA » sous le champ.
+  const [texteGenereIa, setTexteGenereIa] = useState(false);
   const rating = searchParams.get("rating") ?? undefined;
   const orders = searchParams.get("orders") ?? undefined;
   // Préremplissage depuis "Créer un site pour cette boutique" (page de gestion boutique) —
@@ -461,6 +465,7 @@ function SiteBuilderContent() {
         return;
       }
       setProductName(json.texte);
+      setTexteGenereIa(true);
     } catch {
       setTexteIaError(apiErrorMessage({ code: "network" }));
     } finally {
@@ -484,6 +489,7 @@ function SiteBuilderContent() {
         return;
       }
       setDescription(json.texte);
+      setTexteGenereIa(true);
     } catch {
       setTexteIaError(apiErrorMessage({ code: "network" }));
     } finally {
@@ -1195,6 +1201,7 @@ function SiteBuilderContent() {
                       placeholder={t("formulaire.descriptionPlaceholder")}
                       className="bg-[var(--bg)] border border-[var(--border-strong)] rounded-xl px-4 py-3 text-sm text-[var(--text-primary)] placeholder-[var(--text-faint)] focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition resize-none"
                     />
+                    {texteGenereIa ? <MentionIa /> : null}
                     {texteIaError ? <p className="text-xs text-[var(--danger)]">{texteIaError}</p> : null}
                   </div>
 

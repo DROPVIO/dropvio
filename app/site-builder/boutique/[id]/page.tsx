@@ -1,5 +1,7 @@
 "use client";
 
+import MentionIa from "@/components/MentionIa";
+
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { useParams, useRouter } from "next/navigation";
@@ -145,6 +147,8 @@ export default function BoutiqueBuilderDetailPage() {
   const [productSlug, setProductSlug] = useState("");
   const [productDescription, setProductDescription] = useState("");
   const [reformulatingNom, setReformulatingNom] = useState(false);
+  // Nom ou description rempli par l'IA : mention « Contenu généré par IA » sous la description.
+  const [texteGenereIa, setTexteGenereIa] = useState(false);
   const [generatingDescription, setGeneratingDescription] = useState(false);
   const [productImageUrl, setProductImageUrl] = useState("");
   // Images suivantes de image_urls : à conserver quand le formulaire enregistre le produit.
@@ -563,6 +567,7 @@ export default function BoutiqueBuilderDetailPage() {
   }
 
   function resetProductForm() {
+    setTexteGenereIa(false);
     setEditingProductId(null);
     setProductName("");
     setProductSlug("");
@@ -579,6 +584,7 @@ export default function BoutiqueBuilderDetailPage() {
 
   function populateProductForm(product: BoutiqueProduct) {
     setEditingProductId(product.id);
+    setTexteGenereIa(false);
     setProductName(product.nom);
     setProductSlug(product.slug);
     setProductDescription(product.description ?? "");
@@ -680,6 +686,7 @@ export default function BoutiqueBuilderDetailPage() {
         return;
       }
       setProductName(json.texte);
+      setTexteGenereIa(true);
     } catch {
       setProductFormError(apiErrorMessage({ code: "network" }));
     } finally {
@@ -703,6 +710,7 @@ export default function BoutiqueBuilderDetailPage() {
         return;
       }
       setProductDescription(json.texte);
+      setTexteGenereIa(true);
     } catch {
       setProductFormError(apiErrorMessage({ code: "network" }));
     } finally {
@@ -1502,6 +1510,7 @@ export default function BoutiqueBuilderDetailPage() {
                   className="mt-1 w-full rounded-xl border border-[var(--border)] bg-[var(--bg-sunken)] px-3 py-2 text-sm text-[var(--text-primary)] outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 resize-none"
                   placeholder={t("formulaire.descriptionPlaceholder")}
                 />
+                {texteGenereIa ? <MentionIa className="mt-1" /> : null}
               </label>
 
               <label className="block text-xs text-[var(--text-muted)]">

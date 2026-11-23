@@ -2478,7 +2478,8 @@
       "retourCatalogue": "← Volver al catálogo",
       "quantite": "Cantidad",
       "votreCommande": "Tu pedido"
-    }
+    },
+    "mentionIa": "Contenido generado por IA"
   },
   "legal": {
     "commun": {
@@ -2890,5 +2891,8 @@
     "mentions": "Aviso legal",
     "cgv": "Condiciones de venta",
     "confidentialite": "Privacidad"
+  },
+  "mentionIa": {
+    "texte": "Contenido generado por IA"
   }
 }

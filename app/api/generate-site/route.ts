@@ -24,6 +24,7 @@ import {
   type GabaritsPages,
 } from "@/lib/pages-produit";
 import { blocConsignesStyle, validerFicheStyle } from "@/lib/style-fiche";
+import { siteAvecMentionIa } from "@/lib/mention-ia-site";
 import { assemblerPagesBoutique, assemblerPagesProduit, type ContenusLegaux, type PagesSite } from "@/lib/site-builder-pages";
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
@@ -713,7 +714,7 @@ Réponds UNIQUEMENT avec le code HTML, sans explication ni balise markdown.`;
     // Génération réussie : les tokens réellement consommés sont décomptés du budget du mois.
     await suivi.enregistrer();
     reussie = true;
-    return NextResponse.json(pages ? { html: pages.accueil, pages } : { html });
+    return NextResponse.json(siteAvecMentionIa(pages ? { html: pages.accueil, pages } : { html }, ctx.t.mentionIa));
   } catch (err) {
     const refus = reponseLimiteIa(err);
     if (refus) return refus;
@@ -939,13 +940,13 @@ Réponds UNIQUEMENT avec le code HTML, sans explication ni balise markdown.`;
     // Génération réussie (les deux appels) : tokens réellement consommés décomptés en une fois.
     await suivi.enregistrer();
     reussie = true;
-    if (pages) return NextResponse.json({ html: pages.accueil, pages, ...avertissements });
+    if (pages) return NextResponse.json(siteAvecMentionIa({ html: pages.accueil, pages, ...avertissements }, ctx.t.mentionIa));
 
     // Repli : coquille sans <body> ou sans <nav>, impossible à découper — site d'une seule
     // page comme avant (grille et collections ajoutées dans la page).
     console.warn("[generate-site] (mode boutique) coquille non découpable : site d'une seule page.");
     const html = injectProductGrid(ctx, accueilSeul, produits, "var(--site-accent)", categories);
-    return NextResponse.json({ html, ...avertissements });
+    return NextResponse.json(siteAvecMentionIa({ html, ...avertissements }, ctx.t.mentionIa));
   } catch (err) {
     const refus = reponseLimiteIa(err);
     if (refus) return refus;

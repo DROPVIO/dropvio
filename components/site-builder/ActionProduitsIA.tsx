@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import MentionIa from "@/components/MentionIa";
 import { useTranslations } from "next-intl";
 import { useApiErrorMessage } from "@/lib/use-api-error";
 
@@ -108,6 +109,7 @@ export default function ActionProduitsIA({ boutiqueId, produitsCount, action, on
           </button>
         </div>
       ) : null}
+      {resultat && action === "reecrire-produits" && resultat.modifies > 0 ? <MentionIa /> : null}
     </div>
   );
 }

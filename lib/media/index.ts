@@ -1,5 +1,6 @@
 import type { PlanOuAucun } from "@/lib/plan-limits";
-import { reglageMedia, type FournisseurId } from "./config";
+import { FOURNISSEURS, reglageMedia, type FournisseurId } from "./config";
+import { marquerImageIa } from "./marquage-ia";
 import { generateImageOpenAI } from "./openai";
 import { MediaProviderError, MediaProviderNotConfiguredError, type GenerateImageOptions, type GeneratedImage } from "./types";
 
@@ -13,10 +14,24 @@ export const GENERATEURS_IMAGE: Record<FournisseurId, (prompt: string, options?:
 
 // Point d'entrée commun : les routes n'appellent jamais un fournisseur directement. Le
 // fournisseur est celui de la table de configuration pour ce plan, le même que la mention affiche.
-export function generateImage(plan: PlanOuAucun, prompt: string, options?: GenerateImageOptions): Promise<GeneratedImage> {
+export async function generateImage(plan: PlanOuAucun, prompt: string, options?: GenerateImageOptions): Promise<GeneratedImage> {
   const { generateur } = reglageMedia(plan);
   if (!generateur) throw new MediaProviderNotConfiguredError(`image (plan ${plan})`);
-  return GENERATEURS_IMAGE[generateur](prompt, options);
+  const image = await GENERATEURS_IMAGE[generateur](prompt, options);
+  return avecMarquageIa(image, FOURNISSEURS[generateur].libelle);
+}
+
+/** Écrit dans le fichier les métadonnées « généré par IA » (fournisseur, modèle, date). Un
+ *  fichier impossible à marquer est renvoyé tel quel (erreur journalisée) : le marquage ne fait
+ *  jamais échouer une génération déjà payée. */
+export function avecMarquageIa(image: GeneratedImage, fournisseur: string, date = new Date()): GeneratedImage {
+  try {
+    const marque = marquerImageIa(Buffer.from(image.base64, "base64"), { fournisseur, modele: image.model, date });
+    return { ...image, base64: marque.toString("base64") };
+  } catch (error) {
+    console.error("[media] marquage IA impossible :", error instanceof Error ? error.message : error);
+    return image;
+  }
 }
 
 /** Réponse d'API pour un échec de génération : trois messages pour l'utilisateur, le détail

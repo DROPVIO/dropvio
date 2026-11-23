@@ -5,6 +5,8 @@ import { checkRateLimit } from "@/lib/rate-limit";
 import { apiError } from "@/lib/api-errors";
 import { reponseLimiteIa, SuiviBudgetIa, tokensEstimes } from "@/lib/ai-budget";
 import { pagesValides } from "@/lib/site-builder-pages";
+import { avecMentionIaSite } from "@/lib/mention-ia-site";
+import { chargerTextesSite, langueDuHtml } from "@/lib/site-textes";
 import { CADRE_MODIFICATION_SITE, MESSAGE_HORS_SUJET } from "@/lib/cadre-createur-site";
 import {
   appliquerModificationsSite,
@@ -107,8 +109,14 @@ export async function POST(request: NextRequest) {
     if (resultat.appliquees === 0) {
       return apiError("modification_echec", 502, "La modification n'a pas pu être appliquée. Reformulez ou découpez votre demande.");
     }
+    // Mention « Contenu généré par IA » dans le pied de page des pages modifiées (déjà présente
+    // sur les sites générés depuis son ajout ; idempotent), dans la langue du site.
+    const textesSite = await chargerTextesSite(langueDuHtml(resultat.pages.accueil ?? Object.values(resultat.pages)[0] ?? ""));
+    const pagesMarquees = Object.fromEntries(
+      Object.entries(resultat.pages).map(([cle, html]) => [cle, resultat.pagesModifiees.includes(cle) ? avecMentionIaSite(html, textesSite.mentionIa) : html])
+    );
     return NextResponse.json({
-      pages: resultat.pages,
+      pages: pagesMarquees,
       resume: typeof sortie.resume === "string" ? sortie.resume : "",
       appliquees: resultat.appliquees,
       ignorees: resultat.ignorees,
