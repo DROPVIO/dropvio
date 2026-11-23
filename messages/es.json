@@ -1554,7 +1554,9 @@
     "abonnement_requis_outil": "Elige una suscripción para usar esta herramienta.",
     "consentement_requis": "Marca las dos casillas para continuar con el pago.",
     "retractation_invalide": "Revisa los campos del formulario.",
-    "abonnement_manuel": "Tu acceso se abrió manualmente: no hay ninguna suscripción que cancelar."
+    "abonnement_manuel": "Tu acceso se abrió manualmente: no hay ninguna suscripción que cancelar.",
+    "renonciation_invalide": "Revisa el identificador de la cuenta y la fecha de contratación.",
+    "renonciation_hors_delai": "No hay ninguna suscripción contratada hace menos de 14 días en esta cuenta."
   },
   "siteBuilder": {
     "boutique": {
@@ -2856,10 +2858,10 @@
     "conservez": "Guarda esta referencia."
   },
   "resiliation": {
-    "lien": "Cancelar tu contrato",
+    "lien": "Cancelar mi suscripción",
     "metaTitre": "Cancela tu suscripción a Dropvio en línea | Dropvio",
     "metaDescription": "Cancela tu suscripción a Dropvio en línea en tres clics: revisa tu plan y su fecha de fin, confirma y recibe un justificante de cancelación con su referencia.",
-    "titre": "Cancelar tu contrato",
+    "titre": "Cancelar mi suscripción",
     "intro": "Tu suscripción termina al final del periodo en curso: conservas el acceso hasta esa fecha. Para cambiar de plan o de tarjeta, usa el portal de facturación desde la página Suscripción.",
     "chargement": "Cargando…",
     "recapTitre": "Tu suscripción",
@@ -2894,5 +2896,29 @@
   },
   "mentionIa": {
     "texte": "Contenido generado por IA"
+  },
+  "renonciation": {
+    "bouton": "Desistir del contrato aquí",
+    "metaTitre": "Desiste de tu suscripción en un plazo de 14 días | Dropvio",
+    "metaDescription": "Desiste de tu suscripción a Dropvio en los 14 días siguientes a contratarla: confirma en línea, la suscripción se detiene y te devolvemos el importe íntegro.",
+    "titre": "Desistir del contrato",
+    "intro": "Puedes desistir de tu suscripción durante los 14 días siguientes a contratarla, sin tener que justificarlo. La suscripción se detiene de inmediato y te devolvemos íntegramente lo que hayas pagado.",
+    "chargement": "Cargando…",
+    "horsDelai": "No hay ninguna suscripción contratada hace menos de 14 días en esta cuenta: el desistimiento ya no se ofrece aquí. Siempre puedes cancelar tu suscripción.",
+    "explication": "Suscripción {plan}: puedes desistir hasta el {date} incluido. Al confirmar, la suscripción se detiene enseguida y te devolvemos el importe íntegro, por el mismo medio de pago.",
+    "identifiant": "Identificador de la cuenta (correo electrónico)",
+    "dateSouscription": "Fecha de contratación",
+    "motif": "Motivo (opcional)",
+    "motifAide": "No tienes que indicar ningún motivo.",
+    "confirmer": "Confirmar el desistimiento",
+    "envoi": "Enviando…",
+    "confirmationTitre": "Desistimiento registrado",
+    "confirmationTexte": "Tu suscripción {plan} se ha detenido: no se realizará ningún cargo más.",
+    "remboursementLance": "Reembolso de {montant} iniciado: aparecerá en tu cuenta en unos días hábiles.",
+    "remboursementDelai": "Te devolvemos íntegramente lo que hayas pagado, por el mismo medio de pago, como máximo 14 días después de recibir tu solicitud.",
+    "reference": "Referencia",
+    "emailEnvoye": "Te hemos enviado un correo de confirmación a {email}.",
+    "conservez": "Guarda esta referencia.",
+    "retour": "Volver a la suscripción"
   }
 }

@@ -1554,7 +1554,9 @@
     "abonnement_requis_outil": "Choisissez un abonnement pour utiliser cet outil.",
     "consentement_requis": "Cochez les deux cases pour continuer vers le paiement.",
     "retractation_invalide": "Vérifiez les champs du formulaire.",
-    "abonnement_manuel": "Votre accès a été ouvert manuellement : il n'y a pas d'abonnement à résilier."
+    "abonnement_manuel": "Votre accès a été ouvert manuellement : il n'y a pas d'abonnement à résilier.",
+    "renonciation_invalide": "Vérifiez l'identifiant du compte et la date de souscription.",
+    "renonciation_hors_delai": "Aucun abonnement souscrit depuis moins de 14 jours sur ce compte."
   },
   "siteBuilder": {
     "boutique": {
@@ -2856,10 +2858,10 @@
     "conservez": "Conservez cette référence."
   },
   "resiliation": {
-    "lien": "Résilier votre contrat",
+    "lien": "Résilier mon abonnement",
     "metaTitre": "Résilier votre abonnement Dropvio en ligne | Dropvio",
     "metaDescription": "Résiliez votre abonnement Dropvio en ligne en trois clics : vérifiez votre offre et sa date de fin, confirmez, puis recevez un accusé de résiliation référencé.",
-    "titre": "Résilier votre contrat",
+    "titre": "Résilier mon abonnement",
     "intro": "Votre abonnement prend fin à la fin de la période en cours : vous gardez l'accès jusqu'à cette date. Pour changer d'offre ou de carte, utilisez le portail de facturation depuis la page Abonnement.",
     "chargement": "Chargement…",
     "recapTitre": "Votre abonnement",
@@ -2894,5 +2896,29 @@
   },
   "mentionIa": {
     "texte": "Contenu généré par IA"
+  },
+  "renonciation": {
+    "bouton": "Renoncer au contrat ici",
+    "metaTitre": "Renoncer à votre abonnement dans les 14 jours | Dropvio",
+    "metaDescription": "Renoncez à votre abonnement Dropvio dans les 14 jours suivant la souscription : confirmez en ligne, l'abonnement est arrêté et vous êtes remboursé en totalité.",
+    "titre": "Renoncer au contrat",
+    "intro": "Vous pouvez renoncer à votre abonnement pendant 14 jours après sa souscription, sans avoir à vous justifier. L'abonnement est arrêté immédiatement et les sommes versées vous sont remboursées en totalité.",
+    "chargement": "Chargement…",
+    "horsDelai": "Aucun abonnement souscrit depuis moins de 14 jours sur ce compte : la renonciation n'est plus proposée ici. Vous pouvez toujours résilier votre abonnement.",
+    "explication": "Abonnement {plan} : vous pouvez y renoncer jusqu'au {date} inclus. En confirmant, l'abonnement est arrêté tout de suite et vous êtes remboursé intégralement, par le même moyen de paiement.",
+    "identifiant": "Identifiant du compte (e-mail)",
+    "dateSouscription": "Date de souscription",
+    "motif": "Motif (facultatif)",
+    "motifAide": "Vous n'êtes pas obligé d'indiquer un motif.",
+    "confirmer": "Confirmer la renonciation",
+    "envoi": "Envoi…",
+    "confirmationTitre": "Renonciation enregistrée",
+    "confirmationTexte": "Votre abonnement {plan} est arrêté : aucun nouveau prélèvement n'aura lieu.",
+    "remboursementLance": "Remboursement de {montant} lancé : il apparaît sur votre compte sous quelques jours ouvrés.",
+    "remboursementDelai": "Nous vous remboursons l'intégralité des sommes versées, par le même moyen de paiement, au plus tard 14 jours après la réception de votre demande.",
+    "reference": "Référence",
+    "emailEnvoye": "Un e-mail de confirmation vous a été envoyé à {email}.",
+    "conservez": "Conservez cette référence.",
+    "retour": "Retour à l'abonnement"
   }
 }

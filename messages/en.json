@@ -1554,7 +1554,9 @@
     "abonnement_requis_outil": "Choose a subscription to use this tool.",
     "consentement_requis": "Tick both boxes to continue to payment.",
     "retractation_invalide": "Please check the form fields.",
-    "abonnement_manuel": "Your access was granted manually: there is no subscription to cancel."
+    "abonnement_manuel": "Your access was granted manually: there is no subscription to cancel.",
+    "renonciation_invalide": "Check the account identifier and the subscription date.",
+    "renonciation_hors_delai": "No subscription started less than 14 days ago on this account."
   },
   "siteBuilder": {
     "boutique": {
@@ -2856,10 +2858,10 @@
     "conservez": "Keep this reference."
   },
   "resiliation": {
-    "lien": "Cancel your contract",
+    "lien": "Cancel my subscription",
     "metaTitre": "Cancel your Dropvio subscription online now | Dropvio",
     "metaDescription": "Cancel your Dropvio subscription online in three clicks: check your plan and its end date, confirm, then receive a cancellation receipt with a reference number.",
-    "titre": "Cancel your contract",
+    "titre": "Cancel my subscription",
     "intro": "Your subscription ends at the end of the current period: you keep access until that date. To change plan or card, use the billing portal from the Subscription page.",
     "chargement": "Loading…",
     "recapTitre": "Your subscription",
@@ -2894,5 +2896,29 @@
   },
   "mentionIa": {
     "texte": "AI-generated content"
+  },
+  "renonciation": {
+    "bouton": "Withdraw from the contract here",
+    "metaTitre": "Withdraw from your subscription within 14 days | Dropvio",
+    "metaDescription": "Withdraw from your Dropvio subscription within 14 days of signing up: confirm online, the subscription stops at once and you get a full refund of what you paid.",
+    "titre": "Withdraw from the contract",
+    "intro": "You can withdraw from your subscription for 14 days after signing up, without giving a reason. The subscription stops immediately and everything you paid is refunded in full.",
+    "chargement": "Loading…",
+    "horsDelai": "No subscription started less than 14 days ago on this account: withdrawal is no longer offered here. You can still cancel your subscription.",
+    "explication": "{plan} subscription: you can withdraw until {date} inclusive. Once you confirm, the subscription stops right away and you are refunded in full, to the same payment method.",
+    "identifiant": "Account identifier (e-mail)",
+    "dateSouscription": "Subscription date",
+    "motif": "Reason (optional)",
+    "motifAide": "You do not have to give a reason.",
+    "confirmer": "Confirm withdrawal",
+    "envoi": "Sending…",
+    "confirmationTitre": "Withdrawal recorded",
+    "confirmationTexte": "Your {plan} subscription has stopped: no further payment will be taken.",
+    "remboursementLance": "Refund of {montant} started: it will appear on your account within a few business days.",
+    "remboursementDelai": "We refund everything you paid, to the same payment method, no later than 14 days after receiving your request.",
+    "reference": "Reference",
+    "emailEnvoye": "A confirmation e-mail has been sent to {email}.",
+    "conservez": "Keep this reference.",
+    "retour": "Back to subscription"
   }
 }

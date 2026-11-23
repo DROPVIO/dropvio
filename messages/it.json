@@ -1554,7 +1554,9 @@
     "abonnement_requis_outil": "Scegli un abbonamento per usare questo strumento.",
     "consentement_requis": "Seleziona le due caselle per procedere al pagamento.",
     "retractation_invalide": "Verifica i campi del modulo.",
-    "abonnement_manuel": "Il tuo accesso è stato aperto manualmente: non c'è alcun abbonamento da disdire."
+    "abonnement_manuel": "Il tuo accesso è stato aperto manualmente: non c'è alcun abbonamento da disdire.",
+    "renonciation_invalide": "Verifica l'identificativo dell'account e la data di sottoscrizione.",
+    "renonciation_hors_delai": "Nessun abbonamento sottoscritto da meno di 14 giorni su questo account."
   },
   "siteBuilder": {
     "boutique": {
@@ -2856,10 +2858,10 @@
     "conservez": "Conserva questo riferimento."
   },
   "resiliation": {
-    "lien": "Disdire il contratto",
+    "lien": "Disdici il mio abbonamento",
     "metaTitre": "Disdici online il tuo abbonamento Dropvio | Dropvio",
     "metaDescription": "Disdici online il tuo abbonamento Dropvio in tre clic: controlla il piano e la data di fine, conferma e ricevi una ricevuta di disdetta con riferimento.",
-    "titre": "Disdire il contratto",
+    "titre": "Disdici il mio abbonamento",
     "intro": "Il tuo abbonamento termina alla fine del periodo in corso: mantieni l'accesso fino a quella data. Per cambiare piano o carta, usa il portale di fatturazione dalla pagina Abbonamento.",
     "chargement": "Caricamento…",
     "recapTitre": "Il tuo abbonamento",
@@ -2894,5 +2896,29 @@
   },
   "mentionIa": {
     "texte": "Contenuto generato dall'IA"
+  },
+  "renonciation": {
+    "bouton": "Recedi dal contratto qui",
+    "metaTitre": "Recedi dal tuo abbonamento entro 14 giorni | Dropvio",
+    "metaDescription": "Recedi dal tuo abbonamento Dropvio entro 14 giorni dalla sottoscrizione: conferma online, l'abbonamento si ferma subito e ricevi il rimborso integrale.",
+    "titre": "Recedere dal contratto",
+    "intro": "Puoi recedere dal tuo abbonamento entro 14 giorni dalla sottoscrizione, senza dover dare spiegazioni. L'abbonamento si ferma subito e ti rimborsiamo integralmente quanto hai pagato.",
+    "chargement": "Caricamento…",
+    "horsDelai": "Nessun abbonamento sottoscritto da meno di 14 giorni su questo account: il recesso non è più disponibile qui. Puoi sempre disdire l'abbonamento.",
+    "explication": "Abbonamento {plan}: puoi recedere fino al {date} incluso. Confermando, l'abbonamento si ferma subito e ricevi il rimborso integrale, con lo stesso metodo di pagamento.",
+    "identifiant": "Identificativo dell'account (e-mail)",
+    "dateSouscription": "Data di sottoscrizione",
+    "motif": "Motivo (facoltativo)",
+    "motifAide": "Non sei obbligato a indicare un motivo.",
+    "confirmer": "Conferma il recesso",
+    "envoi": "Invio…",
+    "confirmationTitre": "Recesso registrato",
+    "confirmationTexte": "Il tuo abbonamento {plan} è stato interrotto: non verrà effettuato nessun altro addebito.",
+    "remboursementLance": "Rimborso di {montant} avviato: comparirà sul tuo conto entro pochi giorni lavorativi.",
+    "remboursementDelai": "Ti rimborsiamo integralmente quanto hai pagato, con lo stesso metodo di pagamento, entro 14 giorni dalla ricezione della richiesta.",
+    "reference": "Riferimento",
+    "emailEnvoye": "Ti abbiamo inviato un'e-mail di conferma a {email}.",
+    "conservez": "Conserva questo riferimento.",
+    "retour": "Torna all'abbonamento"
   }
 }

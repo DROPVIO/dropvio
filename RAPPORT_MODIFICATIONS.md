@@ -1,5 +1,22 @@
 # Rapport de modifications
 
+## 23 novembre — Marquage IA, plafond d'audits Agency, renonciation dans l'espace client
+
+**Plafond Agency** : Pro = 30 audits → 2,5 × 30 = 75. Coût API maximal (30 sites × 0,234 € + audits × 0,1646 €, sortie max_tokens entière, entrée estimée à 10 000 / 20 000 tokens) : 19,36 € à 75 audits > 14 € → plafond ramené à **42 audits** (13,93 €). Textes mis à jour dans les 4 langues, message « Passez à Agency » calculé depuis la constante.
+
+**Marquage IA (AI Act art. 50)** : chaque image générée (`generateImage`, lib/media/index.ts) reçoit des métadonnées sans réencodage — JPEG : EXIF (ImageDescription, Software, DateTime) + XMP ; PNG : tEXt/iTXt (AI-Generated, Software, Creation Time, Description) + XMP ; WebP : XMP (VP8X). Le XMP porte `DigitalSourceType = trainedAlgorithmicMedia` (IPTC), le fournisseur, le modèle et la date. Pas de C2PA. Mention visible « Contenu généré par IA » (4 langues) : pied de page des sites générés et modifiés (langue du site), sous les résultats d'audit, sous le nom/la description générés (Site Builder, boutique) et après une réécriture IA des fiches produits.
+
+**Résiliation / renonciation** : bouton « Résilier mon abonnement » sur /abonnement (parcours existant : bouton → « Confirmer la résiliation » → confirmation + e-mail, fin de période). Nouveau bouton « Renoncer au contrat ici » sur /abonnement pendant 14 jours après la souscription → /renonciation (identifiant du compte, date de souscription, motif facultatif) → arrêt immédiat de l'abonnement, remboursement intégral automatique via Stripe, e-mail de confirmation. Migration **069** à appliquer (colonnes du parcours connecté sur `demandes_retractation`).
+
+### Décisions prises seul
+- « Coût maximal du plan Agency » = sites + audits au plafond (comme le calibrage précédent à 15,60 €) ; les images ont leur budget séparé et ne sont pas comptées. Hypothèse d'entrée (10 000 / 20 000 tokens) reprise des tests existants : l'entrée d'un audit n'est pas plafonnée dans le code. La correction HTML d'un audit (24 000 tokens de sortie, même quota) n'est pas comptée dans ce coût.
+- Métadonnées écrites octet par octet (pas de réencodage par sharp) : pixels identiques, vérifié par les tests. Un fichier impossible à marquer est renvoyé tel quel (journalisé) plutôt que de faire échouer une génération payée.
+- Mention des sites : ajoutée à la fin du dernier `<footer>` (sinon un pied créé avant `</body>`), idempotente ; les sites générés avant ce changement ne la portent qu'après une modification IA.
+- Textes : mention affichée sous le champ dès qu'un nom ou une description a été rempli par l'IA, retirée quand le formulaire produit est réinitialisé.
+- Renonciation : remboursement **automatique** de tous les paiements des factures payées de l'abonnement (clé d'idempotence par paiement), abonnement arrêté immédiatement (`subscriptions.cancel`). Le formulaire est pré-rempli ; l'identifiant et la date doivent correspondre au compte. Délai : jusqu'à la fin du 14e jour (heure de Paris) après la date de souscription Stripe (`start_date`).
+- Table : les demandes restent dans `demandes_retractation` (067) et `resiliations` (068) ; 069 ajoute les colonnes manquantes plutôt qu'une nouvelle table. Sans 069, la demande est enregistrée avec les colonnes de 067.
+- Libellé « Résilier votre contrat » remplacé par « Résilier mon abonnement » partout où il apparaissait (abonnement, paramètres, quota, pied de page, titre de /resiliation).
+
 ## 23 novembre — Calculateur UK/US : cases « carte émise hors du pays » (+1,5 % Stripe) et « paiement dans une autre devise » (+1 % de conversion), décochées par défaut, donc résultats inchangés sans elles ; la douane US devient un montant manuel en $ par commande, déduit de la marge (anciennes simulations : l'ancien % informatif n'est pas relu) ; case nexus, taux d'État et affichage en £/$ conservés. Choix validés par vous avant l'implémentation. Au passage : `usStateTaxUnknown` (FR) passé au vouvoiement.
 
 ## 22 novembre — Expert : 90 audits par mois (au lieu de 100), soit ≈ 0,165 € × 90 ≈ 14,85 € ≤ 15,60 € ; sites, réserve de 50 sites Opus et prix inchangés. Aucun texte n'affichait « 100 audits » : la ligne « Audit IA quasi illimité » des tarifs Expert devient « 90 audits IA par mois » (4 langues). Constat non corrigé : `dashboard.calculateur.margeCibleInatteignable` est encore au tutoiement (« Réduis… »).

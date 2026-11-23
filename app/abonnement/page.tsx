@@ -38,6 +38,15 @@ export default function AbonnementPage() {
   const tPrix = useTranslations("landing.pricing");
   const tRetractation = useTranslations("retractation");
   const tResiliation = useTranslations("resiliation");
+  const tRenonciation = useTranslations("renonciation");
+  // Bouton « Renoncer au contrat ici » : seulement dans les 14 jours suivant la souscription.
+  const [renonciationPossible, setRenonciationPossible] = useState(false);
+  useEffect(() => {
+    fetch("/api/renonciation")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((json: { eligible?: boolean } | null) => setRenonciationPossible(json?.eligible === true))
+      .catch(() => {});
+  }, []);
   const locale = useLocale();
   const [consentement, setConsentement] = useState<EtatConsentement>(CONSENTEMENT_VIDE);
   const router = useRouter();
@@ -277,10 +286,25 @@ export default function AbonnementPage() {
           {etat?.essaiUtilise ? t("mentionSansEssai") : t("mentionEssai")}
         </p>
 
-        <div className="mt-8 flex items-center justify-center gap-6 text-sm">
-          <Link href="/resiliation" className="text-[var(--text-faint)] hover:text-[var(--text-muted)] transition font-medium">
+        {/* Résiliation (art. L215-1-1) et renonciation dans les 14 jours (art. L221-21). */}
+        <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+          <Link
+            href="/resiliation"
+            className="rounded-xl border border-[var(--border-strong)] px-4 py-2.5 text-sm font-semibold text-[var(--text-primary)] transition hover:border-[var(--danger)]"
+          >
             {tResiliation("lien")}
           </Link>
+          {renonciationPossible ? (
+            <Link
+              href="/renonciation"
+              className="rounded-xl border border-[var(--border-strong)] px-4 py-2.5 text-sm font-semibold text-[var(--text-primary)] transition hover:border-[var(--danger)]"
+            >
+              {tRenonciation("bouton")}
+            </Link>
+          ) : null}
+        </div>
+
+        <div className="mt-6 flex items-center justify-center gap-6 text-sm">
           <Link href="/retractation" className="text-[var(--text-faint)] hover:text-[var(--text-muted)] transition font-medium">
             {tRetractation("lien")}
           </Link>
