@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { getServerUserAndPlan } from "@/lib/supabase-server";
-import { planLabel, getMonthlyUsage, incrementMonthlyUsage, limitesDuPlan } from "@/lib/plan-limits";
+import { planLabel, getMonthlyUsage, incrementMonthlyUsage, limitesDuPlan, PLAN_LIMITS } from "@/lib/plan-limits";
 import { SuiviBudgetIa } from "@/lib/ai-budget";
 import { checkRateLimit } from "@/lib/rate-limit";
 import { AUDIT_MODELE, compacterHtml, restaurerHtml, verifierBudgetAudit } from "@/lib/audit-config";
@@ -105,7 +105,7 @@ export async function POST(request: NextRequest) {
         return NextResponse.json(
           {
             error: `Vous avez atteint la limite de ${maxParMois} audits ce mois-ci sur le plan ${planLabel(plan)}. ${
-              plan === "pro" ? "Passez à Agency pour 50 audits par mois." : "La limite se réinitialise le mois prochain."
+              plan === "pro" ? `Passez à Agency pour ${PLAN_LIMITS.agency.auditsParMoisMax} audits par mois.` : "La limite se réinitialise le mois prochain."
             }`, code: "audit_limit", values: { max: maxParMois, plan: planLabel(plan) },
           },
           { status: 403 }

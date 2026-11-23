@@ -207,13 +207,26 @@ describe("budget images séparé du budget IA", () => {
 });
 
 describe("quotas Agency dans le budget Claude", () => {
-  it("30 sites et 50 audits par mois tiennent dans 15,60 € au coût maximal par appel", () => {
+  // Coût plafond : sortie max_tokens entièrement consommée, entrée estimée (10 000 / 20 000 tokens).
+  const site = coutEuros("claude-sonnet-5-5", 10_000, 24_000);
+  const audit = coutEuros("claude-sonnet-4-6", 20_000, 8_192);
+  const coutAgency = (audits: number) => PLAN_LIMITS.agency.sitesParMoisMax! * site + audits * audit;
+
+  it("30 sites et 42 audits par mois tiennent dans 15,60 € au coût maximal par appel", () => {
     assert.equal(PLAN_LIMITS.agency.sitesParMoisMax, 30);
-    assert.equal(PLAN_LIMITS.agency.auditsParMoisMax, 50);
-    // Coût plafond : sortie max_tokens entièrement consommée, entrée estimée (10 000 / 20 000 tokens).
-    const site = coutEuros("claude-sonnet-5-5", 10_000, 24_000);
-    const audit = coutEuros("claude-sonnet-4-6", 20_000, 8_192);
-    assert.ok(30 * site + 50 * audit <= AI_BUDGET_EUR_PAR_PLAN.agency);
+    assert.equal(PLAN_LIMITS.agency.auditsParMoisMax, 42);
+    assert.ok(coutAgency(42) <= AI_BUDGET_EUR_PAR_PLAN.agency);
+  });
+
+  it("plafond d'audits Agency : 2,5 × Pro arrondi à l'inférieur, puis ramené sous 14 € de coût maximal", () => {
+    const depart = Math.floor(2.5 * PLAN_LIMITS.pro.auditsParMoisMax!);
+    assert.equal(depart, 75);
+    assert.ok(coutAgency(depart) > 14, "75 audits dépassent 14 €");
+    let plafond = depart;
+    while (coutAgency(plafond) > 14) plafond--;
+    assert.equal(PLAN_LIMITS.agency.auditsParMoisMax, plafond);
+    assert.ok(coutAgency(plafond) <= 14);
+    assert.ok(coutAgency(plafond + 1) > 14);
   });
 });
 

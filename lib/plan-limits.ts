@@ -75,9 +75,12 @@ export type LimitesPlan = {
 
 export const PLAN_LIMITS: Record<Plan, LimitesPlan> = {
   pro:    { produitsMax: null, produitsBoutiqueMax: 200, simulationsMax: null, sitesParMoisMax: 20, auditsParMoisMax: 30, alternativesParMoisMax: null },
-  // Agency : 30 sites et 50 audits, pour tenir dans le budget Claude de 15,60 € au coût maximal
-  // par appel (≈ 0,23 € par site, ≈ 0,165 € par audit : 6,90 € + 8,25 € ≈ 15,15 €).
-  agency: { produitsMax: null, produitsBoutiqueMax: 200, simulationsMax: null, sitesParMoisMax: 30, auditsParMoisMax: 50, alternativesParMoisMax: null },
+  // Agency : 30 sites et 42 audits. Point de départ : 2,5 × les 30 audits Pro = 75, arrondi
+  // à l'entier inférieur. Coût API maximal du mois (lib/ai-pricing.ts, sortie max_tokens
+  // entièrement consommée, entrée estimée à 10 000 tokens par site et 20 000 par audit) :
+  // site ≈ 0,234 € × 30 = 7,02 € ; audit ≈ 0,1646 € × 75 = 12,34 € → 19,36 € > 14 €.
+  // Plafond ramené au plus grand nombre qui tient dans 14 € : 42 audits (7,02 € + 6,91 € ≈ 13,93 €).
+  agency: { produitsMax: null, produitsBoutiqueMax: 200, simulationsMax: null, sitesParMoisMax: 30, auditsParMoisMax: 42, alternativesParMoisMax: null },
   // Expert : aucun plafond de produits par boutique, seul le quota d'images limite la génération.
   // Expert : 90 audits par mois, pour tenir dans le budget Claude de 15,60 € au coût maximal
   // par audit (≈ 0,165 € × 90 ≈ 14,85 €). Ses sites, payés à l'unité, sont hors de ce budget.

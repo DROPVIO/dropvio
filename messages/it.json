@@ -237,7 +237,7 @@
         "agency": [
           "Tutto il piano Pro",
           "30 siti generati al mese",
-          "50 audit IA al mese",
+          "42 audit IA al mese",
           "Supporto prioritario entro 24h"
         ]
       },
@@ -1343,7 +1343,7 @@
         "agency": [
           "Tutto il piano Pro",
           "30 siti generati al mese",
-          "50 audit IA al mese",
+          "42 audit IA al mese",
           "Il budget IA più ampio, per lanciare un negozio dopo l'altro",
           "Supporto prioritario entro 24 h"
         ]
@@ -1399,7 +1399,7 @@
     "faq": {
       "title": "Domande",
       "q1": "Che differenza c'è tra Pro e Agency?",
-      "a1": "Pro ({prixPro}/mese): catalogo completo, 20 siti e 30 audit IA al mese, negozi fino a 200 prodotti e {budgetPro} di budget IA. Agency ({prixAgency}/mese): tutto Pro, con 30 siti, 50 audit e {budgetAgency} di budget IA al mese. Senza un abbonamento attivo, gli strumenti non sono più accessibili, ma il tuo account e i tuoi siti vengono conservati.",
+      "a1": "Pro ({prixPro}/mese): catalogo completo, 20 siti e 30 audit IA al mese, negozi fino a 200 prodotti e {budgetPro} di budget IA. Agency ({prixAgency}/mese): tutto Pro, con 30 siti, 42 audit e {budgetAgency} di budget IA al mese. Senza un abbonamento attivo, gli strumenti non sono più accessibili, ma il tuo account e i tuoi siti vengono conservati.",
       "q2": "Cosa succede se raggiungo il limite del mio piano?",
       "a2": "Un messaggio chiaro indica il limite raggiunto: quota del mese (siti, audit), budget IA del mese, oppure limite delle 24 ore o dei 7 giorni, con il momento in cui potrai riprendere. Il tuo utilizzo è sempre visibile nelle impostazioni. Niente si blocca senza spiegazione.",
       "q3": "Il calcolatore di margine include davvero le imposte?",
@@ -2534,7 +2534,7 @@
       "differences": {
         "q": "Che differenza c'è tra Pro e Agency?",
         "pro": "Pro ({prixPro}/mese): catalogo completo, 20 siti e 30 audit IA al mese, negozi fino a 200 prodotti, {budgetPro} di budget IA al mese",
-        "agency": "Agency ({prixAgency}/mese): come Pro, con 30 siti, 50 audit IA e {budgetAgency} di budget IA al mese",
+        "agency": "Agency ({prixAgency}/mese): come Pro, con 30 siti, 42 audit IA e {budgetAgency} di budget IA al mese",
         "fin": "Entrambi i piani iniziano con 3 giorni di prova gratuita, carta richiesta. Domande? Scrivici a <email>{adresse}</email>."
       },
       "changerPlan": {
