@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
 import Logo from "@/components/Logo";
@@ -191,6 +192,17 @@ export default function RegisterPage() {
             >
               {loading ? t("submitting") : t("submit")}
             </button>
+            {/* Information sur le traitement des données (pas de case : la création du compte
+                ne repose pas sur un consentement). */}
+            <p className="text-xs leading-relaxed text-[var(--text-faint)]">
+              {t.rich("confidentialite", {
+                lien: (texte) => (
+                  <Link href="/confidentialite" className="text-[var(--accent)] underline underline-offset-2 hover:opacity-80">
+                    {texte}
+                  </Link>
+                ),
+              })}
+            </p>
           </form>
 
           <p className="mt-6 text-center text-sm text-[var(--text-faint)]">

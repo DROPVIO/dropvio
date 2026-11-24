@@ -128,7 +128,7 @@ function Curseur({
         onChange={(e) => onChange(Number(e.target.value))}
         style={{ "--rempli": `${rempli}%` } as React.CSSProperties}
       />
-      <div className="flex justify-between text-xs text-[#777]">
+      <div className="flex justify-between text-xs text-[#666]">
         <span>{aide}</span>
         <span className="dv-mono tabular-nums">{max}</span>
       </div>
@@ -234,7 +234,7 @@ function Configurateur({ mode }: { mode: ExpertMode }) {
             {abonnement ? <span className="text-sm text-[#666]">{t("config.parMois")}</span> : null}
           </span>
         </div>
-        <p className="m-0 mt-2 text-xs leading-[1.5] text-[#777]">{t("config.apercu")}</p>
+        <p className="m-0 mt-2 text-xs leading-[1.5] text-[#666]">{t("config.apercu")}</p>
         <Link
           href={abonnement ? "/register?plan=expert" : "/register?plan=expert&mode=quota"}
           className={`mt-4 rounded-[10px] px-4 py-3 text-center text-sm font-semibold no-underline transition-colors ${abonnement ? "bg-[#7c3aed] text-white hover:bg-[#6d28d9] hover:text-white" : "border border-[#d9d9d9] text-[#111] hover:border-[#7c3aed] hover:text-[#7c3aed]"}`}

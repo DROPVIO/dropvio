@@ -6,7 +6,7 @@ import { useTranslations } from "next-intl";
 
 /** Pied de page juridique commun à toutes les pages de Dropvio (publiques et outil).
  *  Absent des vitrines publiques des marchands (/boutiques/<slug> ou leur sous-domaine) :
- *  elles ont leurs propres mentions légales. « Résilier votre contrat » n'apparaît qu'aux
+ *  elles ont leurs propres mentions légales. « Résilier mon abonnement » n'apparaît qu'aux
  *  comptes connectés. */
 export default function PiedDePageLegal({ connecte, vitrine }: { connecte: boolean; vitrine: boolean }) {
   const pathname = usePathname();
@@ -22,6 +22,8 @@ export default function PiedDePageLegal({ connecte, vitrine }: { connecte: boole
         <Link href="/mentions-legales" className={lien}>{t("mentions")}</Link>
         <Link href="/cgv" className={lien}>{t("cgv")}</Link>
         <Link href="/confidentialite" className={lien}>{t("confidentialite")}</Link>
+        {/* Section « Cookies » de la politique de confidentialité (ancre posée par lib/legal-content.ts). */}
+        <Link href="/confidentialite#cookies" className={lien}>{t("cookies")}</Link>
         <Link href="/retractation" className={lien}>{tRetractation("lien")}</Link>
         {connecte ? <Link href="/resiliation" className={lien}>{tResiliation("lien")}</Link> : null}
       </nav>

@@ -179,6 +179,16 @@ export default function ParametresModal({
   const t = useTranslations("parametres");
   const tRetractation = useTranslations("retractation");
   const tResiliation = useTranslations("resiliation");
+  const tRenonciation = useTranslations("renonciation");
+  // Lien « Renoncer au contrat ici » : seulement dans les 14 jours suivant la souscription
+  // (même règle que sur /abonnement, lue dans /api/renonciation).
+  const [renonciationPossible, setRenonciationPossible] = useState(false);
+  useEffect(() => {
+    fetch("/api/renonciation")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((json: { eligible?: boolean } | null) => setRenonciationPossible(json?.eligible === true))
+      .catch(() => {});
+  }, []);
   const locale = useLocale();
   const apiErrorMessage = useApiErrorMessage();
   const supabase = createSupabaseBrowserClient();
@@ -990,6 +1000,9 @@ export default function ParametresModal({
       {abonnementMsg ? <p className="text-[11px] text-[var(--danger)]">{abonnementMsg}</p> : null}
       <div className="flex flex-wrap gap-x-5 gap-y-2 text-[12px]">
         <Link href="/resiliation" className="text-[var(--text-muted)] underline-offset-4 hover:underline">{tResiliation("lien")}</Link>
+        {renonciationPossible ? (
+          <Link href="/renonciation" className="text-[var(--text-muted)] underline-offset-4 hover:underline">{tRenonciation("bouton")}</Link>
+        ) : null}
         <Link href="/retractation" className="text-[var(--text-muted)] underline-offset-4 hover:underline">{tRetractation("lien")}</Link>
       </div>
     </div>

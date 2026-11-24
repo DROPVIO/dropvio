@@ -173,7 +173,8 @@
       "resend": "Invia di nuovo l'email di conferma",
       "resendSending": "Invio…",
       "resendSent": "Email inviata di nuovo! Controlla la posta in arrivo (e lo spam).",
-      "backToLogin": "Torna al login →"
+      "backToLogin": "Torna al login →",
+      "confidentialite": "I tuoi dati sono trattati come indicato nella nostra <lien>informativa sulla privacy</lien>."
     },
     "button": {
       "account": "Account",
@@ -1202,15 +1203,15 @@
     "nav": {
       "pricing": "Prezzi",
       "login": "Accedi",
-      "cta": "Crea un account"
+      "cta": "Crea il mio account"
     },
     "hero": {
       "eyebrow": "Per i dropshipper Shopify",
       "title": "Trova un prodotto, conosci il tuo margine reale, lancia il tuo negozio. Nello stesso posto.",
-      "subtitle": "Dropvio cerca i tuoi prodotti su AliExpress, calcola il margine netto dopo commissioni, spedizione e imposte, e genera un negozio pronto a vendere in pochi clic. Poi la nostra IA analizza la tua pagina di vendita e ti dice esattamente cosa correggere per primo.",
-      "ctaPrimary": "Trova il mio primo prodotto",
+      "subtitle": "Cerca prodotti su AliExpress, calcola il margine netto dopo commissioni, spedizione e imposte, poi genera il tuo negozio Shopify. L'IA analizza poi la tua pagina di vendita e ordina le correzioni per impatto.",
+      "ctaPrimary": "Crea il mio account",
       "ctaSecondary": "Vedi i prezzi",
-      "mentionIa": "Basato sui modelli Claude (Anthropic) e OpenAI",
+      "mentionIa": "Basato sui modelli Claude (Anthropic) e OpenAI. Anteprime illustrative, dati fittizi.",
       "mockupAlt": "Anteprima di Dropvio su computer e telefono: dashboard dei margini e negozio generato"
     },
     "mockup": {
@@ -1244,7 +1245,7 @@
       "title": "Quanto vale la tua pagina di vendita?",
       "subtitle": "Incolla il link del tuo negozio o il codice della tua pagina e conferma. Dropvio le dà un punteggio su 100 e ordina ogni correzione per impatto.",
       "winTitle": "🔍 Audit IA della pagina di vendita",
-      "winSub": "Analisi basata su Nielsen Norman Group, Unbounce e McKinsey — punteggio su 100 in 9 criteri.",
+      "winSub": "Punteggio su 100, calcolato su 9 criteri di usabilità e conversione.",
       "htmlLabel": "L'HTML della tua pagina di vendita",
       "clear": "Cancella",
       "dropTitle": "Trascina il tuo file .html (di norma nella cartella Download)",
@@ -1264,7 +1265,7 @@
       "pageLabel": "Pagina da analizzare",
       "planName": "Pro",
       "recommended": "Consigliato",
-      "perMonth": "/mese",
+      "perMonth": "/mese IVA incl.",
       "f1": "30 audit della pagina di vendita al mese",
       "f2": "Punteggio su 100 + correzioni per impatto",
       "f3": "Download dell'HTML corretto",
@@ -1280,24 +1281,23 @@
       "subtitle": "Sei passaggi. Un solo strumento. Nessun foglio di calcolo.",
       "step": "Passaggio {n}",
       "s1Title": "Trovare un prodotto",
-      "s1Body": "Interroga il catalogo AliExpress per nicchia, prezzo, tempi di consegna e venditore. I prodotti senza margine sostenibile vengono scartati prima che tu li veda.",
+      "s1Body": "Filtra il catalogo AliExpress per nicchia, prezzo, numero di ordini, valutazione e margine minimo. Scarti i prodotti poco redditizi prima di studiarli.",
       "s1F1": "Nicchia: Casa",
       "s1F2": "15–40 €",
-      "s1F3": "Consegna < 12 g",
-      "s1F4": "Venditore 4,7★+",
+      "s1F3": "1.000+ ordini",
+      "s1F4": "Valutazione 4,5★+",
       "s1Result": "312 prodotti → {n} con margine sostenibile",
       "s2Title": "Vedere il margine reale",
       "s2Body": "Costo prodotto, spedizione, commissioni di pagamento e imposte vengono dedotti automaticamente. Vedi il margine netto, non quello lordo che fa bella figura sulla carta.",
       "s2Sale": "Prezzo di vendita",
       "s2Cost": "Prodotto + spedizione",
       "s2Fees": "Commissioni di pagamento",
-      "s2Tax": "IVA / imposte",
-      "s2TaxVal": "secondo il paese",
+      "s2Tax": "IVA (20%, Francia)",
       "s2Gross": "Margine lordo",
       "s2Net": "Margine netto",
       "s2Illustrative": "Esempio illustrativo",
       "s3Title": "Analizzare la pagina di vendita",
-      "s3Body": "Ottieni un punteggio su 100 e un elenco di correzioni ordinate per impatto, basato sui lavori del Nielsen Norman Group, sui benchmark Unbounce e su studi McKinsey.",
+      "s3Body": "Ottieni un punteggio su 100 e un elenco di correzioni ordinate per impatto, secondo 9 criteri di usabilità e conversione.",
       "s3Fix1": "Spostare il pulsante d'acquisto sopra la piega",
       "s3Fix2": "Aggiungere recensioni accanto al prezzo",
       "s3Fix3": "Accorciare il titolo",
@@ -1309,16 +1309,17 @@
       "s4T4": "Generalista",
       "s4Legend": "Template",
       "s5Title": "Gestire gli ordini",
-      "s5Body": "Gli ordini in arrivo dal tuo negozio Shopify risalgono in Dropvio e vengono preparati col fornitore, con ogni stato nello stesso posto.",
+      "s5Body": "Gli ordini del tuo negozio Shopify arrivano in Dropvio con il link del fornitore. Ordini su AliExpress e segui ogni stato nello stesso posto.",
       "s5St1": "Preparato",
       "s5St2": "Spedito",
       "s5St3": "Nuovo",
       "s6Title": "Tracking inviato a Shopify",
-      "s6Body": "Appena esiste un numero di tracking, viene inviato automaticamente a Shopify. Il cliente riceve la notifica e la tua assistenza si svuota.",
+      "s6Body": "Quando inserisci il numero di tracking, Dropvio lo invia a Shopify, che può avvisare il tuo cliente.",
       "s6P1": "Ordine",
       "s6P2": "Fornitore",
       "s6P3": "Spedito",
-      "s6P4": "Cliente avvisato"
+      "s6P4": "Cliente avvisato",
+      "exempleIa": "Esempio illustrativo · Contenuto generato dall'IA"
     },
     "pricing": {
       "eyebrow": "Prezzi",
@@ -1326,7 +1327,7 @@
       "pro": "Pro",
       "agency": "Agency",
       "recommended": "Consigliato",
-      "perMonth": "/mese",
+      "perMonth": "/mese IVA incl.",
       "cta": {
         "pro": "Passa a Pro",
         "agency": "Scegli Agency"
@@ -1344,8 +1345,8 @@
           "Tutto il piano Pro",
           "30 siti generati al mese",
           "42 audit IA al mese",
-          "Il budget IA più ampio, per lanciare un negozio dopo l'altro",
-          "Supporto prioritario entro 24 h"
+          "Un budget IA più ampio del piano Pro",
+          "Supporto prioritario"
         ]
       },
       "budgetTitre": "Un budget IA per tutte le funzioni",
@@ -1360,7 +1361,7 @@
         "features": [
           "Tutto il piano Agency",
           "90 audit IA al mese",
-          "Generazione di testi IA quasi illimitata"
+          "Siti multipagina e immagini secondo la tua configurazione del mese"
         ],
         "cta": "Scegli Expert",
         "config": {
@@ -1409,10 +1410,10 @@
     },
     "final": {
       "title": "Fai i conti prima di costruire il negozio.",
-      "cta": "Calcola il mio margine reale"
+      "cta": "Crea il mio account"
     },
     "footer": {
-      "tagline": "La nuova voce del dropshipping.",
+      "tagline": "Strumenti per i dropshipper Shopify.",
       "terms": "Termini",
       "privacy": "Privacy",
       "legal": "Note legali",
@@ -2892,7 +2893,8 @@
     "titre": "Link legali",
     "mentions": "Note legali",
     "cgv": "Condizioni di vendita",
-    "confidentialite": "Privacy"
+    "confidentialite": "Privacy",
+    "cookies": "Cookies"
   },
   "mentionIa": {
     "texte": "Contenuto generato dall'IA"

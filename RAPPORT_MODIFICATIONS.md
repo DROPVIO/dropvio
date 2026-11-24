@@ -1,5 +1,18 @@
 # Rapport de modifications
 
+## 24 novembre — Audit de la landing (juridique, design) et parcours de résiliation / renonciation
+
+Branche `audit-landing-et-parcours-legal`. Landing : prix affichés « TTC/mois » (4 langues) ; marques Nielsen Norman Group, Unbounce et McKinsey retirées (caution non vérifiable) ; textes inexacts corrigés (le catalogue ne filtre ni délai de livraison ni vendeur ; Dropvio ne passe pas les commandes chez le fournisseur ; le suivi part vers Shopify quand le marchand saisit le numéro ; « votre SAV se vide », « quasi illimitée », « sous 24 h » retirés) ; exemple de marge corrigé (TVA 20 % et frais Stripe UE réellement déduits : 21,00 € au lieu de 27,04 €) ; maquettes signalées « Exemple illustratif », l'exemple d'audit « Contenu généré par IA », le hero « Aperçus illustratifs, données fictives » ; un seul appel à l'action « Créer mon compte » (nav, hero, étapes, bas de page) ; « Débloque » → « Débloquez » ; contrastes relevés (#777 → #666, #8a8a94 → #6b6b75). Pied de page : lien « Cookies » vers /confidentialite#cookies (ancre posée sur les titres h2 des pages juridiques, texte inchangé). Inscription : ligne d'information avec lien vers la politique de confidentialité ; « réessaie » → « réessayez ». Paramètres : lien « Renoncer au contrat ici » ajouté à côté de « Résilier mon abonnement » (dans les 14 jours).
+
+### Décisions prises seul
+- « TTC » ajouté sans connaître le régime de TVA (CGV « À COMPLÉTER ») : en franchise en base, le prix payé reste le prix final, la mention reste exacte.
+- Appel à l'action unique « Créer mon compte » plutôt que « Trouver mon premier produit » / « Calculer ma marge réelle » : honnête (le plan se choisit après l'inscription) et identique partout. Les boutons des cartes de tarifs gardent leur libellé par plan.
+- « Support prioritaire sous 24 h » → « Support prioritaire » : aucun processus ne garantit un délai.
+- Exemple de marge recalculé sur le mode France (1,5 % + 0,25 €, TVA 20 % incluse) au lieu d'un exemple US présenté en euros.
+- Pas de case à cocher à l'inscription : la création du compte repose sur le contrat, pas sur un consentement ; une ligne d'information suffit. Les cases d'achat (ConsentementAchat) restent décochées par défaut.
+- Lien « Cookies » vers la section de la politique de confidentialité : il n'existe pas de page cookies dédiée et je n'en rédige pas.
+- `verifier-landing.mjs` (Playwright) non lancé : contrôles faits par requêtes HTTP sur le serveur de dev.
+
 ## 23 novembre — Marquage IA, plafond d'audits Agency, renonciation dans l'espace client
 
 **Plafond Agency** : Pro = 30 audits → 2,5 × 30 = 75. Coût API maximal (30 sites × 0,234 € + audits × 0,1646 €, sortie max_tokens entière, entrée estimée à 10 000 / 20 000 tokens) : 19,36 € à 75 audits > 14 € → plafond ramené à **42 audits** (13,93 €). Textes mis à jour dans les 4 langues, message « Passez à Agency » calculé depuis la constante.

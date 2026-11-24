@@ -157,7 +157,7 @@
       "errorPasswordLength": "Le mot de passe doit contenir au moins 6 caractères.",
       "errorPasswordMismatch": "Les mots de passe ne correspondent pas.",
       "errorAlreadyRegistered": "Cet e-mail est déjà utilisé. Connectez-vous.",
-      "errorFallback": "Une erreur est survenue, réessaie.",
+      "errorFallback": "Une erreur est survenue, réessayez.",
       "emailLabel": "E-mail",
       "emailPlaceholder": "vous@exemple.com",
       "passwordLabel": "Mot de passe",
@@ -173,7 +173,8 @@
       "resend": "Renvoyer l'e-mail de confirmation",
       "resendSending": "Envoi…",
       "resendSent": "E-mail renvoyé ! Vérifiez votre boîte mail (et vos spams).",
-      "backToLogin": "Retour à la connexion →"
+      "backToLogin": "Retour à la connexion →",
+      "confidentialite": "Vos données sont traitées comme indiqué dans notre <lien>politique de confidentialité</lien>."
     },
     "button": {
       "account": "Compte",
@@ -1202,15 +1203,15 @@
     "nav": {
       "pricing": "Tarifs",
       "login": "Connexion",
-      "cta": "Créer un compte"
+      "cta": "Créer mon compte"
     },
     "hero": {
       "eyebrow": "Pour les dropshippers Shopify",
       "title": "Trouvez un produit, connaissez votre marge réelle, lancez votre boutique. Au même endroit.",
-      "subtitle": "Dropvio cherche vos produits sur AliExpress, calcule votre marge nette après frais, livraison et taxes, et génère une boutique prête à vendre en quelques clics. Puis notre IA audite votre page de vente et vous dit précisément quoi corriger en premier.",
-      "ctaPrimary": "Trouver mon premier produit",
+      "subtitle": "Cherchez des produits sur AliExpress, calculez votre marge nette après frais, livraison et taxes, puis générez votre boutique Shopify. L'IA audite ensuite votre page de vente et classe les corrections par impact.",
+      "ctaPrimary": "Créer mon compte",
       "ctaSecondary": "Voir les tarifs",
-      "mentionIa": "Propulsé par les modèles Claude (Anthropic) et OpenAI",
+      "mentionIa": "Propulsé par les modèles Claude (Anthropic) et OpenAI. Aperçus illustratifs, données fictives.",
       "mockupAlt": "Aperçu de Dropvio sur ordinateur et téléphone : tableau de bord des marges et boutique générée"
     },
     "mockup": {
@@ -1244,7 +1245,7 @@
       "title": "Votre page de vente, elle vaut quoi ?",
       "subtitle": "Collez le lien de votre boutique ou le code de votre page, puis validez. Dropvio la note sur 100 et classe chaque correction par impact.",
       "winTitle": "🔍 Audit de page de vente par IA",
-      "winSub": "Analyse basée sur Nielsen Norman Group, Unbounce et McKinsey — score sur 100 en 9 critères.",
+      "winSub": "Score sur 100, calculé sur 9 critères d'ergonomie et de conversion.",
       "htmlLabel": "Le HTML de votre page de vente",
       "clear": "Effacer",
       "dropTitle": "Déposez votre fichier .html (par défaut dans le dossier Téléchargements)",
@@ -1260,11 +1261,11 @@
       "chars": "{n} caractères",
       "run": "Analyser avec l'IA →",
       "running": "Analyse en cours…",
-      "modalTitle": "Débloque l'audit IA",
+      "modalTitle": "Débloquez l'audit IA",
       "pageLabel": "Page à auditer",
       "planName": "Pro",
       "recommended": "Recommandé",
-      "perMonth": "/mois",
+      "perMonth": "TTC/mois",
       "f1": "30 audits de page de vente par mois",
       "f2": "Score sur 100 + corrections classées par impact",
       "f3": "Téléchargement du HTML corrigé",
@@ -1280,24 +1281,23 @@
       "subtitle": "Six étapes. Un seul outil. Aucun tableur.",
       "step": "Étape {n}",
       "s1Title": "Trouver un produit",
-      "s1Body": "Interrogez le catalogue AliExpress par niche, prix, délai de livraison et vendeur. Les produits sans marge viable sont écartés avant même que vous les regardiez.",
+      "s1Body": "Filtrez le catalogue AliExpress par niche, prix, nombre de commandes, note et marge minimale. Vous écartez les produits peu rentables avant de les étudier.",
       "s1F1": "Niche : Maison",
       "s1F2": "15–40 €",
-      "s1F3": "Livraison < 12 j",
-      "s1F4": "Vendeur 4,7★+",
+      "s1F3": "1 000+ commandes",
+      "s1F4": "Note 4,5★+",
       "s1Result": "312 produits → {n} avec une marge viable",
       "s2Title": "Voir votre marge réelle",
       "s2Body": "Coût produit, livraison, frais de paiement et taxes sont déduits automatiquement. Vous voyez votre marge nette, pas la marge brute qui fait joli sur le papier.",
       "s2Sale": "Prix de vente",
       "s2Cost": "Produit + livraison",
       "s2Fees": "Frais de paiement",
-      "s2Tax": "TVA / taxes",
-      "s2TaxVal": "selon le pays",
+      "s2Tax": "TVA (20 %, France)",
       "s2Gross": "Marge brute",
       "s2Net": "Marge nette",
       "s2Illustrative": "Exemple illustratif",
       "s3Title": "Auditer votre page de vente",
-      "s3Body": "Obtenez un score sur 100 et une liste de corrections classées par impact, basée sur les travaux du Nielsen Norman Group, les benchmarks Unbounce et des études McKinsey.",
+      "s3Body": "Obtenez un score sur 100 et une liste de corrections classées par impact, selon 9 critères d'ergonomie et de conversion.",
       "s3Fix1": "Remonter le bouton d'achat au-dessus de la ligne de flottaison",
       "s3Fix2": "Ajouter des avis près du prix",
       "s3Fix3": "Raccourcir le titre",
@@ -1309,16 +1309,17 @@
       "s4T4": "Généraliste",
       "s4Legend": "Template",
       "s5Title": "Traiter les commandes",
-      "s5Body": "Les commandes entrantes de votre boutique Shopify remontent dans Dropvio et sont préparées chez le fournisseur, avec leur statut au même endroit.",
+      "s5Body": "Les commandes de votre boutique Shopify remontent dans Dropvio avec le lien fournisseur. Vous commandez sur AliExpress et suivez chaque statut au même endroit.",
       "s5St1": "Préparée",
       "s5St2": "Expédiée",
       "s5St3": "Nouvelle",
       "s6Title": "Suivi envoyé à Shopify",
-      "s6Body": "Dès qu'un numéro de suivi existe, il est poussé automatiquement vers Shopify. Votre client est notifié, votre SAV se vide.",
+      "s6Body": "Quand vous saisissez le numéro de suivi, Dropvio l'envoie à Shopify, qui peut prévenir votre client.",
       "s6P1": "Commande",
       "s6P2": "Fournisseur",
       "s6P3": "Expédiée",
-      "s6P4": "Client notifié"
+      "s6P4": "Client notifié",
+      "exempleIa": "Exemple illustratif · Contenu généré par IA"
     },
     "pricing": {
       "eyebrow": "Tarifs",
@@ -1326,7 +1327,7 @@
       "pro": "Pro",
       "agency": "Agency",
       "recommended": "Recommandé",
-      "perMonth": "/mois",
+      "perMonth": "TTC/mois",
       "cta": {
         "pro": "Passer en Pro",
         "agency": "Choisir Agency"
@@ -1344,8 +1345,8 @@
           "Tout le plan Pro",
           "30 sites générés par mois",
           "42 audits IA par mois",
-          "Le budget IA le plus large, pour enchaîner les boutiques",
-          "Support prioritaire sous 24 h"
+          "Un budget IA plus large que le plan Pro",
+          "Support prioritaire"
         ]
       },
       "budgetTitre": "Un budget IA pour toutes les fonctions",
@@ -1360,7 +1361,7 @@
         "features": [
           "Tout le plan Agency",
           "90 audits IA par mois",
-          "Génération de textes IA quasi illimitée"
+          "Sites multipages et images selon votre configuration du mois"
         ],
         "cta": "Choisir Expert",
         "config": {
@@ -1409,10 +1410,10 @@
     },
     "final": {
       "title": "Faites les calculs avant de construire la boutique.",
-      "cta": "Calculer ma marge réelle"
+      "cta": "Créer mon compte"
     },
     "footer": {
-      "tagline": "La nouvelle voix du dropshipping.",
+      "tagline": "Outils pour les dropshippers Shopify.",
       "terms": "CGV",
       "privacy": "Confidentialité",
       "legal": "Mentions légales",
@@ -2892,7 +2893,8 @@
     "titre": "Liens juridiques",
     "mentions": "Mentions légales",
     "cgv": "CGV",
-    "confidentialite": "Confidentialité"
+    "confidentialite": "Confidentialité",
+    "cookies": "Cookies"
   },
   "mentionIa": {
     "texte": "Contenu généré par IA"

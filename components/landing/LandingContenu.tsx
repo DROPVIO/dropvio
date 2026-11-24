@@ -21,8 +21,12 @@ import { SUPPORT_EMAIL } from "@/lib/contact";
  * exactement un écran, et une nav collante mangerait cette hauteur.
  *
  * Toute la copie passe par le namespace `landing` des 4 locales. Les chiffres annoncés
- * viennent de lib/plan-limits.ts (quotas, budget IA et limites sur 24 h / 7 jours), et aucun texte ne promet d'essai ni de résiliation : il n'y
- * a aujourd'hui ni abonnement Stripe ni parcours d'essai dans le code. */
+ * viennent de lib/plan-limits.ts (quotas, budget IA et limites sur 24 h / 7 jours) ; les
+ * chiffres des maquettes sont fictifs et signalés comme tels (« Exemple illustratif »,
+ * « Aperçus illustratifs »). Un seul appel à l'action principal (« Créer mon compte »), répété
+ * dans la nav, le hero, la section étapes et le bas de page. Aucun texte ne promet de gain, ni
+ * d'essai. Les liens juridiques (mentions, CGV, confidentialité, cookies, rétractation) sont
+ * dans le pied de page commun, components/PiedDePageLegal.tsx. */
 
 export default function LandingContenu() {
   const t = useTranslations("landing");
@@ -126,11 +130,14 @@ export default function LandingContenu() {
           <Link href="#top" className="flex items-center gap-2 text-[#111] no-underline">
             <Logo className="h-5 w-5 text-[#7c3aed]" />
             <span className="text-base font-bold tracking-[-0.03em]">Dropvio</span>
-            <span className="ml-1 hidden text-[13px] font-normal text-[#777] sm:inline">
+            <span className="ml-1 hidden text-[13px] font-normal text-[#666] sm:inline">
               © {new Date().getFullYear()} — {t("footer.tagline")}
             </span>
           </Link>
           <nav className="flex flex-wrap gap-x-6 gap-y-2.5 text-sm">
+            <Link href="#tarifs" className="text-[#444] no-underline">
+              {t("nav.pricing")}
+            </Link>
             <Link href="/faq" className="text-[#444] no-underline">
               {t("footer.faq")}
             </Link>

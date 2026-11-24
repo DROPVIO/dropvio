@@ -173,7 +173,8 @@
       "resend": "Resend confirmation email",
       "resendSending": "Sending…",
       "resendSent": "Email resent! Check your inbox (and your spam folder).",
-      "backToLogin": "Back to sign in →"
+      "backToLogin": "Back to sign in →",
+      "confidentialite": "Your data is processed as described in our <lien>privacy policy</lien>."
     },
     "button": {
       "account": "Account",
@@ -1202,15 +1203,15 @@
     "nav": {
       "pricing": "Pricing",
       "login": "Log in",
-      "cta": "Create an account"
+      "cta": "Create my account"
     },
     "hero": {
       "eyebrow": "For Shopify dropshippers",
       "title": "Find a product, see your real profit, launch your store. All in one place.",
-      "subtitle": "Dropvio searches AliExpress for products, calculates your net profit after fees, shipping and taxes, and builds a ready-to-sell store in a few clicks. Then our AI audits your sales page and tells you exactly what to fix first.",
-      "ctaPrimary": "Find my first product",
+      "subtitle": "Search AliExpress for products, calculate your net profit after fees, shipping and taxes, then generate your Shopify store. AI then audits your sales page and ranks the fixes by impact.",
+      "ctaPrimary": "Create my account",
       "ctaSecondary": "See pricing",
-      "mentionIa": "Powered by Claude (Anthropic) and OpenAI models",
+      "mentionIa": "Powered by Claude (Anthropic) and OpenAI models. Illustrative previews, sample data.",
       "mockupAlt": "Preview of Dropvio on laptop and phone: margin dashboard and generated store"
     },
     "mockup": {
@@ -1244,7 +1245,7 @@
       "title": "How good is your sales page?",
       "subtitle": "Paste your store link or your page code and press Enter. Dropvio scores it out of 100 and ranks every fix by impact.",
       "winTitle": "🔍 AI sales page audit",
-      "winSub": "Based on Nielsen Norman Group, Unbounce and McKinsey research — scored out of 100 across 9 criteria.",
+      "winSub": "Score out of 100, based on 9 usability and conversion criteria.",
       "htmlLabel": "Your sales page HTML",
       "clear": "Clear",
       "dropTitle": "Drop your .html file (usually in your Downloads folder)",
@@ -1264,7 +1265,7 @@
       "pageLabel": "Page to audit",
       "planName": "Pro",
       "recommended": "Recommended",
-      "perMonth": "/mo",
+      "perMonth": "/month incl. VAT",
       "f1": "30 sales page audits / month",
       "f2": "Score out of 100 + fixes ranked by impact",
       "f3": "Download the corrected HTML",
@@ -1280,24 +1281,23 @@
       "subtitle": "Six steps. One tool. No spreadsheets.",
       "step": "Step {n}",
       "s1Title": "Find a product",
-      "s1Body": "Search the AliExpress catalog by niche, price, shipping time and seller. Products with no viable margin are filtered out before you even look at them.",
+      "s1Body": "Filter the AliExpress catalog by niche, price, order count, rating and minimum margin. Low-profit products are set aside before you study them.",
       "s1F1": "Niche: Home",
       "s1F2": "$15–40",
-      "s1F3": "Ships < 12 days",
-      "s1F4": "Seller 4.7★+",
+      "s1F3": "1,000+ orders",
+      "s1F4": "Rating 4.5★+",
       "s1Result": "312 products → {n} with a viable margin",
       "s2Title": "See your real profit",
       "s2Body": "Product cost, shipping, payment fees and taxes are deducted automatically. You see your net profit, not the gross margin that looks good on paper.",
       "s2Sale": "Sale price",
       "s2Cost": "Product + shipping",
       "s2Fees": "Payment fees",
-      "s2Tax": "VAT / sales tax",
-      "s2TaxVal": "by country",
+      "s2Tax": "VAT (20%, France)",
       "s2Gross": "Gross margin",
       "s2Net": "Net profit",
       "s2Illustrative": "Illustrative example",
       "s3Title": "Audit your sales page",
-      "s3Body": "Get a score out of 100 and a list of fixes ranked by impact, based on Nielsen Norman Group, Unbounce and McKinsey research.",
+      "s3Body": "Get a score out of 100 and a list of fixes ranked by impact, based on 9 usability and conversion criteria.",
       "s3Fix1": "Move the buy button above the fold",
       "s3Fix2": "Add reviews near the price",
       "s3Fix3": "Shorten the headline",
@@ -1309,16 +1309,17 @@
       "s4T4": "General",
       "s4Legend": "Template",
       "s5Title": "Process orders",
-      "s5Body": "New orders from your Shopify store show up in Dropvio and are prepared with your supplier, with every status in one place.",
+      "s5Body": "Orders from your Shopify store show up in Dropvio with the supplier link. You order on AliExpress and track every status in one place.",
       "s5St1": "Prepared",
       "s5St2": "Shipped",
       "s5St3": "New",
       "s6Title": "Tracking sent to Shopify",
-      "s6Body": "As soon as a tracking number exists, it's pushed to Shopify automatically. Your customer is notified, your support inbox stays empty.",
+      "s6Body": "When you enter the tracking number, Dropvio sends it to Shopify, which can notify your customer.",
       "s6P1": "Order",
       "s6P2": "Supplier",
       "s6P3": "Shipped",
-      "s6P4": "Customer notified"
+      "s6P4": "Customer notified",
+      "exempleIa": "Illustrative example · AI-generated content"
     },
     "pricing": {
       "eyebrow": "Pricing",
@@ -1326,7 +1327,7 @@
       "pro": "Pro",
       "agency": "Agency",
       "recommended": "Recommended",
-      "perMonth": "/month",
+      "perMonth": "/month incl. VAT",
       "cta": {
         "pro": "Go Pro",
         "agency": "Choose Agency"
@@ -1344,8 +1345,8 @@
           "Everything in Pro",
           "30 generated sites per month",
           "42 AI audits per month",
-          "The largest AI budget, to run store after store",
-          "Priority support within 24 h"
+          "A larger AI budget than the Pro plan",
+          "Priority support"
         ]
       },
       "budgetTitre": "One AI budget for every feature",
@@ -1360,7 +1361,7 @@
         "features": [
           "Everything in Agency",
           "90 AI audits per month",
-          "Near-unlimited AI text generation"
+          "Multi-page sites and images based on your monthly setup"
         ],
         "cta": "Choose Expert",
         "config": {
@@ -1409,10 +1410,10 @@
     },
     "final": {
       "title": "Run the numbers before you build the store.",
-      "cta": "Calculate my real margin"
+      "cta": "Create my account"
     },
     "footer": {
-      "tagline": "The new voice of dropshipping.",
+      "tagline": "Tools for Shopify dropshippers.",
       "terms": "Terms",
       "privacy": "Privacy",
       "legal": "Legal notice",
@@ -2892,7 +2893,8 @@
     "titre": "Legal links",
     "mentions": "Legal notice",
     "cgv": "Terms of sale",
-    "confidentialite": "Privacy"
+    "confidentialite": "Privacy",
+    "cookies": "Cookies"
   },
   "mentionIa": {
     "texte": "AI-generated content"

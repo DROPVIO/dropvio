@@ -310,6 +310,7 @@ export default function ChaineSection() {
             <div className="dv-mono mt-4 border-t border-[#ECECF0] pt-4 text-sm leading-[1.5] tabular-nums text-[#333]">
               {t("s1Result", { n: 47 })}
             </div>
+            <div className="mt-2.5 text-right text-[13px] text-[#52525B]">{t("s2Illustrative")}</div>
           </div>
         </div>
 
@@ -323,18 +324,15 @@ export default function ChaineSection() {
                 <p className={corps}>{t("s2Body")}</p>
               </div>
               <div className="min-w-0 flex-[1.25_1_300px]">
-                {([["s2Sale", "39,90 €"], ["s2Cost", "−11,40 €"], ["s2Fees", "−1,46 €"]] as const).map(([k, v]) => (
+                {/* Exemple France : 39,90 € TTC, frais Stripe UE 1,5 % + 0,25 € (lib/calcul-marge.ts),
+                    TVA de 20 % incluse dans le prix (39,90 / 1,2 × 0,2). Net = 39,90 − 11,40 − 0,85 − 6,65. */}
+                {([["s2Sale", "39,90 €"], ["s2Cost", "−11,40 €"], ["s2Fees", "−0,85 €"], ["s2Tax", "−6,65 €"]] as const).map(([k, v]) => (
                   <div key={k} className="flex items-baseline gap-2.5 py-2.5 text-[15px] leading-[1.35]">
                     <span className="min-w-0 text-[#333]">{t(k)}</span>
                     <span className="min-w-[12px] flex-[1_1_12px] border-b border-dotted border-[#C9C9D1]" />
                     <span className="flex-none text-right tabular-nums text-[#111]">{v}</span>
                   </div>
                 ))}
-                <div className="flex items-baseline gap-2.5 py-2.5 text-[15px] leading-[1.35]">
-                  <span className="min-w-0 text-[#333]">{t("s2Tax")}</span>
-                  <span className="min-w-[12px] flex-[1_1_12px] border-b border-dotted border-[#C9C9D1]" />
-                  <span className="flex-none text-right text-[#52525B]">{t("s2TaxVal")}</span>
-                </div>
                 <div className="mt-1 flex items-baseline gap-2.5 border-t border-[#E1E1E6] pb-2.5 pt-3 text-[15px]">
                   <span className="text-[#52525B]">{t("s2Gross")}</span>
                   <span className="flex-1" />
@@ -343,7 +341,7 @@ export default function ChaineSection() {
                 <div className="flex items-baseline justify-between gap-3 pt-1.5">
                   <span className="text-[16px] font-medium text-[#111]">{t("s2Net")}</span>
                   <span className="text-[clamp(38px,3.6cqw,52px)] font-medium leading-none tracking-[-0.03em] tabular-nums text-[#7C3AED]">
-                    27,04 €
+                    21,00 €
                   </span>
                 </div>
                 <div className="mt-2.5 text-right text-[13px] text-[#52525B]">{t("s2Illustrative")}</div>
@@ -373,6 +371,10 @@ export default function ChaineSection() {
                 </div>
               ))}
             </div>
+            {/* Résultat d'audit montré en exemple : signalé comme contenu généré par IA. */}
+            <p data-mention-ia="" className="m-0 mt-2.5 text-right text-[13px] text-[#52525B]">
+              {t("exempleIa")}
+            </p>
           </div>
         </div>
 

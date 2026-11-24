@@ -115,7 +115,7 @@ export function MockupDesktop({ largeur, hauteur }: { largeur: number; hauteur: 
             <div className="flex items-end justify-between">
               <div>
                 <div className="text-2xl font-bold">{t("dashboard")}</div>
-                <div className="mt-1 text-sm text-[#8a8a94]">{t("lastDays")}</div>
+                <div className="mt-1 text-sm text-[#6b6b75]">{t("lastDays")}</div>
               </div>
               <div className="rounded-[10px] bg-[#7c3aed] px-[14px] py-[9px] text-[13px] font-semibold text-white">
                 {t("analyze")}
@@ -127,7 +127,7 @@ export function MockupDesktop({ largeur, hauteur }: { largeur: number; hauteur: 
                 <div key={s.k} className="rounded-xl border border-[#e6e6eb] bg-white px-4 py-[14px]">
                   <div className="text-xs text-[#6b6b75]">{t(s.k)}</div>
                   <div className="mt-1.5 text-[26px] font-bold leading-none tracking-[-0.02em] tabular-nums">{s.v}</div>
-                  <div className="mt-0.5 text-[11px] text-[#8a8a94]">{t(s.sub)}</div>
+                  <div className="mt-0.5 text-[11px] text-[#6b6b75]">{t(s.sub)}</div>
                 </div>
               ))}
             </div>
@@ -136,7 +136,7 @@ export function MockupDesktop({ largeur, hauteur }: { largeur: number; hauteur: 
               <div className="flex flex-col rounded-xl border border-[#e6e6eb] bg-white px-5 py-[18px]">
                 <div className="flex items-baseline justify-between">
                   <span className="text-sm font-semibold">{t("chart")}</span>
-                  <span className="text-xs text-[#8a8a94]">%</span>
+                  <span className="text-xs text-[#6b6b75]">%</span>
                 </div>
                 <div className="mt-[14px] flex flex-1 items-end">
                   <svg viewBox="0 0 300 120" preserveAspectRatio="none" className="block h-[300px] w-full" aria-hidden>
@@ -156,11 +156,11 @@ export function MockupDesktop({ largeur, hauteur }: { largeur: number; hauteur: 
                     <span className="h-[30px] w-[30px] flex-none rounded-[7px] bg-[#f0f0f3]" />
                     <div className="min-w-0 flex-1">
                       <div className="truncate text-[13px] font-semibold">{r.nom}</div>
-                      <div className="text-[11px] text-[#8a8a94]">AliExpress</div>
+                      <div className="text-[11px] text-[#6b6b75]">AliExpress</div>
                     </div>
                     <div className="text-right tabular-nums">
                       <div className="text-[13px] font-semibold" style={{ color: couleurGain(r.ok) }}>{r.gain}</div>
-                      <div className="text-[11px] text-[#8a8a94]">{r.pct}</div>
+                      <div className="text-[11px] text-[#6b6b75]">{r.pct}</div>
                     </div>
                   </div>
                 ))}
@@ -204,7 +204,7 @@ export function MockupMobile({ largeur, hauteur }: { largeur: number; hauteur: n
           <div className="grid grid-cols-2 gap-2.5">
             {STATS.map((s) => (
               <div key={s.k} className="rounded-xl border border-white/[0.07] bg-[#2e2e3b] px-[14px] py-3">
-                <div className="text-xs text-white/45">{t(s.k)}</div>
+                <div className="text-xs text-white/65">{t(s.k)}</div>
                 <div className="mt-1 text-[22px] font-bold tabular-nums" style={{ color: s.c }}>{s.v}</div>
               </div>
             ))}
@@ -227,7 +227,7 @@ export function MockupMobile({ largeur, hauteur }: { largeur: number; hauteur: n
             ([key, actif]) => (
               <div
                 key={key}
-                className={`flex flex-col items-center gap-1 text-[10px] ${actif ? "font-semibold text-[#a78bfa]" : "text-white/45"}`}
+                className={`flex flex-col items-center gap-1 text-[10px] ${actif ? "font-semibold text-[#a78bfa]" : "text-white/65"}`}
               >
                 <span className={`h-5 w-5 rounded-md ${actif ? "bg-[#7c3aed]" : "bg-white/20"}`} />
                 {t(key)}
