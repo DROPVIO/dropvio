@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerUserAndPlan } from "@/lib/supabase-server";
 import { calculerCroissance } from "@/lib/croissance-produit";
 import { erreurServeur } from "@/lib/api-errors";
+import { filtreBorne, lireBorneCatalogue } from "@/lib/catalogue-plafond";
 
 const SUGGESTIONS_LIMIT = 6;
 const CANDIDATE_POOL = 40; // sur-fetch avant exclusion des produits déjà en boutique
@@ -12,7 +13,7 @@ const CANDIDATE_POOL = 40; // sur-fetch avant exclusion des produits déjà en b
 // d'appel Claude — coût inutile pour une simple suggestion de catalogue).
 export async function GET(request: NextRequest, context: { params: Promise<{ id: string }> }) {
   const { id } = await context.params;
-  const { supabase, user } = await getServerUserAndPlan();
+  const { supabase, user, plan } = await getServerUserAndPlan();
   if (!user) {
     return NextResponse.json({ error: "Connectez-vous pour voir les suggestions.", code: "auth_required" }, { status: 401 });
   }
@@ -85,6 +86,15 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
     .order("commandes", { ascending: false })
     .limit(CANDIDATE_POOL);
 
+  // Plafond du catalogue du plan (Pro) : on ne suggère que des produits de son catalogue.
+  if (plan !== null) {
+    try {
+      const borne = await lireBorneCatalogue(supabase, plan);
+      if (borne) candidatsQuery = candidatsQuery.or(filtreBorne(borne));
+    } catch (err) {
+      return erreurServeur("api/boutiques/[id]/suggestions-produits", err);
+    }
+  }
   if (prixMin !== undefined) candidatsQuery = candidatsQuery.gte("prixVente", prixMin);
   if (prixMax !== undefined) candidatsQuery = candidatsQuery.lte("prixVente", prixMax);
 

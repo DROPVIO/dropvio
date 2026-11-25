@@ -1269,7 +1269,7 @@
       "f1": "30 sales page audits / month",
       "f2": "Score out of 100 + fixes ranked by impact",
       "f3": "Download the corrected HTML",
-      "f4": "Full product catalog, no cap",
+      "f4": "Catalog of {catalogueMax} products",
       "f5": "Margin calculator, 10 countries",
       "cta": "Get started",
       "modalNote": "The AI audit is included in the Pro and Agency plans.",
@@ -1334,7 +1334,7 @@
       },
       "features": {
         "pro": [
-          "Full product catalog",
+          "Catalog of {catalogueMax} products",
           "20 generated sites per month, full HTML download and Shopify publishing",
           "30 AI audits per month, on the whole page, with corrected HTML",
           "Stores with up to 200 products: sorting, rewriting and market pricing in one click",
@@ -1343,6 +1343,7 @@
         ],
         "agency": [
           "Everything in Pro",
+          "Full catalog, no cap",
           "30 generated sites per month",
           "42 AI audits per month",
           "A larger AI budget than the Pro plan",
@@ -1400,7 +1401,7 @@
     "faq": {
       "title": "Questions",
       "q1": "What's the difference between Pro and Agency?",
-      "a1": "Pro ({prixPro}/month): full catalog, 20 sites and 30 AI audits per month, stores up to 200 products and {budgetPro} of AI budget. Agency ({prixAgency}/month): everything in Pro, with 30 sites, 42 audits and {budgetAgency} of AI budget per month. Without an active subscription, the tools are no longer accessible, but your account and sites are kept.",
+      "a1": "Pro ({prixPro}/month): catalog of {catalogueMax} products, 20 sites and 30 AI audits per month, stores up to 200 products and {budgetPro} of AI budget. Agency ({prixAgency}/month): everything in Pro, with the full catalog, 30 sites, 42 audits and {budgetAgency} of AI budget per month. Without an active subscription, the tools are no longer accessible, but your account and sites are kept.",
       "q2": "What happens when I hit my plan's limit?",
       "a2": "A clear message tells you which limit you reached: the monthly quota (sites, audits), the monthly AI budget, or the 24-hour or 7-day limit, along with when you can continue. Your usage is visible at any time in settings. Nothing gets blocked without an explanation.",
       "q3": "Does the margin calculator really include taxes?",
@@ -2537,8 +2538,8 @@
       },
       "differences": {
         "q": "What's the difference between Pro and Agency?",
-        "pro": "Pro ({prixPro}/month): full catalog, 20 sites and 30 AI audits per month, stores with up to 200 products, {budgetPro} AI budget per month",
-        "agency": "Agency ({prixAgency}/month): like Pro, with 30 sites, 42 AI audits and a {budgetAgency} AI budget per month",
+        "pro": "Pro ({prixPro}/month): catalog of {catalogueMax} products, 20 sites and 30 AI audits per month, stores with up to 200 products, {budgetPro} AI budget per month",
+        "agency": "Agency ({prixAgency}/month): like Pro, with the full catalog, 30 sites, 42 AI audits and a {budgetAgency} AI budget per month",
         "fin": "Both plans start with a 3-day free trial, card required. Any questions? Write to us at <email>{adresse}</email>."
       },
       "changerPlan": {

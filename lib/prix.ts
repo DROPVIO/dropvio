@@ -1,8 +1,9 @@
 // Prix affichés : formatage dans la langue de l'interface à partir de la source unique
 // (lib/plan-limits.ts, lib/expert-pricing.ts). Aucun montant d'abonnement ne doit être écrit en
 // dur dans un composant ou dans messages/*.json : les messages reçoivent {prixPro},
-// {prixAgency}, {prixExpert}, {budgetPro} ou {budgetAgency} via valeursPrix().
-import { AGENCY_PRICE_EUR, AI_BUDGET_EUR_PAR_PLAN, PRO_PRICE_EUR } from "./plan-limits";
+// {prixAgency}, {prixExpert}, {budgetPro} ou {budgetAgency} via valeursPrix(). Même règle pour la
+// taille du catalogue Pro : {catalogueMax}, jamais écrite en dur.
+import { AGENCY_PRICE_EUR, AI_BUDGET_EUR_PAR_PLAN, CATALOGUE_MAX_PRO, PRO_PRICE_EUR } from "./plan-limits";
 import { EXPERT_BASE_EUR } from "./expert-pricing";
 
 export type PlanPayantAffiche = "pro" | "agency";
@@ -30,5 +31,12 @@ export function valeursPrix(locale: string) {
     prixExpert: formatEuros(EXPERT_BASE_EUR, locale),
     budgetPro: formatEuros(AI_BUDGET_EUR_PAR_PLAN.pro, locale),
     budgetAgency: formatEuros(AI_BUDGET_EUR_PAR_PLAN.agency, locale),
+    catalogueMax: new Intl.NumberFormat(locale).format(CATALOGUE_MAX_PRO),
   };
+}
+
+/** Remplit les {variables} d'un texte lu avec t.raw() (listes de fonctionnalités des plans),
+ *  que next-intl ne formate pas. Une variable inconnue est laissée telle quelle. */
+export function remplirValeurs(texte: string, valeurs: Record<string, string>): string {
+  return texte.replace(/\{(\w+)\}/g, (brut, cle: string) => valeurs[cle] ?? brut);
 }

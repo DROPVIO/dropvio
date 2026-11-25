@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { useLocale, useTranslations } from "next-intl";
-import { PRIX_PLAN_EUR, formatEuros } from "@/lib/prix";
+import { PRIX_PLAN_EUR, formatEuros, valeursPrix } from "@/lib/prix";
 import Link from "next/link";
 
 /* Démonstration de l'audit IA, jouable directement depuis la landing.
@@ -409,7 +409,7 @@ export default function DemoAudit() {
                 {(["f1", "f2", "f3", "f4", "f5"] as const).map((k) => (
                   <li key={k} className="flex items-baseline gap-2.5 text-[15px] leading-[1.4]">
                     <span aria-hidden className="flex-none font-bold text-[#7c3aed]">✓</span>
-                    <span>{t(k)}</span>
+                    <span>{t(k, { catalogueMax: valeursPrix(locale).catalogueMax })}</span>
                   </li>
                 ))}
               </ul>

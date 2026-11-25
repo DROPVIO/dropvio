@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerUserPlanOnly } from "@/lib/supabase-server";
 import { limitesDuPlan } from "@/lib/plan-limits";
+import { filtreBorne, lireBorneCatalogue } from "@/lib/catalogue-plafond";
 import { lirePhotosPrincipales } from "@/lib/catalogue-photos";
 import { COMMANDES_MIN_DEFAUT } from "@/lib/catalogue-commandes";
 import { apiError, reponseAbonnementRequis, erreurServeur } from "@/lib/api-errors";
@@ -32,11 +33,20 @@ export async function GET(request: NextRequest) {
   const from = (page - 1) * limit;
   const to = from + limit - 1;
 
-  const produitsMax = limitesDuPlan(plan).produitsMax; // null = illimité
+  const produitsMax = limitesDuPlan(plan).produitsMax; // null = illimité (Agency/Expert)
   if (produitsMax !== null && from >= produitsMax) {
     return NextResponse.json({ products: [], total: produitsMax, page, limit, totalPages: Math.max(1, Math.ceil(produitsMax / limit)), planLimited: true });
   }
   const cappedTo = produitsMax !== null ? Math.min(to, produitsMax - 1) : to;
+
+  // Plafond du plan (lib/catalogue-plafond.ts) : un ensemble fixe de produits, appliqué avant la
+  // recherche et le filtre de niche pour qu'aucun filtre ne fasse sortir de cet ensemble.
+  let borne;
+  try {
+    borne = await lireBorneCatalogue(supabase, plan);
+  } catch (err) {
+    return erreurServeur("api/catalogue", err);
+  }
 
   let query = supabase
     .from("produits_dedup")
@@ -47,6 +57,7 @@ export async function GET(request: NextRequest) {
   // Même plancher de commandes que Produits gagnants (lib/catalogue-commandes.ts), sur toutes les
   // pages et pour tous les filtres.
   query = query.gte("commandes", COMMANDES_MIN_DEFAUT);
+  if (borne) query = query.or(filtreBorne(borne));
   if (search) query = query.ilike("nom", `%${escapeLike(search)}%`);
   if (niche) query = query.eq("niche", niche);
 
@@ -101,6 +112,6 @@ export async function GET(request: NextRequest) {
     page,
     limit,
     totalPages: Math.max(1, Math.ceil(total / limit)),
-    planLimited: produitsMax !== null && realTotal > produitsMax,
+    planLimited: borne !== null || (produitsMax !== null && realTotal > produitsMax),
   });
 }

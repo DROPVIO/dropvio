@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
-import { PRIX_PLAN_EUR, formatEuros } from "@/lib/prix";
+import { PRIX_PLAN_EUR, formatEuros, remplirValeurs, valeursPrix } from "@/lib/prix";
 import Logo from "@/components/Logo";
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
 import { useApiErrorMessage } from "@/lib/use-api-error";
@@ -263,7 +263,7 @@ export default function AbonnementPage() {
                   <span className="text-sm text-[var(--text-faint)]">{tPrix("perMonth")}</span>
                 </p>
                 <ul className="m-0 mt-5 flex list-none flex-col gap-2 p-0 text-sm text-[var(--text-muted)]">
-                  {(tPrix.raw(`features.${plan}`) as string[]).map((f) => (
+                  {(tPrix.raw(`features.${plan}`) as string[]).map((brut) => remplirValeurs(brut, valeursPrix(locale))).map((f) => (
                     <li key={f} className="flex gap-2">
                       <span aria-hidden className="text-violet-500">✓</span>
                       <span>{f}</span>

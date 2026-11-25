@@ -3,6 +3,7 @@ import { apiError, reponseAbonnementRequis, erreurServeur } from "@/lib/api-erro
 import { getServerUserPlanOnly } from "@/lib/supabase-server";
 import { limitesDuPlan } from "@/lib/plan-limits";
 import { commandesMinEffectif } from "@/lib/catalogue-commandes";
+import { commandesMinRepli, fonctionSansBorne, lireBorneCatalogue, parametresBorne } from "@/lib/catalogue-plafond";
 
 const DEFAULT_LIMIT = 20;
 
@@ -52,9 +53,9 @@ export async function GET(request: NextRequest) {
       return apiError("auth_required", 401, "Connectez-vous pour voir le catalogue.");
     }
     if (plan === null) return reponseAbonnementRequis();
-    const produitsMax = limitesDuPlan(plan).produitsMax; // null = illimité (Pro/Agency)
+    const produitsMax = limitesDuPlan(plan).produitsMax; // null = illimité (Agency/Expert)
 
-    // Sans abonnement : le catalogue accessible est plafonné à produitsMax, quels que soient
+    // Plafond du plan (Pro) : le catalogue accessible est plafonné à produitsMax, quels que soient
     // les filtres. Au-delà, on ne requête même pas — la pagination s'arrête au plafond.
     if (produitsMax !== null && from >= produitsMax) {
       return NextResponse.json({
@@ -90,15 +91,31 @@ export async function GET(request: NextRequest) {
       p_marge_min:     margeMin     ? nombreOuNull(parseInt(margeMin)) : null,
     };
 
-    const [pageRes, totalRes] = await Promise.all([
-      supabase.rpc("produits_rotation", {
-        ...filtres,
-        p_seed: seedRotation(searchParams.get("seed")),
-        p_offset: from,
-        p_limit: cappedTo - from + 1,
-      }),
-      supabase.rpc("produits_rotation_total", filtres),
-    ]);
+    // Plafond du plan (Pro) : ensemble fixe des CATALOGUE_MAX_PRO premiers produits dans l'ordre
+    // de référence (lib/catalogue-plafond.ts). La rotation et les filtres s'appliquent dedans.
+    const borne = await lireBorneCatalogue(supabase, plan);
+    const lire = (avecBorne: boolean) => {
+      const f = !borne
+        ? filtres
+        : avecBorne
+          ? { ...filtres, ...parametresBorne(borne) }
+          : { ...filtres, p_commandes_min: commandesMinRepli(filtres.p_commandes_min, borne) };
+      return Promise.all([
+        supabase.rpc("produits_rotation", {
+          ...f,
+          p_seed: seedRotation(searchParams.get("seed")),
+          p_offset: from,
+          p_limit: cappedTo - from + 1,
+        }),
+        supabase.rpc("produits_rotation_total", f),
+      ]);
+    };
+
+    let [pageRes, totalRes] = await lire(true);
+    if (borne && (fonctionSansBorne(pageRes.error) || fonctionSansBorne(totalRes.error))) {
+      console.error("[produits] migration 070 absente : plafond Pro appliqué en repli (produits au-dessus de la borne seulement)");
+      [pageRes, totalRes] = await lire(false);
+    }
 
     const error = pageRes.error ?? totalRes.error;
     if (error) {
@@ -115,7 +132,7 @@ export async function GET(request: NextRequest) {
       page,
       limit,
       totalPages: Math.max(1, Math.ceil(total / limit)),
-      planLimited: produitsMax !== null && realTotal > produitsMax,
+      planLimited: borne !== null || (produitsMax !== null && realTotal > produitsMax),
     });
   } catch (err) {
     return erreurServeur("api/aliexpress/products", err);

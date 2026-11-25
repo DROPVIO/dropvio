@@ -843,7 +843,7 @@ export default function ParametresModal({
                 {usage.catalogue.max === null ? (
                   <span className="text-[var(--success)]">{t("usage.catalogueFull")}</span>
                 ) : (
-                  <span className="text-[var(--text-muted)]">{t("usage.catalogueLimited", { max: usage.catalogue.max })}</span>
+                  <span className="text-[var(--text-muted)]">{t("usage.catalogueLimited", { max: usage.catalogue.max.toLocaleString(locale) })}</span>
                 )}
               </p>
             </div>

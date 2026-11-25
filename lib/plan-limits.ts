@@ -73,8 +73,13 @@ export type LimitesPlan = {
   alternativesParMoisMax: number | null;
 };
 
+// produitsMax = taille du catalogue accessible (« catalogueMax ») : Pro voit les 15 000 premiers
+// produits dans l'ordre de référence du catalogue (commandes décroissantes, puis id), un ensemble
+// fixe appliqué par le serveur (lib/catalogue-plafond.ts) ; Agency et Expert voient tout.
+export const CATALOGUE_MAX_PRO = 15_000;
+
 export const PLAN_LIMITS: Record<Plan, LimitesPlan> = {
-  pro:    { produitsMax: null, produitsBoutiqueMax: 200, simulationsMax: null, sitesParMoisMax: 20, auditsParMoisMax: 30, alternativesParMoisMax: null },
+  pro:    { produitsMax: CATALOGUE_MAX_PRO, produitsBoutiqueMax: 200, simulationsMax: null, sitesParMoisMax: 20, auditsParMoisMax: 30, alternativesParMoisMax: null },
   // Agency : 30 sites et 42 audits. Point de départ : 2,5 × les 30 audits Pro = 75, arrondi
   // à l'entier inférieur. Coût API maximal du mois (lib/ai-pricing.ts, sortie max_tokens
   // entièrement consommée, entrée estimée à 10 000 tokens par site et 20 000 par audit) :

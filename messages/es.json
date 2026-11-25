@@ -1269,7 +1269,7 @@
       "f1": "30 auditorías de página de venta al mes",
       "f2": "Puntuación sobre 100 + correcciones por impacto",
       "f3": "Descarga del HTML corregido",
-      "f4": "Catálogo de productos completo, sin tope",
+      "f4": "Catálogo de {catalogueMax} productos",
       "f5": "Calculadora de margen, 10 países",
       "cta": "Empezar",
       "modalNote": "La auditoría IA está incluida en los planes Pro y Agency.",
@@ -1334,7 +1334,7 @@
       },
       "features": {
         "pro": [
-          "Catálogo de productos completo",
+          "Catálogo de {catalogueMax} productos",
           "20 sitios generados al mes, descarga HTML completa y publicación en Shopify",
           "30 auditorías de IA al mes, de la página entera, con HTML corregido",
           "Tiendas de hasta 200 productos: orden, reescritura y precios de mercado en un clic",
@@ -1343,6 +1343,7 @@
         ],
         "agency": [
           "Todo el plan Pro",
+          "Catálogo completo, sin tope",
           "30 sitios generados al mes",
           "42 auditorías de IA al mes",
           "Un presupuesto de IA mayor que el del plan Pro",
@@ -1400,7 +1401,7 @@
     "faq": {
       "title": "Preguntas",
       "q1": "¿Qué diferencia hay entre Pro y Agency?",
-      "a1": "Pro ({prixPro}/mes): catálogo completo, 20 sitios y 30 auditorías IA al mes, tiendas de hasta 200 productos y {budgetPro} de presupuesto IA. Agency ({prixAgency}/mes): todo Pro, con 30 sitios, 42 auditorías y {budgetAgency} de presupuesto IA al mes. Sin suscripción activa, las herramientas dejan de estar accesibles, pero tu cuenta y tus sitios se conservan.",
+      "a1": "Pro ({prixPro}/mes): catálogo de {catalogueMax} productos, 20 sitios y 30 auditorías IA al mes, tiendas de hasta 200 productos y {budgetPro} de presupuesto IA. Agency ({prixAgency}/mes): todo Pro, con el catálogo completo, 30 sitios, 42 auditorías y {budgetAgency} de presupuesto IA al mes. Sin suscripción activa, las herramientas dejan de estar accesibles, pero tu cuenta y tus sitios se conservan.",
       "q2": "¿Qué pasa si alcanzo el límite de mi plan?",
       "a2": "Un mensaje claro indica el límite alcanzado: cuota del mes (sitios, auditorías), presupuesto de IA del mes, o límite de 24 horas o de 7 días, con el momento en que podrás continuar. Tu uso está visible en todo momento en los ajustes. Nada se bloquea sin explicación.",
       "q3": "¿La calculadora de margen incluye realmente los impuestos?",
@@ -2537,8 +2538,8 @@
       },
       "differences": {
         "q": "¿Qué diferencia hay entre Pro y Agency?",
-        "pro": "Pro ({prixPro}/mes): catálogo completo, 20 sitios y 30 auditorías de IA al mes, tiendas de hasta 200 productos, {budgetPro} de presupuesto de IA al mes",
-        "agency": "Agency ({prixAgency}/mes): como Pro, con 30 sitios, 42 auditorías de IA y {budgetAgency} de presupuesto de IA al mes",
+        "pro": "Pro ({prixPro}/mes): catálogo de {catalogueMax} productos, 20 sitios y 30 auditorías de IA al mes, tiendas de hasta 200 productos, {budgetPro} de presupuesto de IA al mes",
+        "agency": "Agency ({prixAgency}/mes): como Pro, con el catálogo completo, 30 sitios, 42 auditorías de IA y {budgetAgency} de presupuesto de IA al mes",
         "fin": "Los dos planes empiezan con 3 días de prueba gratuita, tarjeta bancaria obligatoria. ¿Alguna pregunta? Escríbenos a <email>{adresse}</email>."
       },
       "changerPlan": {

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
 import { ExpertCarte } from "@/components/landing/ExpertOffre";
 import { AI_BUDGET_PART_JOUR, AI_BUDGET_PART_SEMAINE, type Plan } from "@/lib/plan-limits";
-import { PRIX_PLAN_EUR, formatEuros, type PlanPayantAffiche } from "@/lib/prix";
+import { PRIX_PLAN_EUR, formatEuros, remplirValeurs, valeursPrix, type PlanPayantAffiche } from "@/lib/prix";
 
 const PLANS: (PlanPayantAffiche & Plan)[] = ["pro", "agency"];
 
@@ -15,6 +15,8 @@ const PLANS: (PlanPayantAffiche & Plan)[] = ["pro", "agency"];
 export default function TarifsSection() {
   const t = useTranslations("landing.pricing");
   const locale = useLocale();
+  // {catalogueMax} (taille du catalogue Pro) vient de lib/plan-limits.ts, jamais écrit en dur.
+  const valeurs = valeursPrix(locale);
 
   return (
     <section
@@ -50,7 +52,7 @@ export default function TarifsSection() {
               </p>
 
               <ul className="m-0 mt-5 flex list-none flex-col gap-2.5 p-0 text-sm leading-[1.45] text-[#333]">
-                {(t.raw(`features.${plan}`) as string[]).map((f) => (
+                {(t.raw(`features.${plan}`) as string[]).map((brut) => remplirValeurs(brut, valeurs)).map((f) => (
                   <li key={f} className="flex gap-2.5">
                     <span aria-hidden className="mt-[3px] text-[#7c3aed]">✓</span>
                     <span>{f}</span>

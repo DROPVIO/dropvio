@@ -34,6 +34,7 @@ const METRIC_KEYS: Record<string, string> = {
 
 export default function UtilisationDetailPage() {
   const t = useTranslations("dashboard");
+  const format = useFormatter();
   const apiErrorMessage = useApiErrorMessage();
   const [usage, setUsage] = useState<UsageData | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -137,7 +138,7 @@ export default function UtilisationDetailPage() {
                     <span className="text-[var(--success)]">{t("utilisation.catalogueFull")}</span>
                   ) : (
                     <span className="text-[var(--text-muted)]">
-                      {t("utilisation.catalogueLimited", { max: usage.catalogue.max })}
+                      {t("utilisation.catalogueLimited", { max: format.number(usage.catalogue.max) })}
                     </span>
                   )}
                 </p>
