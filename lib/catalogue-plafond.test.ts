@@ -144,11 +144,10 @@ describe("plafond du catalogue — application côté serveur", () => {
 });
 
 describe("plafond du catalogue — textes", () => {
-  it("nombre formaté selon la langue, à partir de la constante", () => {
-    assert.equal(valeursPrix("en").catalogueMax, "15,000");
-    assert.equal(valeursPrix("it").catalogueMax, "15.000");
-    assert.equal(valeursPrix("fr").catalogueMax.replace(/\s/g, " "), "15 000");
-    assert.equal(remplirValeurs("Catalogue de {catalogueMax} produits", valeursPrix("en")), "Catalogue de 15,000 produits");
+  it("nombre affiché à partir de la constante", () => {
+    // Même forme que la taille du catalogue complet (« 40K ») : « 15K » dans les 4 langues.
+    for (const langue of ["fr", "en", "es", "it"]) assert.equal(valeursPrix(langue).catalogueMax, "15K", langue);
+    assert.equal(remplirValeurs("Catalogue de {catalogueMax} produits", valeursPrix("en")), "Catalogue de 15K produits");
   });
 
   it("landing, tarifs et FAQ citent {catalogueMax}, jamais le nombre en dur (4 langues)", () => {

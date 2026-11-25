@@ -1,5 +1,6 @@
 "use client";
 
+import { CATALOGUE_TAILLE_AFFICHEE, tailleCatalogueAffichee } from "@/lib/plan-limits";
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -841,9 +842,9 @@ export default function ParametresModal({
               </div>
               <p className="text-xs font-semibold shrink-0">
                 {usage.catalogue.max === null ? (
-                  <span className="text-[var(--success)]">{t("usage.catalogueFull")}</span>
+                  <span className="text-[var(--success)]">{t("usage.catalogueFull", { taille: CATALOGUE_TAILLE_AFFICHEE })}</span>
                 ) : (
-                  <span className="text-[var(--text-muted)]">{t("usage.catalogueLimited", { max: usage.catalogue.max.toLocaleString(locale) })}</span>
+                  <span className="text-[var(--text-muted)]">{t("usage.catalogueLimited", { max: tailleCatalogueAffichee(usage.catalogue.max, locale) })}</span>
                 )}
               </p>
             </div>

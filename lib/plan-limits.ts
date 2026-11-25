@@ -78,6 +78,18 @@ export type LimitesPlan = {
 // fixe appliqué par le serveur (lib/catalogue-plafond.ts) ; Agency et Expert voient tout.
 export const CATALOGUE_MAX_PRO = 15_000;
 
+// Taille du catalogue complet (Agency, Expert) telle qu'affichée dans les textes : variable
+// {taille} des traductions (« Catalogue complet ({taille} produits) »). Valeur arrondie et
+// écrite à la main : 39 975 produits dédoublonnés comptés le 25 novembre 2026. À mettre à jour
+// ici seulement si le catalogue change nettement de taille.
+export const CATALOGUE_TAILLE_AFFICHEE = "40K";
+
+/** Nombre de produits sous la même forme que CATALOGUE_TAILLE_AFFICHEE : 15 000 → « 15K ».
+ *  Un nombre qui n'est pas un multiple de 1 000 reste en chiffres (« 1 234 » selon la langue). */
+export function tailleCatalogueAffichee(nombre: number, locale = "fr"): string {
+  return nombre >= 1_000 && nombre % 1_000 === 0 ? `${nombre / 1_000}K` : new Intl.NumberFormat(locale).format(nombre);
+}
+
 export const PLAN_LIMITS: Record<Plan, LimitesPlan> = {
   pro:    { produitsMax: CATALOGUE_MAX_PRO, produitsBoutiqueMax: 200, simulationsMax: null, sitesParMoisMax: 20, auditsParMoisMax: 30, alternativesParMoisMax: null },
   // Agency : 30 sites et 42 audits. Point de départ : 2,5 × les 30 audits Pro = 75, arrondi

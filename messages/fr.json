@@ -322,7 +322,7 @@
       "catalogueTitle": "Catalogue & boutiques",
       "catalogueLabel": "Produits gagnants accessibles",
       "catalogueCaption": "Nombre de produits consultables dans le catalogue.",
-      "catalogueFull": "Catalogue complet",
+      "catalogueFull": "Catalogue complet ({taille} produits)",
       "catalogueLimited": "{max} premiers produits",
       "noBoutique": "Vous n'avez pas encore de boutique — créez-en une depuis « Mode boutique ».",
       "boutiqueProduits": "Produits de « {nom} »",
@@ -621,7 +621,7 @@
       "catalogueTitle": "Catalogue & boutiques",
       "catalogueLabel": "Produits gagnants accessibles",
       "catalogueCaption": "Nombre de produits consultables dans le catalogue.",
-      "catalogueFull": "Catalogue complet",
+      "catalogueFull": "Catalogue complet ({taille} produits)",
       "catalogueLimited": "{max} premiers produits",
       "noBoutique": "Vous n'avez pas encore de boutique — créez-en une depuis « Mode boutique ».",
       "boutiqueProduits": "Produits de « {nom} »",
@@ -1342,7 +1342,7 @@
         ],
         "agency": [
           "Tout le plan Pro",
-          "Catalogue complet, sans plafond",
+          "Catalogue complet ({taille} produits), sans plafond",
           "30 sites générés par mois",
           "42 audits IA par mois",
           "Un budget IA plus large que le plan Pro",
@@ -1400,7 +1400,7 @@
     "faq": {
       "title": "Questions",
       "q1": "Quelle différence entre Pro et Agency ?",
-      "a1": "Pro ({prixPro}/mois) : catalogue de {catalogueMax} produits, 20 sites et 30 audits IA par mois, boutiques jusqu'à 200 produits et {budgetPro} de budget IA. Agency ({prixAgency}/mois) : tout Pro, avec le catalogue complet, 30 sites, 42 audits et {budgetAgency} de budget IA par mois. Sans abonnement actif, les outils ne sont plus accessibles, mais votre compte et vos sites sont conservés.",
+      "a1": "Pro ({prixPro}/mois) : catalogue de {catalogueMax} produits, 20 sites et 30 audits IA par mois, boutiques jusqu'à 200 produits et {budgetPro} de budget IA. Agency ({prixAgency}/mois) : tout Pro, avec le catalogue complet ({taille} produits), 30 sites, 42 audits et {budgetAgency} de budget IA par mois. Sans abonnement actif, les outils ne sont plus accessibles, mais votre compte et vos sites sont conservés.",
       "q2": "Que se passe-t-il si j'atteins la limite de mon plan ?",
       "a2": "Un message clair indique la limite atteinte : quota du mois (sites, audits), budget IA du mois, ou limite des 24 heures ou des 7 jours, avec le moment où vous pourrez reprendre. Votre utilisation est visible à tout moment dans les paramètres. Rien ne se bloque sans explication.",
       "q3": "Le calculateur de marge inclut vraiment les taxes ?",
@@ -2538,7 +2538,7 @@
       "differences": {
         "q": "Quelle différence entre Pro et Agency ?",
         "pro": "Pro ({prixPro}/mois) : catalogue de {catalogueMax} produits, 20 sites et 30 audits IA par mois, boutiques jusqu'à 200 produits, {budgetPro} de budget IA par mois",
-        "agency": "Agency ({prixAgency}/mois) : comme Pro, avec le catalogue complet, 30 sites, 42 audits IA et {budgetAgency} de budget IA par mois",
+        "agency": "Agency ({prixAgency}/mois) : comme Pro, avec le catalogue complet ({taille} produits), 30 sites, 42 audits IA et {budgetAgency} de budget IA par mois",
         "fin": "Les deux plans commencent par 3 jours d'essai gratuit, carte bancaire requise. Une question ? Écrivez-nous à <email>{adresse}</email>."
       },
       "changerPlan": {

@@ -1,5 +1,6 @@
 "use client";
 
+import { CATALOGUE_TAILLE_AFFICHEE, tailleCatalogueAffichee } from "@/lib/plan-limits";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useFormatter, useTranslations } from "next-intl";
@@ -34,7 +35,6 @@ const METRIC_KEYS: Record<string, string> = {
 
 export default function UtilisationDetailPage() {
   const t = useTranslations("dashboard");
-  const format = useFormatter();
   const apiErrorMessage = useApiErrorMessage();
   const [usage, setUsage] = useState<UsageData | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -135,10 +135,10 @@ export default function UtilisationDetailPage() {
                 </div>
                 <p className="text-xs font-semibold shrink-0">
                   {usage.catalogue.max === null ? (
-                    <span className="text-[var(--success)]">{t("utilisation.catalogueFull")}</span>
+                    <span className="text-[var(--success)]">{t("utilisation.catalogueFull", { taille: CATALOGUE_TAILLE_AFFICHEE })}</span>
                   ) : (
                     <span className="text-[var(--text-muted)]">
-                      {t("utilisation.catalogueLimited", { max: format.number(usage.catalogue.max) })}
+                      {t("utilisation.catalogueLimited", { max: tailleCatalogueAffichee(usage.catalogue.max) })}
                     </span>
                   )}
                 </p>

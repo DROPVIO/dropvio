@@ -1,5 +1,14 @@
 # Rapport de modifications
 
+## 25 novembre — « Catalogue complet (40K produits) » dans les textes
+
+Branche `texte-catalogue-40k` (depuis `catalogue-sans-plancher-commandes`). Constante `CATALOGUE_TAILLE_AFFICHEE = "40K"` (lib/plan-limits.ts), passée aux traductions par la variable {taille} (lib/prix.ts, valeursPrix). Textes modifiés dans les 4 langues : parametres.usage.catalogueFull, dashboard.utilisation.catalogueFull, landing.pricing.features.agency[1], landing.faq.a1, faq.questions.differences.agency. Limite Pro sous la même forme : « 15K » (tailleCatalogueAffichee), dans les tarifs, la FAQ, la fenêtre de l'audit et les compteurs d'utilisation.
+
+### Décisions prises seul
+- « 40K » écrit dans la constante (39 975 produits dédoublonnés comptés le 25 novembre), pas calculé en base : le texte reste stable entre deux imports du catalogue.
+- boutique.accueil.voirCatalogue (« See the full catalog ») exclu : il s'agit du catalogue de la boutique d'un marchand, pas de celui de Dropvio.
+- La limite Pro passe de « 15 000 » / « 15,000 » / « 15.000 » à « 15K » dans les 4 langues, pour la même forme que « 40K ».
+
 ## 25 novembre — Catalogue sans plancher de 100 commandes
 
 Branche `catalogue-sans-plancher-commandes` (depuis `limite-catalogue-pro`). Plus de plancher : tout le catalogue dédoublonné est accessible, ordre commandes décroissantes puis id. Pro : 15 000 premiers produits ; Agency et Expert : tout. Comptage en base (lecture seule) : 39 975 produits dédoublonnés → Pro 15 000, Agency 39 975, Expert 39 975 (borne Pro : 3 commandes, id 1005012133674872 ; 35 894 produits ont moins de 100 commandes, dont 20 020 aucune).

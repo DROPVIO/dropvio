@@ -2,8 +2,9 @@
 // (lib/plan-limits.ts, lib/expert-pricing.ts). Aucun montant d'abonnement ne doit être écrit en
 // dur dans un composant ou dans messages/*.json : les messages reçoivent {prixPro},
 // {prixAgency}, {prixExpert}, {budgetPro} ou {budgetAgency} via valeursPrix(). Même règle pour la
-// taille du catalogue Pro : {catalogueMax}, jamais écrite en dur.
-import { AGENCY_PRICE_EUR, AI_BUDGET_EUR_PAR_PLAN, CATALOGUE_MAX_PRO, PRO_PRICE_EUR } from "./plan-limits";
+// taille du catalogue : {catalogueMax} (Pro, « 15K ») et {taille} (catalogue complet, « 40K »),
+// jamais écrites en dur.
+import { AGENCY_PRICE_EUR, AI_BUDGET_EUR_PAR_PLAN, CATALOGUE_MAX_PRO, CATALOGUE_TAILLE_AFFICHEE, PRO_PRICE_EUR, tailleCatalogueAffichee } from "./plan-limits";
 import { EXPERT_BASE_EUR } from "./expert-pricing";
 
 export type PlanPayantAffiche = "pro" | "agency";
@@ -31,7 +32,8 @@ export function valeursPrix(locale: string) {
     prixExpert: formatEuros(EXPERT_BASE_EUR, locale),
     budgetPro: formatEuros(AI_BUDGET_EUR_PAR_PLAN.pro, locale),
     budgetAgency: formatEuros(AI_BUDGET_EUR_PAR_PLAN.agency, locale),
-    catalogueMax: new Intl.NumberFormat(locale).format(CATALOGUE_MAX_PRO),
+    catalogueMax: tailleCatalogueAffichee(CATALOGUE_MAX_PRO, locale),
+    taille: CATALOGUE_TAILLE_AFFICHEE,
   };
 }
 
