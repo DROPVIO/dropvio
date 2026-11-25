@@ -35,7 +35,8 @@ function melanger<T>(liste: T[], graine: number): T[] {
 }
 
 // 20 000 produits : id numériques de longueurs variées, beaucoup d'ex æquo sur les commandes
-// (paliers de 50) et 1 000 produits sous le plancher de 100 commandes, jamais affichés.
+// (paliers de 50) et 1 000 produits de moins de 100 commandes, dont des produits à 0 commande :
+// sans plancher, ils font partie du catalogue comme les autres.
 const r = aleatoire(42);
 const CATALOGUE = Array.from({ length: 20_000 }, (_, i) => ({
   id: String(100_000_000 + Math.floor(r() * 9e15)).slice(0, 9 + (i % 8)),
@@ -59,11 +60,10 @@ describe("plafond du catalogue — limites par plan", () => {
   it("Pro : exactement 15 000 produits accessibles, les premiers de l'ordre de référence", () => {
     const borne = borneDepuisListe(CATALOGUE, limitesDuPlan("pro").produitsMax);
     assert.ok(borne);
-    const affiches = CATALOGUE.filter((p) => p.commandes >= 100);
-    assert.ok(affiches.length > 15_000);
-    const accessibles = affiches.filter((p) => dansLePlafond(p, borne));
+    assert.ok(CATALOGUE.length > 15_000);
+    const accessibles = CATALOGUE.filter((p) => dansLePlafond(p, borne));
     assert.equal(accessibles.length, 15_000);
-    const premiers = [...affiches].sort(comparerOrdreCatalogue).slice(0, 15_000);
+    const premiers = [...CATALOGUE].sort(comparerOrdreCatalogue).slice(0, 15_000);
     assert.deepEqual(new Set(accessibles.map((p) => p.id)), new Set(premiers.map((p) => p.id)));
   });
 
@@ -78,7 +78,7 @@ describe("plafond du catalogue — limites par plan", () => {
     }
   });
 
-  it("catalogue plus petit que le plafond : pas de borne (cas actuel, 4 081 produits affichés)", () => {
+  it("catalogue plus petit que le plafond : pas de borne", () => {
     assert.equal(borneDepuisListe(CATALOGUE.slice(0, 5_000), 15_000), null);
   });
 });
@@ -118,7 +118,7 @@ describe("plafond du catalogue — application côté serveur", () => {
 
   it("repli sans migration 070 : jamais plus de produits que le plafond", () => {
     const borne = borneDepuisListe(CATALOGUE, 15_000)!;
-    const min = commandesMinRepli(100, borne);
+    const min = commandesMinRepli(null, borne);
     const repli = CATALOGUE.filter((p) => p.commandes >= min);
     assert.ok(repli.length <= 15_000);
     assert.ok(repli.every((p) => dansLePlafond(p, borne)));
@@ -134,7 +134,6 @@ describe("plafond du catalogue — application côté serveur", () => {
       const route = lire(chemin);
       assert.ok(route.includes("lireBorneCatalogue(supabase, plan)") && route.includes("filtreBorne(borne)"), chemin);
     }
-    assert.ok(lire("app/api/catalogue/compte/route.ts").includes('.gte("commandes", COMMANDES_MIN_DEFAUT)'));
   });
 
   it("migration 070 : bornes dans les deux fonctions de rotation", () => {
@@ -159,6 +158,59 @@ describe("plafond du catalogue — textes", () => {
       for (const texte of textes) assert.ok(texte.includes("{catalogueMax}"), `${langue} : ${texte}`);
       assert.doesNotMatch(JSON.stringify(m), /15[ .,  ]?000/, langue);
       assert.ok(m.landing.pricing.features.agency[1].length > 0, langue);
+    }
+  });
+});
+
+describe("catalogue — absence de plancher de commandes", () => {
+  it("les produits peu ou pas commandés comptent dans l'ordre et le plafond", () => {
+    const petit = [
+      { id: "300", commandes: 0 },
+      { id: "100", commandes: 12 },
+      { id: "200", commandes: 99 },
+      { id: "400", commandes: 5_000 },
+    ];
+    assert.deepEqual([...petit].sort(comparerOrdreCatalogue).map((p) => p.id), ["400", "200", "100", "300"]);
+    // Plafond de 3 : la borne tombe sur un produit à 12 commandes, sous l'ancien plancher de 100.
+    assert.deepEqual(borneDepuisListe(petit, 3), { id: "100", commandes: 12 });
+    // Sans plafond, même un produit à 0 commande est accessible.
+    assert.ok(dansLePlafond({ id: "300", commandes: 0 }, borneDepuisListe(petit, null)));
+  });
+
+  it("Agency et Expert : les 20 000 produits, y compris ceux de moins de 100 commandes", () => {
+    const sousCent = CATALOGUE.filter((p) => p.commandes < 100);
+    assert.ok(sousCent.length > 0);
+    for (const plan of ["agency", "expert"] as const) {
+      const borne = borneDepuisListe(CATALOGUE, limitesDuPlan(plan).produitsMax);
+      assert.equal(CATALOGUE.filter((p) => dansLePlafond(p, borne)).length, CATALOGUE.length, plan);
+    }
+  });
+
+  it("aucun plancher dans le code des routes, du plafond et de la page", () => {
+    for (const chemin of [
+      "lib/catalogue-commandes.ts",
+      "lib/catalogue-plafond.ts",
+      "app/api/aliexpress/products/route.ts",
+      "app/api/catalogue/route.ts",
+      "app/api/catalogue/compte/route.ts",
+      "app/produits-gagnants/page.tsx",
+    ]) {
+      const code = lire(chemin);
+      assert.doesNotMatch(code, /COMMANDES_MIN_DEFAUT|commandesMinEffectif|\.gte\("commandes"/, chemin);
+    }
+  });
+
+  it("migration 070 : aucun plancher, filtre de commandes facultatif", () => {
+    const sql = lire("supabase/migrations/070_plafond_catalogue_pro.sql");
+    assert.doesNotMatch(sql, /greatest\(coalesce\(p_commandes_min/);
+    assert.doesNotMatch(sql, /commandes\s*>=\s*100/);
+    assert.equal(sql.match(/\(p_commandes_min is null or d\.commandes\s+>= p_commandes_min\)/g)?.length, 2);
+  });
+
+  it("aucun texte n'annonce le plancher (4 langues)", () => {
+    for (const langue of ["fr", "en", "es", "it"]) {
+      const m = JSON.parse(lire(`messages/${langue}.json`));
+      assert.equal(m.dashboard.produits.ordersMinHint, undefined, langue);
     }
   });
 });

@@ -1,19 +1,23 @@
--- 070 — Plafond du catalogue du plan Pro (15 000 produits), appliqué aussi par les fonctions de
--- rotation de Produits gagnants (app/api/aliexpress/products/route.ts).
+-- 070 — Catalogue sans plancher de commandes, et plafond du plan Pro (15 000 produits), dans les
+-- fonctions de rotation de Produits gagnants (app/api/aliexpress/products/route.ts).
 --
--- Le plafond est un ensemble fixe : les 15 000 premiers produits du catalogue affiché (vue
--- produits_dedup, au moins 100 commandes) dans l'ordre commandes décroissantes, puis id
--- croissant. La route lit le dernier produit autorisé (la « borne », lib/catalogue-plafond.ts) et
--- la passe ici : un produit est gardé s'il a plus de commandes que la borne, ou autant avec un id
--- inférieur ou égal. Les filtres et l'ordre de rotation quotidien s'appliquent à l'intérieur.
--- Borne absente (null) = aucun plafond (Agency, Expert, ou catalogue plus petit que le plafond).
+-- Plus de plancher : la condition de la migration 049 qui imposait au moins 100 commandes, même
+-- sans filtre, est retirée. Tout le catalogue dédoublonné (vue produits_dedup) est lisible ;
+-- p_commandes_min redevient un filtre facultatif, appliqué seulement s'il est fourni.
+--
+-- Plafond Pro : un ensemble fixe, les 15 000 premiers produits du catalogue dédoublonné dans
+-- l'ordre commandes décroissantes, puis id croissant. La route lit le dernier produit autorisé
+-- (la « borne », lib/catalogue-plafond.ts) et la passe ici : un produit est gardé s'il a plus de
+-- commandes que la borne, ou autant avec un id inférieur ou égal. Les filtres et l'ordre de
+-- rotation quotidien s'appliquent à l'intérieur. Borne absente (null) = aucun plafond (Agency,
+-- Expert, ou catalogue plus petit que le plafond).
 --
 -- La comparaison des id garde la collation par défaut de la base, comme le tri de PostgREST qui
 -- sert à lire la borne : les deux rangent les id de la même façon.
 --
 -- Deux paramètres s'ajoutent en fin de signature : les anciennes fonctions sont supprimées
--- (sinon PostgREST verrait deux surcharges pour un même appel). Corps, ordre et droits
--- identiques à 049 et 057 par ailleurs. Prérequis : migrations 047, 049 et 057 appliquées.
+-- (sinon PostgREST verrait deux surcharges pour un même appel). Ordre et droits identiques à 047
+-- et 057. Prérequis : migrations 047, 049 et 057 appliquées.
 
 drop function if exists public.produits_rotation(text, text, numeric, numeric, integer, integer, numeric, integer, integer, integer);
 drop function if exists public.produits_rotation_total(text, numeric, numeric, integer, integer, numeric, integer);
@@ -42,7 +46,7 @@ as $$
   where (p_niche         is null or d.niche       =  p_niche)
     and (p_prix_min      is null or d."prixVente" >= p_prix_min)
     and (p_prix_max      is null or d."prixVente" <= p_prix_max)
-    and d.commandes >= greatest(coalesce(p_commandes_min, 100), 100)
+    and (p_commandes_min is null or d.commandes   >= p_commandes_min)
     and (p_commandes_max is null or d.commandes   <= p_commandes_max)
     and (p_note_min      is null or d.note        >= p_note_min)
     and (p_marge_min     is null or d.marge       >= p_marge_min)
@@ -75,7 +79,7 @@ as $$
   where (p_niche         is null or d.niche       =  p_niche)
     and (p_prix_min      is null or d."prixVente" >= p_prix_min)
     and (p_prix_max      is null or d."prixVente" <= p_prix_max)
-    and d.commandes >= greatest(coalesce(p_commandes_min, 100), 100)
+    and (p_commandes_min is null or d.commandes   >= p_commandes_min)
     and (p_commandes_max is null or d.commandes   <= p_commandes_max)
     and (p_note_min      is null or d.note        >= p_note_min)
     and (p_marge_min     is null or d.marge       >= p_marge_min)

@@ -765,7 +765,6 @@
       "advanced": "Filtros avanzados",
       "ordersMinLabel": "Volumen mínimo de pedidos",
       "ordersMinPlaceholder": "ej.: 200",
-      "ordersMinHint": "Mínimo: {min} pedidos. Los productos con menos pedidos no se muestran.",
       "noteMinLabel": "Valoración mínima",
       "noteAll": "Todas",
       "sweetSpot": "Punto óptimo de saturación",

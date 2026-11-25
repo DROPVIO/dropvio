@@ -3,7 +3,6 @@ import { getServerUserPlanOnly } from "@/lib/supabase-server";
 import { limitesDuPlan } from "@/lib/plan-limits";
 import { filtreBorne, lireBorneCatalogue } from "@/lib/catalogue-plafond";
 import { lirePhotosPrincipales } from "@/lib/catalogue-photos";
-import { COMMANDES_MIN_DEFAUT } from "@/lib/catalogue-commandes";
 import { apiError, reponseAbonnementRequis, erreurServeur } from "@/lib/api-errors";
 
 const DEFAULT_LIMIT = 30;
@@ -54,9 +53,6 @@ export async function GET(request: NextRequest) {
     .order("commandes", { ascending: false, nullsFirst: false })
     .order("id", { ascending: true })
     .range(from, cappedTo);
-  // Même plancher de commandes que Produits gagnants (lib/catalogue-commandes.ts), sur toutes les
-  // pages et pour tous les filtres.
-  query = query.gte("commandes", COMMANDES_MIN_DEFAUT);
   if (borne) query = query.or(filtreBorne(borne));
   if (search) query = query.ilike("nom", `%${escapeLike(search)}%`);
   if (niche) query = query.eq("niche", niche);

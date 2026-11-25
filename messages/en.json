@@ -765,7 +765,6 @@
       "advanced": "Advanced filters",
       "ordersMinLabel": "Minimum order volume",
       "ordersMinPlaceholder": "e.g. 200",
-      "ordersMinHint": "Minimum: {min} orders. Products with fewer orders are not shown.",
       "noteMinLabel": "Minimum rating",
       "noteAll": "All",
       "sweetSpot": "Saturation sweet spot",

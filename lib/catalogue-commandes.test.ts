@@ -1,23 +1,20 @@
-// Plancher de 100 commandes du catalogue : npm test.
-import assert from "node:assert/strict";
+// Filtre « volume de commandes minimum » du catalogue, sans plancher : npm test.
 import { describe, it } from "node:test";
-import { COMMANDES_MIN_DEFAUT, commandesMinEffectif } from "./catalogue-commandes";
+import assert from "node:assert/strict";
+import { commandesMinFiltre } from "./catalogue-commandes";
 
-describe("minimum de commandes", () => {
-  it("le plancher est 100", () => assert.equal(COMMANDES_MIN_DEFAUT, 100));
-  it("requête sans commandesMin → 100", () => {
-    for (const v of [null, undefined, "", "abc"]) assert.equal(commandesMinEffectif(v), 100, String(v));
+describe("filtre de commandes minimum (sans plancher)", () => {
+  it("absent ou illisible → aucun filtre", () => {
+    for (const v of [null, undefined, "", "abc"]) assert.equal(commandesMinFiltre(v), null, String(v));
   });
-  it("commandesMin=50 → 100", () => assert.equal(commandesMinEffectif("50"), 100));
-  it("commandesMin=0 ou négatif → 100", () => {
-    assert.equal(commandesMinEffectif("0"), 100);
-    assert.equal(commandesMinEffectif("-20"), 100);
+  it("0 ou négatif → aucun filtre", () => {
+    assert.equal(commandesMinFiltre("0"), null);
+    assert.equal(commandesMinFiltre("-20"), null);
   });
-  it("commandesMin=100 → 100", () => assert.equal(commandesMinEffectif("100"), 100));
-  it("commandesMin=500 → 500", () => assert.equal(commandesMinEffectif("500"), 500));
-  it("plage « sweet spot » qui commence sous 100 → bas de plage ramené à 100, haut inchangé", () => {
-    const params = new URLSearchParams("commandesMin=20&commandesMax=1000");
-    assert.equal(commandesMinEffectif(params.get("commandesMin")), 100);
-    assert.equal(params.get("commandesMax"), "1000");
+  it("valeur saisie respectée, même sous 100", () => {
+    assert.equal(commandesMinFiltre("1"), 1);
+    assert.equal(commandesMinFiltre("50"), 50);
+    assert.equal(commandesMinFiltre(500), 500);
+    assert.equal(commandesMinFiltre("12.7"), 12);
   });
 });

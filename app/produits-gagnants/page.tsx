@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { COMMANDES_MIN_DEFAUT, commandesMinEffectif } from "@/lib/catalogue-commandes";
+import { commandesMinFiltre } from "@/lib/catalogue-commandes";
 import { useTranslations } from "next-intl";
 import { slugify } from "@/lib/slugify";
 import ProduitsSuggeres from "@/components/ProduitsSuggeres";
@@ -64,8 +64,8 @@ export default function ProduitsGagnants() {
   const [erreur, setErreur] = useState<string | null>(null);
 
   // Bloc 1 — filtres avancés
-  // Jamais sous COMMANDES_MIN_DEFAUT : la route ramène toute valeur plus basse à 100.
-  const [commandesMin, setCommandesMin] = useState<string>(String(COMMANDES_MIN_DEFAUT));
+  // Vide par défaut : aucun plancher, tout le catalogue est affiché.
+  const [commandesMin, setCommandesMin] = useState<string>("");
   const [noteMin, setNoteMin] = useState<number>(0);
 
   // Pagination
@@ -94,7 +94,8 @@ export default function ProduitsGagnants() {
       else if (filtresPrix === "20-50") { params.set("priceMin", "20"); params.set("priceMax", "50"); }
       else if (filtresPrix === "50+") params.set("priceMin", "50");
 
-      params.set("commandesMin", String(commandesMinEffectif(commandesMin)));
+      const minCommandes = commandesMinFiltre(commandesMin);
+      if (minCommandes !== null) params.set("commandesMin", String(minCommandes));
       if (noteMin > 0) params.set("noteMin", String(noteMin));
       if (filtreMarge > 0) params.set("margeMin", String(filtreMarge));
       params.set("page", String(page));
@@ -169,12 +170,12 @@ export default function ProduitsGagnants() {
         : "text-[var(--text-muted)] hover:text-[var(--text-primary)]"
     }`;
 
-  const nbFiltresActifs = [nicheActive !== "all", filtresPrix !== "tous", filtreMarge > 0, commandesMinEffectif(commandesMin) > COMMANDES_MIN_DEFAUT, noteMin > 0].filter(Boolean).length;
+  const nbFiltresActifs = [nicheActive !== "all", filtresPrix !== "tous", filtreMarge > 0, commandesMinFiltre(commandesMin) !== null, noteMin > 0].filter(Boolean).length;
   const effacerFiltres = () => {
     setNicheActive("all");
     setFiltresPrix("tous");
     setFiltreMarge(0);
-    setCommandesMin(String(COMMANDES_MIN_DEFAUT));
+    setCommandesMin("");
     setNoteMin(0);
     setPage(1);
   };
@@ -319,17 +320,15 @@ export default function ProduitsGagnants() {
                 <span className={`${champ} flex items-center gap-2 focus-within:border-[var(--accent)]`}>
                   <input
                     type="number"
-                    min={COMMANDES_MIN_DEFAUT}
+                    min={1}
                     placeholder={t("ordersMinPlaceholder")}
                     value={commandesMin}
-                    aria-describedby="commandes-min-aide"
                     onChange={(e) => { setCommandesMin(e.target.value); setPage(1); }}
-                    onBlur={() => setCommandesMin(String(commandesMinEffectif(commandesMin)))}
+                    onBlur={() => setCommandesMin(String(commandesMinFiltre(commandesMin) ?? ""))}
                     className={`${sansFleches} min-w-0 flex-1 bg-transparent text-[var(--text-primary)] outline-none placeholder:text-[var(--text-faint)]`}
                   />
                   <span className="shrink-0 text-xs text-[var(--text-faint)]">{t("ordersUnit")}</span>
                 </span>
-                <span id="commandes-min-aide" className="text-xs text-[var(--text-faint)]">{t("ordersMinHint", { min: COMMANDES_MIN_DEFAUT })}</span>
               </label>
 
               {/* Note minimum */}

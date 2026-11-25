@@ -1,5 +1,17 @@
 # Rapport de modifications
 
+## 25 novembre — Catalogue sans plancher de 100 commandes
+
+Branche `catalogue-sans-plancher-commandes` (depuis `limite-catalogue-pro`). Plus de plancher : tout le catalogue dédoublonné est accessible, ordre commandes décroissantes puis id. Pro : 15 000 premiers produits ; Agency et Expert : tout. Comptage en base (lecture seule) : 39 975 produits dédoublonnés → Pro 15 000, Agency 39 975, Expert 39 975 (borne Pro : 3 commandes, id 1005012133674872 ; 35 894 produits ont moins de 100 commandes, dont 20 020 aucune).
+
+Plancher retiré de : lib/catalogue-commandes.ts (COMMANDES_MIN_DEFAUT et commandesMinEffectif remplacés par commandesMinFiltre, filtre facultatif), app/api/aliexpress/products/route.ts, app/api/catalogue/route.ts, app/api/catalogue/compte/route.ts, lib/catalogue-plafond.ts (calcul de la borne), app/produits-gagnants/page.tsx (filtre vide par défaut, texte d'aide retiré), migration 070 (les deux fonctions de rotation), textes `dashboard.produits.ordersMinHint` (4 langues).
+
+### Décisions prises seul
+- Migrations 049 et 057 non modifiées : déjà appliquées ; 070 remplace les fonctions de 049, et la fonction de 057 qui portait aussi le plancher (catalogue_free_rafraichir) a été supprimée par 062.
+- Tant que 070 n'est pas appliquée, Produits gagnants garde le plancher en base (fonctions de 049) : 4 081 produits pour tous les plans. La liste Catalogue et le compteur n'en dépendent pas : sans plancher dès le déploiement.
+- Le champ « Volume de commandes minimum » reste un filtre facultatif, vide par défaut ; sa phrase d'aide, qui annonçait le plancher, est retirée dans les 4 langues.
+- lib/catalogue-commandes.test.ts réécrit (tests du filtre sans plancher) au lieu d'être supprimé.
+
 ## 25 novembre — Catalogue du plan Pro plafonné à 15 000 produits
 
 Branche `limite-catalogue-pro`. Comptage en base (lecture seule) : 45 255 lignes dans `produits`, 39 975 dans `produits_dedup`, dont **4 081 affichés** (au moins 100 commandes, 21 niches). Le plafond Pro (15 000) ne retire donc aucun produit aujourd'hui ; il s'appliquera quand le catalogue affiché dépassera 15 000 produits. `produitsMax` (déjà « produits accessibles du catalogue ») passe à `CATALOGUE_MAX_PRO` = 15 000 pour Pro ; Agency et Expert restent à null. Le plafond est un ensemble fixe (lib/catalogue-plafond.ts), appliqué par le serveur à Produits gagnants (RPC de rotation, migration **070** à appliquer), à la liste Catalogue, au compteur et aux suggestions de produits. Textes (4 langues) : tarifs de la landing et de /abonnement, fenêtre de l'audit, FAQ de la landing et page /faq, via `{catalogueMax}`.

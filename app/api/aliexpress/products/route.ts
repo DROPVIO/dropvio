@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { apiError, reponseAbonnementRequis, erreurServeur } from "@/lib/api-errors";
 import { getServerUserPlanOnly } from "@/lib/supabase-server";
 import { limitesDuPlan } from "@/lib/plan-limits";
-import { commandesMinEffectif } from "@/lib/catalogue-commandes";
+import { commandesMinFiltre } from "@/lib/catalogue-commandes";
 import { commandesMinRepli, fonctionSansBorne, lireBorneCatalogue, parametresBorne } from "@/lib/catalogue-plafond";
 
 const DEFAULT_LIMIT = 20;
@@ -84,8 +84,8 @@ export async function GET(request: NextRequest) {
       p_niche:         niche || null,
       p_prix_min:      priceMin     ? nombreOuNull(parseFloat(priceMin)) : null,
       p_prix_max:      priceMax     ? nombreOuNull(parseFloat(priceMax)) : null,
-      // Jamais sous 100 commandes, même sans filtre (lib/catalogue-commandes.ts).
-      p_commandes_min: commandesMinEffectif(commandesMin),
+      // Filtre facultatif, sans plancher (lib/catalogue-commandes.ts).
+      p_commandes_min: commandesMinFiltre(commandesMin),
       p_commandes_max: commandesMax ? nombreOuNull(parseInt(commandesMax)) : null,
       p_note_min:      noteMin      ? nombreOuNull(parseFloat(noteMin)) : null,
       p_marge_min:     margeMin     ? nombreOuNull(parseInt(margeMin)) : null,

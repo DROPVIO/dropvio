@@ -8,14 +8,13 @@
 //
 // Ordre de référence, stable d'une requête à l'autre : commandes décroissantes, puis id
 // croissant (ordre de la liste /api/catalogue, et ancien ordre fixe du catalogue avant la rotation
-// de la migration 047). Il est pris sur le catalogue affiché : vue produits_dedup, produits d'au
-// moins COMMANDES_MIN_DEFAUT commandes. Le dernier produit autorisé (la « borne ») est lu une
+// de la migration 047). Il est pris sur tout le catalogue dédoublonné (vue produits_dedup), sans
+// plancher de commandes. Le dernier produit autorisé (la « borne ») est lu une
 // fois, puis chaque lecture du catalogue garde les produits placés avant ou sur cette borne :
 //   commandes > borne.commandes, ou commandes = borne.commandes et id <= borne.id.
 // Les filtres et l'ordre d'affichage (rotation) s'appliquent ensuite, à l'intérieur de cet ensemble.
 
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { COMMANDES_MIN_DEFAUT } from "./catalogue-commandes";
 import { limitesDuPlan, type PlanOuAucun } from "./plan-limits";
 
 export type BorneCatalogue = { commandes: number; id: string };
@@ -44,7 +43,7 @@ export function dansLePlafond(produit: ProduitOrdonnable, borne: BorneCatalogue 
 /** Borne calculée sur une liste en mémoire (même règle que lireBorneCatalogue côté base). */
 export function borneDepuisListe(produits: ProduitOrdonnable[], max: number | null): BorneCatalogue | null {
   if (max === null) return null;
-  const affiches = produits.filter((p) => (p.commandes ?? -1) >= COMMANDES_MIN_DEFAUT).sort(comparerOrdreCatalogue);
+  const affiches = [...produits].sort(comparerOrdreCatalogue);
   if (affiches.length <= max) return null;
   const derniere = affiches[max - 1];
   return { commandes: derniere.commandes ?? 0, id: derniere.id };
@@ -64,8 +63,8 @@ export function parametresBorne(borne: BorneCatalogue): { p_borne_commandes: num
 /** Repli tant que la migration 070 n'est pas appliquée : on ne garde que les produits qui ont
  *  strictement plus de commandes que la borne. C'est un sous-ensemble du plafond (les ex æquo
  *  de la borne sont exclus) : jamais plus de produits que le plan n'en autorise. */
-export function commandesMinRepli(commandesMin: number, borne: BorneCatalogue): number {
-  return Math.max(commandesMin, borne.commandes + 1);
+export function commandesMinRepli(commandesMin: number | null, borne: BorneCatalogue): number {
+  return Math.max(commandesMin ?? 0, borne.commandes + 1);
 }
 
 /** PostgREST ne trouve pas la fonction avec ces paramètres (migration 070 absente). */
@@ -88,7 +87,6 @@ export async function lireBorneCatalogue(supabase: SupabaseClient, plan: PlanOuA
   const { data, error } = await supabase
     .from("produits_dedup")
     .select("commandes, id")
-    .gte("commandes", COMMANDES_MIN_DEFAUT)
     .order("commandes", { ascending: false, nullsFirst: false })
     .order("id", { ascending: true })
     .range(max - 1, max - 1);
