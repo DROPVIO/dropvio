@@ -1,9 +1,12 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useState } from "react";
 import { useFormatter, useTranslations } from "next-intl";
 import { STATUTS_VENTE, type ActionStatut, type StatutVente, type VenteAffichee } from "@/lib/ventes";
 import { useApiErrorMessage } from "@/lib/use-api-error";
+import { ErreurApi, invaliderCache, lireJson } from "@/lib/cache-client";
+import { useDonneesClient } from "@/components/chargement/useDonneesClient";
+import { IndicateurChargement, Squelette } from "@/components/chargement/IndicateurChargement";
 
 type Reponse = { ventes: VenteAffichee[]; total: number; page: number; totalPages: number };
 
@@ -13,16 +16,22 @@ const BADGE: Record<StatutVente, string> = {
   ignoree: "border-[var(--border)] bg-[var(--surface-2)] text-[var(--text-faint)]",
 };
 
-/** Lecture d'une page de ventes, sans état React : null en cas d'erreur réseau. */
-async function lireVentes(page: number, filtre: StatutVente | null): Promise<{ ok: boolean; json: Reponse | null } | null> {
+/** URL d'une page de ventes : c'est aussi la clé du cache client (lib/cache-client.ts). */
+function urlVentes(page: number, filtre: StatutVente | null): string {
   const params = new URLSearchParams({ page: String(page) });
   if (filtre) params.set("statut", filtre);
-  try {
-    const res = await fetch(`/api/ventes?${params}`);
-    return { ok: res.ok, json: await res.json().catch(() => null) };
-  } catch {
-    return null;
-  }
+  return `/api/ventes?${params}`;
+}
+
+/** Squelette du tableau : cinq lignes à la hauteur d'une vente. */
+function SqueletteVentes() {
+  return (
+    <div className="flex flex-col gap-3 px-4 py-4">
+      {[0, 1, 2, 3, 4].map((i) => (
+        <Squelette key={i} className="h-10 w-full" />
+      ))}
+    </div>
+  );
 }
 
 const BOUTON = "min-h-[36px] whitespace-nowrap rounded-lg border px-3 text-xs font-semibold transition disabled:cursor-not-allowed disabled:opacity-40";
@@ -36,36 +45,42 @@ export default function VentesPage() {
   const apiErrorMessage = useApiErrorMessage();
   const [filtre, setFiltre] = useState<StatutVente | null>(null);
   const [page, setPage] = useState(1);
-  const [donnees, setDonnees] = useState<Reponse | null>(null);
-  const [erreur, setErreur] = useState<string | null>(null);
+  const url = urlVentes(page, filtre);
+  const lecture = useDonneesClient<Reponse>(url, () => lireJson<Reponse>(url));
+  // Changement de page ou de filtre : le tableau précédent reste affiché jusqu'à l'arrivée du
+  // nouveau (aucun indicateur sous 1 s), au lieu d'un écran vide.
+  const [affichees, setAffichees] = useState<Reponse | null>(null);
+  if (lecture.donnees && lecture.donnees !== affichees) setAffichees(lecture.donnees);
+  const donnees = lecture.donnees ?? affichees;
+  const [erreurAction, setErreur] = useState<string | null>(null);
+  const erreurLecture = lecture.erreur
+    ? apiErrorMessage(lecture.erreur instanceof ErreurApi ? lecture.erreur.corps : { code: "network" }, t("erreurChargement"))
+    : null;
+  const erreur = erreurAction ?? erreurLecture;
   const [enCours, setEnCours] = useState<string | null>(null);
 
-  const appliquer = useCallback(
-    (resultat: Awaited<ReturnType<typeof lireVentes>>) => {
-      if (!resultat) return setErreur(apiErrorMessage({ code: "network" }));
-      if (!resultat.ok || !resultat.json) return setErreur(apiErrorMessage(resultat.json, t("erreurChargement")));
-      setErreur(null);
-      setDonnees(resultat.json);
-    },
-    [apiErrorMessage, t]
-  );
-  const charger = useCallback(async () => appliquer(await lireVentes(page, filtre)), [appliquer, page, filtre]);
-
-  useEffect(() => {
-    lireVentes(page, filtre).then(appliquer);
-  }, [page, filtre, appliquer]);
-
+  // Mise à jour optimiste : le statut change tout de suite dans le tableau, la requête part
+  // ensuite ; en cas d'échec, l'ancien statut revient avec un message. Après succès, les
+  // listes sont relues en arrière-plan (filtres et totaux).
   async function changerStatut(id: string, statut: ActionStatut) {
+    setErreur(null);
     setEnCours(id);
+    const precedent = lecture.modifier((d) => ({
+      ...d,
+      ventes: d.ventes.map((v) => (v.id === id ? { ...v, statut, statutChangeLe: new Date().toISOString() } : v)),
+    }));
     try {
       const res = await fetch("/api/ventes", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id, statut }) });
       const json = await res.json().catch(() => null);
       if (!res.ok) {
+        if (precedent) lecture.remettre(precedent);
         setErreur(apiErrorMessage(json, t("erreurStatut")));
         return;
       }
-      await charger();
+      invaliderCache("/api/ventes");
+      void lecture.recharger();
     } catch {
+      if (precedent) lecture.remettre(precedent);
       setErreur(apiErrorMessage({ code: "network" }));
     } finally {
       setEnCours(null);
@@ -114,7 +129,11 @@ export default function VentesPage() {
             </thead>
             <tbody>
               {donnees === null ? (
-                <tr><td colSpan={7} className="px-4 py-10 text-center text-[var(--text-faint)]">{t("chargement")}</td></tr>
+                <tr>
+                  <td colSpan={7} className="p-0">
+                    {lecture.enAttente ? <IndicateurChargement libelle={t("chargement")} squelette={<SqueletteVentes />} /> : null}
+                  </td>
+                </tr>
               ) : donnees.ventes.length === 0 ? (
                 <tr><td colSpan={7} className="px-4 py-10 text-center text-[var(--text-muted)]">{t(filtre ? "videFiltre" : "vide")}</td></tr>
               ) : (

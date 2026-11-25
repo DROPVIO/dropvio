@@ -2923,5 +2923,19 @@
     "emailEnvoye": "Ti abbiamo inviato un'e-mail di conferma a {email}.",
     "conservez": "Conserva questo riferimento.",
     "retour": "Torna all'abbonamento"
+  },
+  "chargement": {
+    "enCours": "Caricamento in corso…",
+    "quelquesSecondes": "Ancora qualche secondo",
+    "restantSecondes": "Ancora circa {secondes} s",
+    "restantMinutes": "Ancora circa {minutes} min",
+    "creation": {
+      "preparation": "Preparazione della richiesta",
+      "redaction": "Scrittura del sito: {caracteres} caratteri scritti",
+      "relance": "Fine della scrittura: {caracteres} caratteri scritti",
+      "gabarits": "Creazione delle pagine prodotto e di acquisto",
+      "termine": "Sito pronto",
+      "libelle": "Avanzamento della creazione del sito"
+    }
   }
 }

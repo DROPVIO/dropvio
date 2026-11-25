@@ -8,6 +8,7 @@ import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
 import { toIntlTag, type AppLocale } from "@/lib/locale";
 import type { User } from "@supabase/supabase-js";
 import { useApiErrorMessage } from "@/lib/use-api-error";
+import { EmplacementGraphique } from "@/components/chargement/IndicateurChargement";
 import {
   SEUIL_TVA,
   SEUIL_TVA_MAJORE,
@@ -161,11 +162,7 @@ const MARGE_BORDER: Record<ReturnType<typeof margeTier>, string> = {
 // rendu serveur n'apporterait rien et créerait un mismatch d'hydratation.
 const MargeBarChart = dynamic(() => import("@/components/tools/MargeBarChart"), {
   ssr: false,
-  loading: () => (
-    <div className="h-[240px] flex items-center justify-center">
-      <div className="w-5 h-5 rounded-full border-2 border-[var(--accent)] border-t-transparent animate-spin" />
-    </div>
-  ),
+  loading: () => <EmplacementGraphique hauteur={240} cadre={false} />,
 });
 
 export default function CalculateurMarge() {

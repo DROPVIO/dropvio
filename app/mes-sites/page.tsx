@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import type { Plan } from "@/lib/plan-limits";
 import { useLocale, useTranslations } from "next-intl";
@@ -13,6 +13,10 @@ import { FORMATS_EXPORT, LABEL_FORMAT, type FormatExport } from "@/lib/format-ex
 import { ToastHost, useToast } from "@/components/Toast";
 import { LIEN_CHANGER_DE_PLAN } from "@/lib/plan-links";
 import { useApiErrorMessage } from "@/lib/use-api-error";
+import { ErreurApi, lireJson } from "@/lib/cache-client";
+import { URL_DONNEES } from "@/lib/donnees-pages";
+import { useDonneesClient } from "@/components/chargement/useDonneesClient";
+import { IndicateurChargement, Squelette } from "@/components/chargement/IndicateurChargement";
 
 type Site = {
   id: string;
@@ -33,19 +37,59 @@ function sortSites(list: Site[]): Site[] {
   });
 }
 
+type ReponseSites = { sites?: Site[]; idsAnnulables?: string[]; formats?: Record<string, FormatExport> };
+
+/** Squelette de la liste : même grille et mêmes cartes (icône, nom, date, rangée de boutons). */
+function SqueletteSites() {
+  return (
+    <div className="flex flex-col">
+      <Squelette className="mb-4 h-3 w-24" />
+      <div className="grid gap-3 sm:grid-cols-2">
+        {[0, 1, 2, 3].map((i) => (
+          <div key={i} className="rounded-2xl bg-[var(--surface)] border border-[var(--border)] p-5 flex flex-col gap-4">
+            <div className="flex items-start gap-3">
+              <Squelette className="h-9 w-9 shrink-0 rounded-xl" />
+              <div className="flex-1 flex flex-col gap-2">
+                <Squelette className="h-4 w-2/3" />
+                <Squelette className="h-3 w-1/2" />
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <Squelette className="h-8 flex-1" />
+              <Squelette className="h-8 flex-1" />
+              <Squelette className="h-8 w-16" />
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default function MesSitesPage() {
   const t = useTranslations("dashboard.mesSites");
   const apiErrorMessage = useApiErrorMessage();
   const tCommon = useTranslations("dashboard.common");
   const intlTag = toIntlTag(useLocale() as AppLocale);
   const { toast, succes, echec, fermer } = useToast();
-  const [sites, setSites] = useState<Site[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  // Sites, corrections annulables et formats d'export : une seule réponse de /api/sites-generes,
+  // gardée dans le cache client (affichée tout de suite au retour sur la page). Les
+  // modifications (favori, format, suppression, annulation) mettent ce cache à jour.
+  const listeSites = useDonneesClient<ReponseSites>(URL_DONNEES.sitesGeneres, () => lireJson<ReponseSites>(URL_DONNEES.sitesGeneres));
+  const sites = useMemo(() => listeSites.donnees?.sites ?? [], [listeSites.donnees]);
+  const loading = listeSites.enAttente;
+  const error = listeSites.erreur
+    ? apiErrorMessage(listeSites.erreur instanceof ErreurApi ? listeSites.erreur.corps : null, t("errorLoad"))
+    : null;
+  const setSites = (f: (prev: Site[]) => Site[]) => listeSites.modifier((d) => ({ ...d, sites: f(d.sites ?? []) }));
   const [downloading, setDownloading] = useState<string | null>(null);
-  const [deleting, setDeleting] = useState<string | null>(null);
 
-  const [shopifyConnected, setShopifyConnected] = useState<boolean | null>(null);
+  const statutShopify = useDonneesClient<{ connected?: boolean }>(URL_DONNEES.shopifyStatus, () => lireJson(URL_DONNEES.shopifyStatus));
+  const shopifyConnected: boolean | null = statutShopify.donnees
+    ? Boolean(statutShopify.donnees.connected)
+    : statutShopify.erreur
+      ? false
+      : null;
   const [shopifyDomainInput, setShopifyDomainInput] = useState("");
   const [pushingId, setPushingId] = useState<string | null>(null);
   const [pushErrors, setPushErrors] = useState<Record<string, string>>({});
@@ -53,47 +97,24 @@ export default function MesSitesPage() {
   // Sans abonnement : téléchargement et publication Shopify réservés à Pro/Agency (voir diagnostic
   // "restriction export Site Builder") — démarre à false (état le plus restrictif) tant que
   // /api/plan n'a pas répondu.
-  const [plan, setPlan] = useState<Plan | null>(null);
+  const plan = useDonneesClient<{ plan?: Plan | null }>(URL_DONNEES.plan, () => lireJson(URL_DONNEES.plan)).donnees?.plan ?? null;
   const canExport = plan === "pro" || plan === "agency" || plan === "expert";
 
   // Sites sur lesquels une correction IA a été appliquée et reste annulable
   // (html_content_precedent non null côté serveur, voir /api/sites-generes). Vide si la
   // migration 035 n'est pas appliquée : le bouton d'annulation ne s'affiche simplement pas.
-  const [idsAnnulables, setIdsAnnulables] = useState<Set<string>>(new Set());
+  const idsAnnulables = useMemo(() => new Set<string>(listeSites.donnees?.idsAnnulables ?? []), [listeSites.donnees]);
   const [undoing, setUndoing] = useState<string | null>(null);
 
   // Format d'export par site (sites_generes.format_export, migration 039). Vide si 039 n'est
   // pas appliquée : chaque site retombe alors sur "html", et le sélecteur reste affiché mais
   // la route PATCH répondra 501 avec la consigne d'appliquer la migration.
-  const [formats, setFormats] = useState<Record<string, FormatExport>>({});
+  const formats = listeSites.donnees?.formats ?? {};
+  const setFormats = (f: (prev: Record<string, FormatExport>) => Record<string, FormatExport>) =>
+    listeSites.modifier((d) => ({ ...d, formats: f(d.formats ?? {}) }));
   const [changingFormat, setChangingFormat] = useState<string | null>(null);
   const formatDe = (id: string): FormatExport => formats[id] ?? "html";
 
-  useEffect(() => {
-    fetch("/api/sites-generes")
-      .then((r) => r.json())
-      .then((json) => {
-        if (json.error) setError(apiErrorMessage(json, t("errorLoad")));
-        else {
-          setSites(json.sites ?? []);
-          setIdsAnnulables(new Set<string>(json.idsAnnulables ?? []));
-          setFormats(json.formats ?? {});
-        }
-      })
-      .catch(() => setError(t("errorLoad")))
-      .finally(() => setLoading(false));
-
-    fetch("/api/shopify/status")
-      .then((r) => r.json())
-      .then((json) => setShopifyConnected(Boolean(json.connected)))
-      .catch(() => setShopifyConnected(false));
-
-    fetch("/api/plan")
-      .then((r) => r.json())
-      .then((json) => setPlan(json.plan ?? null))
-      .catch(() => setPlan(null));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   function handleConnectShopify() {
     const shop = shopifyDomainInput.trim().toLowerCase();
@@ -212,11 +233,7 @@ export default function MesSitesPage() {
         echec(apiErrorMessage(json, t("errorUndoAiFix")));
         return;
       }
-      setIdsAnnulables((prev) => {
-        const next = new Set(prev);
-        next.delete(site.id);
-        return next;
-      });
+      listeSites.modifier((d) => ({ ...d, idsAnnulables: (d.idsAnnulables ?? []).filter((id) => id !== site.id) }));
       succes(t("undoAiFixOk"));
     } catch {
       echec(t("errorServer"));
@@ -225,17 +242,17 @@ export default function MesSitesPage() {
     }
   }
 
+  // Optimiste : le site disparaît de la liste dès la confirmation ; si la suppression échoue,
+  // la liste précédente revient et un message l'explique.
   async function handleDelete(site: Site) {
     if (!confirm(t("confirmDelete", { nom: site.nom_produit }))) return;
-    setDeleting(site.id);
+    const precedent = listeSites.modifier((d) => ({ ...d, sites: (d.sites ?? []).filter((s) => s.id !== site.id) }));
     try {
       const res = await fetch(`/api/sites-generes/${site.id}`, { method: "DELETE" });
       if (!res.ok) throw new Error();
-      setSites((prev) => prev.filter((s) => s.id !== site.id));
     } catch {
+      if (precedent) listeSites.remettre(precedent);
       echec(t("errorDelete"));
-    } finally {
-      setDeleting(null);
     }
   }
 
@@ -303,10 +320,7 @@ export default function MesSitesPage() {
         )}
 
         {loading ? (
-          <div className="flex items-center justify-center py-24 text-[var(--text-faint)] text-sm gap-3">
-            <div className="w-5 h-5 rounded-full border-2 border-[var(--border-strong)] border-t-violet-500 animate-spin" />
-            {tCommon("loading")}
-          </div>
+          <IndicateurChargement libelle={tCommon("loading")} squelette={<SqueletteSites />} />
         ) : error ? (
           <div className="rounded-2xl bg-[var(--danger)]/10 border border-[var(--danger)]/20 px-6 py-8 text-center text-[var(--danger-text)] text-sm">
             {error}
@@ -495,10 +509,10 @@ export default function MesSitesPage() {
 
                   <button
                     onClick={() => handleDelete(site)}
-                    disabled={deleting === site.id}
+
                     className="text-xs text-[var(--text-faint)] hover:text-[var(--danger-text)] transition disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    {deleting === site.id ? t("deleting") : t("delete")}
+                    {t("delete")}
                   </button>
                 </div>
               ))}

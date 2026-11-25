@@ -1,5 +1,6 @@
 "use client";
 
+import { viderCache } from "@/lib/cache-client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -146,6 +147,7 @@ export default function AbonnementPage() {
 
   const seDeconnecter = async () => {
     await createSupabaseBrowserClient().auth.signOut();
+    viderCache();
     router.replace("/login");
   };
 

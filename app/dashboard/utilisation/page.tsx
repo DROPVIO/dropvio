@@ -1,10 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useFormatter, useTranslations } from "next-intl";
 import { UsageMeter } from "@/components/UsageMeter";
 import { useApiErrorMessage } from "@/lib/use-api-error";
+import { ErreurApi, lireJson } from "@/lib/cache-client";
+import { URL_DONNEES } from "@/lib/donnees-pages";
+import { useDonneesClient } from "@/components/chargement/useDonneesClient";
+import { IndicateurChargement, Squelette } from "@/components/chargement/IndicateurChargement";
 
 // informatif : compteur affiché sans plafond (sites des plans Pro et Agency, limités par le budget IA).
 type UsageMetric = { key: string; label: string; used: number; max: number | null; informatif?: boolean };
@@ -32,28 +35,35 @@ const METRIC_KEYS: Record<string, string> = {
   simulations_marge: "metricSimulationsMarge",
 };
 
+/** Squelette : les mêmes blocs que la page (mois en cours, budgets, total, catalogue). */
+function SqueletteUtilisation() {
+  return (
+    <div className="flex flex-col gap-8">
+      {[2, 2, 1, 1].map((lignes, i) => (
+        <div key={i} className="rounded-2xl border border-[var(--border)] bg-[var(--surface-2)] p-6 flex flex-col gap-3">
+          <Squelette className="h-3 w-28" />
+          {Array.from({ length: lignes }, (_, j) => (
+            <Squelette key={j} className="h-[68px] w-full rounded-xl" />
+          ))}
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export default function UtilisationDetailPage() {
   const t = useTranslations("dashboard");
   const format = useFormatter();
   const apiErrorMessage = useApiErrorMessage();
-  const [usage, setUsage] = useState<UsageData | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    fetch("/api/usage")
-      .then(async (res) => {
-        const json = await res.json();
-        if (!res.ok) {
-          setError(apiErrorMessage(json, t("utilisation.errorLoad")));
-          return;
-        }
-        setUsage(json);
-      })
-      .catch(() => setError(t("utilisation.errorServer")))
-      .finally(() => setLoading(false));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  // Lu dans le cache client : affiché tout de suite au retour sur la page.
+  const lecture = useDonneesClient<UsageData>(URL_DONNEES.usage, () => lireJson<UsageData>(URL_DONNEES.usage));
+  const usage = lecture.donnees ?? null;
+  const loading = lecture.enAttente;
+  const error = lecture.erreur
+    ? lecture.erreur instanceof ErreurApi
+      ? apiErrorMessage(lecture.erreur.corps, t("utilisation.errorLoad"))
+      : t("utilisation.errorServer")
+    : null;
 
   const metricLabel = (key: string, fallback: string) =>
     METRIC_KEYS[key] ? t(`utilisation.${METRIC_KEYS[key]}`) : fallback;
@@ -72,7 +82,7 @@ export default function UtilisationDetailPage() {
         </div>
 
         {loading ? (
-          <p className="text-[var(--text-faint)] text-sm text-center py-12">{t("common.loading")}</p>
+          <IndicateurChargement libelle={t("common.loading")} squelette={<SqueletteUtilisation />} />
         ) : error ? (
           <div className="rounded-xl bg-[var(--danger)]/10 border border-[var(--danger)]/20 px-4 py-3 text-[var(--danger-text)] text-sm">{error}</div>
         ) : usage ? (

@@ -1,5 +1,7 @@
 "use client";
 
+import { invaliderCache } from "@/lib/cache-client";
+import { URL_DONNEES } from "@/lib/donnees-pages";
 import MentionIa from "@/components/MentionIa";
 
 import { useState, useRef, useCallback, useEffect } from "react";
@@ -253,6 +255,7 @@ export default function AuditPage() {
         return;
       }
       setAppliedAt(new Date().toISOString());
+      invaliderCache(URL_DONNEES.sitesGeneres);
       succes(t("siteMisAJour"), { label: t("annuler"), onClick: () => void undoApplyToSite() });
     } catch {
       echec(t("erreurs.reseauAppliquer"));
@@ -276,6 +279,7 @@ export default function AuditPage() {
         return;
       }
       setAppliedAt(null);
+      invaliderCache(URL_DONNEES.sitesGeneres);
       succes(t("correctionAnnulee"));
     } catch {
       echec(t("erreurs.reseauAnnuler"));

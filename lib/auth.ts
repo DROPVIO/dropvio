@@ -1,4 +1,5 @@
 import { createSupabaseBrowserClient } from "./supabase-browser";
+import { viderCache } from "./cache-client";
 
 export async function getCurrentUser() {
   const supabase = createSupabaseBrowserClient();
@@ -9,4 +10,6 @@ export async function getCurrentUser() {
 export async function signOut() {
   const supabase = createSupabaseBrowserClient();
   await supabase.auth.signOut();
+  // Données lues par le compte (cache client) : jamais visibles par le compte suivant.
+  viderCache();
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
@@ -9,6 +9,10 @@ import { useLibelleModele } from "@/components/expert/useLibelleModele";
 import { UsageMeter } from "@/components/UsageMeter";
 import { expertRechargePrice, type ExpertModel, type ExpertSelection } from "@/lib/expert-pricing";
 import { toIntlTag, type AppLocale } from "@/lib/locale";
+import { lireJson } from "@/lib/cache-client";
+import { URL_DONNEES } from "@/lib/donnees-pages";
+import { useDonneesClient } from "@/components/chargement/useDonneesClient";
+import { IndicateurChargement, Squelette } from "@/components/chargement/IndicateurChargement";
 import ConsentementAchat, { CONSENTEMENT_VIDE, consentementDonne, corpsConsentement, type EtatConsentement } from "@/components/ConsentementAchat";
 
 type QuotaData = {
@@ -30,6 +34,35 @@ const TITRE = "text-[11px] font-semibold text-[var(--text-faint)] uppercase trac
 const LABEL_TYPE = { site: "sites", image: "images" } as const;
 
 
+/** Squelette : carte de configuration (4 valeurs), carte d'utilisation (2 compteurs) et carte
+ *  de recharge, aux mêmes dimensions que la page. */
+function SqueletteQuota() {
+  return (
+    <div className="flex flex-col gap-6">
+      <div className={CARTE}>
+        <Squelette className="h-3 w-32" />
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+          {[0, 1, 2, 3].map((i) => (
+            <div key={i} className="flex flex-col gap-2">
+              <Squelette className="h-3 w-16" />
+              <Squelette className="h-5 w-20" />
+            </div>
+          ))}
+        </div>
+      </div>
+      <div className={CARTE}>
+        <Squelette className="h-3 w-28" />
+        <Squelette className="h-[68px] w-full rounded-xl" />
+        <Squelette className="h-[68px] w-full rounded-xl" />
+      </div>
+      <div className={CARTE}>
+        <Squelette className="h-3 w-36" />
+        <Squelette className="h-40 w-full rounded-xl" />
+      </div>
+    </div>
+  );
+}
+
 function QuotaContenu() {
   const t = useTranslations("quota");
   const tResiliation = useTranslations("resiliation");
@@ -38,22 +71,17 @@ function QuotaContenu() {
   const locale = useLocale() as AppLocale;
   const paiementRecu = useSearchParams().get("recharge") === "success";
 
-  const [data, setData] = useState<QuotaData | null>(null);
-  const [chargement, setChargement] = useState(true);
-  const [erreur, setErreur] = useState<string | null>(null);
+  // Quota lu dans le cache client : affiché tout de suite au retour sur la page.
+  const lecture = useDonneesClient<QuotaData>(URL_DONNEES.quotaExpert, () => lireJson<QuotaData>(URL_DONNEES.quotaExpert));
+  const data = lecture.donnees ?? null;
+  const chargement = lecture.enAttente;
+  // Erreurs des paiements (recharge, abonnement) ; l'erreur de lecture vient du cache.
+  const [erreurAction, setErreur] = useState<string | null>(null);
+  const erreur = erreurAction ?? (lecture.erreur ? t("loadError") : null);
   const [selection, setSelection] = useState<ExpertSelection>({ model: "opus-5-5", sites: 0, images: 0 });
   const [consentement, setConsentement] = useState<EtatConsentement>(CONSENTEMENT_VIDE);
   const [redirection, setRedirection] = useState(false);
 
-  useEffect(() => {
-    fetch("/api/expert/quota")
-      .then(async (res) => {
-        if (!res.ok) throw new Error();
-        setData(await res.json());
-      })
-      .catch(() => setErreur(t("loadError")))
-      .finally(() => setChargement(false));
-  }, [t]);
 
   async function versStripe(url: string, body: object, messageErreur: string) {
     setErreur(null);
@@ -92,7 +120,7 @@ function QuotaContenu() {
         )}
 
         {chargement ? (
-          <p className="text-[var(--text-faint)] text-sm text-center py-12">{t("loading")}</p>
+          <IndicateurChargement libelle={t("loading")} squelette={<SqueletteQuota />} />
         ) : periode ? (
           <>
             <section className={CARTE}>

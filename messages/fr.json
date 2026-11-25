@@ -2923,5 +2923,19 @@
     "emailEnvoye": "Un e-mail de confirmation vous a été envoyé à {email}.",
     "conservez": "Conservez cette référence.",
     "retour": "Retour à l'abonnement"
+  },
+  "chargement": {
+    "enCours": "Chargement en cours…",
+    "quelquesSecondes": "Encore quelques secondes",
+    "restantSecondes": "Encore environ {secondes} s",
+    "restantMinutes": "Encore environ {minutes} min",
+    "creation": {
+      "preparation": "Préparation de la demande",
+      "redaction": "Rédaction du site : {caracteres} caractères écrits",
+      "relance": "Fin de la rédaction : {caracteres} caractères écrits",
+      "gabarits": "Création des pages produit et d'achat",
+      "termine": "Site terminé",
+      "libelle": "Avancement de la création du site"
+    }
   }
 }

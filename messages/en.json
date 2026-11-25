@@ -2923,5 +2923,19 @@
     "emailEnvoye": "A confirmation e-mail has been sent to {email}.",
     "conservez": "Keep this reference.",
     "retour": "Back to subscription"
+  },
+  "chargement": {
+    "enCours": "Loading…",
+    "quelquesSecondes": "A few more seconds",
+    "restantSecondes": "About {secondes} s left",
+    "restantMinutes": "About {minutes} min left",
+    "creation": {
+      "preparation": "Preparing the request",
+      "redaction": "Writing the site: {caracteres} characters written",
+      "relance": "Finishing the site: {caracteres} characters written",
+      "gabarits": "Creating the product and checkout pages",
+      "termine": "Site ready",
+      "libelle": "Site creation progress"
+    }
   }
 }

@@ -1,6 +1,9 @@
 "use client";
 
 import MentionIa from "@/components/MentionIa";
+import ProgressionCreation from "@/components/site-builder/ProgressionCreation";
+import { invaliderCache } from "@/lib/cache-client";
+import { URL_DONNEES } from "@/lib/donnees-pages";
 
 import { useState, useEffect, useRef, Suspense } from "react";
 import Link from "next/link";
@@ -124,6 +127,7 @@ function SiteBuilderContent() {
   const [description, setDescription] = useState(searchParams.get("description") ?? "");
   const [imageUrl, setImageUrl] = useState(searchParams.get("image") ?? "");
   const [reformulatingNom, setReformulatingNom] = useState(false);
+  const [suiviGeneration, setSuiviGeneration] = useState<string | null>(null);
   const [generatingDescription, setGeneratingDescription] = useState(false);
   const [texteIaError, setTexteIaError] = useState<string | null>(null);
   // Nom ou description rempli par l'IA : mention « Contenu généré par IA » sous le champ.
@@ -509,6 +513,10 @@ function SiteBuilderContent() {
       return;
     }
     const isAuto = !boutiqueDraft && (withAutoMode || autoMode);
+    // Identifiant de suivi : la route écrit l'avancement réel sous cet id, l'écran de
+    // génération l'interroge (components/site-builder/ProgressionCreation.tsx).
+    const suiviId = crypto.randomUUID();
+    setSuiviGeneration(suiviId);
     setStep(2);
     setError(null);
     setImagesAvertissement(null);
@@ -564,7 +572,7 @@ function SiteBuilderContent() {
         const res = await fetch("/api/generate-site", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
+          body: JSON.stringify({ ...payload, suiviId }),
         });
         return { res, json: await res.json() };
       };
@@ -664,6 +672,8 @@ function SiteBuilderContent() {
           // Publier sur Shopify (route /api/sites-generes/[id]/shopify-push) a besoin de
           // cet id — sans sauvegarde réussie, il n'y a rien à publier.
           setSavedSiteId(data.id ?? null);
+          // « Mes sites » relira sa liste (cache client) pour montrer ce nouveau site.
+          invaliderCache(URL_DONNEES.sitesGeneres);
           // Images générées avec ce site : rattachées à lui dans la médiathèque (migration 050).
           if (data.id && imagesReussies.length > 0) {
             fetch("/api/media/rattacher-site", {
@@ -1380,16 +1390,13 @@ function SiteBuilderContent() {
         {/* Step 2: Loading */}
         {step === 2 && (
           <div className="rounded-2xl bg-[var(--surface)] border border-[var(--border)] p-16 flex flex-col items-center gap-6 text-center">
-            <div className="relative">
-              <div className="w-16 h-16 rounded-full border-2 border-violet-500/20 border-t-violet-500 animate-spin" />
-              <div className="absolute inset-0 flex items-center justify-center">
-                <span className="text-2xl">✨</span>
-              </div>
-            </div>
             <div className="flex flex-col gap-2">
               <p className="text-[var(--text-primary)] font-semibold">{t("generation.titre")}</p>
               <p className="text-[var(--text-faint)] text-sm">{t("generation.aide")}</p>
             </div>
+            {/* Avancement réel (sondage toutes les 1,5 s) : rien avant 1 s, squelette jusqu'à
+                10 s, puis barre de progression et temps restant. */}
+            {suiviGeneration ? <ProgressionCreation key={suiviGeneration} suiviId={suiviGeneration} /> : null}
           </div>
         )}
 

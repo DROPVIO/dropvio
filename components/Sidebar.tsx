@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { prechargerDonneesPage } from "@/lib/donnees-pages";
 import { usePathname, useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
@@ -219,7 +220,17 @@ function NavGroupe({
               <span className="text-[9px] font-bold bg-[var(--surface-2)] border border-[var(--border)] text-[var(--text-faint)] px-1.5 py-0.5 rounded-full">{t("soon")}</span>
             </span>
           ) : (
-            <Link href={enfant.href} onClick={onNavigate} aria-current={estActif ? "page" : undefined} className={`dv-nav-entree ${cls}`}>
+            <Link
+              href={enfant.href}
+              // Préchargement complet de la route (code et rendu serveur), plus ses données au
+              // survol ou au focus (lib/donnees-pages.ts) : changement de page sous 1 s.
+              prefetch={true}
+              onMouseEnter={() => prechargerDonneesPage(enfant.href)}
+              onFocus={() => prechargerDonneesPage(enfant.href)}
+              onClick={onNavigate}
+              aria-current={estActif ? "page" : undefined}
+              className={`dv-nav-entree ${cls}`}
+            >
               {estActif && !dansVolant && <span className="absolute -left-[9px] top-1/2 -translate-y-1/2 w-0.5 h-5 bg-[var(--accent)] rounded-r-full" />}
               <span className="flex-1 whitespace-nowrap">{libelle}</span>
             </Link>
@@ -510,6 +521,10 @@ export default function Sidebar({
               <Link
                 key={href}
                 href={href}
+                // Préchargement complet de la route, plus ses données au survol ou au focus.
+                prefetch={true}
+                onMouseEnter={() => prechargerDonneesPage(href)}
+                onFocus={() => prechargerDonneesPage(href)}
                 onClick={onCloseMobile}
                 title={collapsed ? label : undefined}
                 data-onboarding-target={onboardingTarget}

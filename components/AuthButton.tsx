@@ -1,5 +1,6 @@
 "use client";
 
+import { viderCache } from "@/lib/cache-client";
 import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
@@ -36,6 +37,7 @@ export default function AuthButton() {
     try {
       const supabase = createSupabaseBrowserClient();
       const { error } = await supabase.auth.signOut();
+      viderCache();
       // Best-effort assumé (on redirige vers /login quoi qu'il arrive, rester sur une page
       // protégée avec un bouton bloqué serait pire) mais l'échec ne doit plus être invisible.
       if (error) console.error("[auth] Échec de la déconnexion :", error.message);

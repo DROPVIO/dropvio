@@ -2923,5 +2923,19 @@
     "emailEnvoye": "Te hemos enviado un correo de confirmación a {email}.",
     "conservez": "Guarda esta referencia.",
     "retour": "Volver a la suscripción"
+  },
+  "chargement": {
+    "enCours": "Cargando…",
+    "quelquesSecondes": "Unos segundos más",
+    "restantSecondes": "Quedan unos {secondes} s",
+    "restantMinutes": "Quedan unos {minutes} min",
+    "creation": {
+      "preparation": "Preparando la solicitud",
+      "redaction": "Redactando el sitio: {caracteres} caracteres escritos",
+      "relance": "Terminando la redacción: {caracteres} caracteres escritos",
+      "gabarits": "Creando las páginas de producto y de compra",
+      "termine": "Sitio terminado",
+      "libelle": "Progreso de la creación del sitio"
+    }
   }
 }

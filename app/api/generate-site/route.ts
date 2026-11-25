@@ -8,6 +8,7 @@ import { planLabel, type PlanOuAucun, limitesDuPlan } from "@/lib/plan-limits";
 import { reponseLimiteIa, SuiviBudgetIa, tokensEstimes } from "@/lib/ai-budget";
 import { EXPERT_MODELS } from "@/lib/expert-pricing";
 import { finaliserSiteExpert, reserverSiteExpert, type ReservationSite } from "@/lib/expert-generation";
+import { SuiviProgressionSite, idSuiviValide } from "@/lib/progression-site";
 import { createSupabaseAdminClient } from "@/lib/supabase-admin";
 import { apiError } from "@/lib/api-errors";
 import { contexteSite, langueSite, prixSite, type SiteCtx } from "@/lib/site-textes";
@@ -134,7 +135,14 @@ type ResultatGeneration = {
 // Renvoie aussi la consommation cumulée de tokens. Le budget IA est vérifié avant CHAQUE appel
 // (la relance coûte autant que le premier appel) et chaque réponse est ajoutée au suivi, que
 // l'appelant enregistre même si la génération échoue ensuite (HTML tronqué).
-async function generateHtmlViaClaude(prompt: string, suivi: SuiviBudgetIa, config: ConfigGeneration): Promise<ResultatGeneration> {
+// progression : avancement réel (étape, caractères reçus) écrit pour le Site Builder, qui
+// l'interroge pendant la génération (lib/progression-site.ts). Sans effet sur la génération.
+async function generateHtmlViaClaude(
+  prompt: string,
+  suivi: SuiviBudgetIa,
+  config: ConfigGeneration,
+  progression?: SuiviProgressionSite
+): Promise<ResultatGeneration> {
   const msgs: Anthropic.MessageParam[] = [{ role: "user", content: prompt }];
   let texteEnvoye = prompt;
   let html = "";
@@ -147,6 +155,7 @@ async function generateHtmlViaClaude(prompt: string, suivi: SuiviBudgetIa, confi
     await suivi.verifier(suivi.estimer(entreeEstimee, config.maxTokens));
     // Durée de chaque appel, pour les logs : une génération longue se diagnostique appel par appel.
     const debutAppel = Date.now();
+    void progression?.etape(attempt === 0 ? "redaction" : "relance", attempt + 1);
     const stream = client.messages.stream({
       model: config.model,
       max_tokens: config.maxTokens,
@@ -161,6 +170,7 @@ async function generateHtmlViaClaude(prompt: string, suivi: SuiviBudgetIa, confi
     let chunk = "";
     stream.on("text", (text) => {
       chunk += text;
+      progression?.progres(html.length + chunk.length);
     });
 
     const finalMessage = await stream.finalMessage();
@@ -520,8 +530,12 @@ export async function POST(request: NextRequest) {
   // Mode boutique (plusieurs produits, voir app/site-builder/{page.tsx,TemplateEditor.tsx})
   // — payload distingué par la présence d'un tableau produits, branché ici avant la
   // validation productName/description (propre au mode produit unique, inchangée ci-dessous).
+  // Suivi de progression (facultatif : sans suiviId valide, rien n'est écrit).
+  const progression = new SuiviProgressionSite(createSupabaseAdminClient(), user.id, idSuiviValide(body.suiviId));
+  void progression.demarrer();
+
   if (Array.isArray(body.produits)) {
-    return handleGenerateBoutique(body, supabase, user.id, plan);
+    return handleGenerateBoutique(body, supabase, user.id, plan, progression);
   }
 
   const { productName, description, colorPrimary, colorSecondary, colorAccent, style, imageUrl, rating, salePrice, originalPrice, corrections } = body;
@@ -706,7 +720,7 @@ Réponds UNIQUEMENT avec le code HTML, sans explication ni balise markdown.`;
 
   const suivi = new SuiviBudgetIa(supabase, user.id, plan, "site_builder", { fenetres: true, horsBudget: reservation !== null });
   try {
-    const resultat = await generateHtmlViaClaude(prompt, suivi, configGeneration(reservation));
+    const resultat = await generateHtmlViaClaude(prompt, suivi, configGeneration(reservation), progression);
     const html = injectColorTokens(resultat.html, colorTokens);
     // Pages légales vierges (mentions légales, CGV, confidentialité) à côté de la page : le
     // site devient multi-pages ; html reste la page d'accueil. Page non découpable : seule.
@@ -744,6 +758,7 @@ Réponds UNIQUEMENT avec le code HTML, sans explication ni balise markdown.`;
     // Génération en échec : le coût est rendu (rien n'est décompté du budget du mois).
     if (!reussie) suivi.abandonner();
     if (reservation) await finaliserSiteExpert(admin, reservation, reussie, suivi.tokensReels);
+    void progression.terminer(reussie);
   }
 }
 
@@ -776,7 +791,8 @@ async function handleGenerateBoutique(
   // comptée sur le même compteur que celle du mode produit unique.
   supabase: SupabaseClient,
   userId: string,
-  plan: PlanOuAucun
+  plan: PlanOuAucun,
+  progression: SuiviProgressionSite
 ): Promise<NextResponse> {
   const { nomBoutique, descriptionBoutique, produits, colorPrimary, colorSecondary, colorAccent, style } = body;
   const promptUtilisateur = promptUtilisateurDe(body);
@@ -923,7 +939,7 @@ Réponds UNIQUEMENT avec le code HTML, sans explication ni balise markdown.`;
 
   const suivi = new SuiviBudgetIa(supabase, userId, plan, "site_builder", { fenetres: true, horsBudget: reservation !== null });
   try {
-    const resultat = await generateHtmlViaClaude(prompt, suivi, config);
+    const resultat = await generateHtmlViaClaude(prompt, suivi, config, progression);
     const htmlWithTokens = injectColorTokens(resultat.html, colorTokens);
     const categories = categoriesValides(body.categories);
     const { html: accueilSeul, retraits } = nettoyerCoquilleAccueil(htmlWithTokens);
@@ -935,6 +951,7 @@ Réponds UNIQUEMENT avec le code HTML, sans explication ni balise markdown.`;
     // html = l'accueil (sauvegardé dans html_content), pages = toutes les pages du site.
     // Mentions légales absentes ou illisibles : page vierge.
     // Page produit et page d'achat au design du site (deuxième appel, repli intégré).
+    void progression.etape("gabarits");
     const gabarits = await genererGabarits(client, config.model, ctx, accueilSeul, suivi);
     const pages = pagesBoutique(ctx, accueilSeul, produits, "var(--site-accent)", categories, gabarits, { mentionsLegales });
     // Génération réussie (les deux appels) : tokens réellement consommés décomptés en une fois.
@@ -970,5 +987,6 @@ Réponds UNIQUEMENT avec le code HTML, sans explication ni balise markdown.`;
     // Génération en échec : le coût est rendu (rien n'est décompté du budget du mois).
     if (!reussie) suivi.abandonner();
     if (reservation) await finaliserSiteExpert(admin, reservation, reussie, suivi.tokensReels);
+    void progression.terminer(reussie);
   }
 }

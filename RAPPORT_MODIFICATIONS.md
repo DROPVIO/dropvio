@@ -1,5 +1,15 @@
 # Rapport de modifications
 
+## 25 novembre — Vitesse perçue : squelettes, progression, mise à jour optimiste, préchargement
+
+Branche `chargement-pages` (depuis `survol-sidebar`). Seuils (lib/chargement.ts) : 0–1 s rien (contenu en cache affiché, sinon écran précédent) ; 1–10 s squelette pulsé aux dimensions du contenu ; au-delà, barre de progression + temps restant ou « encore quelques secondes », mise à jour toutes les 500 ms. Pages : Mes sites, Utilisation, Quota, Ventes, emplacements de graphiques du tableau de bord et du calculateur, écran de génération du Site Builder. Création de site : avancement réel écrit par la route (étape, caractères reçus de l'IA) dans la table de la migration **071** (à appliquer), lu par GET /api/generate-site/progression toutes les 1,5 s. Mise à jour optimiste : suppression d'un site, statut d'une vente (favori et format l'étaient déjà). Préchargement : prefetch complet des liens de la barre latérale + données de la page au survol/focus ; cache client des données (60 s sans relecture, puis relecture en arrière-plan), vidé à la déconnexion.
+
+### Décisions prises seul
+- Progression réelle via une table plutôt qu'un état en mémoire : sur Vercel, la requête d'état peut arriver sur une autre instance que la génération. Sans la migration 071, l'écriture échoue sans bloquer et la barre est estimée.
+- Taille attendue d'un site fixée à 60 000 caractères (hypothèse, l'historique en base ne permet pas de la mesurer) ; le temps restant n'est affiché que si l'avancement mesuré est entre 10 % et 90 % après 5 s, sinon « encore quelques secondes ».
+- Pas de loading.tsx sur les pages de l'outil : sans lui, Next garde l'écran précédent pendant la navigation (règle 0–1 s). Pas de staleTimes (option expérimentale) : le cache des données couvre le retour sur une page.
+- Pages non converties (Produits gagnants, Catalogue, Studio, Abonnement, tableau de bord principal) : chargements à filtres multiples ou déjà sans indicateur bloquant ; à traiter page par page si besoin.
+
 ## 25 novembre — Contraste du texte (WCAG AA) dans les deux thèmes
 
 Branche `lisibilite-et-vitesse-percue`. Partie 1 du prompt « lisibilité et vitesse perçue » ; la partie 2 (chargement) n'est pas faite : le prompt reçu s'arrêtait après la règle « 0 à 1 seconde ».

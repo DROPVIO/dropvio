@@ -7,6 +7,7 @@ import { useTranslations } from "next-intl";
 import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
 import { getMonthlyUsage, type Plan, limitesDuPlan, estPlan } from "@/lib/plan-limits";
 import type { DashboardChartData } from "@/components/DashboardActiviteChart";
+import { EmplacementGraphique } from "@/components/chargement/IndicateurChargement";
 
 // recharts (~390 KB) ne doit jamais faire partie du bundle initial du dashboard — chargé à
 // la demande, après le premier rendu. ssr: false : recharts mesure le DOM au montage
@@ -14,21 +15,13 @@ import type { DashboardChartData } from "@/components/DashboardActiviteChart";
 // d'hydratation.
 const DashboardActiviteChart = dynamic(() => import("@/components/DashboardActiviteChart"), {
   ssr: false,
-  loading: () => (
-    <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-6 h-[420px] flex items-center justify-center">
-      <div className="w-5 h-5 rounded-full border-2 border-[var(--accent)] border-t-transparent animate-spin" />
-    </div>
-  ),
+  loading: () => <EmplacementGraphique hauteur={420} />,
 });
 
 // Même chargement à la demande pour le tableau des ventes et les camemberts (recharts).
 const chargementGraphique = (hauteur: number) => {
   function Chargement() {
-    return (
-      <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-6 flex items-center justify-center" style={{ height: hauteur }}>
-        <div className="w-5 h-5 rounded-full border-2 border-[var(--accent)] border-t-transparent animate-spin" />
-      </div>
-    );
+    return <EmplacementGraphique hauteur={hauteur} />;
   }
   return Chargement;
 };

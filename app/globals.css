@@ -744,3 +744,23 @@ footer.lp-cta p { color: var(--text-2); margin-bottom: 32px; }
   /* Pas d'animation, mais la lueur reste affichée au survol et au focus. */
   .dv-nav-entree { transition: none; }
 }
+
+/* ─── Chargement : squelettes et barre de progression ────────────────────────
+   Squelette (components/chargement/IndicateurChargement.tsx) : bloc aux dimensions du contenu
+   à venir, affiché entre 1 et 10 s d'attente, avec une pulsation légère (opacité 1 → 0,55).
+   Barre de progression : au-delà de 10 s, largeur animée en douceur. Les deux animations sont
+   coupées avec « réduire les animations » ; squelette et barre restent affichés. */
+.dv-squelette {
+  background-color: var(--surface-3);
+  border-radius: 0.5rem;
+  animation: dv-squelette-pulsation 1.6s ease-in-out infinite;
+}
+@keyframes dv-squelette-pulsation {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.55; }
+}
+.dv-progression-barre { transition: width 400ms ease-out; }
+@media (prefers-reduced-motion: reduce) {
+  .dv-squelette { animation: none; }
+  .dv-progression-barre { transition: none; }
+}

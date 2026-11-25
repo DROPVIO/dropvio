@@ -1,5 +1,7 @@
 "use client";
 
+import { invaliderCache } from "@/lib/cache-client";
+import { URL_DONNEES } from "@/lib/donnees-pages";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
@@ -254,6 +256,7 @@ export default function TemplateEditor({
         return;
       }
       setSaved(true);
+      invaliderCache(URL_DONNEES.sitesGeneres);
     } catch {
       setSaveError(canExport ? t("erreurs.reseauTelecharge") : t("erreurs.reseauRien"));
     } finally {

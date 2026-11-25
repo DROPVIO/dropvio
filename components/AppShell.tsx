@@ -9,6 +9,8 @@ import OnboardingProvider from "./onboarding/OnboardingProvider";
 import OnboardingTour from "./onboarding/OnboardingTour";
 import PaiementActionBanner from "./expert/PaiementActionBanner";
 import ClocheVentes from "./ClocheVentes";
+import { createSupabaseBrowserClient } from "@/lib/supabase-browser";
+import { viderCache } from "@/lib/cache-client";
 
 // Mémorise la sidebar réduite (icônes seules) entre les rechargements et les sessions.
 const SIDEBAR_COLLAPSED_KEY = "dropvio-sidebar-collapsed";
@@ -140,6 +142,14 @@ export function CadreApp({ children, pied }: { children: React.ReactNode; pied?:
  *  contenu des pages de l'outil pour ne pas passer sous la barre latérale. */
 export default function AppShell({ children, pied }: { children: React.ReactNode; pied?: React.ReactNode }) {
   const pathname = usePathname();
+  // Déconnexion venue d'ailleurs (session expirée, autre onglet) : le cache client des données
+  // est vidé, comme pour une déconnexion par le bouton (lib/cache-client.ts).
+  useEffect(() => {
+    const { data } = createSupabaseBrowserClient().auth.onAuthStateChange((evenement) => {
+      if (evenement === "SIGNED_OUT") viderCache();
+    });
+    return () => data.subscription.unsubscribe();
+  }, []);
   const showSidebar = PROTECTED_PATHS.some((p) => pathname.startsWith(p));
 
   if (!showSidebar) {
