@@ -49,6 +49,9 @@
   --success-text: #34d399;
   --warning-text: #fbbf24;
   --danger-text: #fca5a5;
+  /* Lueur de survol et de focus des entrées de la barre latérale (.dv-nav-entree) : couleur
+     d'accent #7c3aed. Plus opaque qu'en clair : un violet à faible opacité se perd sur fond sombre. */
+  --nav-lueur: rgba(124, 58, 237, 0.45);
 }
 
 :root[data-theme="light"] {
@@ -75,6 +78,7 @@
   --success-text: #065f46;
   --warning-text: #92400e;
   --danger-text: #b91c1c;
+  --nav-lueur: rgba(124, 58, 237, 0.28);
 }
 
 /* Boutique publique : mode clair/sombre choisi par le marchand (boutiques.settings.colorMode,
@@ -720,3 +724,23 @@ footer.lp-cta p { color: var(--text-2); margin-bottom: 32px; }
 .document-legal strong { color: var(--text-primary); }
 .document-legal a { color: var(--accent); }
 .document-legal a:hover { opacity: 0.8; }
+
+/* ─── Barre latérale : survol et focus clavier des entrées ───────────────────
+   Lueur courte de la couleur d'accent (--nav-lueur, une valeur par thème). Une ombre ne
+   change ni la taille ni la position de l'élément ; le padding du conteneur (p-2, 8 px)
+   laisse la place à la lueur (rayon 8 px). Règles hors @layer : elles l'emportent sur
+   transition-all / transition-colors des classes Tailwind de ces éléments. La couleur du
+   texte reste celle des classes de chaque entrée : elle est seulement transitionnée. */
+.dv-nav-entree {
+  transition-property: color, background-color, border-color, box-shadow;
+  transition-duration: 180ms;
+  transition-timing-function: ease-out;
+}
+.dv-nav-entree:hover,
+.dv-nav-entree:focus-visible {
+  box-shadow: 0 0 8px 0 var(--nav-lueur);
+}
+@media (prefers-reduced-motion: reduce) {
+  /* Pas d'animation, mais la lueur reste affichée au survol et au focus. */
+  .dv-nav-entree { transition: none; }
+}

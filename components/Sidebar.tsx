@@ -219,7 +219,7 @@ function NavGroupe({
               <span className="text-[9px] font-bold bg-[var(--surface-2)] border border-[var(--border)] text-[var(--text-faint)] px-1.5 py-0.5 rounded-full">{t("soon")}</span>
             </span>
           ) : (
-            <Link href={enfant.href} onClick={onNavigate} aria-current={estActif ? "page" : undefined} className={cls}>
+            <Link href={enfant.href} onClick={onNavigate} aria-current={estActif ? "page" : undefined} className={`dv-nav-entree ${cls}`}>
               {estActif && !dansVolant && <span className="absolute -left-[9px] top-1/2 -translate-y-1/2 w-0.5 h-5 bg-[var(--accent)] rounded-r-full" />}
               <span className="flex-1 whitespace-nowrap">{libelle}</span>
             </Link>
@@ -246,7 +246,7 @@ function NavGroupe({
         aria-controls={idListe}
         title={collapsed ? label : undefined}
         data-onboarding-target={item.onboardingTarget}
-        className={`relative flex w-full items-center gap-3 rounded-lg text-sm transition-all duration-150 ${
+        className={`dv-nav-entree relative flex w-full items-center gap-3 rounded-lg text-sm transition-all duration-150 ${
           collapsed ? "w-10 h-10 mx-auto justify-center" : "px-3 py-2.5 text-left"
         } ${parentEnEvidence ? ENTREE_ACTIVE : ENTREE_INACTIVE}`}
       >
@@ -513,7 +513,7 @@ export default function Sidebar({
                 onClick={onCloseMobile}
                 title={collapsed ? label : undefined}
                 data-onboarding-target={onboardingTarget}
-                className={className}
+                className={`dv-nav-entree ${className}`}
               >
                 {inner}
               </Link>
@@ -525,7 +525,7 @@ export default function Sidebar({
           <button
             onClick={() => setModalOpen(true)}
             title={collapsed ? t("settings") : undefined}
-            className={`relative flex items-center gap-3 rounded-lg text-sm transition-all duration-150 shrink-0 text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-2)] ${
+            className={`dv-nav-entree relative flex items-center gap-3 rounded-lg text-sm transition-all duration-150 shrink-0 text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-2)] ${
               collapsed ? "w-10 h-10 mx-auto justify-center" : "px-3 py-2.5"
             }`}
           >
@@ -539,7 +539,7 @@ export default function Sidebar({
           <button
             onClick={onCollapse}
             title={collapsed ? t("expandTooltip") : t("collapseTooltip")}
-            className={`flex items-center gap-2 rounded-lg text-[11px] text-[var(--text-faint)] hover:text-[var(--text-muted)] hover:bg-[var(--surface-2)] transition h-8 ${
+            className={`dv-nav-entree flex items-center gap-2 rounded-lg text-[11px] text-[var(--text-faint)] hover:text-[var(--text-muted)] hover:bg-[var(--surface-2)] transition h-8 ${
               collapsed ? "w-10 justify-center" : "w-full px-3"
             }`}
           >
@@ -558,7 +558,7 @@ export default function Sidebar({
             <button
               onClick={() => setModalOpen(true)}
               title={collapsed ? t("userTooltip", { name: displayName }) : undefined}
-              className={`flex items-center gap-2.5 w-full rounded-xl hover:bg-[var(--surface-2)] transition-colors px-2 py-2 group text-left ${
+              className={`dv-nav-entree flex items-center gap-2.5 w-full rounded-xl hover:bg-[var(--surface-2)] transition-colors px-2 py-2 group text-left ${
                 collapsed ? "justify-center" : ""
               }`}
             >
@@ -588,7 +588,7 @@ export default function Sidebar({
             <Link
               href="/abonnement"
               onClick={onCloseMobile}
-              className="mt-1 block rounded-lg px-2 py-1.5 text-[12px] font-semibold text-[var(--accent-text)] hover:bg-[var(--surface-2)]"
+              className="dv-nav-entree mt-1 block rounded-lg px-2 py-1.5 text-[12px] font-semibold text-[var(--accent-text)] hover:bg-[var(--surface-2)]"
             >
               {t("choisirAbonnement")}
             </Link>
