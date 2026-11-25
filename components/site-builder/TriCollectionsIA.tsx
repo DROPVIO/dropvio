@@ -123,7 +123,7 @@ export default function TriCollectionsIA({ boutiqueId, categories, onTermine }: 
                 onClick={() => setLignes((avant) => avant.filter((_, i) => i !== index))}
                 aria-label={t("retirer")}
                 title={t("retirer")}
-                className="mt-7 rounded-xl px-3 py-3 text-sm text-[var(--text-faint)] transition hover:text-[var(--danger)]"
+                className="mt-7 rounded-xl px-3 py-3 text-sm text-[var(--text-faint)] transition hover:text-[var(--danger-text)]"
               >
                 ✕
               </button>
@@ -173,7 +173,7 @@ export default function TriCollectionsIA({ boutiqueId, categories, onTermine }: 
         {enCours ? t("enCours") : t("trier")}
       </button>
 
-      {erreur ? <p className="text-sm text-[var(--danger)]">{erreur}</p> : null}
+      {erreur ? <p className="text-sm text-[var(--danger-text)]">{erreur}</p> : null}
 
       {resultat ? (
         <div className="space-y-2 rounded-2xl border border-[var(--border)] bg-[var(--surface-2)] p-3 text-sm">

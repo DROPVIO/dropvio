@@ -85,7 +85,7 @@ export default async function CollectionPage({
               {t("collection.retour")}
             </Link>
           </div>
-          <div className="rounded-full bg-violet-500/10 px-4 py-2 text-sm text-[var(--accent)]">{t("nombreProduits", { count: total })}</div>
+          <div className="rounded-full bg-violet-500/10 px-4 py-2 text-sm text-[var(--accent-text)]">{t("nombreProduits", { count: total })}</div>
         </div>
         <ProductGrid
           produits={produits}

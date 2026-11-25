@@ -103,7 +103,7 @@ export default function FormulaireRetractation() {
           <dt className="text-[var(--text-faint)]">{t("achat")}</dt><dd className="m-0 text-[var(--text-primary)]">{achatTexte}</dd>
           <dt className="text-[var(--text-faint)]">{t("dateAchat")}</dt><dd className="m-0 text-[var(--text-primary)]">{dateAchat}</dd>
         </dl>
-        {erreur ? <p role="alert" className="m-0 text-sm text-[var(--danger)]">{erreur}</p> : null}
+        {erreur ? <p role="alert" className="m-0 text-sm text-[var(--danger-text)]">{erreur}</p> : null}
         <div className="flex flex-wrap gap-3">
           <button type="button" onClick={confirmer} disabled={envoi} className={BOUTON}>
             {envoi ? t("envoi") : t("confirmer")}
@@ -163,7 +163,7 @@ export default function FormulaireRetractation() {
         {t("dateAchat")}
         <input className={CHAMP} type="date" value={dateAchat} onChange={(e) => setDateAchat(e.target.value)} required />
       </label>
-      {erreur ? <p role="alert" className="m-0 text-sm text-[var(--danger)]">{erreur}</p> : null}
+      {erreur ? <p role="alert" className="m-0 text-sm text-[var(--danger-text)]">{erreur}</p> : null}
       <button type="submit" className={`${BOUTON} self-start`}>{t("continuer")}</button>
     </form>
   );

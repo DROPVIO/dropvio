@@ -118,7 +118,7 @@ export default function BoutiqueBuilderListPage() {
             {loading ? (
               <div className="mt-6 text-sm text-[var(--text-muted)]">{t("chargement")}</div>
             ) : error ? (
-              <div className="mt-6 rounded-2xl border border-[var(--danger)]/20 bg-[var(--danger)]/10 p-4 text-sm text-[var(--danger)]">
+              <div className="mt-6 rounded-2xl border border-[var(--danger)]/20 bg-[var(--danger)]/10 p-4 text-sm text-[var(--danger-text)]">
                 {error}
               </div>
             ) : boutiques.length === 0 ? (
@@ -140,13 +140,13 @@ export default function BoutiqueBuilderListPage() {
                         <span
                           className={`rounded-full px-3 py-1 text-xs uppercase tracking-[0.2em] ${
                             boutique.est_publique
-                              ? "bg-emerald-500/10 text-[var(--success)]"
+                              ? "bg-emerald-500/10 text-[var(--success-text)]"
                               : "bg-[var(--surface-3)] text-[var(--text-muted)]"
                           }`}
                         >
                           {boutique.est_publique ? t("publique") : t("privee")}
                         </span>
-                        <span className="rounded-full bg-violet-500/10 px-3 py-1 text-xs uppercase tracking-[0.2em] text-[var(--accent)]">
+                        <span className="rounded-full bg-violet-500/10 px-3 py-1 text-xs uppercase tracking-[0.2em] text-[var(--accent-text)]">
                           {t("ouvrir")}
                         </span>
                       </div>

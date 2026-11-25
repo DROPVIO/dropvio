@@ -165,7 +165,7 @@ export default function FormationContenu() {
     <div className="min-h-screen bg-[var(--bg)] text-[var(--text-primary)] font-sans px-4 py-16">
       <div className="max-w-3xl mx-auto">
         <div className="mb-10 text-center">
-          <div className="inline-flex items-center gap-2 mb-4 px-3 py-1 rounded-full bg-violet-500/10 border border-violet-500/20 text-[var(--accent)] text-xs font-medium tracking-widest uppercase">
+          <div className="inline-flex items-center gap-2 mb-4 px-3 py-1 rounded-full bg-violet-500/10 border border-violet-500/20 text-[var(--accent-text)] text-xs font-medium tracking-widest uppercase">
             <span className="w-1.5 h-1.5 rounded-full bg-violet-400" />
             {t("badge")}
           </div>
@@ -174,7 +174,7 @@ export default function FormationContenu() {
         </div>
 
         {banner === "success" && (
-          <div className="mb-8 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-[var(--success)] text-sm text-center px-4 py-3">
+          <div className="mb-8 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-[var(--success-text)] text-sm text-center px-4 py-3">
             {t("bannerSuccess")}
           </div>
         )}
@@ -226,7 +226,7 @@ export default function FormationContenu() {
                         <ul className="mt-4 flex flex-col gap-1.5">
                           {info.bullets.map((b) => (
                             <li key={b} className="flex items-start gap-2 text-sm text-[var(--text-muted)]">
-                              <span className="text-[var(--accent)] shrink-0 mt-0.5">✓</span>
+                              <span className="text-[var(--accent-text)] shrink-0 mt-0.5">✓</span>
                               {b}
                             </li>
                           ))}
@@ -257,7 +257,7 @@ export default function FormationContenu() {
                       <span className="text-sm text-[var(--text-faint)] line-through">
                         {formatPrix(FORMATION_PRIX.courte + FORMATION_PRIX.longue)}
                       </span>
-                      <span className="text-xs text-[var(--success)] font-medium">
+                      <span className="text-xs text-[var(--success-text)] font-medium">
                         {t("bundleSave", {
                           montant: formatPrix(FORMATION_PRIX.courte + FORMATION_PRIX.longue - FORMATION_PRIX.bundle),
                         })}
@@ -299,7 +299,7 @@ export default function FormationContenu() {
                             <Link
                               href={`/formation/lire/${m.id}`}
                               onClick={(e) => e.stopPropagation()}
-                              className="rounded-lg border border-violet-500/30 bg-violet-500/10 px-3 py-1.5 text-xs font-medium text-[var(--accent)] transition hover:bg-violet-500/20"
+                              className="rounded-lg border border-violet-500/30 bg-violet-500/10 px-3 py-1.5 text-xs font-medium text-[var(--accent-text)] transition hover:bg-violet-500/20"
                             >
                               {t("read")}
                             </Link>

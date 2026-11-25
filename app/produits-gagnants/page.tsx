@@ -378,7 +378,7 @@ export default function ProduitsGagnants() {
             <div className="text-[var(--text-faint)] text-[15px]">{t("loadingProducts")}</div>
           </div>
         ) : erreur ? (
-          <div className="bg-[var(--danger)]/10 border border-[var(--danger)]/20 rounded-xl p-8 text-center text-[var(--danger)]">
+          <div className="bg-[var(--danger)]/10 border border-[var(--danger)]/20 rounded-xl p-8 text-center text-[var(--danger-text)]">
             <div className="text-2xl mb-2">⚠️</div>
             <div className="text-sm">{erreur}</div>
             <button
@@ -541,7 +541,7 @@ function CarteProduit({
             <span className="text-[10px] text-[var(--text-faint)] uppercase tracking-[0.04em]">
               {t("cardPriceSuggested")}
             </span>
-            <span className="text-[13px] font-bold text-[var(--accent)]">
+            <span className="text-[13px] font-bold text-[var(--accent-text)]">
               {produit.prixVente.toFixed(2)}€
             </span>
           </div>
@@ -551,7 +551,7 @@ function CarteProduit({
         <div className="bg-[var(--bg-sunken)] rounded-lg px-2.5 py-1.5 mb-3">
           <div className="flex justify-between items-center">
             <span className="text-[10px] text-[var(--text-faint)] uppercase tracking-[0.04em]">{t("cardMarge")}</span>
-            <span className="text-[15px] font-bold text-[var(--success)]">{produit.marge}%</span>
+            <span className="text-[15px] font-bold text-[var(--success-text)]">{produit.marge}%</span>
           </div>
         </div>
 
@@ -562,7 +562,7 @@ function CarteProduit({
             {t("cardOrdersUnit")}
           </span>
           {croissancePct !== undefined && (
-            <span className={`text-[11px] font-bold flex items-center gap-0.5 ${croissancePct >= 0 ? "text-[var(--success)]" : "text-[var(--danger)]"}`}>
+            <span className={`text-[11px] font-bold flex items-center gap-0.5 ${croissancePct >= 0 ? "text-[var(--success-text)]" : "text-[var(--danger-text)]"}`}>
               {croissancePct >= 0 ? "↑" : "↓"} {Math.abs(croissancePct).toFixed(0)}%
             </span>
           )}
@@ -582,7 +582,7 @@ function CarteProduit({
             className={`block text-center py-2 rounded-lg text-xs font-semibold no-underline transition-colors ${
               isHalloweenNiche
                 ? "bg-[#e07b2e]/10 border border-[#e07b2e]/30 text-[#e07b2e] hover:bg-[#e07b2e]/20"
-                : "bg-violet-500/10 border border-violet-500/30 text-[var(--accent)] hover:bg-violet-500/20"
+                : "bg-violet-500/10 border border-violet-500/30 text-[var(--accent-text)] hover:bg-violet-500/20"
             }`}
           >
             {t("cardCreateLanding")}
@@ -595,7 +595,7 @@ function CarteProduit({
           </a>
           <button
             onClick={onAjouterBoutique}
-            className="block w-full bg-emerald-500/10 border border-emerald-500/25 text-[var(--success)] text-center py-2 rounded-lg text-xs font-semibold cursor-pointer transition-colors hover:bg-emerald-500/20"
+            className="block w-full bg-emerald-500/10 border border-emerald-500/25 text-[var(--success-text)] text-center py-2 rounded-lg text-xs font-semibold cursor-pointer transition-colors hover:bg-emerald-500/20"
           >
             {t("cardAddBoutique")}
           </button>
@@ -695,7 +695,7 @@ function AlternativesModal({ produit, onClose }: { produit: Produit; onClose: ()
             {t("altLoading")}
           </div>
         ) : erreur ? (
-          <div className="text-[var(--danger)] text-[13px] text-center py-5">
+          <div className="text-[var(--danger-text)] text-[13px] text-center py-5">
             ⚠️ {erreur}
           </div>
         ) : !alternatives || alternatives.length === 0 ? (
@@ -733,10 +733,10 @@ function AlternativesModal({ produit, onClose }: { produit: Produit; onClose: ()
                         📦 {alt.orders > 1000 ? `${(alt.orders / 1000).toFixed(0)}k` : alt.orders}{" "}
                         {t("cardOrdersUnit")}
                       </span>
-                      <span className="text-[var(--accent)]">
+                      <span className="text-[var(--accent-text)]">
                         {t("altSimilar", { pct: Math.round(alt.similarityScore * 100) })}
                       </span>
-                      {!hasLink && <span className="text-[var(--danger)]">{t("altNoLink")}</span>}
+                      {!hasLink && <span className="text-[var(--danger-text)]">{t("altNoLink")}</span>}
                     </div>
                   </div>
                 </>
@@ -868,13 +868,13 @@ function AjouterBoutiqueModal({ produit, onClose }: { produit: Produit; onClose:
         </div>
 
         {boutiquesError ? (
-          <div className="text-[var(--danger)] text-[13px]">{boutiquesError}</div>
+          <div className="text-[var(--danger-text)] text-[13px]">{boutiquesError}</div>
         ) : boutiques === null ? (
           <p className="text-[13px] text-[var(--text-faint)]">{t("addLoadingBoutiques")}</p>
         ) : boutiques.length === 0 ? (
           <div className="text-[13px] text-[var(--text-muted)] leading-relaxed">
             {t("addNoBoutique")}
-            <Link href="/site-builder/boutique" className="text-[var(--accent)]">{t("addCreateLink")}</Link>
+            <Link href="/site-builder/boutique" className="text-[var(--accent-text)]">{t("addCreateLink")}</Link>
           </div>
         ) : !added ? (
           <>
@@ -896,7 +896,7 @@ function AjouterBoutiqueModal({ produit, onClose }: { produit: Produit; onClose:
               const nicheCible = cible?.settings?.niche;
               if (!nicheCible || nicheCible === produit.niche) return null;
               return (
-                <div className="bg-amber-500/10 border border-amber-500/25 text-[var(--warning)] rounded-lg px-3 py-2.5 text-[12.5px] mb-4">
+                <div className="bg-amber-500/10 border border-amber-500/25 text-[var(--warning-text)] rounded-lg px-3 py-2.5 text-[12.5px] mb-4">
                   {t("addNicheWarning", {
                     nicheCible: labelNiche(nicheCible),
                     nicheProduit: labelNiche(produit.niche),
@@ -906,7 +906,7 @@ function AjouterBoutiqueModal({ produit, onClose }: { produit: Produit; onClose:
             })()}
 
             {addError && (
-              <div className="text-[var(--danger)] text-[12.5px] mb-3">{addError}</div>
+              <div className="text-[var(--danger-text)] text-[12.5px] mb-3">{addError}</div>
             )}
 
             <button
@@ -919,7 +919,7 @@ function AjouterBoutiqueModal({ produit, onClose }: { produit: Produit; onClose:
           </>
         ) : (
           <div className="flex flex-col gap-5">
-            <div className="bg-emerald-500/10 border border-emerald-500/25 text-[var(--success)] rounded-[10px] px-4 py-3 text-[13px] font-semibold">
+            <div className="bg-emerald-500/10 border border-emerald-500/25 text-[var(--success-text)] rounded-[10px] px-4 py-3 text-[13px] font-semibold">
               {t("addSuccess")}
             </div>
             <ProduitsSuggeres boutiqueId={selectedBoutiqueId} />

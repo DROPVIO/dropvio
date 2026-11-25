@@ -43,7 +43,7 @@ export function ToastHost({ toast, onClose }: { toast: ToastMessage | null; onCl
       className={`fixed bottom-5 right-5 z-50 max-w-[min(92vw,26rem)] rounded-xl border px-4 py-3 text-sm shadow-lg ${
         toast.ok
           ? "border-[var(--success)]/25 bg-[var(--surface)] text-[var(--text-primary)]"
-          : "border-[var(--danger)]/30 bg-[var(--surface)] text-[var(--danger)]"
+          : "border-[var(--danger)]/30 bg-[var(--surface)] text-[var(--danger-text)]"
       }`}
     >
       <div className="flex items-start gap-2.5">
@@ -55,7 +55,7 @@ export function ToastHost({ toast, onClose }: { toast: ToastMessage | null; onCl
               toast.action?.onClick();
               onClose();
             }}
-            className="ml-1 shrink-0 font-semibold text-[var(--accent)] underline decoration-dotted underline-offset-2 transition hover:opacity-80"
+            className="ml-1 shrink-0 font-semibold text-[var(--accent-text)] underline decoration-dotted underline-offset-2 transition hover:opacity-80"
           >
             {toast.action.label}
           </button>

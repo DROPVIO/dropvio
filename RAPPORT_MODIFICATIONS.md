@@ -1,5 +1,18 @@
 # Rapport de modifications
 
+## 25 novembre — Contraste du texte (WCAG AA) dans les deux thèmes
+
+Branche `lisibilite-et-vitesse-percue`. Partie 1 du prompt « lisibilité et vitesse perçue » ; la partie 2 (chargement) n'est pas faite : le prompt reçu s'arrêtait après la règle « 0 à 1 seconde ».
+
+Mesures avant correction (fond le plus défavorable : calque --surface-3) : thème clair --text-faint 2,05:1, --accent-secondary 2,94:1, --success 3,01:1, --warning 2,55:1, --danger 3,86:1 ; thème sombre --text-faint 4,34:1, --accent en texte 1,71:1, --danger 2,60:1, --success 3,85:1 ; boutons rouges sombres (#ef4444, texte blanc) 3,76:1. Les titres « Sites », « Images »… de /quota (UsageMeter) étaient en blanc codé en dur, quasi invisibles en clair.
+
+### Décisions prises seul
+- Couleurs de remplissage et couleurs de texte séparées : aucun violet ne peut porter du texte blanc ET se lire sur fond sombre à 4,5:1. Nouvelles variables --accent-text, --accent-secondary-text, --success-text, --warning-text, --danger-text dans les 4 blocs de thème (app, boutiques claires et sombres) ; les classes text-[var(--accent)] etc. des composants pointent dessus (remplacement mécanique, 266 classes dans 60 fichiers).
+- Valeurs : clair --text-faint #63636c, textes #7c3aed / #1d4ed8 / #065f46 / #92400e / #b91c1c ; sombre --text-faint #b8b8c1, textes #c4b5fd / #93c5fd / #34d399 / #fbbf24 / #fca5a5 ; --danger sombre #dc2626 (boutons à texte blanc 4,83:1). Seuil retenu : 4,5:1 partout, y compris pour les gros titres (plus strict que 3:1).
+- Palette de /faq : --text-3 #a19caf et --purple #a78bfa (texte et icône seulement).
+- UsageMeter passé aux variables du thème. Les textes clairs sur fonds sombres fixes (lecteur de formation, bulle d'onboarding, landing) n'ont pas été touchés : ils passent déjà.
+- Test lib/contraste-theme.test.ts : recalcule les contrastes à partir de app/globals.css.
+
 ## 25 novembre — Catalogue du plan Pro plafonné à 15 000 produits
 
 Branche `limite-catalogue-pro`. Comptage en base (lecture seule) : 45 255 lignes dans `produits`, 39 975 dans `produits_dedup`, dont **4 081 affichés** (au moins 100 commandes, 21 niches). Le plafond Pro (15 000) ne retire donc aucun produit aujourd'hui ; il s'appliquera quand le catalogue affiché dépassera 15 000 produits. `produitsMax` (déjà « produits accessibles du catalogue ») passe à `CATALOGUE_MAX_PRO` = 15 000 pour Pro ; Agency et Expert restent à null. Le plafond est un ensemble fixe (lib/catalogue-plafond.ts), appliqué par le serveur à Produits gagnants (RPC de rotation, migration **070** à appliquer), à la liste Catalogue, au compteur et aux suggestions de produits. Textes (4 langues) : tarifs de la landing et de /abonnement, fenêtre de l'audit, FAQ de la landing et page /faq, via `{catalogueMax}`.

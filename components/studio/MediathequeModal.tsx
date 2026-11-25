@@ -43,7 +43,7 @@ export default function MediathequeModal({ plan, onChoisir, onFermer }: { plan?:
           <h2 className="text-lg font-semibold text-[var(--text-primary)]">{t("titreModal")}</h2>
           <button type="button" onClick={onFermer} className="text-sm text-[var(--text-muted)]">{t("fermer")}</button>
         </div>
-        {erreur && <p role="alert" className="text-sm text-[var(--danger)]">{erreur}</p>}
+        {erreur && <p role="alert" className="text-sm text-[var(--danger-text)]">{erreur}</p>}
         {publication ? (
           <p className="py-8 text-center text-sm text-[var(--text-faint)]">{t("publication")}</p>
         ) : (

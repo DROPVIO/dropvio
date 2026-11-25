@@ -103,7 +103,7 @@ export default function FormulaireRenonciation() {
         <p className="m-0 text-sm text-[var(--text-muted)]">
           {confirmation.emailEnvoye && confirmation.email ? t("emailEnvoye", { email: confirmation.email }) : t("conservez")}
         </p>
-        <Link href="/abonnement" className="self-start text-sm font-medium text-[var(--accent)]">{t("retour")}</Link>
+        <Link href="/abonnement" className="self-start text-sm font-medium text-[var(--accent-text)]">{t("retour")}</Link>
       </div>
     );
   }
@@ -114,7 +114,7 @@ export default function FormulaireRenonciation() {
     return (
       <div className={CADRE}>
         <p className="m-0 text-sm text-[var(--text-muted)]">{erreur ?? t("horsDelai")}</p>
-        <Link href="/abonnement" className="self-start text-sm font-medium text-[var(--accent)]">{t("retour")}</Link>
+        <Link href="/abonnement" className="self-start text-sm font-medium text-[var(--accent-text)]">{t("retour")}</Link>
       </div>
     );
   }
@@ -143,7 +143,7 @@ export default function FormulaireRenonciation() {
         {t("motif")}
         <textarea className={CHAMP} rows={3} maxLength={1000} value={motif} onChange={(e) => setMotif(e.target.value)} placeholder={t("motifAide")} />
       </label>
-      {erreur ? <p role="alert" className="m-0 text-sm text-[var(--danger)]">{erreur}</p> : null}
+      {erreur ? <p role="alert" className="m-0 text-sm text-[var(--danger-text)]">{erreur}</p> : null}
       <button type="submit" disabled={envoi} className={BOUTON}>
         {envoi ? t("envoi") : t("confirmer")}
       </button>

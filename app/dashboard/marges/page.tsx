@@ -52,11 +52,11 @@ export default function MargesDetailPage() {
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
           <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface-2)] p-5">
             <p className="text-[10px] font-semibold uppercase tracking-widest text-[var(--text-faint)]">{t("marges.statSimulations")}</p>
-            <p className="text-2xl font-bold tabular-nums text-[var(--accent)] mt-2">{simulations.length}</p>
+            <p className="text-2xl font-bold tabular-nums text-[var(--accent-text)] mt-2">{simulations.length}</p>
           </div>
           <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface-2)] p-5">
             <p className="text-[10px] font-semibold uppercase tracking-widest text-[var(--text-faint)]">{t("marges.statAverage")}</p>
-            <p className="text-2xl font-bold tabular-nums text-[var(--accent-secondary)] mt-2">
+            <p className="text-2xl font-bold tabular-nums text-[var(--accent-secondary-text)] mt-2">
               {margeMoyenne !== null ? `${margeMoyenne.toFixed(1)}%` : "—"}
             </p>
           </div>
@@ -68,7 +68,7 @@ export default function MargesDetailPage() {
           ) : simulations.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 gap-2">
               <p className="text-[var(--text-faint)] text-sm">{t("marges.empty")}</p>
-              <a href="/tools/calculateur-marge" className="text-[var(--accent)] text-xs hover:underline">
+              <a href="/tools/calculateur-marge" className="text-[var(--accent-text)] text-xs hover:underline">
                 {t("marges.cta")}
               </a>
             </div>

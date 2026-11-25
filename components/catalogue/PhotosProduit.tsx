@@ -100,7 +100,7 @@ export default function PhotosProduit({
   }
 
   if (!disponible) {
-    return <p className="rounded-xl border border-[var(--warning)]/30 bg-[var(--warning)]/10 px-4 py-3 text-sm text-[var(--warning)]">{indisponibleMessage ?? t("indisponible")}</p>;
+    return <p className="rounded-xl border border-[var(--warning)]/30 bg-[var(--warning)]/10 px-4 py-3 text-sm text-[var(--warning-text)]">{indisponibleMessage ?? t("indisponible")}</p>;
   }
 
   const bouton =
@@ -130,7 +130,7 @@ export default function PhotosProduit({
                 {index > 0 && (
                   <button type="button" onClick={() => definirPrincipale(index)} className={petitBouton}>{t("definirPrincipale")}</button>
                 )}
-                <button type="button" onClick={() => setPhotos((p) => p.filter((_, i) => i !== index))} className={`${petitBouton} ml-auto text-[var(--danger)]`}>
+                <button type="button" onClick={() => setPhotos((p) => p.filter((_, i) => i !== index))} className={`${petitBouton} ml-auto text-[var(--danger-text)]`}>
                   {t("retirer")}
                 </button>
               </div>
@@ -165,7 +165,7 @@ export default function PhotosProduit({
         </button>
       </div>
       {modifie && <p className="text-[11px] text-[var(--text-faint)]">{t("nonEnregistre")}</p>}
-      {message && <p className={`text-xs ${message.ok ? "text-[var(--success)]" : "text-[var(--danger)]"}`}>{message.texte}</p>}
+      {message && <p className={`text-xs ${message.ok ? "text-[var(--success-text)]" : "text-[var(--danger-text)]"}`}>{message.texte}</p>}
 
       {mediatheque && (
         <MediathequeModal

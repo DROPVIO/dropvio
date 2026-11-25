@@ -91,30 +91,30 @@ function LoginForm() {
           <p className="text-[var(--text-faint)] text-sm mb-8">{t("subtitle")}</p>
 
           {justConfirmed && !error && (
-            <div className="mb-5 rounded-xl bg-[var(--success)]/10 border border-[var(--success)]/20 px-4 py-3 text-[var(--success)] text-sm">
+            <div className="mb-5 rounded-xl bg-[var(--success)]/10 border border-[var(--success)]/20 px-4 py-3 text-[var(--success-text)] text-sm">
               {t("confirmedBanner")}
             </div>
           )}
 
           {error && (
-            <div className="mb-5 rounded-xl bg-[var(--danger)]/10 border border-[var(--danger)]/20 px-4 py-3 text-[var(--danger)] text-sm flex flex-col gap-2">
+            <div className="mb-5 rounded-xl bg-[var(--danger)]/10 border border-[var(--danger)]/20 px-4 py-3 text-[var(--danger-text)] text-sm flex flex-col gap-2">
               <span>{error}</span>
               {unconfirmed && (
                 resendState === "sent" ? (
-                  <span className="text-[var(--success)] text-xs">{t("resendSent")}</span>
+                  <span className="text-[var(--success-text)] text-xs">{t("resendSent")}</span>
                 ) : (
                   <button
                     type="button"
                     onClick={handleResend}
                     disabled={resendState === "loading"}
-                    className="self-start text-xs text-[var(--accent)] hover:opacity-80 transition font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="self-start text-xs text-[var(--accent-text)] hover:opacity-80 transition font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {resendState === "loading" ? t("resendSending") : t("resend")}
                   </button>
                 )
               )}
               {unconfirmed && resendState === "error" && resendError && (
-                <span className="text-[var(--danger)] text-xs">{resendError}</span>
+                <span className="text-[var(--danger-text)] text-xs">{resendError}</span>
               )}
             </div>
           )}
@@ -155,7 +155,7 @@ function LoginForm() {
 
           <p className="mt-6 text-center text-sm text-[var(--text-faint)]">
             {t("noAccount")}{" "}
-            <a href="/register" className="text-[var(--accent)] hover:opacity-80 font-medium transition">
+            <a href="/register" className="text-[var(--accent-text)] hover:opacity-80 font-medium transition">
               {t("createAccount")}
             </a>
           </p>

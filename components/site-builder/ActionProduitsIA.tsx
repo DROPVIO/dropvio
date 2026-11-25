@@ -91,7 +91,7 @@ export default function ActionProduitsIA({ boutiqueId, produitsCount, action, on
         {enCours ? t("enCours") : t("bouton")}
       </button>
       {enCours ? <p className="text-sm text-[var(--text-muted)]">{t("patience")}</p> : null}
-      {erreur ? <p className="text-sm text-[var(--danger)]">{erreur}</p> : null}
+      {erreur ? <p className="text-sm text-[var(--danger-text)]">{erreur}</p> : null}
       {resultat ? (
         <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-[var(--border)] bg-[var(--surface-2)] p-3 text-sm">
           <p className="text-[var(--text-primary)]">

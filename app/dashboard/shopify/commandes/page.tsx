@@ -289,7 +289,7 @@ export default function CommandesAPreparerPage() {
                             href={l.lien_aliexpress}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="shrink-0 text-xs font-semibold text-[var(--accent)] hover:underline"
+                            className="shrink-0 text-xs font-semibold text-[var(--accent-text)] hover:underline"
                           >
                             {t("commandes.openAliExpress")}
                           </a>
@@ -305,7 +305,7 @@ export default function CommandesAPreparerPage() {
                             <button
                               onClick={() => attacherLien(c.id, i)}
                               disabled={lienBusyKey === `${c.id}:${i}`}
-                              className="text-[11px] font-semibold text-[var(--accent)] hover:underline disabled:opacity-50 disabled:cursor-not-allowed disabled:no-underline"
+                              className="text-[11px] font-semibold text-[var(--accent-text)] hover:underline disabled:opacity-50 disabled:cursor-not-allowed disabled:no-underline"
                             >
                               {lienBusyKey === `${c.id}:${i}` ? t("commandes.attaching") : t("commandes.attach")}
                             </button>
@@ -326,7 +326,7 @@ export default function CommandesAPreparerPage() {
                     {c.adresse_livraison ? (
                       <button
                         onClick={() => copierAdresse(c)}
-                        className="shrink-0 text-xs font-semibold text-[var(--accent)] hover:underline"
+                        className="shrink-0 text-xs font-semibold text-[var(--accent-text)] hover:underline"
                       >
                         {copiedId === c.id ? t("commandes.copied") : t("commandes.copy")}
                       </button>
@@ -350,7 +350,7 @@ export default function CommandesAPreparerPage() {
                     </button>
                   </div>
                   {actionErrors[c.id] ? (
-                    <p className="text-[11px] text-[var(--danger)]">{actionErrors[c.id]}</p>
+                    <p className="text-[11px] text-[var(--danger-text)]">{actionErrors[c.id]}</p>
                   ) : null}
                 </div>
               ))}
@@ -377,13 +377,13 @@ export default function CommandesAPreparerPage() {
 
                   {c.statut === "commandee" ? (
                     c.fulfillment_shopify_id ? (
-                      <p className="text-[11px] text-[var(--accent-secondary)]">
+                      <p className="text-[11px] text-[var(--accent-secondary-text)]">
                         {t("commandes.trackingSent", { tracking: c.numero_suivi ?? "" })}
                         {c.transporteur ? ` (${c.transporteur})` : ""}
                       </p>
                     ) : !fulfillmentScopeGranted ? (
                       <p className="text-[11px] text-[var(--text-faint)]">
-                        <a href="/dashboard?openIntegrations=1" className="text-[var(--accent)] hover:underline">
+                        <a href="/dashboard?openIntegrations=1" className="text-[var(--accent-text)] hover:underline">
                           {t("commandes.reconnectPrefix")}
                         </a>
                         {t("commandes.reconnectSuffix")}
@@ -391,7 +391,7 @@ export default function CommandesAPreparerPage() {
                     ) : (
                       <div className="flex flex-col gap-1.5">
                         {c.fulfillment_erreur ? (
-                          <p className="text-[11px] text-[var(--danger)]">{libelleErreurSuivi(c.fulfillment_erreur)}</p>
+                          <p className="text-[11px] text-[var(--danger-text)]">{libelleErreurSuivi(c.fulfillment_erreur)}</p>
                         ) : null}
                         <div className="flex items-center gap-1.5">
                           <input
@@ -421,7 +421,7 @@ export default function CommandesAPreparerPage() {
                           <button
                             onClick={() => envoyerSuivi(c.id)}
                             disabled={suiviBusyId === c.id}
-                            className="text-[11px] font-semibold text-[var(--accent)] hover:underline disabled:opacity-50"
+                            className="text-[11px] font-semibold text-[var(--accent-text)] hover:underline disabled:opacity-50"
                           >
                             {suiviBusyId === c.id
                               ? t("commandes.sending")

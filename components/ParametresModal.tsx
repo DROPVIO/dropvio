@@ -54,8 +54,8 @@ const FIELD = "w-full bg-[var(--bg-sunken)] border border-[var(--border)] rounde
 const LABEL = "block text-xs font-medium text-[var(--text-muted)] mb-1.5";
 const BTN_V = "px-4 py-2 rounded-lg bg-violet-600 hover:bg-violet-500 text-white text-xs font-semibold transition disabled:opacity-40 disabled:cursor-not-allowed";
 const BTN_G = "px-4 py-2 rounded-lg bg-[var(--surface-2)] border border-[var(--border-strong)] hover:bg-[var(--surface-3)] text-[var(--text-primary)] text-xs font-semibold transition disabled:opacity-40";
-const MSG_OK = "text-[11px] text-[var(--success)]";
-const MSG_ERR = "text-[11px] text-[var(--danger)]";
+const MSG_OK = "text-[11px] text-[var(--success-text)]";
+const MSG_ERR = "text-[11px] text-[var(--danger-text)]";
 const SECTION_TITLE = "text-[15px] font-semibold text-[var(--text-primary)]";
 const SECTION_SUB = "text-[12px] text-[var(--text-faint)] mt-0.5";
 const DIVIDER = "border-t border-[var(--border)] my-5";
@@ -517,7 +517,7 @@ export default function ParametresModal({
             {plan === null ? t("plan.choose") : t("plan.changePlan")}
           </button>
         </div>
-        {abonnementMsg ? <p className="mt-2 text-[11px] text-[var(--danger)]">{abonnementMsg}</p> : null}
+        {abonnementMsg ? <p className="mt-2 text-[11px] text-[var(--danger-text)]">{abonnementMsg}</p> : null}
       </div>
 
       {/* Budget IA du mois */}
@@ -546,7 +546,7 @@ export default function ParametresModal({
                       <div className={ROW}>
                         <p className="text-xs text-[var(--text-muted)]">{t(`plan.${cle}`, { utilise: euros.format(f.utilise), max: euros.format(f.max) })}</p>
                         {r >= 1 && f.reprise ? (
-                          <p className="text-[11px] text-[var(--warning)]">{t("plan.limiteReprise", { reprise: f.reprise })}</p>
+                          <p className="text-[11px] text-[var(--warning-text)]">{t("plan.limiteReprise", { reprise: f.reprise })}</p>
                         ) : null}
                       </div>
                       <div className="h-1 rounded-full bg-[var(--surface-3)] overflow-hidden">
@@ -581,7 +581,7 @@ export default function ParametresModal({
               <ul className="flex flex-col gap-1.5">
                 {t.raw(`plan.features.${p}`).map((f: string) => (
                   <li key={f} className="flex items-start gap-1.5 text-[11px] text-[var(--text-muted)]">
-                    <span className="text-[var(--success)] mt-[1px] shrink-0">{Ico.check}</span>
+                    <span className="text-[var(--success-text)] mt-[1px] shrink-0">{Ico.check}</span>
                     {f}
                   </li>
                 ))}
@@ -815,7 +815,7 @@ export default function ParametresModal({
       {usageLoading ? (
         <p className="text-xs text-[var(--text-faint)]">{t("usage.loading")}</p>
       ) : usageError ? (
-        <div className="rounded-xl bg-[var(--danger)]/10 border border-[var(--danger)]/20 px-4 py-3 text-[var(--danger)] text-sm">{usageError}</div>
+        <div className="rounded-xl bg-[var(--danger)]/10 border border-[var(--danger)]/20 px-4 py-3 text-[var(--danger-text)] text-sm">{usageError}</div>
       ) : usage ? (
         <>
           <div className="flex flex-col gap-3">
@@ -841,7 +841,7 @@ export default function ParametresModal({
               </div>
               <p className="text-xs font-semibold shrink-0">
                 {usage.catalogue.max === null ? (
-                  <span className="text-[var(--success)]">{t("usage.catalogueFull")}</span>
+                  <span className="text-[var(--success-text)]">{t("usage.catalogueFull")}</span>
                 ) : (
                   <span className="text-[var(--text-muted)]">{t("usage.catalogueLimited", { max: usage.catalogue.max.toLocaleString(locale) })}</span>
                 )}
@@ -881,16 +881,16 @@ export default function ParametresModal({
         {shopifyStatusLoading ? (
           <p className="text-[11px] text-[var(--text-faint)]">{t("integrations.shopifyChecking")}</p>
         ) : !shopifyStatus?.configured ? (
-          <p className="text-[11px] text-[var(--warning)]">
+          <p className="text-[11px] text-[var(--warning-text)]">
             {t("integrations.shopifyNotConfigured")}
           </p>
         ) : shopifyStatus.connected ? (
           <>
             <div className="rounded-lg border border-[var(--success)]/20 bg-[var(--success)]/[0.06] px-3 py-2.5 flex items-center gap-2">
               <span className="w-1.5 h-1.5 rounded-full bg-[var(--success)] shrink-0" />
-              <p className="text-xs text-[var(--success)]">
+              <p className="text-xs text-[var(--success-text)]">
                 {t("integrations.shopifyConnectedPrefix")} <span className="font-semibold">{shopifyStatus.shop_name || shopifyStatus.shop_domain}</span>
-                {shopifyStatus.shop_name ? <span className="text-[var(--success)]/70"> ({shopifyStatus.shop_domain})</span> : null}
+                {shopifyStatus.shop_name ? <span className="text-[var(--success-text)]/70"> ({shopifyStatus.shop_domain})</span> : null}
               </p>
             </div>
             <p className="text-[11px] text-[var(--text-faint)]">
@@ -910,7 +910,7 @@ export default function ParametresModal({
             {shopifyStatus.reconnectRequired && (
               <div className="rounded-lg border border-[var(--warning)]/20 bg-[var(--warning)]/[0.06] px-3 py-2.5 flex items-center gap-2">
                 <span className="w-1.5 h-1.5 rounded-full bg-[var(--warning)] shrink-0" />
-                <p className="text-xs text-[var(--warning)]">
+                <p className="text-xs text-[var(--warning-text)]">
                   {t("integrations.shopifyReconnectRequired")}
                 </p>
               </div>
@@ -997,7 +997,7 @@ export default function ParametresModal({
       <button className={`${BTN_G} self-start`} onClick={ouvrirAbonnement} disabled={portailEnCours}>
         {plan === null ? t("plan.choose") : t("facturation.manage")}
       </button>
-      {abonnementMsg ? <p className="text-[11px] text-[var(--danger)]">{abonnementMsg}</p> : null}
+      {abonnementMsg ? <p className="text-[11px] text-[var(--danger-text)]">{abonnementMsg}</p> : null}
       <div className="flex flex-wrap gap-x-5 gap-y-2 text-[12px]">
         <Link href="/resiliation" className="text-[var(--text-muted)] underline-offset-4 hover:underline">{tResiliation("lien")}</Link>
         {renonciationPossible ? (
@@ -1058,13 +1058,13 @@ export default function ParametresModal({
 
       <div className="rounded-xl border border-[var(--danger)]/20 bg-[var(--danger)]/[0.03] p-5 flex flex-col gap-4">
         <div>
-          <p className="text-sm font-medium text-[var(--danger)]">{t("danger.deleteLabel")}</p>
+          <p className="text-sm font-medium text-[var(--danger-text)]">{t("danger.deleteLabel")}</p>
           <p className="text-[11px] text-[var(--text-faint)] mt-1 leading-relaxed">
             {t("danger.deleteDesc", { email: SUPPORT_EMAIL })}
           </p>
         </div>
         <button
-          className="self-start px-4 py-2 rounded-lg border border-[var(--danger)]/30 text-[var(--danger)] text-xs font-semibold opacity-40 cursor-not-allowed"
+          className="self-start px-4 py-2 rounded-lg border border-[var(--danger)]/30 text-[var(--danger-text)] text-xs font-semibold opacity-40 cursor-not-allowed"
           disabled
           title={t("danger.deleteTooltip", { email: SUPPORT_EMAIL })}
         >
@@ -1140,7 +1140,7 @@ export default function ParametresModal({
                         : "text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-2)]"
                     }`}
                   >
-                    <span className={isActive ? "text-[var(--accent)]" : "text-[var(--text-faint)]"}>{NAV_ICONS[id]}</span>
+                    <span className={isActive ? "text-[var(--accent-text)]" : "text-[var(--text-faint)]"}>{NAV_ICONS[id]}</span>
                     {t(`nav.${id}`)}
                   </button>
                 );
@@ -1154,8 +1154,8 @@ export default function ParametresModal({
               onClick={() => setActiveSection("danger")}
               className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-medium text-left transition w-full mt-1 ${
                 activeSection === "danger"
-                  ? "bg-[var(--danger)]/10 text-[var(--danger)]"
-                  : "text-[var(--danger)]/50 hover:text-[var(--danger)]/80 hover:bg-[var(--danger)]/[0.05]"
+                  ? "bg-[var(--danger)]/10 text-[var(--danger-text)]"
+                  : "text-[var(--danger-text)]/50 hover:text-[var(--danger-text)]/80 hover:bg-[var(--danger)]/[0.05]"
               }`}
             >
               <span>{Ico.danger}</span>

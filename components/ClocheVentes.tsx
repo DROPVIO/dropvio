@@ -98,7 +98,7 @@ export default function ClocheVentes() {
               ))}
             </ul>
           )}
-          <Link href="/ventes" onClick={() => setOuvert(false)} className="mt-1 block rounded-lg px-3 py-2 text-sm font-semibold text-[var(--accent)] hover:bg-[var(--surface-2)]">
+          <Link href="/ventes" onClick={() => setOuvert(false)} className="mt-1 block rounded-lg px-3 py-2 text-sm font-semibold text-[var(--accent-text)] hover:bg-[var(--surface-2)]">
             {t("voirVentes")}
           </Link>
         </div>

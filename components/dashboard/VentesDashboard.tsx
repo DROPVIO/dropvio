@@ -544,7 +544,7 @@ export default function VentesDashboard() {
 function Variation({ valeur, nouveau, vsAvant, intlTag }: { valeur: number | null; nouveau: string; vsAvant: string; intlTag: string }) {
   if (valeur === null) return <span className="text-[11px] text-[var(--text-faint)]">{nouveau}</span>;
   return (
-    <span className={`text-[11px] font-semibold ${valeur >= 0 ? "text-[var(--success)]" : "text-[var(--danger)]"}`}>
+    <span className={`text-[11px] font-semibold ${valeur >= 0 ? "text-[var(--success-text)]" : "text-[var(--danger-text)]"}`}>
       {valeur >= 0 ? "▲" : "▼"} {(Math.abs(valeur) / 100).toLocaleString(intlTag, { style: "percent", maximumFractionDigits: 1 })}
       <span className="ml-1 font-normal text-[var(--text-faint)]">{vsAvant}</span>
     </span>

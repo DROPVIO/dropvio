@@ -220,7 +220,7 @@ export default function AbonnementPage() {
         ) : null}
 
         {erreur ? (
-          <div className="mb-5 rounded-xl bg-[var(--danger)]/10 border border-[var(--danger)]/20 px-4 py-3 text-[var(--danger)] text-sm">
+          <div className="mb-5 rounded-xl bg-[var(--danger)]/10 border border-[var(--danger)]/20 px-4 py-3 text-[var(--danger-text)] text-sm">
             {erreur}
           </div>
         ) : null}

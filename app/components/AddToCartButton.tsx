@@ -33,7 +33,7 @@ export default function AddToCartButton({ boutiqueSlug, produitId, slug, nom, pr
         {t("ajouter")}
       </button>
       {message ? (
-        <p role="status" className={`text-sm ${message.ok ? "text-[var(--success)]" : "text-[var(--danger)]"}`}>
+        <p role="status" className={`text-sm ${message.ok ? "text-[var(--success-text)]" : "text-[var(--danger-text)]"}`}>
           {message.text}
         </p>
       ) : null}

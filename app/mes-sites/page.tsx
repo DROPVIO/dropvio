@@ -273,7 +273,7 @@ export default function MesSitesPage() {
 
         {/* Header */}
         <div className="mb-10">
-          <div className="inline-flex items-center gap-2 mb-4 px-3 py-1 rounded-full bg-violet-500/10 border border-violet-500/20 text-[var(--accent)] text-xs font-medium tracking-widest uppercase">
+          <div className="inline-flex items-center gap-2 mb-4 px-3 py-1 rounded-full bg-violet-500/10 border border-violet-500/20 text-[var(--accent-text)] text-xs font-medium tracking-widest uppercase">
             <span className="w-1.5 h-1.5 rounded-full bg-violet-400" />
             {t("badge")}
           </div>
@@ -308,7 +308,7 @@ export default function MesSitesPage() {
             {tCommon("loading")}
           </div>
         ) : error ? (
-          <div className="rounded-2xl bg-[var(--danger)]/10 border border-[var(--danger)]/20 px-6 py-8 text-center text-[var(--danger)] text-sm">
+          <div className="rounded-2xl bg-[var(--danger)]/10 border border-[var(--danger)]/20 px-6 py-8 text-center text-[var(--danger-text)] text-sm">
             {error}
           </div>
         ) : sites.length === 0 ? (
@@ -382,7 +382,7 @@ export default function MesSitesPage() {
                     {canExport ? (
                       <a
                         href={`/site-builder?modifier=${site.id}`}
-                        className="flex-1 py-2 rounded-xl border border-violet-500/40 text-[var(--accent)] text-xs font-semibold text-center hover:bg-violet-500/10 transition"
+                        className="flex-1 py-2 rounded-xl border border-violet-500/40 text-[var(--accent-text)] text-xs font-semibold text-center hover:bg-violet-500/10 transition"
                       >
                         {t("modifier")}
                       </a>
@@ -454,7 +454,7 @@ export default function MesSitesPage() {
                     <button
                       onClick={() => handleUndoAiFix(site)}
                       disabled={undoing === site.id}
-                      className="py-2 rounded-xl border border-[var(--warning)]/30 text-[var(--warning)] text-xs font-medium text-center hover:border-[var(--warning)]/60 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="py-2 rounded-xl border border-[var(--warning)]/30 text-[var(--warning-text)] text-xs font-medium text-center hover:border-[var(--warning)]/60 transition disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {undoing === site.id ? t("undoingAiFix") : t("undoAiFix")}
                     </button>
@@ -477,7 +477,7 @@ export default function MesSitesPage() {
                     </button>
                   )}
                   {pushErrors[site.id] && (
-                    <p className="text-[11px] text-[var(--danger)]">{pushErrors[site.id]}</p>
+                    <p className="text-[11px] text-[var(--danger-text)]">{pushErrors[site.id]}</p>
                   )}
                   {pushResults[site.id] && (
                     <p className="text-[11px] text-[var(--text-faint)]">
@@ -486,7 +486,7 @@ export default function MesSitesPage() {
                         href={pushResults[site.id].url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-[var(--accent)] hover:underline"
+                        className="text-[var(--accent-text)] hover:underline"
                       >
                         {t("publishedLink")}
                       </a>
@@ -496,7 +496,7 @@ export default function MesSitesPage() {
                   <button
                     onClick={() => handleDelete(site)}
                     disabled={deleting === site.id}
-                    className="text-xs text-[var(--text-faint)] hover:text-[var(--danger)] transition disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="text-xs text-[var(--text-faint)] hover:text-[var(--danger-text)] transition disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {deleting === site.id ? t("deleting") : t("delete")}
                   </button>

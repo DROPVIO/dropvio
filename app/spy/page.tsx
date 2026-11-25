@@ -79,7 +79,7 @@ export default function SpyPage() {
       <div className="max-w-2xl mx-auto">
         {/* Header */}
         <div className="mb-12 text-center">
-          <div className="inline-flex items-center gap-2 mb-4 px-3 py-1 rounded-full bg-violet-500/10 border border-violet-500/20 text-[var(--accent)] text-xs font-medium tracking-widest uppercase">
+          <div className="inline-flex items-center gap-2 mb-4 px-3 py-1 rounded-full bg-violet-500/10 border border-violet-500/20 text-[var(--accent-text)] text-xs font-medium tracking-widest uppercase">
             {t("badge")}
           </div>
           <h1 className="text-4xl font-bold bg-gradient-to-r from-[var(--accent)] to-[var(--accent-secondary)] bg-clip-text text-transparent mb-3">
@@ -122,7 +122,7 @@ export default function SpyPage() {
 
         {/* Error */}
         {error && (
-          <div className="rounded-xl bg-[var(--danger)]/10 border border-[var(--danger)]/20 text-[var(--danger)] text-sm px-4 py-3 mb-6">
+          <div className="rounded-xl bg-[var(--danger)]/10 border border-[var(--danger)]/20 text-[var(--danger-text)] text-sm px-4 py-3 mb-6">
             {error}
           </div>
         )}
@@ -193,8 +193,8 @@ function StatCard({
   }[accent];
 
   const text = {
-    violet: "text-[var(--accent)]",
-    blue: "text-[var(--accent-secondary)]",
+    violet: "text-[var(--accent-text)]",
+    blue: "text-[var(--accent-secondary-text)]",
     indigo: isLight ? "text-indigo-600" : "text-indigo-300",
     purple: isLight ? "text-purple-600" : "text-purple-300",
   }[accent];

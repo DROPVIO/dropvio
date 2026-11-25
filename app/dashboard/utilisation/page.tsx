@@ -74,7 +74,7 @@ export default function UtilisationDetailPage() {
         {loading ? (
           <p className="text-[var(--text-faint)] text-sm text-center py-12">{t("common.loading")}</p>
         ) : error ? (
-          <div className="rounded-xl bg-[var(--danger)]/10 border border-[var(--danger)]/20 px-4 py-3 text-[var(--danger)] text-sm">{error}</div>
+          <div className="rounded-xl bg-[var(--danger)]/10 border border-[var(--danger)]/20 px-4 py-3 text-[var(--danger-text)] text-sm">{error}</div>
         ) : usage ? (
           <div className="flex flex-col gap-8">
             <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface-2)] p-6 flex flex-col gap-3">
@@ -135,7 +135,7 @@ export default function UtilisationDetailPage() {
                 </div>
                 <p className="text-xs font-semibold shrink-0">
                   {usage.catalogue.max === null ? (
-                    <span className="text-[var(--success)]">{t("utilisation.catalogueFull")}</span>
+                    <span className="text-[var(--success-text)]">{t("utilisation.catalogueFull")}</span>
                   ) : (
                     <span className="text-[var(--text-muted)]">
                       {t("utilisation.catalogueLimited", { max: format.number(usage.catalogue.max) })}

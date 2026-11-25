@@ -32,7 +32,7 @@ export default function BudgetIaSite() {
   const epuise = restant < 0.01;
 
   return (
-    <p className={`mt-2 text-xs ${epuise ? "text-[var(--warning)]" : "text-[var(--text-faint)]"}`}>
+    <p className={`mt-2 text-xs ${epuise ? "text-[var(--warning-text)]" : "text-[var(--text-faint)]"}`}>
       {epuise
         ? t("epuise")
         : t("restant", {

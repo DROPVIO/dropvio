@@ -68,7 +68,7 @@ export default function GenerationImagesBoutique({
         <p className="font-semibold text-[var(--text-primary)]">{t("titre")}</p>
         <p className="mt-1 text-xs text-[var(--text-muted)]">
           {t("reservePayant")}{" "}
-          <Link href="/abonnement" className="font-semibold text-[var(--accent)] hover:underline">{t("voirPlans")}</Link>
+          <Link href="/abonnement" className="font-semibold text-[var(--accent-text)] hover:underline">{t("voirPlans")}</Link>
         </p>
       </div>
     );
@@ -185,13 +185,13 @@ export default function GenerationImagesBoutique({
           {!outilDisponible(preparation.outil) ? (
             <MessageEtatOutil etat={preparation.outil} />
           ) : preparation.eligibles.length === 0 ? (
-            <p className="text-[var(--warning)]">{t("aucunEligible")}</p>
+            <p className="text-[var(--warning-text)]">{t("aucunEligible")}</p>
           ) : preparation.lot.couvert ? (
             <button type="button" onClick={() => void lancer(preparation.eligibles.length)} className="self-start rounded-lg bg-violet-600 px-3 py-1.5 font-semibold text-white transition hover:bg-violet-500">
               {t("lancer", { produits: preparation.eligibles.length })}
             </button>
           ) : preparation.lot.produitsPossibles > 0 ? (
-            <div className="flex flex-wrap items-center gap-2 text-[var(--warning)]">
+            <div className="flex flex-wrap items-center gap-2 text-[var(--warning-text)]">
               <span>{t("depasse", { possibles: preparation.lot.imagesPossibles, total: preparation.lot.images })}</span>
               <button
                 type="button"
@@ -202,7 +202,7 @@ export default function GenerationImagesBoutique({
               </button>
             </div>
           ) : (
-            <p className="text-[var(--warning)]">
+            <p className="text-[var(--warning-text)]">
               {t("quotaEpuise")}
               {preparation.quota?.source === "expert" && <Link href="/quota" className="ml-1 underline">{tNav("itemQuota")}</Link>}
             </p>
@@ -225,7 +225,7 @@ export default function GenerationImagesBoutique({
       {!lot.enCours && produitsLances.length > 0 && (
         <div className="flex flex-col gap-1.5 text-xs" aria-live="polite">
           {lot.arret ? (
-            <p role="alert" className="text-[var(--danger)]">
+            <p role="alert" className="text-[var(--danger-text)]">
               {lot.arret.raison === "pause"
                 ? `${lot.arret.finPause ? messagePause(lot.arret.finPause) : ""} ${t("arretUtilisateur", { traites: lot.arret.traites, total: lot.arret.total })}`
                 : lot.arret.raison === "quota"
@@ -236,7 +236,7 @@ export default function GenerationImagesBoutique({
               <LienQuotaEpuise code={lot.codeArret} />
             </p>
           ) : (
-            <p className="text-[var(--success)]">{t("termine", { traites: lot.traites, total: lot.total })}</p>
+            <p className="text-[var(--success-text)]">{t("termine", { traites: lot.traites, total: lot.total })}</p>
           )}
           {imagesGenerees > 0 && (
             <div className="flex flex-wrap items-center gap-2">
@@ -260,7 +260,7 @@ export default function GenerationImagesBoutique({
         </div>
       )}
 
-      {erreur && <p className="text-xs text-[var(--danger)]">{erreur}</p>}
+      {erreur && <p className="text-xs text-[var(--danger-text)]">{erreur}</p>}
     </div>
   );
 }

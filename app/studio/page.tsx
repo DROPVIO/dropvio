@@ -70,7 +70,7 @@ function Studio() {
     <div className="min-h-screen bg-[var(--bg)] px-4 pb-16 pt-16 font-sans text-[var(--text-primary)]">
       <div className="mx-auto w-full max-w-6xl">
         <div className="mb-10">
-          <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-violet-500/20 bg-violet-500/10 px-3 py-1 text-xs font-medium uppercase tracking-widest text-[var(--accent)]">
+          <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-violet-500/20 bg-violet-500/10 px-3 py-1 text-xs font-medium uppercase tracking-widest text-[var(--accent-text)]">
             <span className="h-1.5 w-1.5 rounded-full bg-violet-400" />
             {t("titre")}
           </div>

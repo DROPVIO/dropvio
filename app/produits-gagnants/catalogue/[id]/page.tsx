@@ -318,7 +318,7 @@ function CatalogueDetail() {
     return (
       <div className="min-h-screen w-full bg-[var(--bg)] px-8 py-10">
         {backLink}
-        <div className="mt-6 rounded-xl border border-[var(--danger)]/20 bg-[var(--danger)]/10 px-4 py-3 text-sm text-[var(--danger)]">{error ?? t("errorLoad")}</div>
+        <div className="mt-6 rounded-xl border border-[var(--danger)]/20 bg-[var(--danger)]/10 px-4 py-3 text-sm text-[var(--danger-text)]">{error ?? t("errorLoad")}</div>
       </div>
     );
   }
@@ -418,7 +418,7 @@ function CatalogueDetail() {
                 <dt className="text-[var(--text-faint)]">{t("fieldLienAliExpress")}</dt>
                 <dd className="min-w-0">
                   {produit.lienAliExpress ? (
-                    <a href={produit.lienAliExpress} target="_blank" rel="noopener noreferrer" className="break-all text-[var(--accent)] hover:underline">
+                    <a href={produit.lienAliExpress} target="_blank" rel="noopener noreferrer" className="break-all text-[var(--accent-text)] hover:underline">
                       {produit.lienAliExpress}
                     </a>
                   ) : (
@@ -472,7 +472,7 @@ function CatalogueDetail() {
             {boutiques.length === 0 ? (
               <div className="flex flex-col gap-2">
                 <p className="text-sm text-[var(--text-faint)]">{t("noBoutiqueYet")}</p>
-                <Link href="/site-builder/boutique" className="text-xs text-[var(--accent)] hover:underline">{t("createBoutique")}</Link>
+                <Link href="/site-builder/boutique" className="text-xs text-[var(--accent-text)] hover:underline">{t("createBoutique")}</Link>
               </div>
             ) : (
               <>
@@ -486,7 +486,7 @@ function CatalogueDetail() {
                       </option>
                     ))}
                   </select>
-                  <span className={`text-[11px] ${copie ? "text-[var(--success)]" : "text-[var(--text-faint)]"}`}>{copie ? t("statusIn") : t("statusNotIn")}</span>
+                  <span className={`text-[11px] ${copie ? "text-[var(--success-text)]" : "text-[var(--text-faint)]"}`}>{copie ? t("statusIn") : t("statusNotIn")}</span>
                 </label>
 
                 <div className="flex flex-col gap-1.5">
@@ -562,7 +562,7 @@ function CatalogueDetail() {
                 {message && (
                   <div
                     className={`rounded-xl border px-4 py-3 text-sm ${
-                      message.ok ? "border-[var(--success)]/20 bg-[var(--success)]/10 text-[var(--success)]" : "border-[var(--danger)]/20 bg-[var(--danger)]/10 text-[var(--danger)]"
+                      message.ok ? "border-[var(--success)]/20 bg-[var(--success)]/10 text-[var(--success-text)]" : "border-[var(--danger)]/20 bg-[var(--danger)]/10 text-[var(--danger-text)]"
                     }`}
                   >
                     {message.text}

@@ -37,7 +37,7 @@ export default function BoutiquePanierPage() {
         <h1 className="mt-4 text-3xl font-bold text-[var(--text-primary)]">{t("titre")}</h1>
 
         {erreurEcriture ? (
-          <p role="alert" className="mt-4 text-sm text-[var(--danger)]">
+          <p role="alert" className="mt-4 text-sm text-[var(--danger-text)]">
             {t("erreurStockage")}
           </p>
         ) : null}
@@ -103,7 +103,7 @@ export default function BoutiquePanierPage() {
                       type="button"
                       onClick={() => retirer(item.produitId)}
                       aria-label={t("retirerAria", { nom: item.nom })}
-                      className="text-xs text-[var(--text-faint)] hover:text-[var(--danger)]"
+                      className="text-xs text-[var(--text-faint)] hover:text-[var(--danger-text)]"
                     >
                       {t("retirer")}
                     </button>

@@ -236,9 +236,9 @@ export default function ImagesProduits({ plan, onGenere, produitCatalogue }: { p
               {produit.nom?.trim() || t("sansNomLibelle")}
             </span>
             {!produit.eligible.ok ? (
-              <span className="block text-xs text-[var(--warning)]">{t(produit.eligible.raison === "sans_nom" ? "sansNom" : "sansPhoto")}</span>
+              <span className="block text-xs text-[var(--warning-text)]">{t(produit.eligible.raison === "sans_nom" ? "sansNom" : "sansPhoto")}</span>
             ) : etat ? (
-              <span className={`block text-xs ${etat.statut === "erreur" ? "text-[var(--danger)]" : etat.statut === "ok" ? "text-[var(--success)]" : "text-[var(--text-faint)]"}`}>
+              <span className={`block text-xs ${etat.statut === "erreur" ? "text-[var(--danger-text)]" : etat.statut === "ok" ? "text-[var(--success-text)]" : "text-[var(--text-faint)]"}`}>
                 {etat.statut === "erreur" ? etat.message : t(`etat_${etat.statut}`)}
               </span>
             ) : (
@@ -246,7 +246,7 @@ export default function ImagesProduits({ plan, onGenere, produitCatalogue }: { p
             )}
           </span>
           {produit.type === "catalogue" && !lot.enCours && (
-            <button type="button" onClick={() => retirerDuCatalogue(produit.id)} className="shrink-0 text-xs text-[var(--text-faint)] hover:text-[var(--danger)]">
+            <button type="button" onClick={() => retirerDuCatalogue(produit.id)} className="shrink-0 text-xs text-[var(--text-faint)] hover:text-[var(--danger-text)]">
               {t("retirerListe")}
             </button>
           )}
@@ -289,9 +289,9 @@ export default function ImagesProduits({ plan, onGenere, produitCatalogue }: { p
                 {statutEnregistrement === "en_cours" ? t("enregistrement") : t("enregistrer")}
               </button>
             )}
-            {statutEnregistrement === "ok" && <span className="text-xs text-[var(--success)]">{t("enregistre")}</span>}
+            {statutEnregistrement === "ok" && <span className="text-xs text-[var(--success-text)]">{t("enregistre")}</span>}
             {statutEnregistrement && statutEnregistrement !== "ok" && statutEnregistrement !== "en_cours" && (
-              <span className="text-xs text-[var(--danger)]">{statutEnregistrement}</span>
+              <span className="text-xs text-[var(--danger-text)]">{statutEnregistrement}</span>
             )}
           </div>
         )}
@@ -359,13 +359,13 @@ export default function ImagesProduits({ plan, onGenere, produitCatalogue }: { p
 
           <ul className="max-h-[420px] overflow-y-auto rounded-xl border border-[var(--border)] bg-[var(--bg-sunken)]" aria-label={t("produitsTitre")}>
             {chargementErreur ? (
-              <li className="px-4 py-6 text-center text-sm text-[var(--danger)]">{t("chargementErreur")}</li>
+              <li className="px-4 py-6 text-center text-sm text-[var(--danger-text)]">{t("chargementErreur")}</li>
             ) : boutique === null ? (
               <li className="px-4 py-6 text-center text-sm text-[var(--text-faint)]">{ts("chargement")}</li>
             ) : tous.length === 0 ? (
               <li className="px-4 py-6 text-center text-sm text-[var(--text-muted)]">
                 {t("aucunProduit")}{" "}
-                <Link href="/produits-gagnants/catalogue" className="font-semibold text-[var(--accent)] underline-offset-4 hover:underline">{t("versCatalogue")}</Link>
+                <Link href="/produits-gagnants/catalogue" className="font-semibold text-[var(--accent-text)] underline-offset-4 hover:underline">{t("versCatalogue")}</Link>
               </li>
             ) : visibles.length === 0 ? (
               <li className="px-4 py-6 text-center text-sm text-[var(--text-muted)]">{t("rechercheVide")}</li>
@@ -425,7 +425,7 @@ export default function ImagesProduits({ plan, onGenere, produitCatalogue }: { p
         </p>
         <MessageEtatOutil etat={etatOutil} />
         {!plan_.couvert && selection.length > 0 && !lot.enCours && outilDisponible(etatOutil) && (
-          <div className="flex flex-wrap items-center gap-2 text-xs text-[var(--warning)]">
+          <div className="flex flex-wrap items-center gap-2 text-xs text-[var(--warning-text)]">
             <span>
               {plan_.produitsPossibles > 0
                 ? t("depasse", { possibles: plan_.imagesPossibles, produits: plan_.produitsPossibles })
@@ -435,7 +435,7 @@ export default function ImagesProduits({ plan, onGenere, produitCatalogue }: { p
               <button
                 type="button"
                 onClick={() => void lancer(selection.slice(0, plan_.produitsPossibles))}
-                className="rounded-lg border border-[var(--warning)]/40 px-2.5 py-1 font-semibold text-[var(--warning)] transition hover:bg-[var(--warning)]/10"
+                className="rounded-lg border border-[var(--warning)]/40 px-2.5 py-1 font-semibold text-[var(--warning-text)] transition hover:bg-[var(--warning)]/10"
               >
                 {t("genererSeulement", { produits: plan_.produitsPossibles })}
               </button>
@@ -452,7 +452,7 @@ export default function ImagesProduits({ plan, onGenere, produitCatalogue }: { p
           </div>
         )}
         {lot.arret && (
-          <p role="alert" className="text-xs text-[var(--danger)]">
+          <p role="alert" className="text-xs text-[var(--danger-text)]">
             {lot.arret.raison === "pause"
               ? `${lot.arret.finPause ? messagePause(lot.arret.finPause) : ""} ${t("arretUtilisateur", { traites: lot.arret.traites, total: lot.arret.total })}`
               : lot.arret.raison === "quota"

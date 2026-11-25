@@ -171,7 +171,7 @@ export default function BoutiqueShopifyPush({ boutiqueId, canExport }: { boutiqu
       ) : null}
 
       {erreur ? (
-        <div className="mt-4 rounded-xl border border-[var(--danger)]/20 bg-[var(--danger)]/10 px-4 py-3 text-sm text-[var(--danger)]">
+        <div className="mt-4 rounded-xl border border-[var(--danger)]/20 bg-[var(--danger)]/10 px-4 py-3 text-sm text-[var(--danger-text)]">
           {erreur}
           {reprise ? <span className="block mt-1">{t("repriseDisponible")}</span> : null}
         </div>
@@ -182,23 +182,23 @@ export default function BoutiqueShopifyPush({ boutiqueId, canExport }: { boutiqu
           <div
             className={`rounded-xl border px-4 py-3 text-sm ${
               resultat.status === "success"
-                ? "border-emerald-500/20 bg-emerald-500/10 text-[var(--success)]"
+                ? "border-emerald-500/20 bg-emerald-500/10 text-[var(--success-text)]"
                 : resultat.status === "partial"
-                ? "border-amber-500/20 bg-amber-500/10 text-[var(--warning)]"
-                : "border-[var(--danger)]/20 bg-[var(--danger)]/10 text-[var(--danger)]"
+                ? "border-amber-500/20 bg-amber-500/10 text-[var(--warning-text)]"
+                : "border-[var(--danger)]/20 bg-[var(--danger)]/10 text-[var(--danger-text)]"
             }`}
           >
             {resultat.status === "success" ? t("succes") : resultat.status === "partial" ? t("partiel") : t("echec")}
           </div>
           {resultat.resets > 0 ? (
-            <div className="rounded-xl border border-amber-500/20 bg-amber-500/10 px-4 py-3 text-sm text-[var(--warning)]">
+            <div className="rounded-xl border border-amber-500/20 bg-amber-500/10 px-4 py-3 text-sm text-[var(--warning-text)]">
               {t("resets", { count: resultat.resets })}
             </div>
           ) : null}
           {resultat.erreurs.map((item) => (
             <div
               key={item.id}
-              className="rounded-lg border border-[var(--danger)]/10 bg-[var(--danger)]/[0.04] px-3 py-2 text-xs text-[var(--danger)]"
+              className="rounded-lg border border-[var(--danger)]/10 bg-[var(--danger)]/[0.04] px-3 py-2 text-xs text-[var(--danger-text)]"
             >
               {t("erreurElement", { nom: item.nom, erreur: apiErrorMessage({ code: item.code }) })}
             </div>

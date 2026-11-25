@@ -76,7 +76,7 @@ export default function BoutiqueHeaderCart({ boutiqueSlug, fullCartHref }: Bouti
             {count > 0 ? <span className="text-xs text-[var(--text-muted)]">{t("articles", { count })}</span> : null}
           </div>
 
-          {erreurEcriture ? <p className="mt-2 text-xs text-[var(--danger)]">{t("erreurStockage")}</p> : null}
+          {erreurEcriture ? <p className="mt-2 text-xs text-[var(--danger-text)]">{t("erreurStockage")}</p> : null}
 
           {items.length === 0 ? (
             <div className="mt-4 rounded-2xl border border-dashed border-[var(--border)] bg-[var(--surface-2)] p-4 text-xs text-[var(--text-muted)]">
@@ -129,7 +129,7 @@ export default function BoutiqueHeaderCart({ boutiqueSlug, fullCartHref }: Bouti
                       type="button"
                       onClick={() => retirer(item.produitId)}
                       aria-label={t("retirerAria", { nom: item.nom })}
-                      className="text-[var(--text-faint)] hover:text-[var(--danger)]"
+                      className="text-[var(--text-faint)] hover:text-[var(--danger-text)]"
                     >
                       ×
                     </button>

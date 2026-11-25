@@ -152,7 +152,7 @@ export default function BoutiqueReglages({
         </div>
         <p className="mt-2 text-xs text-[var(--text-muted)]">{t("identite.aideSlug")}</p>
         {boutique.est_publique && slugify(slug) !== boutique.slug ? (
-          <p className="mt-2 text-xs text-[var(--warning)]">{t("identite.avertissementSlug")}</p>
+          <p className="mt-2 text-xs text-[var(--warning-text)]">{t("identite.avertissementSlug")}</p>
         ) : null}
         <div className="mt-2 flex items-center gap-2">
           <button
@@ -163,8 +163,8 @@ export default function BoutiqueReglages({
           >
             {identiteEnCours ? t("enregistrement") : t("enregistrer")}
           </button>
-          {identiteSucces ? <span className="text-sm text-[var(--success)]">{t("enregistre")}</span> : null}
-          {identiteErreur ? <span className="text-sm text-[var(--danger)]">{identiteErreur}</span> : null}
+          {identiteSucces ? <span className="text-sm text-[var(--success-text)]">{t("enregistre")}</span> : null}
+          {identiteErreur ? <span className="text-sm text-[var(--danger-text)]">{identiteErreur}</span> : null}
         </div>
       </div>
 
@@ -183,8 +183,8 @@ export default function BoutiqueReglages({
             </option>
           ))}
         </select>
-        {!langueDisponible ? <p className="mt-2 text-xs text-[var(--warning)]">{t("langue.indisponible")}</p> : null}
-        {langueErreur ? <p className="mt-2 text-sm text-[var(--danger)]">{langueErreur}</p> : null}
+        {!langueDisponible ? <p className="mt-2 text-xs text-[var(--warning-text)]">{t("langue.indisponible")}</p> : null}
+        {langueErreur ? <p className="mt-2 text-sm text-[var(--danger-text)]">{langueErreur}</p> : null}
       </div>
 
       <div className="mt-3 rounded-2xl border border-[var(--border)] bg-[var(--surface-2)] p-3">
@@ -214,7 +214,7 @@ export default function BoutiqueReglages({
         <p className="mt-2 text-xs text-[var(--text-muted)]">
           {boutique.est_publique ? t("visibilite.aidePublique") : t("visibilite.aidePrivee")}
         </p>
-        {visibiliteErreur ? <p className="mt-2 text-sm text-[var(--danger)]">{visibiliteErreur}</p> : null}
+        {visibiliteErreur ? <p className="mt-2 text-sm text-[var(--danger-text)]">{visibiliteErreur}</p> : null}
       </div>
 
     </>
@@ -282,11 +282,11 @@ export function BoutiqueSuppression({
         type="button"
         onClick={() => void supprimer()}
         disabled={suppressionEnCours}
-        className="shrink-0 text-xs font-semibold text-[var(--danger)] transition hover:underline disabled:opacity-50"
+        className="shrink-0 text-xs font-semibold text-[var(--danger-text)] transition hover:underline disabled:opacity-50"
       >
         {suppressionEnCours ? t("suppression.enCours") : t("suppression.bouton")}
       </button>
-      {suppressionErreur ? <p className="w-full text-xs text-[var(--danger)]">{suppressionErreur}</p> : null}
+      {suppressionErreur ? <p className="w-full text-xs text-[var(--danger-text)]">{suppressionErreur}</p> : null}
     </div>
   );
 }

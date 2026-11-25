@@ -85,11 +85,11 @@ export default function BoutiquesDetailPage() {
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
           <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5">
             <p className="text-[10px] font-semibold uppercase tracking-widest text-[var(--text-faint)]">{t("boutiques.statBoutiques")}</p>
-            <p className="text-2xl font-bold tabular-nums text-[var(--accent)] mt-2">{boutiques.length}</p>
+            <p className="text-2xl font-bold tabular-nums text-[var(--accent-text)] mt-2">{boutiques.length}</p>
           </div>
           <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5">
             <p className="text-[10px] font-semibold uppercase tracking-widest text-[var(--text-faint)]">{t("boutiques.statProduits")}</p>
-            <p className="text-2xl font-bold tabular-nums text-[var(--accent-secondary)] mt-2">{totalProduits}</p>
+            <p className="text-2xl font-bold tabular-nums text-[var(--accent-secondary-text)] mt-2">{totalProduits}</p>
           </div>
         </div>
 
@@ -99,7 +99,7 @@ export default function BoutiquesDetailPage() {
           ) : boutiques.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 gap-2">
               <p className="text-[var(--text-faint)] text-sm">{t("boutiques.empty")}</p>
-              <a href="/site-builder" className="text-[var(--accent)] text-xs hover:underline">
+              <a href="/site-builder" className="text-[var(--accent-text)] text-xs hover:underline">
                 {t("boutiques.cta")}
               </a>
             </div>
@@ -115,9 +115,9 @@ export default function BoutiquesDetailPage() {
                     <p className="text-sm text-[var(--text-primary)] truncate">{b.nom}</p>
                     <p className="text-[11px] text-[var(--text-faint)] mt-0.5">
                       {new Date(b.created_at).toLocaleDateString(intlTag, { day: "numeric", month: "short", year: "numeric" })}
-                      {b.est_publique && <span className="text-[var(--success)]"> · {t("boutiques.public")}</span>}
+                      {b.est_publique && <span className="text-[var(--success-text)]"> · {t("boutiques.public")}</span>}
                       {maxProduits !== null && b.produitsCount > maxProduits && (
-                        <span className="text-[var(--warning)]"> · {t("boutiques.auDelaLimite", { max: maxProduits })}</span>
+                        <span className="text-[var(--warning-text)]"> · {t("boutiques.auDelaLimite", { max: maxProduits })}</span>
                       )}
                     </p>
                   </div>

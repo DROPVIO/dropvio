@@ -64,9 +64,9 @@ export function MessageEtatOutil({ etat }: { etat: EtatOutilClient | null }) {
   const t = useTranslations("outilsIa");
   const messagePause = useMessagePause();
   if (!etat) return null;
-  if (etat.statut === "pause") return <p role="status" className="text-xs font-semibold text-[var(--warning)]">{messagePause(etat.finPause)}</p>;
-  if (etat.statut === "a_definir") return <p role="status" className="text-xs text-[var(--warning)]">{t("aDefinir")}</p>;
-  if (etat.statut === "migration") return <p role="status" className="text-xs text-[var(--warning)]">{t("migration")}</p>;
+  if (etat.statut === "pause") return <p role="status" className="text-xs font-semibold text-[var(--warning-text)]">{messagePause(etat.finPause)}</p>;
+  if (etat.statut === "a_definir") return <p role="status" className="text-xs text-[var(--warning-text)]">{t("aDefinir")}</p>;
+  if (etat.statut === "migration") return <p role="status" className="text-xs text-[var(--warning-text)]">{t("migration")}</p>;
   return (
     <p className="text-xs text-[var(--text-faint)]">
       {t("restants", { restants: etat.restants, max: etat.creditsMax, images: etat.imagesPossibles })}

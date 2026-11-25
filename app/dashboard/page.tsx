@@ -212,21 +212,21 @@ export default function DashboardPage() {
       label: t("metricSitesMonth"),
       value: String(sitesMois),
       sub: t("metricSitesMonthSub"),
-      accent: "text-[var(--accent)]",
+      accent: "text-[var(--accent-text)]",
     },
     {
       id: "total",
       label: t("metricSitesTotal"),
       value: fmt(sitesTotal),
       sub: t("metricSitesTotalSub"),
-      accent: "text-[var(--accent-secondary)]",
+      accent: "text-[var(--accent-secondary-text)]",
     },
     {
       id: "produits",
       label: t("metricProducts"),
       value: fmt(produitsTotal),
       sub: t("metricProductsSub"),
-      accent: "text-[var(--success)]",
+      accent: "text-[var(--success-text)]",
     },
     {
       id: "plan",
@@ -331,8 +331,8 @@ export default function DashboardPage() {
               >
                 <span className="text-lg shrink-0">⚠️</span>
                 <div className="min-w-0">
-                  <p className="text-sm font-medium text-[var(--warning)]">{t("reconnectTitle")}</p>
-                  <p className="text-[11px] text-[var(--warning)]/80 mt-0.5">{t("reconnectBody")}</p>
+                  <p className="text-sm font-medium text-[var(--warning-text)]">{t("reconnectTitle")}</p>
+                  <p className="text-[11px] text-[var(--warning-text)]/80 mt-0.5">{t("reconnectBody")}</p>
                 </div>
               </a>
             )}
@@ -360,7 +360,7 @@ export default function DashboardPage() {
                     <p className="text-[11px] text-[var(--text-faint)] leading-relaxed">{m.sub}</p>
                   )}
                   {m.id === "plan" && !planEnVigueur ? (
-                    <Link href="/abonnement" className="self-start text-[12px] font-semibold text-[var(--accent)] underline-offset-4 hover:underline">
+                    <Link href="/abonnement" className="self-start text-[12px] font-semibold text-[var(--accent-text)] underline-offset-4 hover:underline">
                       {tNav("choisirAbonnement")}
                     </Link>
                   ) : null}

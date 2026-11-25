@@ -112,7 +112,7 @@ export default function AuthButton() {
                 <button
                   onClick={handleSignOut}
                   disabled={signingOut}
-                  className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs text-[var(--danger)] hover:bg-[var(--danger)]/10 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs text-[var(--danger-text)] hover:bg-[var(--danger)]/10 transition disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
                     <path d="M4.5 2H2.5C2.2 2 2 2.2 2 2.5v7c0 .3.2.5.5.5H4.5M8 8.5L10.5 6 8 3.5M10.5 6H4.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>

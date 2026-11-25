@@ -21,7 +21,7 @@ export function CompteurProduits({ plan, count }: { plan: Plan; count: number })
     <span
       className={`rounded-full border px-3 py-2 text-xs font-semibold tabular-nums ${
         atteinte
-          ? "border-[var(--warning)]/40 bg-amber-500/10 text-[var(--warning)]"
+          ? "border-[var(--warning)]/40 bg-amber-500/10 text-[var(--warning-text)]"
           : "border-[var(--border)] bg-[var(--surface-2)] text-[var(--text-muted)]"
       }`}
     >
@@ -42,7 +42,7 @@ export function AlerteLimiteProduits({ plan, count }: { plan: Plan; count: numbe
   const depassement = count > max;
 
   return (
-    <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-[var(--warning)]">
+    <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-[var(--warning-text)]">
       <p>
         {depassement
           ? t("depassement", { count, max, plan: planLabel(plan) })
@@ -67,7 +67,7 @@ export function BandeauDepassementProduits({ plan, count }: { plan: Plan; count:
   if (max === null || count <= max) return null;
   const superieur = planSuperieurProduitsBoutique(plan);
   return (
-    <div className="rounded-3xl border border-amber-500/30 bg-amber-500/10 p-6 text-sm text-[var(--warning)]">
+    <div className="rounded-3xl border border-amber-500/30 bg-amber-500/10 p-6 text-sm text-[var(--warning-text)]">
       <p>{t("depassement", { count, max, plan: planLabel(plan) })}</p>
       {superieur ? (
         <Link href={LIEN_CHANGER_DE_PLAN} className="mt-1 inline-block font-semibold underline underline-offset-2">

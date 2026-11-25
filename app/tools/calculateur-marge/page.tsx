@@ -650,7 +650,7 @@ function CalculateurMargeInner() {
                 </div>
 
                 {(parseFloat(prixVente) || 0) >= DOUANE_SEUIL_UK && (
-                  <div className="text-xs text-[var(--warning)] bg-[var(--warning)]/10 border border-[var(--warning)]/20 rounded-lg px-3.5 py-2.5 leading-relaxed">
+                  <div className="text-xs text-[var(--warning-text)] bg-[var(--warning)]/10 border border-[var(--warning)]/20 rounded-lg px-3.5 py-2.5 leading-relaxed">
                     {t("ukDouane", { seuil: DOUANE_SEUIL_UK })}
                   </div>
                 )}
@@ -681,7 +681,7 @@ function CalculateurMargeInner() {
               <div className="bg-[var(--bg-sunken)] rounded-xl p-5 border border-[var(--border)] grid gap-4">
                 <div>
                   <label className="block text-[13px] font-medium text-[var(--text-muted)] mb-2">
-                    {t("usStateLabel")} <span className="text-[var(--accent)]">*</span>
+                    {t("usStateLabel")} <span className="text-[var(--accent-text)]">*</span>
                   </label>
                   <select
                     value={usState}
@@ -892,7 +892,7 @@ function CalculateurMargeInner() {
                   caption={t("deCondition2", { seuil: SEUIL_KLEINUNTERNEHMER_PREVISIONNEL_DE.toLocaleString(intlTag) })}
                 />
                 {(parseFloat(caAnneePrecedenteDE) > SEUIL_KLEINUNTERNEHMER_PRECEDENT_DE || parseFloat(caPrevisionnelDE) > SEUIL_KLEINUNTERNEHMER_PREVISIONNEL_DE) && (
-                  <div className="text-[12.5px] text-[var(--danger)] bg-[var(--danger)]/10 border border-[var(--danger)]/20 rounded-lg px-4 py-3 leading-relaxed">
+                  <div className="text-[12.5px] text-[var(--danger-text)] bg-[var(--danger)]/10 border border-[var(--danger)]/20 rounded-lg px-4 py-3 leading-relaxed">
                     {t("deSeuilDepasse")}
                   </div>
                 )}
@@ -988,7 +988,7 @@ function CalculateurMargeInner() {
             />
             <div className="bg-[var(--bg-sunken)] rounded-[10px] px-4 py-3 border border-[var(--border)] h-[46px] flex items-center justify-between">
               <span className="text-xs text-[var(--text-faint)]">{t("prixVenteMin")}</span>
-              <span className={`text-base font-bold ${prixVenteMin !== null ? "text-[var(--accent)]" : "text-[var(--text-faint)]"}`}>
+              <span className={`text-base font-bold ${prixVenteMin !== null ? "text-[var(--accent-text)]" : "text-[var(--text-faint)]"}`}>
                 {margeCible
                   ? prixVenteMin !== null
                     ? `${prixVenteMin.toFixed(2)} ${devise}`
@@ -998,7 +998,7 @@ function CalculateurMargeInner() {
             </div>
           </div>
           {margeCible && prixVenteMin === null && (
-            <div className="mt-3 text-[12.5px] text-[var(--danger)]">{t("margeCibleInatteignable")}</div>
+            <div className="mt-3 text-[12.5px] text-[var(--danger-text)]">{t("margeCibleInatteignable")}</div>
           )}
         </div>
 
@@ -1031,7 +1031,7 @@ function CalculateurMargeInner() {
                 en tooltip, pour rester visibles même si l'utilisateur ne survole rien. */}
             {mode === "us" && (
               <div className="mb-5 grid gap-2.5">
-                <div className="text-[12.5px] text-[var(--warning)] bg-[var(--warning)]/10 border border-[var(--warning)]/20 rounded-lg px-4 py-3 leading-relaxed">
+                <div className="text-[12.5px] text-[var(--warning-text)] bg-[var(--warning)]/10 border border-[var(--warning)]/20 rounded-lg px-4 py-3 leading-relaxed">
                   {t("noteUs1")}
                 </div>
                 <div className="text-[12.5px] text-[var(--text-faint)] bg-[var(--bg-sunken)] border border-[var(--border)] rounded-lg px-4 py-3 leading-relaxed">
@@ -1062,7 +1062,7 @@ function CalculateurMargeInner() {
             {/* Avertissements fixes mode Canada — affichés en permanence sous le résultat */}
             {mode === "ca" && (
               <div className="mb-5 grid gap-2.5">
-                <div className="text-[12.5px] text-[var(--warning)] bg-[var(--warning)]/10 border border-[var(--warning)]/20 rounded-lg px-4 py-3 leading-relaxed">
+                <div className="text-[12.5px] text-[var(--warning-text)] bg-[var(--warning)]/10 border border-[var(--warning)]/20 rounded-lg px-4 py-3 leading-relaxed">
                   {t("noteCa1")}
                 </div>
                 <div className="text-[12.5px] text-[var(--text-faint)] bg-[var(--bg-sunken)] border border-[var(--border)] rounded-lg px-4 py-3 leading-relaxed">
@@ -1144,7 +1144,7 @@ function CalculateurMargeInner() {
               </div>
             ) : null}
             {saveError && (
-              <div className="mt-3 px-3.5 py-2.5 bg-[var(--danger)]/10 border border-[var(--danger)]/20 rounded-lg text-[12.5px] text-[var(--danger)]">
+              <div className="mt-3 px-3.5 py-2.5 bg-[var(--danger)]/10 border border-[var(--danger)]/20 rounded-lg text-[12.5px] text-[var(--danger-text)]">
                 {saveError}
               </div>
             )}
@@ -1154,12 +1154,12 @@ function CalculateurMargeInner() {
 
             {/* Conseil */}
             {resultats.margePct < 20 && (
-              <div className="mt-5 px-4.5 py-3.5 bg-[var(--danger)]/10 rounded-[10px] border border-[var(--danger)]/20 text-[13px] text-[var(--danger)] leading-relaxed">
+              <div className="mt-5 px-4.5 py-3.5 bg-[var(--danger)]/10 rounded-[10px] border border-[var(--danger)]/20 text-[13px] text-[var(--danger-text)] leading-relaxed">
                 {t("conseilFaible")}
               </div>
             )}
             {resultats.margePct >= 40 && (
-              <div className="mt-5 px-4.5 py-3.5 bg-[var(--success)]/10 rounded-[10px] border border-[var(--success)]/20 text-[13px] text-[var(--success)] leading-relaxed">
+              <div className="mt-5 px-4.5 py-3.5 bg-[var(--success)]/10 rounded-[10px] border border-[var(--success)]/20 text-[13px] text-[var(--success-text)] leading-relaxed">
                 {t("conseilBonne")}
               </div>
             )}
@@ -1172,7 +1172,7 @@ function CalculateurMargeInner() {
               <div className="grid grid-cols-3 gap-3">
                 {scaleData.map((s) => (
                   <div key={s.n} className="bg-[var(--bg-sunken)] rounded-xl px-4 py-4.5 border border-[var(--border)]">
-                    <div className="text-xs font-bold text-[var(--accent)] mb-3">
+                    <div className="text-xs font-bold text-[var(--accent-text)] mb-3">
                       {t("commandesParMois", { n: s.n })}
                     </div>
                     <div className="grid gap-2">
@@ -1210,7 +1210,7 @@ function CalculateurMargeInner() {
             </h2>
 
             {deleteError && (
-              <div className="mb-3 text-[13px] text-[var(--danger)]">{deleteError}</div>
+              <div className="mb-3 text-[13px] text-[var(--danger-text)]">{deleteError}</div>
             )}
 
             {loadingSims ? (
@@ -1242,14 +1242,14 @@ function CalculateurMargeInner() {
                       <div className="flex gap-2 shrink-0">
                         <button
                           onClick={() => handleCharger(sim)}
-                          className="bg-violet-500/10 border border-violet-500/30 text-[var(--accent)] px-3 py-[7px] rounded-[7px] text-xs font-semibold cursor-pointer"
+                          className="bg-violet-500/10 border border-violet-500/30 text-[var(--accent-text)] px-3 py-[7px] rounded-[7px] text-xs font-semibold cursor-pointer"
                         >
                           {t("simCharger")}
                         </button>
                         <button
                           onClick={() => handleSupprimer(sim.id)}
                           disabled={deletingSimId === sim.id}
-                          className="bg-transparent border border-[var(--danger)]/20 text-[var(--danger)] px-3 py-[7px] rounded-[7px] text-xs font-semibold cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                          className="bg-transparent border border-[var(--danger)]/20 text-[var(--danger-text)] px-3 py-[7px] rounded-[7px] text-xs font-semibold cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                           {deletingSimId === sim.id ? "…" : t("simSupprimer")}
                         </button>
@@ -1364,7 +1364,7 @@ function InputField({
   return (
     <div>
       <label className="block text-[13px] font-medium text-[var(--text-muted)] mb-2">
-        {label} {required && <span className="text-[var(--accent)]">*</span>}
+        {label} {required && <span className="text-[var(--accent-text)]">*</span>}
       </label>
       <input
         type="number"

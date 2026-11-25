@@ -932,7 +932,7 @@ export default function BoutiqueBuilderDetailPage() {
         aria-expanded={menuAjoutOuvert}
         className={`flex h-9 w-9 items-center justify-center rounded-full border text-xl leading-none transition ${
           menuAjoutOuvert
-            ? "border-violet-500/50 bg-violet-500/10 text-[var(--accent)] rotate-45"
+            ? "border-violet-500/50 bg-violet-500/10 text-[var(--accent-text)] rotate-45"
             : "border-[var(--border-strong)] text-[var(--text-muted)] hover:bg-[var(--surface)] hover:text-[var(--text-primary)]"
         }`}
       >
@@ -1002,7 +1002,7 @@ export default function BoutiqueBuilderDetailPage() {
         </div>
 
         {globalError ? (
-          <div className="rounded-3xl border border-[var(--danger)]/20 bg-[var(--danger)]/10 p-6 text-sm text-[var(--danger)]">
+          <div className="rounded-3xl border border-[var(--danger)]/20 bg-[var(--danger)]/10 p-6 text-sm text-[var(--danger-text)]">
             {globalError}
           </div>
         ) : null}
@@ -1048,8 +1048,8 @@ export default function BoutiqueBuilderDetailPage() {
                 >
                   {savingMentions ? t("enregistrement") : t("enregistrer")}
                 </button>
-                {mentionsSuccess ? <span className="text-sm text-[var(--success)]">{t("enregistre")}</span> : null}
-                {mentionsError ? <span className="text-sm text-[var(--danger)]">{mentionsError}</span> : null}
+                {mentionsSuccess ? <span className="text-sm text-[var(--success-text)]">{t("enregistre")}</span> : null}
+                {mentionsError ? <span className="text-sm text-[var(--danger-text)]">{mentionsError}</span> : null}
               </div>
             </div>
 
@@ -1080,7 +1080,7 @@ export default function BoutiqueBuilderDetailPage() {
                       type="button"
                       onClick={() => setBandeauVideos((prev) => prev.filter((_, i) => i !== index))}
                       aria-label={t("bandeau.retirerVideo")}
-                      className="shrink-0 rounded-full border border-[var(--border)] px-3 py-2 text-sm text-[var(--text-faint)] transition hover:border-[var(--danger)]/40 hover:text-[var(--danger)]"
+                      className="shrink-0 rounded-full border border-[var(--border)] px-3 py-2 text-sm text-[var(--text-faint)] transition hover:border-[var(--danger)]/40 hover:text-[var(--danger-text)]"
                     >
                       ×
                     </button>
@@ -1103,8 +1103,8 @@ export default function BoutiqueBuilderDetailPage() {
                 >
                   {savingBandeau ? t("enregistrement") : t("enregistrer")}
                 </button>
-                {bandeauSuccess ? <span className="text-sm text-[var(--success)]">{t("enregistre")}</span> : null}
-                {bandeauError ? <span className="text-sm text-[var(--danger)]">{bandeauError}</span> : null}
+                {bandeauSuccess ? <span className="text-sm text-[var(--success-text)]">{t("enregistre")}</span> : null}
+                {bandeauError ? <span className="text-sm text-[var(--danger-text)]">{bandeauError}</span> : null}
               </div>
             </div>
 
@@ -1173,7 +1173,7 @@ export default function BoutiqueBuilderDetailPage() {
                 {t("site.preparerAide")}
               </p>
               {contenuError && (
-                <p className="mt-2 text-sm text-[var(--danger)]">{contenuError}</p>
+                <p className="mt-2 text-sm text-[var(--danger-text)]">{contenuError}</p>
               )}
               {reviewPalette === null ? (
                 <div className="mt-3">
@@ -1301,7 +1301,7 @@ export default function BoutiqueBuilderDetailPage() {
               {productsLoading ? (
                 <p className="text-sm text-[var(--text-muted)]">{t("produits.chargement")}</p>
               ) : productsError ? (
-                <p className="text-sm text-[var(--danger)]">{productsError}</p>
+                <p className="text-sm text-[var(--danger-text)]">{productsError}</p>
               ) : products.length === 0 ? (
                 <div className="flex items-center justify-between gap-3">
                   <p className="text-sm text-[var(--text-muted)]">{t("produits.vide")}</p>
@@ -1363,7 +1363,7 @@ export default function BoutiqueBuilderDetailPage() {
                               type="button"
                               onClick={() => void handleDeleteProduct(product.id)}
                               disabled={deletingProductId === product.id}
-                              className="rounded-xl bg-[var(--danger)]/10 px-3 py-2 text-xs font-semibold text-[var(--danger)] transition hover:bg-[var(--danger)]/20 disabled:opacity-50 disabled:cursor-not-allowed"
+                              className="rounded-xl bg-[var(--danger)]/10 px-3 py-2 text-xs font-semibold text-[var(--danger-text)] transition hover:bg-[var(--danger)]/20 disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                               {deletingProductId === product.id ? "…" : t("supprimer")}
                             </button>
@@ -1453,7 +1453,7 @@ export default function BoutiqueBuilderDetailPage() {
                     {importLoading ? t("formulaire.importation") : t("formulaire.importerBouton")}
                   </button>
                 </div>
-                {importError ? <p className="text-xs text-[var(--danger)]">{importError}</p> : null}
+                {importError ? <p className="text-xs text-[var(--danger-text)]">{importError}</p> : null}
               </div>
 
               <div className="grid gap-2.5 sm:grid-cols-2">
@@ -1592,9 +1592,9 @@ export default function BoutiqueBuilderDetailPage() {
               </label>
 
               {productFormError ? (
-                <p className="text-xs text-[var(--danger)]">{productFormError}</p>
+                <p className="text-xs text-[var(--danger-text)]">{productFormError}</p>
               ) : productFormSuccess ? (
-                <p className="text-xs text-[var(--success)]">{productFormSuccess}</p>
+                <p className="text-xs text-[var(--success-text)]">{productFormSuccess}</p>
               ) : null}
 
               <div className="flex flex-wrap gap-2">
@@ -1667,7 +1667,7 @@ export default function BoutiqueBuilderDetailPage() {
             {categoriesLoading ? (
               <p className="mt-3 text-sm text-[var(--text-muted)]">{t("categories.chargement")}</p>
             ) : categoriesError ? (
-              <p className="mt-3 text-sm text-[var(--danger)]">{categoriesError}</p>
+              <p className="mt-3 text-sm text-[var(--danger-text)]">{categoriesError}</p>
             ) : categories.length === 0 ? (
               <p className="mt-3 text-sm text-[var(--text-muted)]">{t("categories.vide")}</p>
             ) : (
@@ -1695,7 +1695,7 @@ export default function BoutiqueBuilderDetailPage() {
                           type="button"
                           onClick={() => void handleDeleteCategory(category.id)}
                           disabled={categoryActionId === category.id}
-                          className="rounded-2xl bg-[var(--danger)]/10 px-3 py-2 text-xs font-semibold text-[var(--danger)] transition hover:bg-[var(--danger)]/20 disabled:opacity-50 disabled:cursor-not-allowed"
+                          className="rounded-2xl bg-[var(--danger)]/10 px-3 py-2 text-xs font-semibold text-[var(--danger-text)] transition hover:bg-[var(--danger)]/20 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                           {categoryActionId === category.id ? "…" : t("supprimer")}
                         </button>

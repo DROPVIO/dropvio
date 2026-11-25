@@ -94,11 +94,11 @@ export default function SitesDetailPage() {
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
           <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface-2)] p-5">
             <p className="text-[10px] font-semibold uppercase tracking-widest text-[var(--text-faint)]">{t("sites.statMonth")}</p>
-            <p className="text-2xl font-bold tabular-nums text-[var(--accent)] mt-2">{sitesMois}</p>
+            <p className="text-2xl font-bold tabular-nums text-[var(--accent-text)] mt-2">{sitesMois}</p>
           </div>
           <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface-2)] p-5">
             <p className="text-[10px] font-semibold uppercase tracking-widest text-[var(--text-faint)]">{t("sites.statTotal")}</p>
-            <p className="text-2xl font-bold tabular-nums text-[var(--accent-secondary)] mt-2">{fmt(sites.length)}</p>
+            <p className="text-2xl font-bold tabular-nums text-[var(--accent-secondary-text)] mt-2">{fmt(sites.length)}</p>
           </div>
         </div>
 
@@ -111,7 +111,7 @@ export default function SitesDetailPage() {
           {!loading && sites.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 gap-2">
               <p className="text-[var(--text-faint)] text-sm">{t("sites.empty")}</p>
-              <a href="/site-builder" className="text-[var(--accent)] text-xs hover:underline">
+              <a href="/site-builder" className="text-[var(--accent-text)] text-xs hover:underline">
                 {t("sites.cta")}
               </a>
             </div>

@@ -105,18 +105,18 @@ export default function RegisterPage() {
           </p>
 
           {resendState === "sent" ? (
-            <p className="mt-1 text-sm text-[var(--success)]">{t("resendSent")}</p>
+            <p className="mt-1 text-sm text-[var(--success-text)]">{t("resendSent")}</p>
           ) : (
             <button
               onClick={handleResend}
               disabled={resendState === "loading"}
-              className="mt-1 text-sm text-[var(--accent)] hover:opacity-80 transition font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+              className="mt-1 text-sm text-[var(--accent-text)] hover:opacity-80 transition font-medium disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {resendState === "loading" ? t("resendSending") : t("resend")}
             </button>
           )}
           {resendState === "error" && resendError && (
-            <p className="text-xs text-[var(--danger)]">{resendError}</p>
+            <p className="text-xs text-[var(--danger-text)]">{resendError}</p>
           )}
 
           <a href="/login" className="mt-2 text-sm text-[var(--text-faint)] hover:text-[var(--text-muted)] transition font-medium">
@@ -143,7 +143,7 @@ export default function RegisterPage() {
           <p className="text-[var(--text-faint)] text-sm mb-8">{t("subtitle")}</p>
 
           {error && (
-            <div className="mb-5 rounded-xl bg-[var(--danger)]/10 border border-[var(--danger)]/20 px-4 py-3 text-[var(--danger)] text-sm">
+            <div className="mb-5 rounded-xl bg-[var(--danger)]/10 border border-[var(--danger)]/20 px-4 py-3 text-[var(--danger-text)] text-sm">
               {error}
             </div>
           )}
@@ -197,7 +197,7 @@ export default function RegisterPage() {
             <p className="text-xs leading-relaxed text-[var(--text-faint)]">
               {t.rich("confidentialite", {
                 lien: (texte) => (
-                  <Link href="/confidentialite" className="text-[var(--accent)] underline underline-offset-2 hover:opacity-80">
+                  <Link href="/confidentialite" className="text-[var(--accent-text)] underline underline-offset-2 hover:opacity-80">
                     {texte}
                   </Link>
                 ),
@@ -207,7 +207,7 @@ export default function RegisterPage() {
 
           <p className="mt-6 text-center text-sm text-[var(--text-faint)]">
             {t("hasAccount")}{" "}
-            <a href="/login" className="text-[var(--accent)] hover:opacity-80 font-medium transition">
+            <a href="/login" className="text-[var(--accent-text)] hover:opacity-80 font-medium transition">
               {t("signIn")}
             </a>
           </p>

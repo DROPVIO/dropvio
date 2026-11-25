@@ -253,7 +253,7 @@ function NavGroupe({
         {parentEnEvidence && !collapsed && (
           <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 bg-[var(--accent)] rounded-r-full" />
         )}
-        <span className={`shrink-0 ${actif ? "text-[var(--accent)]" : "text-[var(--text-faint)]"}`}>{item.icon}</span>
+        <span className={`shrink-0 ${actif ? "text-[var(--accent-text)]" : "text-[var(--text-faint)]"}`}>{item.icon}</span>
         {!collapsed && (
           <>
             <span className="flex-1 whitespace-nowrap">{label}</span>
@@ -288,9 +288,9 @@ function NavGroupe({
 
 const PLAN_CLS: Record<string, string> = {
   aucun:  "text-[var(--text-faint)]",
-  pro:    "text-[var(--accent)]",
-  agency: "text-[var(--warning)]",
-  expert: "text-[var(--success)]",
+  pro:    "text-[var(--accent-text)]",
+  agency: "text-[var(--warning-text)]",
+  expert: "text-[var(--success-text)]",
 };
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -482,7 +482,7 @@ export default function Sidebar({
                   <span className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 bg-[var(--accent)] rounded-r-full" />
                 )}
 
-                <span className={`shrink-0 ${isActive ? "text-[var(--accent)]" : "text-[var(--text-faint)]"}`}>
+                <span className={`shrink-0 ${isActive ? "text-[var(--accent-text)]" : "text-[var(--text-faint)]"}`}>
                   {icon}
                 </span>
 
@@ -588,7 +588,7 @@ export default function Sidebar({
             <Link
               href="/abonnement"
               onClick={onCloseMobile}
-              className="mt-1 block rounded-lg px-2 py-1.5 text-[12px] font-semibold text-[var(--accent)] hover:bg-[var(--surface-2)]"
+              className="mt-1 block rounded-lg px-2 py-1.5 text-[12px] font-semibold text-[var(--accent-text)] hover:bg-[var(--surface-2)]"
             >
               {t("choisirAbonnement")}
             </Link>

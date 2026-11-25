@@ -118,7 +118,7 @@ export default function GenerateurMedia({
                   <img src={reference.url} alt="" className="h-full w-full object-cover" />
                 )}
               </span>
-              <button type="button" onClick={() => setReference(null)} className="text-xs font-semibold text-[var(--danger)]">
+              <button type="button" onClick={() => setReference(null)} className="text-xs font-semibold text-[var(--danger-text)]">
                 {t("referenceRetirer")}
               </button>
             </div>
@@ -144,7 +144,7 @@ export default function GenerateurMedia({
         ))}
       </div>
       {erreur && (
-        <p role="alert" className="rounded-xl border border-[var(--danger)]/20 bg-[var(--danger)]/10 px-4 py-3 text-sm text-[var(--danger)]">
+        <p role="alert" className="rounded-xl border border-[var(--danger)]/20 bg-[var(--danger)]/10 px-4 py-3 text-sm text-[var(--danger-text)]">
           {erreur}
           <LienQuotaEpuise code={codeErreur} />
         </p>

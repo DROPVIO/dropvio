@@ -8,8 +8,8 @@ import { useApiErrorMessage } from "@/lib/use-api-error";
 type Reponse = { ventes: VenteAffichee[]; total: number; page: number; totalPages: number };
 
 const BADGE: Record<StatutVente, string> = {
-  a_traiter: "border-amber-500/30 bg-amber-500/10 text-[var(--warning)]",
-  commandee: "border-emerald-500/30 bg-emerald-500/10 text-[var(--success)]",
+  a_traiter: "border-amber-500/30 bg-amber-500/10 text-[var(--warning-text)]",
+  commandee: "border-emerald-500/30 bg-emerald-500/10 text-[var(--success-text)]",
   ignoree: "border-[var(--border)] bg-[var(--surface-2)] text-[var(--text-faint)]",
 };
 
@@ -100,7 +100,7 @@ export default function VentesPage() {
           ))}
         </div>
 
-        {erreur && <p role="alert" className="mb-4 rounded-xl border border-[var(--danger)]/20 bg-[var(--danger)]/10 px-4 py-3 text-sm text-[var(--danger)]">{erreur}</p>}
+        {erreur && <p role="alert" className="mb-4 rounded-xl border border-[var(--danger)]/20 bg-[var(--danger)]/10 px-4 py-3 text-sm text-[var(--danger-text)]">{erreur}</p>}
 
         <div className="overflow-x-auto rounded-2xl border border-[var(--border)] bg-[var(--surface)]">
           <table className="w-full min-w-[860px] border-collapse text-left text-sm">

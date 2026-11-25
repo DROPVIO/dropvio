@@ -21,7 +21,7 @@ export default function PaiementActionBanner() {
   return (
     <div role="alert" className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--warning)] bg-[var(--surface)] px-6 py-3 text-sm text-[var(--text-primary)]">
       <span>{t("message")}</span>
-      <a href={url} className="font-semibold text-[var(--warning)] underline underline-offset-2">
+      <a href={url} className="font-semibold text-[var(--warning-text)] underline underline-offset-2">
         {t("cta")}
       </a>
     </div>

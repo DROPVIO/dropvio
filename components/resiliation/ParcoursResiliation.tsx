@@ -103,7 +103,7 @@ export default function ParcoursResiliation() {
       ) : (
         <>
           <p className="m-0 text-sm text-[var(--text-muted)]">{t("explication", { date: date(recap.finAcces) })}</p>
-          {erreur ? <p role="alert" className="m-0 text-sm text-[var(--danger)]">{erreur}</p> : null}
+          {erreur ? <p role="alert" className="m-0 text-sm text-[var(--danger-text)]">{erreur}</p> : null}
           <button type="button" onClick={confirmer} disabled={envoi} className={BOUTON}>
             {envoi ? t("envoi") : t("confirmer")}
           </button>

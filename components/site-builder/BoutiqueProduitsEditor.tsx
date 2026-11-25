@@ -65,7 +65,7 @@ export default function BoutiqueProduitsEditor({
           type="button"
           onClick={addProduit}
           disabled={limiteAtteinte}
-          className="text-[11px] text-[var(--accent)] hover:opacity-80 transition disabled:opacity-40 disabled:cursor-not-allowed"
+          className="text-[11px] text-[var(--accent-text)] hover:opacity-80 transition disabled:opacity-40 disabled:cursor-not-allowed"
         >
           {limite !== null ? t("ajouterMax", { max: limite }) : t("ajouter")}
         </button>
@@ -82,7 +82,7 @@ export default function BoutiqueProduitsEditor({
               <button
                 type="button"
                 onClick={() => removeProduit(i)}
-                className="text-xs text-[var(--danger)] hover:opacity-80 transition"
+                className="text-xs text-[var(--danger-text)] hover:opacity-80 transition"
               >
                 {t("supprimer")}
               </button>

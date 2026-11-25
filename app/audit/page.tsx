@@ -92,7 +92,7 @@ function CategoryCard({ cat }: { cat: Category }) {
       {cat.points_forts.length > 0 && (
         <div className="flex flex-col gap-1.5">
           {cat.points_forts.map((p, i) => (
-            <div key={i} className="flex items-start gap-2 text-[11px] text-[var(--success)] leading-relaxed">
+            <div key={i} className="flex items-start gap-2 text-[11px] text-[var(--success-text)] leading-relaxed">
               <span className="shrink-0 mt-px">✓</span>
               <span>{p}</span>
             </div>
@@ -104,7 +104,7 @@ function CategoryCard({ cat }: { cat: Category }) {
       {cat.points_faibles.length > 0 && (
         <div className="flex flex-col gap-1.5">
           {cat.points_faibles.map((p, i) => (
-            <div key={i} className="flex items-start gap-2 text-[11px] text-[var(--danger)] leading-relaxed">
+            <div key={i} className="flex items-start gap-2 text-[11px] text-[var(--danger-text)] leading-relaxed">
               <span className="shrink-0 mt-px">✕</span>
               <span>{p}</span>
             </div>
@@ -119,7 +119,7 @@ function CategoryCard({ cat }: { cat: Category }) {
             {t("corrections")}
           </p>
           {cat.corrections_specifiques.map((c, i) => (
-            <div key={i} className="flex items-start gap-2 text-[11px] text-[var(--warning)] leading-relaxed">
+            <div key={i} className="flex items-start gap-2 text-[11px] text-[var(--warning-text)] leading-relaxed">
               <span className="shrink-0 mt-px">→</span>
               <span>{c}</span>
             </div>
@@ -538,12 +538,12 @@ export default function AuditPage() {
               <button
                 onClick={handleFetchUrl}
                 disabled={!urlInput.trim() || urlLoading}
-                className="px-4 py-3 rounded-xl bg-violet-600/20 border border-violet-500/30 text-[var(--accent)] text-sm font-semibold hover:bg-violet-600/30 transition disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap"
+                className="px-4 py-3 rounded-xl bg-violet-600/20 border border-violet-500/30 text-[var(--accent-text)] text-sm font-semibold hover:bg-violet-600/30 transition disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap"
               >
                 {urlLoading ? "…" : t("saisie.recuperer")}
               </button>
             </div>
-            {urlError && <p className="text-xs text-[var(--danger)]">{urlError}</p>}
+            {urlError && <p className="text-xs text-[var(--danger-text)]">{urlError}</p>}
           </div>
 
           <div className="border-t border-[var(--border)]" />
@@ -578,7 +578,7 @@ export default function AuditPage() {
 
         {/* ── Error ───────────────────────────────────────────────────── */}
         {error && (
-          <div className="rounded-xl border border-[var(--danger)]/20 bg-[var(--danger)]/[0.06] px-4 py-3 text-sm text-[var(--danger)] flex items-start gap-2">
+          <div className="rounded-xl border border-[var(--danger)]/20 bg-[var(--danger)]/[0.06] px-4 py-3 text-sm text-[var(--danger-text)] flex items-start gap-2">
             <span className="shrink-0">⚠️</span>
             <span>{error}</span>
           </div>
@@ -601,7 +601,7 @@ export default function AuditPage() {
                   </p>
                   {/* Designer quote */}
                   <div className="rounded-xl border border-violet-500/20 bg-violet-500/[0.05] px-4 py-4">
-                    <p className="text-[9px] font-bold uppercase tracking-widest text-[var(--accent)] mb-2">
+                    <p className="text-[9px] font-bold uppercase tracking-widest text-[var(--accent-text)] mb-2">
                       {t("resultats.avisDesigner")}
                     </p>
                     <p className="text-[13px] text-[var(--text-muted)] leading-relaxed italic">

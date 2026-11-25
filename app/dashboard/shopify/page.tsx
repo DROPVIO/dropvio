@@ -76,7 +76,7 @@ export default function ShopifyDetailPage() {
           <p className="text-[var(--text-faint)] text-sm mt-1.5">{t("shopify.subtitle")}</p>
           <Link
             href="/dashboard/shopify/commandes"
-            className="inline-flex items-center gap-2 mt-3 text-xs font-semibold text-[var(--accent)] hover:underline"
+            className="inline-flex items-center gap-2 mt-3 text-xs font-semibold text-[var(--accent-text)] hover:underline"
           >
             {t("shopify.commandesLink")}
             {aTraiterCount ? (
@@ -92,7 +92,7 @@ export default function ShopifyDetailPage() {
             <p className="text-[var(--text-faint)] text-sm">
               {status.reconnectRequired ? t("shopify.reconnectNeeded") : t("shopify.notConnected")}
             </p>
-            <a href="/dashboard?openIntegrations=1" className="text-[var(--accent)] text-xs hover:underline">
+            <a href="/dashboard?openIntegrations=1" className="text-[var(--accent-text)] text-xs hover:underline">
               {status.reconnectRequired ? t("shopify.reconnectCta") : t("shopify.connectCta")}
             </a>
           </div>
@@ -103,14 +103,14 @@ export default function ShopifyDetailPage() {
                 <p className="text-[10px] font-semibold uppercase tracking-widest text-[var(--text-faint)]">
                   {t("shopify.statRefunds", { days: lookbackDays })}
                 </p>
-                <p className="text-2xl font-bold tabular-nums text-[var(--accent-secondary)] mt-2">{refunds.length}</p>
+                <p className="text-2xl font-bold tabular-nums text-[var(--accent-secondary-text)] mt-2">{refunds.length}</p>
               </div>
               <div className="rounded-2xl border border-[var(--border)] bg-[var(--surface-2)] p-5">
                 <p className="text-[10px] font-semibold uppercase tracking-widest text-[var(--text-faint)]">
                   {t("shopify.statDisputes", { days: lookbackDays })}
                 </p>
                 {status?.disputesScopeGranted ? (
-                  <p className="text-2xl font-bold tabular-nums text-[var(--danger)] mt-2">{disputes.length}</p>
+                  <p className="text-2xl font-bold tabular-nums text-[var(--danger-text)] mt-2">{disputes.length}</p>
                 ) : (
                   <p className="text-xs font-semibold text-[var(--text-faint)] mt-3">{t("shopify.disputesUnavailable")}</p>
                 )}

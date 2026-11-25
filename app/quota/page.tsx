@@ -86,7 +86,7 @@ function QuotaContenu() {
           </p>
         )}
         {erreur && (
-          <p role="alert" className="rounded-xl border border-[var(--danger)]/20 bg-[var(--danger)]/10 px-4 py-3 text-sm text-[var(--danger)]">
+          <p role="alert" className="rounded-xl border border-[var(--danger)]/20 bg-[var(--danger)]/10 px-4 py-3 text-sm text-[var(--danger-text)]">
             {erreur}
           </p>
         )}

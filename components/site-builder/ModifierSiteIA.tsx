@@ -146,11 +146,11 @@ export default function ModifierSiteIA({ html, pages, siteId, onChange }: Props)
         <p className="text-xs text-[var(--text-faint)]">{enCours ? t("patience") : t("raccourci")}</p>
       </div>
 
-      {erreur ? <p className="text-sm text-[var(--danger)]">{erreur}</p> : null}
+      {erreur ? <p className="text-sm text-[var(--danger-text)]">{erreur}</p> : null}
 
       {resultat ? (
         <div className="rounded-xl border border-[var(--border)] bg-[var(--surface-2)] px-4 py-3 flex flex-col gap-2 text-sm">
-          <p className="text-[var(--success)] font-medium">{t("succes")}</p>
+          <p className="text-[var(--success-text)] font-medium">{t("succes")}</p>
           {resultat.resume ? <p className="text-[var(--text-muted)]">{resultat.resume}</p> : null}
           {resultat.pages.length > 0 ? (
             <p className="text-xs text-[var(--text-faint)]">{t("pagesModifiees", { pages: resultat.pages.map(nomPage).join(", ") })}</p>

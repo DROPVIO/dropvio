@@ -28,7 +28,7 @@ export function VariationCourte({ valeur, intlTag, nouveau, inverse = false }: {
   const hausse = valeur >= 0;
   const positif = valeur === 0 || hausse !== inverse;
   return (
-    <span className={`inline-flex items-center gap-0.5 text-sm font-semibold tabular-nums ${positif ? "text-[var(--success)]" : "text-[var(--danger)]"}`}>
+    <span className={`inline-flex items-center gap-0.5 text-sm font-semibold tabular-nums ${positif ? "text-[var(--success-text)]" : "text-[var(--danger-text)]"}`}>
       <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true" className={hausse ? "" : "rotate-90"}>
         <path d="M3 9L9 3M9 3H4.5M9 3V7.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
       </svg>

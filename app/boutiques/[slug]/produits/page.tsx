@@ -110,7 +110,7 @@ export default async function CataloguePage({
               </Link>
             ) : null}
           </div>
-          <span className="rounded-full bg-violet-500/10 px-4 py-2 text-sm text-[var(--accent)]">{t("nombreProduits", { count: total })}</span>
+          <span className="rounded-full bg-violet-500/10 px-4 py-2 text-sm text-[var(--accent-text)]">{t("nombreProduits", { count: total })}</span>
         </div>
 
         <form method="get" className="mt-6 grid gap-4 sm:grid-cols-[1fr_auto]">

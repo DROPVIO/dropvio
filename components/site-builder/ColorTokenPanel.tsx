@@ -67,8 +67,8 @@ export default function ColorTokenPanel({
           >
             {saving ? t("enregistrement") : t("enregistrer")}
           </button>
-          {saveSuccess ? <span className="text-sm text-[var(--success)]">{t("enregistre")}</span> : null}
-          {saveError ? <span className="text-sm text-[var(--danger)]">{saveError}</span> : null}
+          {saveSuccess ? <span className="text-sm text-[var(--success-text)]">{t("enregistre")}</span> : null}
+          {saveError ? <span className="text-sm text-[var(--danger-text)]">{saveError}</span> : null}
         </div>
       ) : null}
     </div>

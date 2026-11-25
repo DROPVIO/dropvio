@@ -305,7 +305,7 @@ export default function TemplateEditor({
           <p className="text-sm font-medium text-[var(--text-muted)]">{t("contenu.titre")}</p>
           <button
             onClick={reinitialiserTextes}
-            className="text-[11px] text-[var(--text-faint)] hover:text-[var(--accent)] transition"
+            className="text-[11px] text-[var(--text-faint)] hover:text-[var(--accent-text)] transition"
           >
             {t("contenu.reinitialiser")}
           </button>
@@ -408,7 +408,7 @@ export default function TemplateEditor({
         <p className="text-sm font-medium text-[var(--text-muted)]">{t("photos.titre")}</p>
 
         {uploadErreur && (
-          <p className="text-xs text-[var(--danger)]">{uploadErreur}</p>
+          <p className="text-xs text-[var(--danger-text)]">{uploadErreur}</p>
         )}
 
         <div>
@@ -567,13 +567,13 @@ export default function TemplateEditor({
           )}
         </div>
         {saved && (
-          <p className="text-[11px] text-[var(--success)]">
+          <p className="text-[11px] text-[var(--success-text)]">
             {canExport ? (
               t("apercu.sauvegarde")
             ) : (
               <>
                 {t("apercu.sauvegardeFree")}{" "}
-                <Link href={LIEN_CHANGER_DE_PLAN} className="text-[var(--accent)] font-semibold hover:underline">
+                <Link href={LIEN_CHANGER_DE_PLAN} className="text-[var(--accent-text)] font-semibold hover:underline">
                   {t("apercu.passerPro")}
                 </Link>
               </>
@@ -581,7 +581,7 @@ export default function TemplateEditor({
           </p>
         )}
         {saveError && (
-          <p className="text-[11px] text-[var(--danger)]">{saveError}</p>
+          <p className="text-[11px] text-[var(--danger-text)]">{saveError}</p>
         )}
 
         <ColorTokenPanel

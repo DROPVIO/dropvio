@@ -198,7 +198,7 @@ export default function ComposerSite({
               aria-expanded={menuOuvert}
               className={`flex h-8 w-8 items-center justify-center rounded-full border text-xl leading-none transition ${
                 menuOuvert
-                  ? "border-violet-500/50 bg-violet-500/10 text-[var(--accent)] rotate-45"
+                  ? "border-violet-500/50 bg-violet-500/10 text-[var(--accent-text)] rotate-45"
                   : "border-[var(--border-strong)] text-[var(--text-muted)] hover:bg-[var(--surface-2)] hover:text-[var(--text-primary)]"
               }`}
             >
@@ -313,7 +313,7 @@ export default function ComposerSite({
           )}
           {outils}
 
-          <span className={`ml-auto hidden text-[11px] sm:inline ${promptManquant > 0 ? "text-[var(--text-faint)]" : "text-[var(--accent)]"}`}>
+          <span className={`ml-auto hidden text-[11px] sm:inline ${promptManquant > 0 ? "text-[var(--text-faint)]" : "text-[var(--accent-text)]"}`}>
             {promptManquant > 0
               ? tPrompt("compteurManquant", { count: prompt.trim().length, manquant: promptManquant })
               : tPrompt("compteur", { count: prompt.trim().length })}
@@ -335,7 +335,7 @@ export default function ComposerSite({
       </div>
 
       {inspiration.erreurs.map((e) => (
-        <p key={e} className="px-2 text-xs text-[var(--danger)]">{e}</p>
+        <p key={e} className="px-2 text-xs text-[var(--danger-text)]">{e}</p>
       ))}
       <p className="px-2 text-[11px] leading-tight text-[var(--text-faint)]">
         {aide ?? t("raccourci")}
@@ -364,7 +364,7 @@ export function BoutonOutil({
       title={title}
       className={`flex h-8 shrink-0 items-center gap-1 rounded-full border px-2.5 text-xs font-semibold transition ${
         actif
-          ? "border-violet-500 bg-violet-500/10 text-[var(--accent)]"
+          ? "border-violet-500 bg-violet-500/10 text-[var(--accent-text)]"
           : "border-[var(--border-strong)] text-[var(--text-muted)] hover:bg-[var(--surface-2)] hover:text-[var(--text-primary)]"
       }`}
     >

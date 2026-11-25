@@ -31,16 +31,24 @@
   --border-strong: rgba(255, 255, 255, 0.14);
   --text-primary: #ffffff;
   --text-muted: #c0c0c8;
-  /* #90909a (pas #71717a) : le gris d'origine tombait sous 4.5:1 (WCAG AA) sur tous les
-     fonds sombres, jusqu'à 3.14:1 sur --surface-3 — voir l'audit de contraste qui a précédé
-     ce changement. */
-  --text-faint: #acacb5;
+  /* #b8b8c1 : 4,96:1 sur le fond le plus clair du thème (--surface-3 posé sur --surface),
+     7,8:1 sur --bg. #acacb5 tombait à 4,34:1 sur --surface-3 (WCAG AA : 4,5:1). */
+  --text-faint: #b8b8c1;
   --accent: #7c3aed;
   --accent-secondary: #60a5fa;
   --success: #10b981;
   --warning: #fbbf24;
-  --danger: #ef4444;
+  --danger: #dc2626; /* #ef4444 ne portait le texte blanc qu'à 3,8:1 */
   --logo-accent: #34D399;
+  /* Couleurs de TEXTE (WCAG AA, 4,5:1 au moins sur --bg, --surface et leurs calques
+     --surface-2/--surface-3) : les couleurs ci-dessus restent celles des fonds (boutons,
+     pastilles, barres), qui portent du texte blanc. Un violet ne peut pas faire les deux en
+     sombre : #7c3aed porte du blanc à 5,7:1 mais ne se lit qu'à 2,7:1 sur --bg. */
+  --accent-text: #c4b5fd;
+  --accent-secondary-text: #93c5fd;
+  --success-text: #34d399;
+  --warning-text: #fbbf24;
+  --danger-text: #fca5a5;
 }
 
 :root[data-theme="light"] {
@@ -53,12 +61,20 @@
   --border-strong: rgba(0, 0, 0, 0.14);
   --text-primary: #18181b;
   --text-muted: #52525b;
-  --text-faint: #a1a1aa;
+  /* #63636c : 4,76:1 sur le fond le plus foncé du thème (--surface-3 posé sur --bg), 5,6:1 sur
+     --bg. #a1a1aa ne dépassait pas 2,6:1 : textes secondaires à peine lisibles. */
+  --text-faint: #63636c;
   --accent: #7c3aed;
   --accent-secondary: #3b82f6;
   --success: #059669;
   --warning: #d97706;
   --danger: #dc2626;
+  /* Couleurs de texte (voir le bloc sombre) : 4,5:1 au moins sur --bg, --surface et leurs calques. */
+  --accent-text: #7c3aed;
+  --accent-secondary-text: #1d4ed8;
+  --success-text: #065f46;
+  --warning-text: #92400e;
+  --danger-text: #b91c1c;
 }
 
 /* Boutique publique : mode clair/sombre choisi par le marchand (boutiques.settings.colorMode,
@@ -77,12 +93,21 @@
   --text-primary: #ffffff;
   --text-muted: #c0c0c8;
   /* Même correctif de contraste que le bloc :root ci-dessus. */
-  --text-faint: #acacb5;
+  --text-faint: #b8b8c1;
   --accent: #7c3aed;
   --accent-secondary: #60a5fa;
   --success: #10b981;
   --warning: #fbbf24;
-  --danger: #ef4444;
+  --danger: #dc2626; /* #ef4444 ne portait le texte blanc qu'à 3,8:1 */
+  /* Couleurs de TEXTE (WCAG AA, 4,5:1 au moins sur --bg, --surface et leurs calques
+     --surface-2/--surface-3) : les couleurs ci-dessus restent celles des fonds (boutons,
+     pastilles, barres), qui portent du texte blanc. Un violet ne peut pas faire les deux en
+     sombre : #7c3aed porte du blanc à 5,7:1 mais ne se lit qu'à 2,7:1 sur --bg. */
+  --accent-text: #c4b5fd;
+  --accent-secondary-text: #93c5fd;
+  --success-text: #34d399;
+  --warning-text: #fbbf24;
+  --danger-text: #fca5a5;
 }
 
 [data-boutique-theme="light"] {
@@ -95,12 +120,20 @@
   --border-strong: rgba(0, 0, 0, 0.14);
   --text-primary: #18181b;
   --text-muted: #52525b;
-  --text-faint: #a1a1aa;
+  /* #63636c : 4,76:1 sur le fond le plus foncé du thème (--surface-3 posé sur --bg), 5,6:1 sur
+     --bg. #a1a1aa ne dépassait pas 2,6:1 : textes secondaires à peine lisibles. */
+  --text-faint: #63636c;
   --accent: #7c3aed;
   --accent-secondary: #3b82f6;
   --success: #059669;
   --warning: #d97706;
   --danger: #dc2626;
+  /* Couleurs de texte (voir le bloc sombre) : 4,5:1 au moins sur --bg, --surface et leurs calques. */
+  --accent-text: #7c3aed;
+  --accent-secondary-text: #1d4ed8;
+  --success-text: #065f46;
+  --warning-text: #92400e;
+  --danger-text: #b91c1c;
 }
 
 /* Niche boutique : reflets visuels discrets appliqués automatiquement sur les pages boutique
@@ -355,10 +388,12 @@ body {
   --border-strong: rgba(255,255,255,0.14);
   --text: #F5F3F7;
   --text-2: #A8A3B8;
-  /* #908c9a (pas #6B6578) : sous 4.5:1 (WCAG AA) sur tous les fonds de cette palette,
-     jusqu'à 3.09:1 sur --surface-2 — même audit de contraste que --text-faint plus haut. */
-  --text-3: #908c9a;
-  --purple: #8B5CF6;
+  /* #a19caf : 4,78:1 au moins (sur --surface-2), sous --text-2 pour garder la hiérarchie.
+     #908c9a tombait à 3,88:1 sur --surface-2 (WCAG AA : 4,5:1). */
+  --text-3: #a19caf;
+  /* --purple ne sert qu'à du texte et des icônes (titres de catégorie, icône ouverte) :
+     #a78bfa (4,68:1 au moins) au lieu de #8B5CF6 (3,0:1 sur --surface-2). */
+  --purple: #a78bfa;
   --purple-dark: #6D28D9;
   --grad: linear-gradient(135deg,#8B5CF6,#6D28D9);
   --green: #34D399;

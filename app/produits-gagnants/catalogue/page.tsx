@@ -174,7 +174,7 @@ function CatalogueListe() {
           {loading && !data ? (
             <p className="py-16 text-center text-sm text-[var(--text-faint)]">{t("loading")}</p>
           ) : error ? (
-            <div className="m-6 rounded-xl border border-[var(--danger)]/20 bg-[var(--danger)]/10 px-4 py-3 text-sm text-[var(--danger)]">{error}</div>
+            <div className="m-6 rounded-xl border border-[var(--danger)]/20 bg-[var(--danger)]/10 px-4 py-3 text-sm text-[var(--danger-text)]">{error}</div>
           ) : !data || data.products.length === 0 ? (
             <p className="py-16 text-center text-sm text-[var(--text-faint)]">{search || niche ? t("emptyFiltered") : t("empty")}</p>
           ) : (

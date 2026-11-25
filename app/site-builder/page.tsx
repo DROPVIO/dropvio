@@ -935,7 +935,7 @@ function SiteBuilderContent() {
 
         {/* Header */}
         <div className="mb-12 text-center">
-          <div className="inline-flex items-center gap-2 mb-4 px-3 py-1 rounded-full bg-violet-500/10 border border-violet-500/20 text-[var(--accent)] text-xs font-medium tracking-widest uppercase">
+          <div className="inline-flex items-center gap-2 mb-4 px-3 py-1 rounded-full bg-violet-500/10 border border-violet-500/20 text-[var(--accent-text)] text-xs font-medium tracking-widest uppercase">
             <span className="w-1.5 h-1.5 rounded-full bg-violet-400" />
             Site Builder
           </div>
@@ -962,7 +962,7 @@ function SiteBuilderContent() {
             modes IA et Éditeur de templates ci-dessous (tous deux consomment le même
             boutiqueDraft en lecture pour leur génération respective). */}
         {brouillonIntrouvable && (
-          <div className="mb-4 rounded-2xl border border-amber-500/30 bg-amber-500/10 px-5 py-4 text-sm text-[var(--warning)]">
+          <div className="mb-4 rounded-2xl border border-amber-500/30 bg-amber-500/10 px-5 py-4 text-sm text-[var(--warning-text)]">
             {t("brouillon.introuvable")}
           </div>
         )}
@@ -1039,7 +1039,7 @@ function SiteBuilderContent() {
         {step === 1 && boutiqueDraft && (
           <div className="flex-1 flex flex-col gap-4">
             {error && (
-              <div className="rounded-xl bg-[var(--danger)]/10 border border-[var(--danger)]/20 px-4 py-3 text-[var(--danger)] text-sm">
+              <div className="rounded-xl bg-[var(--danger)]/10 border border-[var(--danger)]/20 px-4 py-3 text-[var(--danger-text)] text-sm">
                 {error}
                 {quotaEpuise && <Link href="/quota" className="ml-1 underline">{tNav("itemQuota")}</Link>}
               </div>
@@ -1095,19 +1095,19 @@ function SiteBuilderContent() {
         {step === 1 && !boutiqueDraft && (
           <div className="flex-1 flex flex-col gap-4">
             {error && (
-              <div className="rounded-xl bg-[var(--danger)]/10 border border-[var(--danger)]/20 px-4 py-3 text-[var(--danger)] text-sm">
+              <div className="rounded-xl bg-[var(--danger)]/10 border border-[var(--danger)]/20 px-4 py-3 text-[var(--danger-text)] text-sm">
                 {error}
                 {quotaEpuise && <Link href="/quota" className="ml-1 underline">{tNav("itemQuota")}</Link>}
               </div>
             )}
 
             {regenerating && (
-              <div className="rounded-xl bg-violet-500/10 border border-violet-500/20 px-4 py-3 text-[var(--accent)] text-sm">
+              <div className="rounded-xl bg-violet-500/10 border border-violet-500/20 px-4 py-3 text-[var(--accent-text)] text-sm">
                 {t("chargementRegeneration")}
               </div>
             )}
             {regenerateError && (
-              <div className="rounded-xl bg-[var(--danger)]/10 border border-[var(--danger)]/20 px-4 py-3 text-[var(--danger)] text-sm">
+              <div className="rounded-xl bg-[var(--danger)]/10 border border-[var(--danger)]/20 px-4 py-3 text-[var(--danger-text)] text-sm">
                 {regenerateError}
               </div>
             )}
@@ -1146,13 +1146,13 @@ function SiteBuilderContent() {
                         type="button"
                         onClick={handleImportAliexpress}
                         disabled={!aliexpressUrl.trim() || aliexpressLoading}
-                        className="px-4 py-3 rounded-xl bg-violet-600/20 border border-violet-500/30 text-[var(--accent)] text-sm font-semibold hover:bg-violet-600/30 transition disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap"
+                        className="px-4 py-3 rounded-xl bg-violet-600/20 border border-violet-500/30 text-[var(--accent-text)] text-sm font-semibold hover:bg-violet-600/30 transition disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap"
                       >
                         {aliexpressLoading ? "…" : t("formulaire.importerBouton")}
                       </button>
                     </div>
                     {aliexpressError && (
-                      <p className="text-xs text-[var(--danger)]">{aliexpressError}</p>
+                      <p className="text-xs text-[var(--danger-text)]">{aliexpressError}</p>
                     )}
                   </div>
 
@@ -1202,7 +1202,7 @@ function SiteBuilderContent() {
                       className="bg-[var(--bg)] border border-[var(--border-strong)] rounded-xl px-4 py-3 text-sm text-[var(--text-primary)] placeholder-[var(--text-faint)] focus:outline-none focus:border-violet-500 focus:ring-1 focus:ring-violet-500 transition resize-none"
                     />
                     {texteGenereIa ? <MentionIa /> : null}
-                    {texteIaError ? <p className="text-xs text-[var(--danger)]">{texteIaError}</p> : null}
+                    {texteIaError ? <p className="text-xs text-[var(--danger-text)]">{texteIaError}</p> : null}
                   </div>
 
                   {/* Photo du produit : lecture seule ici (import AliExpress ou pré-remplissage).
@@ -1235,7 +1235,7 @@ function SiteBuilderContent() {
                   <div className="flex gap-3">
                     <div className="flex flex-col gap-2 flex-1">
                       <label className="text-sm font-medium text-[var(--text-muted)]">
-                        {t("formulaire.prixVente")} <span className="text-[var(--danger)]">*</span>
+                        {t("formulaire.prixVente")} <span className="text-[var(--danger-text)]">*</span>
                       </label>
                       <div className="relative">
                         <input
@@ -1313,7 +1313,7 @@ function SiteBuilderContent() {
                   </ul>
                 </div>
               )}
-              {avisErreur && <p className="px-2 text-xs text-[var(--danger)]">{avisErreur}</p>}
+              {avisErreur && <p className="px-2 text-xs text-[var(--danger-text)]">{avisErreur}</p>}
 
               {/* Corrections d'un audit précédent — pré-remplies automatiquement lors d'une
                   régénération si un audit est lié à ce site (voir useEffect plus haut), sinon
@@ -1397,12 +1397,12 @@ function SiteBuilderContent() {
         {step === 3 && (
           <div className="flex flex-col gap-4">
             {saveWarning && (
-              <div className="rounded-xl bg-amber-500/10 border border-amber-500/20 px-4 py-3 text-[var(--warning)] text-sm">
+              <div className="rounded-xl bg-amber-500/10 border border-amber-500/20 px-4 py-3 text-[var(--warning-text)] text-sm">
                 ⚠️ {saveWarning}
               </div>
             )}
             {imagesAvertissement && (
-              <div role="status" className="rounded-xl bg-amber-500/10 border border-amber-500/20 px-4 py-3 text-[var(--warning)] text-sm">
+              <div role="status" className="rounded-xl bg-amber-500/10 border border-amber-500/20 px-4 py-3 text-[var(--warning-text)] text-sm">
                 ⚠️ {imagesAvertissement}
               </div>
             )}
@@ -1427,7 +1427,7 @@ function SiteBuilderContent() {
                         conversion Liquid est faite à la demande, au clic. */}
                     <button
                       onClick={formatExport === "liquid" ? handleDownload : handleDownloadLiquid}
-                      className="px-4 py-2 rounded-xl border border-emerald-500/30 bg-emerald-500/10 text-[var(--success)] text-xs font-semibold hover:bg-emerald-500/20 transition"
+                      className="px-4 py-2 rounded-xl border border-emerald-500/30 bg-emerald-500/10 text-[var(--success-text)] text-xs font-semibold hover:bg-emerald-500/20 transition"
                     >
                       {formatExport === "liquid" ? t("resultat.fichierHtml") : t("resultat.fichierLiquid")}
                     </button>
@@ -1550,7 +1550,7 @@ function SiteBuilderContent() {
               </div>
 
               {colorsDirty ? (
-                <div className="mb-4 rounded-xl bg-amber-500/10 border border-amber-500/20 px-4 py-3 text-[var(--warning)] text-xs">
+                <div className="mb-4 rounded-xl bg-amber-500/10 border border-amber-500/20 px-4 py-3 text-[var(--warning-text)] text-xs">
                   {t("shopify.couleursNonEnregistrees")}
                 </div>
               ) : null}
@@ -1558,7 +1558,7 @@ function SiteBuilderContent() {
               {!canExport ? (
                 <div className="rounded-xl bg-violet-500/10 border border-violet-500/20 px-4 py-3 text-xs text-[var(--text-muted)]">
                   {t("shopify.reservePro")}{" "}
-                  <Link href={LIEN_CHANGER_DE_PLAN} className="text-[var(--accent)] font-semibold hover:underline">
+                  <Link href={LIEN_CHANGER_DE_PLAN} className="text-[var(--accent-text)] font-semibold hover:underline">
                     {t("shopify.passerPro")}
                   </Link>
                 </div>
@@ -1615,7 +1615,7 @@ function SiteBuilderContent() {
                   </div>
 
                   {!savedSiteId && (
-                    <p className="text-[11px] text-[var(--warning)]">
+                    <p className="text-[11px] text-[var(--warning-text)]">
                       {t("shopify.attenteSauvegarde")}
                     </p>
                   )}
@@ -1625,14 +1625,14 @@ function SiteBuilderContent() {
                   )}
 
                   {shopifyPushError && (
-                    <div className="rounded-xl border border-[var(--danger)]/20 bg-[var(--danger)]/10 px-4 py-3 text-sm text-[var(--danger)]">
+                    <div className="rounded-xl border border-[var(--danger)]/20 bg-[var(--danger)]/10 px-4 py-3 text-sm text-[var(--danger-text)]">
                       {shopifyPushError}
                     </div>
                   )}
 
                   {shopifyPushResult && (
                     <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-4 flex flex-col gap-2">
-                      <p className="text-sm font-semibold text-[var(--success)]">
+                      <p className="text-sm font-semibold text-[var(--success-text)]">
                         {shopifyPushResult.mode === "liquid" && shopifyPushResult.autoAttached === false
                           ? t("shopify.etapeManuelle")
                           : t("shopify.publie")}
@@ -1647,7 +1647,7 @@ function SiteBuilderContent() {
                           href={shopifyPushResult.url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-xs font-semibold text-[var(--success)] hover:opacity-80 underline"
+                          className="text-xs font-semibold text-[var(--success-text)] hover:opacity-80 underline"
                         >
                           {t("shopify.voirPage")}
                         </a>

@@ -175,7 +175,7 @@ export default function MediathequeGrille({
       </div>
       {vue === "import" && !onChoisir && <p className="-mt-2 text-xs text-[var(--text-faint)]">{t("aideImportees")}</p>}
 
-      {erreur && <p role="alert" className="rounded-xl border border-[var(--danger)]/20 bg-[var(--danger)]/10 px-4 py-3 text-sm text-[var(--danger)]">{erreur}</p>}
+      {erreur && <p role="alert" className="rounded-xl border border-[var(--danger)]/20 bg-[var(--danger)]/10 px-4 py-3 text-sm text-[var(--danger-text)]">{erreur}</p>}
       {information && <p role="status" className="rounded-xl border border-[var(--border)] px-4 py-3 text-sm text-[var(--text-muted)]">{information}</p>}
 
       {chargement ? (
@@ -200,7 +200,7 @@ export default function MediathequeGrille({
                   {media.prompt ?? t("imageImportee")}
                 </p>
                 {!onChoisir && (
-                  <button type="button" onClick={() => void supprimer(media.id)} className="shrink-0 text-xs font-semibold text-[var(--danger)]">
+                  <button type="button" onClick={() => void supprimer(media.id)} className="shrink-0 text-xs font-semibold text-[var(--danger-text)]">
                     {t("supprimer")}
                   </button>
                 )}

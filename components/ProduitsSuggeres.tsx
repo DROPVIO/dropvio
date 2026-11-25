@@ -118,7 +118,7 @@ export default function ProduitsSuggeres({
       {loading ? (
         <p className="text-xs text-[var(--text-faint)]">{t("loading")}</p>
       ) : error ? (
-        <div className="rounded-xl border border-[var(--danger)]/20 bg-[var(--danger)]/10 px-4 py-3 text-sm text-[var(--danger)]">{error}</div>
+        <div className="rounded-xl border border-[var(--danger)]/20 bg-[var(--danger)]/10 px-4 py-3 text-sm text-[var(--danger-text)]">{error}</div>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {suggestions.map((s) => {
@@ -146,7 +146,7 @@ export default function ProduitsSuggeres({
                   </div>
                   {s.croissance !== null && (
                     <span
-                      className={`text-[11px] font-semibold ${s.croissance >= 0 ? "text-[var(--success)]" : "text-[var(--danger)]"}`}
+                      className={`text-[11px] font-semibold ${s.croissance >= 0 ? "text-[var(--success-text)]" : "text-[var(--danger-text)]"}`}
                     >
                       {s.croissance >= 0 ? "↑" : "↓"} {t("growth", { pct: Math.abs(s.croissance).toFixed(0) })}
                     </span>
@@ -160,7 +160,7 @@ export default function ProduitsSuggeres({
                     {added ? t("added") : addingId === s.id ? t("adding") : t("add")}
                   </button>
                   {addErrors[s.id] ? (
-                    <p className="text-[11px] text-[var(--danger)]">{addErrors[s.id]}</p>
+                    <p className="text-[11px] text-[var(--danger-text)]">{addErrors[s.id]}</p>
                   ) : null}
                 </div>
               </div>
